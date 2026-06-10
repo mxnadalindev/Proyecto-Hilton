@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevo Evento — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <header class="header">
+    <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
+    <nav class="header-nav">
+      <a href="/eventos" class="nav-link activo"><i class="ti ti-calendar-event"></i> Eventos</a>
+      <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
+      <a href="/recetas" class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
+    </nav>
+    <div class="header-user">
+      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+      <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
+    </div>
+  </header>
+  <main class="main-content">
+
+
+
+
+<div class="seccion-header">
+  <div class="seccion-header-left">
+    <p class="seccion-label"><a href="/eventos" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> Eventos</a></p>
+    <h1 class="seccion-titulo">Nuevo evento</h1>
+  </div>
+</div>
+
+<form method="POST" action="/eventos/nuevo" id="form-evento">
+<input type="hidden" name="platos_json" id="platos_json" value="[]">
+<input type="hidden" name="personal_json" id="personal_json" value="[]">
+<input type="hidden" name="vajilla_json" id="vajilla_json" value="[]">
+
+<div class="form-grid">
+
+  <!-- ── Columna izquierda ── -->
+  <div class="form-col">
+
+    <!-- Info general -->
+    <div class="form-card">
+      <p class="form-card-title"><i class="ti ti-info-circle" aria-hidden="true"></i> Información general</p>
+
+      <div class="field">
+        <label>Nombre del evento</label>
+        <input type="text" name="nombre" placeholder="Ej: Casamiento García" required>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Fecha</label>
+          <input type="date" name="fecha" id="campo-fecha" required>
+        </div>
+        <div class="field">
+          <label>Hora inicio</label>
+          <input type="time" name="hora_inicio">
+        </div>
+        <div class="field">
+          <label>Hora fin</label>
+          <input type="time" name="hora_fin">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Horas de producción</label>
+          <input type="number" name="horas_produccion" placeholder="0" min="0" step="0.5">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Descripción (opcional)</label>
+        <textarea name="descripcion" rows="3" placeholder="Notas del evento..."></textarea>
+      </div>
+    </div>
+
+    <!-- Calendario visual -->
+    <div class="form-card">
+      <p class="form-card-title"><i class="ti ti-calendar" aria-hidden="true"></i> Calendario</p>
+      <div id="mini-cal"></div>
+    </div>
+
+  </div>
+
+  <!-- ── Columna derecha ── -->
+  <div class="form-col">
+
+    <!-- Platos -->
+    <div class="form-card">
+      <p class="form-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Platos del menú</p>
+
+      <div class="add-row">
+        <input type="text" id="plato-nombre" placeholder="Nombre del plato">
+        <input type="number" id="plato-porciones" placeholder="Porciones" min="1" value="1">
+        <input type="number" id="plato-costo" placeholder="Costo por porción $" min="0" step="0.01">
+        <button type="button" class="btn-add" onclick="agregarPlato()">
+          <i class="ti ti-plus" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div id="lista-platos" class="items-list">
+        <p class="list-empty">No hay platos agregados todavía.</p>
+      </div>
+
+      <div class="subtotal-row">
+        <span>Costo total de platos:</span>
+        <strong id="costo-total-display">$0.00</strong>
+      </div>
+    </div>
+
+    <!-- Personal -->
+    <div class="form-card">
+      <p class="form-card-title"><i class="ti ti-users" aria-hidden="true"></i> Personal asignado</p>
+
+      <div class="personal-grid">
+        <% if (personal.length > 0) { %>
+          <% personal.forEach(p => { %>
+          <label class="personal-item">
+            <input type="checkbox" class="chk-personal" value="<%= p.id %>" data-nombre="<%= p.nombre %>">
+            <span class="personal-nombre"><%= p.nombre %></span>
+            <span class="personal-rol"><%= p.rol %></span>
+          </label>
+          <% }) %>
+        <% } else { %>
+          <p class="list-empty">No hay personal registrado todavía.</p>
+        <% } %>
+      </div>
+
+      <div class="subtotal-row">
+        <span>Personal seleccionado:</span>
+        <strong id="personal-count">0 personas</strong>
+      </div>
+    </div>
+
+    <!-- Vajilla -->
+    <div class="form-card">
+      <p class="form-card-title"><i class="ti ti-bowl" aria-hidden="true"></i> Vajilla necesaria</p>
+
+      <div class="add-row">
+        <input type="text" id="vajilla-nombre" placeholder="Tipo de vajilla">
+        <input type="number" id="vajilla-cantidad" placeholder="Cantidad" min="1" value="1">
+        <button type="button" class="btn-add" onclick="agregarVajilla()">
+          <i class="ti ti-plus" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div id="lista-vajilla" class="items-list">
+        <p class="list-empty">No hay vajilla agregada todavía.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Botones -->
+<div class="form-actions">
+  <a href="/eventos" class="btn-secondary">Cancelar</a>
+  <button type="submit" class="btn-primary">
+    <i class="ti ti-device-floppy" aria-hidden="true"></i> Guardar evento
+  </button>
+</div>
+
+</form>
+
+<style>
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-col { display: flex; flex-direction: column; gap: 20px; }
+.form-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
+.form-card-title { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+.field label { display: block; font-size: 0.68rem; font-weight: 500; color: var(--negro); margin-bottom: 6px; letter-spacing: 0.05em; }
+.field input, .field textarea, .field select {
+  width: 100%; background: var(--gris-fondo); border: 1px solid var(--gris-borde);
+  border-radius: 8px; padding: 10px 12px; font-family: var(--font-sans);
+  font-size: 0.85rem; color: var(--negro); outline: none;
+  transition: border-color var(--tr), box-shadow var(--tr);
+}
+.field input:focus, .field textarea:focus { border-color: var(--azul); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: var(--blanco); }
+.field-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.add-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.add-row input { flex: 1; background: var(--gris-fondo); border: 1px solid var(--gris-borde); border-radius: 8px; padding: 9px 12px; font-family: var(--font-sans); font-size: 0.83rem; color: var(--negro); outline: none; transition: border-color var(--tr); }
+.add-row input:focus { border-color: var(--azul); background: var(--blanco); }
+.btn-add { width: 36px; height: 36px; background: var(--azul); border: none; border-radius: 8px; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background var(--tr); }
+.btn-add:hover { background: var(--azul-hover); }
+.items-list { min-height: 40px; }
+.list-empty { font-size: 0.78rem; color: var(--gris-texto); font-style: italic; padding: 8px 0; }
+.item-row { display: flex; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--gris-borde); font-size: 0.83rem; }
+.item-row:last-child { border-bottom: none; }
+.item-nombre { flex: 1; color: var(--negro); font-weight: 500; }
+.item-detalle { color: var(--gris-texto); font-size: 0.75rem; }
+.item-costo { color: var(--azul); font-weight: 600; min-width: 70px; text-align: right; }
+.btn-remove { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 16px; padding: 2px; line-height: 1; }
+.btn-remove:hover { color: #991b1b; }
+.subtotal-row { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--gris-borde); margin-top: 8px; font-size: 0.82rem; color: var(--gris-texto); }
+.subtotal-row strong { color: var(--azul); font-size: 1rem; }
+.personal-grid { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; margin-bottom: 12px; }
+.personal-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; transition: background var(--tr); }
+.personal-item:hover { background: var(--azul-claro); }
+.personal-item input { width: 16px; height: 16px; accent-color: var(--azul); flex-shrink: 0; }
+.personal-nombre { flex: 1; font-size: 0.83rem; color: var(--negro); font-weight: 500; }
+.personal-rol { font-size: 0.65rem; color: var(--gris-texto); text-transform: uppercase; letter-spacing: 0.08em; }
+.form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--gris-borde); }
+.back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: flex; align-items: center; gap: 4px; }
+.back-link:hover { color: var(--azul); }
+
+/* Calendario mini */
+#mini-cal { font-family: var(--font-sans); }
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cal-header span { font-size: 0.85rem; font-weight: 600; color: var(--negro); }
+.cal-nav { background: none; border: 1px solid var(--gris-borde); border-radius: 6px; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gris-texto); font-size: 14px; transition: all var(--tr); }
+.cal-nav:hover { border-color: var(--azul); color: var(--azul); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-day-name { text-align: center; font-size: 0.6rem; font-weight: 600; color: var(--gris-texto); padding: 4px 0; letter-spacing: 0.05em; }
+.cal-day { text-align: center; font-size: 0.78rem; padding: 6px 4px; border-radius: 6px; cursor: pointer; color: var(--negro); transition: all var(--tr); }
+.cal-day:hover { background: var(--azul-claro); color: var(--azul); }
+.cal-day.hoy { background: var(--azul-claro); color: var(--azul); font-weight: 600; }
+.cal-day.seleccionado { background: var(--azul); color: #fff; font-weight: 600; }
+.cal-day.vacio { visibility: hidden; }
+.cal-day.otro-mes { color: var(--gris-borde); cursor: default; }
+.cal-day.otro-mes:hover { background: none; }
+
+@media (max-width: 900px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .field-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+
+<script>
+// ── Estado ──────────────────────────────────────────
+let platos = [];
+let vajilla = [];
+
+// ── Platos ──────────────────────────────────────────
+function agregarPlato() {
+  const nombre = document.getElementById('plato-nombre').value.trim();
+  const porciones = parseInt(document.getElementById('plato-porciones').value) || 1;
+  const costo = parseFloat(document.getElementById('plato-costo').value) || 0;
+  if (!nombre) { document.getElementById('plato-nombre').focus(); return; }
+  const subtotal = porciones * costo;
+  platos.push({ nombre, porciones, costo, subtotal });
+  document.getElementById('plato-nombre').value = '';
+  document.getElementById('plato-porciones').value = '1';
+  document.getElementById('plato-costo').value = '';
+  renderPlatos();
+  actualizarCosto();
+}
+
+function eliminarPlato(i) {
+  platos.splice(i, 1);
+  renderPlatos();
+  actualizarCosto();
+}
+
+function renderPlatos() {
+  const el = document.getElementById('lista-platos');
+  if (!platos.length) {
+    el.innerHTML = '<p class="list-empty">No hay platos agregados todavía.</p>';
+    return;
+  }
+  el.innerHTML = platos.map((p, i) => `
+    <div class="item-row">
+      <span class="item-nombre">${p.nombre}</span>
+      <span class="item-detalle">${p.porciones} porc. × $${p.costo.toFixed(2)}</span>
+      <span class="item-costo">$${p.subtotal.toFixed(2)}</span>
+      <button type="button" class="btn-remove" onclick="eliminarPlato(${i})">
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </button>
+    </div>
+  `).join('');
+}
+
+function actualizarCosto() {
+  const total = platos.reduce((s, p) => s + p.subtotal, 0);
+  document.getElementById('costo-total-display').textContent = '$' + total.toFixed(2);
+  document.getElementById('platos_json').value = JSON.stringify(platos);
+}
+
+// ── Personal ─────────────────────────────────────────
+document.querySelectorAll('.chk-personal').forEach(chk => {
+  chk.addEventListener('change', actualizarPersonal);
+});
+
+function actualizarPersonal() {
+  const sel = [...document.querySelectorAll('.chk-personal:checked')];
+  document.getElementById('personal-count').textContent = sel.length + ' persona' + (sel.length !== 1 ? 's' : '');
+  document.getElementById('personal_json').value = JSON.stringify(sel.map(c => c.value));
+}
+
+// ── Vajilla ──────────────────────────────────────────
+function agregarVajilla() {
+  const nombre = document.getElementById('vajilla-nombre').value.trim();
+  const cantidad = parseInt(document.getElementById('vajilla-cantidad').value) || 1;
+  if (!nombre) { document.getElementById('vajilla-nombre').focus(); return; }
+  vajilla.push({ nombre, cantidad });
+  document.getElementById('vajilla-nombre').value = '';
+  document.getElementById('vajilla-cantidad').value = '1';
+  renderVajilla();
+}
+
+function eliminarVajilla(i) {
+  vajilla.splice(i, 1);
+  renderVajilla();
+}
+
+function renderVajilla() {
+  const el = document.getElementById('lista-vajilla');
+  if (!vajilla.length) {
+    el.innerHTML = '<p class="list-empty">No hay vajilla agregada todavía.</p>';
+    return;
+  }
+  el.innerHTML = vajilla.map((v, i) => `
+    <div class="item-row">
+      <span class="item-nombre">${v.nombre}</span>
+      <span class="item-detalle">${v.cantidad} unidades</span>
+      <button type="button" class="btn-remove" onclick="eliminarVajilla(${i})">
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </button>
+    </div>
+  `).join('');
+  document.getElementById('vajilla_json').value = JSON.stringify(vajilla);
+}
+
+// ── Calendario mini ──────────────────────────────────
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+let calFecha = new Date();
+let calSeleccionado = null;
+
+function renderCal() {
+  const hoy = new Date();
+  const anio = calFecha.getFullYear();
+  const mes = calFecha.getMonth();
+  const primerDia = new Date(anio, mes, 1).getDay();
+  const diasMes = new Date(anio, mes + 1, 0).getDate();
+
+  let html = `
+    <div class="cal-header">
+      <button type="button" class="cal-nav" onclick="calMes(-1)">&#8249;</button>
+      <span>${MESES[mes]} ${anio}</span>
+      <button type="button" class="cal-nav" onclick="calMes(1)">&#8250;</button>
+    </div>
+    <div class="cal-grid">
+  `;
+  DIAS.forEach(d => html += `<div class="cal-day-name">${d}</div>`);
+  for (let i = 0; i < primerDia; i++) html += `<div class="cal-day vacio"></div>`;
+  for (let d = 1; d <= diasMes; d++) {
+    const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let cls = 'cal-day';
+    if (hoy.getDate()===d && hoy.getMonth()===mes && hoy.getFullYear()===anio) cls += ' hoy';
+    if (calSeleccionado === fechaStr) cls += ' seleccionado';
+    html += `<div class="${cls}" onclick="selDia('${fechaStr}', ${d})">${d}</div>`;
+  }
+  html += '</div>';
+  document.getElementById('mini-cal').innerHTML = html;
+}
+
+function calMes(dir) {
+  calFecha.setMonth(calFecha.getMonth() + dir);
+  renderCal();
+}
+
+function selDia(fechaStr, dia) {
+  calSeleccionado = fechaStr;
+  document.getElementById('campo-fecha').value = fechaStr;
+  renderCal();
+}
+
+// Sincronizar calendario con el input de fecha
+document.getElementById('campo-fecha').addEventListener('change', function() {
+  if (this.value) {
+    calSeleccionado = this.value;
+    calFecha = new Date(this.value + 'T00:00:00');
+    renderCal();
+  }
+});
+
+renderCal();
+
+// ── Enter en inputs de platos/vajilla ────────────────
+document.getElementById('plato-costo').addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();agregarPlato();} });
+document.getElementById('vajilla-cantidad').addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();agregarVajilla();} });
+</script>
+
+  </main>
+</div>
+</body>
+</html>

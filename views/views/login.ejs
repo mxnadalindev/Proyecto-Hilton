@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0f172a">
+  <title>Acceso — Hilton Buenos Aires</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:      #0f172a;
+      --navy-800:  #1e293b;
+      --navy-700:  #334155;
+      --navy-600:  #475569;
+      --slate-400: #94a3b8;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --white:     #ffffff;
+      --accent:    #3b82f6;
+      --accent-h:  #2563eb;
+      --accent-l:  #dbeafe;
+      --gold:      #c9a84c;
+      --error:     #ef4444;
+      --error-l:   #fef2f2;
+      --success:   #22c55e;
+      --tr:        0.2s ease;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 15px;
+      background: var(--navy);
+      color: var(--white);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* ── Panel izquierdo ── */
+    .panel-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+      background: var(--navy);
+    }
+
+    .panel-left::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .panel-left::after {
+      content: '';
+      position: absolute;
+      bottom: -150px; right: -100px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .brand { position: relative; z-index: 1; }
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+    .brand-icon {
+      width: 42px; height: 42px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: var(--white);
+    }
+    .brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--white);
+    }
+    .brand-sub {
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--slate-400);
+    }
+
+    .hero-content { position: relative; z-index: 1; }
+    .hero-eyebrow {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: block;
+      width: 24px; height: 1px;
+      background: var(--accent);
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      font-weight: 400;
+      line-height: 1.2;
+      color: var(--white);
+      margin-bottom: 20px;
+    }
+    .hero-title span { color: var(--gold); }
+    .hero-desc {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: var(--slate-400);
+      max-width: 360px;
+      margin-bottom: 48px;
+    }
+
+    .features { display: flex; flex-direction: column; gap: 16px; }
+    .feature {
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .feature-icon {
+      width: 32px; height: 32px; flex-shrink: 0;
+      background: rgba(59,130,246,0.1);
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; color: var(--accent);
+    }
+    .feature-text strong {
+      display: block; font-size: 0.83rem; font-weight: 500;
+      color: var(--white); margin-bottom: 2px;
+    }
+    .feature-text span { font-size: 0.75rem; color: var(--slate-400); }
+
+    .panel-left-footer {
+      position: relative; z-index: 1;
+      font-size: 0.72rem;
+      color: var(--navy-600);
+    }
+
+    /* ── Panel derecho ── */
+    .panel-right {
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      position: relative;
+    }
+
+    .form-box {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .form-header { margin-bottom: 36px; }
+    .form-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 400;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+    .form-subtitle {
+      font-size: 0.85rem;
+      color: var(--navy-600);
+    }
+
+    /* Error banner */
+    .error-banner {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--error-l);
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      font-size: 0.82rem;
+      color: #dc2626;
+      animation: slideDown 0.2s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Campos */
+    .field { margin-bottom: 18px; }
+    .field-label {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 7px;
+    }
+    .field-label span {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--navy);
+      letter-spacing: 0.03em;
+    }
+    .field-label a {
+      font-size: 0.72rem;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .field-label a:hover { text-decoration: underline; }
+
+    .input-wrap {
+      position: relative;
+      display: flex; align-items: center;
+    }
+    .input-icon {
+      position: absolute; left: 14px;
+      font-size: 17px; color: var(--slate-400);
+      pointer-events: none;
+      transition: color var(--tr);
+    }
+    .input-wrap input {
+      width: 100%;
+      height: 46px;
+      background: var(--slate-100);
+      border: 1.5px solid var(--slate-200);
+      border-radius: 10px;
+      padding: 0 44px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      color: var(--navy);
+      outline: none;
+      transition: border-color var(--tr), background var(--tr), box-shadow var(--tr);
+    }
+    .input-wrap input::placeholder { color: var(--slate-400); }
+    .input-wrap input:focus {
+      background: var(--white);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+    }
+    .input-wrap input:focus ~ .input-icon,
+    .input-wrap input:focus + .input-icon { color: var(--accent); }
+    .input-wrap .input-icon:first-child { left: 14px; }
+    .input-wrap input:focus + * .input-icon { color: var(--accent); }
+
+    .toggle-pass {
+      position: absolute; right: 14px;
+      background: none; border: none;
+      font-size: 17px; color: var(--slate-400);
+      cursor: pointer; padding: 4px;
+      transition: color var(--tr);
+    }
+    .toggle-pass:hover { color: var(--navy); }
+
+    .field-valid .input-wrap input { border-color: var(--success); }
+    .field-error .input-wrap input { border-color: var(--error); background: var(--error-l); }
+
+    /* Checkbox recordarme */
+    .check-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 22px;
+    }
+    .check-row input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .check-row label {
+      font-size: 0.8rem;
+      color: var(--navy-600);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Botón */
+    .btn-submit {
+      width: 100%;
+      height: 48px;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background var(--tr), transform var(--tr), box-shadow var(--tr);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-submit::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background var(--tr);
+    }
+    .btn-submit:hover {
+      background: var(--accent-h);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(59,130,246,0.3);
+    }
+    .btn-submit:active { transform: translateY(0); box-shadow: none; }
+    .btn-submit:disabled {
+      opacity: 0.7; cursor: not-allowed; transform: none;
+    }
+    .btn-submit .spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: var(--white);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-submit.loading .spinner { display: block; }
+    .btn-submit.loading .btn-text { opacity: 0; position: absolute; }
+
+    /* Divider */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 24px 0;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1;
+      height: 1px; background: var(--slate-200);
+    }
+    .divider span { font-size: 0.72rem; color: var(--slate-400); }
+
+    /* Badge sistema */
+    .system-badge {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px;
+      background: var(--slate-100);
+      border-radius: 10px;
+      font-size: 0.72rem;
+      color: var(--navy-600);
+    }
+    .system-badge i { font-size: 15px; color: var(--accent); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body { grid-template-columns: 1fr; }
+      .panel-left { display: none; }
+      .panel-right { padding: 32px 24px; min-height: 100vh; background: var(--navy); }
+      .form-box { max-width: 100%; }
+      .form-title { color: var(--white); }
+      .form-subtitle { color: var(--slate-400); }
+      .field-label span { color: var(--slate-200); }
+      .field-label a { color: var(--accent); }
+      .check-row label { color: var(--slate-400); }
+      .input-wrap input { background: var(--navy-800); border-color: var(--navy-700); color: var(--white); }
+      .input-wrap input::placeholder { color: var(--navy-600); }
+      .input-wrap input:focus { background: var(--navy-700); }
+      .system-badge { background: var(--navy-800); }
+    }
+
+    @media (max-width: 480px) {
+      .panel-right { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Panel izquierdo -->
+<div class="panel-left">
+  <div class="brand">
+    <div class="brand-logo">
+      <div class="brand-icon">
+        <i class="ti ti-building" aria-hidden="true"></i>
+      </div>
+      <div>
+        <div class="brand-name">Hilton</div>
+        <div class="brand-sub">Buenos Aires</div>
+      </div>
+    </div>
+
+    <div class="hero-content">
+      <p class="hero-eyebrow">Portal interno</p>
+      <h1 class="hero-title">
+        Gestión<br>gastronómica<br><span>inteligente</span>
+      </h1>
+      <p class="hero-desc">
+        Plataforma centralizada para la gestión operativa del equipo de cocina. Horarios, recetas, eventos y costos en un solo lugar.
+      </p>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon"><i class="ti ti-clock" aria-hidden="true"></i></div>
+          <div class="feature-text">
+            <strong>Horarios automáticos</strong>
+            <span>Generación inteligente por turnos y jerarquía</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon"><i class="ti ti-chef-hat" aria-hidden="true"></i></div>
+          <div class="feature-text">
+            <strong>Biblioteca de recetas</strong>
+            <span>Recetario digital con videos e imágenes</span>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon"><i class="ti ti-coin" aria-hidden="true"></i></div>
+          <div class="feature-text">
+            <strong>Control de costos</strong>
+            <span>Costeo automático de platos e insumos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-left-footer">
+    © 2026 Hilton Buenos Aires · Future Lab
+  </div>
+</div>
+
+<!-- Panel derecho -->
+<div class="panel-right">
+  <div class="form-box">
+
+    <div class="form-header">
+      <h2 class="form-title">Bienvenido</h2>
+      <p class="form-subtitle">Ingresá con tu cuenta corporativa para continuar</p>
+    </div>
+
+    <% if (error) { %>
+    <div class="error-banner" role="alert">
+      <i class="ti ti-alert-circle" aria-hidden="true"></i>
+      <%= error %>
+    </div>
+    <% } %>
+
+    <form method="POST" action="/login" id="loginForm" novalidate>
+
+      <div class="field" id="field-email">
+        <div class="field-label">
+          <span>Correo electrónico</span>
+        </div>
+        <div class="input-wrap">
+          <i class="ti ti-mail input-icon" aria-hidden="true"></i>
+          <input
+            type="email"
+            name="email"
+            id="email"
+            placeholder="tu.nombre@hilton.com"
+            autocomplete="email"
+            required
+            aria-label="Correo electrónico"
+          >
+        </div>
+      </div>
+
+      <div class="field" id="field-pass">
+        <div class="field-label">
+          <span>Contraseña</span>
+          <span style="font-size:0.7rem;color:var(--slate-400);">Contactá al administrador</span>
+        </div>
+        <div class="input-wrap">
+          <i class="ti ti-lock input-icon" aria-hidden="true"></i>
+          <input
+            type="password"
+            name="password"
+            id="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+            aria-label="Contraseña"
+          >
+          <button type="button" class="toggle-pass" id="togglePass" aria-label="Mostrar contraseña">
+            <i class="ti ti-eye" id="eyeIcon" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <input type="checkbox" id="remember" name="remember">
+        <label for="remember">Mantener sesión iniciada</label>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">
+        <div class="spinner" aria-hidden="true"></div>
+        <span class="btn-text">Ingresar al portal</span>
+        <i class="ti ti-arrow-right btn-text" aria-hidden="true"></i>
+      </button>
+
+    </form>
+
+    <div class="divider"><span>Sistema seguro</span></div>
+
+    <div class="system-badge">
+      <i class="ti ti-shield-check" aria-hidden="true"></i>
+      Acceso restringido al personal autorizado · Red interna Hilton
+    </div>
+
+  </div>
+</div>
+
+<script>
+const togglePass = document.getElementById('togglePass');
+const passInput  = document.getElementById('password');
+const eyeIcon    = document.getElementById('eyeIcon');
+
+togglePass.addEventListener('click', () => {
+  const visible = passInput.type === 'text';
+  passInput.type = visible ? 'password' : 'text';
+  eyeIcon.className = visible ? 'ti ti-eye' : 'ti ti-eye-off';
+});
+
+const emailInput = document.getElementById('email');
+emailInput.addEventListener('blur', () => {
+  const field = document.getElementById('field-email');
+  if (emailInput.value && emailInput.checkValidity()) {
+    field.className = 'field field-valid';
+  } else if (emailInput.value) {
+    field.className = 'field field-error';
+  }
+});
+
+document.getElementById('loginForm').addEventListener('submit', (e) => {
+  const btn = document.getElementById('submitBtn');
+  if (emailInput.value && passInput.value) {
+    btn.classList.add('loading');
+    btn.disabled = true;
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    document.getElementById('submitBtn').click();
+  }
+});
+</script>
+
+</body>
+</html>

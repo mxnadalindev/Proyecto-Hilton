@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Costos — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <header class="header">
+    <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
+    <nav class="header-nav">
+      <a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
+      <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
+      <a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a>
+      <a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
+      <a href="/costos"   class="nav-link activo"><i class="ti ti-coin"></i> Costos</a>
+    </nav>
+    <div class="header-user">
+      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+      <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i> Salir</a>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Portal interno</p>
+        <h1 class="seccion-titulo">Costos</h1>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú</a>
+        <button onclick="showModal('modal-insumo')" class="btn-secondary">
+          <i class="ti ti-plus"></i> Nuevo insumo
+        </button>
+        <button onclick="showModal('modal-plato')" class="btn-primary">
+          <i class="ti ti-tools-kitchen-2"></i> Nuevo plato
+        </button>
+      </div>
+    </div>
+
+    <!-- Aviso factura IA -->
+    <% if (typeof msg !== 'undefined' && msg === 'foto_recibida') { %>
+    <div style="background:var(--azul-claro);border:1px solid var(--azul-borde);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:var(--azul);display:flex;align-items:center;gap:10px;">
+      <i class="ti ti-check" style="font-size:18px;"></i>
+      Foto recibida. La actualización automática de precios estará disponible cuando se configure la API de Google Gemini.
+    </div>
+    <% } %>
+
+    <!-- Subir factura -->
+    <div style="background:var(--blanco);border:1px dashed var(--azul-borde);border-radius:12px;padding:20px 24px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div>
+        <p style="font-size:0.78rem;font-weight:600;color:var(--azul);margin:0 0 4px;"><i class="ti ti-camera"></i> Actualización automática de precios por foto</p>
+        <p style="font-size:0.75rem;color:var(--gris-texto);margin:0;">Subí una foto de factura o lista de precios y la IA actualizará los insumos automáticamente.</p>
+      </div>
+      <form method="POST" action="/costos/factura" enctype="multipart/form-data" style="display:flex;align-items:center;gap:8px;">
+        <input type="file" name="factura" accept="image/*" required
+               style="font-size:0.78rem;color:var(--gris-texto);">
+        <button type="submit" class="btn-primary" style="white-space:nowrap;">
+          <i class="ti ti-upload"></i> Subir factura
+        </button>
+      </form>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+      <!-- INSUMOS -->
+      <div>
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--azul);margin-bottom:14px;">
+          <i class="ti ti-package"></i> Insumos / ingredientes
+        </p>
+        <div class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Insumo</th>
+                <th>Categoría</th>
+                <th>Unidad</th>
+                <th>Precio</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (insumos.length > 0) { %>
+                <% insumos.forEach(ins => { %>
+                <tr>
+                  <td style="font-weight:500;"><%= ins.nombre %></td>
+                  <td><span class="puesto-badge"><%= ins.categoria %></span></td>
+                  <td style="color:var(--gris-texto);font-size:0.78rem;"><%= ins.unidad %></td>
+                  <td>
+                    <form method="POST" action="/costos/insumo/<%= ins.id %>/precio" style="display:flex;gap:4px;align-items:center;">
+                      <span style="font-size:0.78rem;color:var(--gris-texto);">$</span>
+                      <input type="number" name="precio_nuevo" value="<%= ins.precio_unitario %>" step="0.01" min="0"
+                             style="width:80px;padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.82rem;outline:none;">
+                      <button type="submit" class="btn-sm" style="padding:4px 8px;">✓</button>
+                    </form>
+                  </td>
+                  <td>
+                    <form method="POST" action="/costos/insumo/<%= ins.id %>/eliminar"
+                          onsubmit="return confirm('¿Eliminar este insumo?')" style="margin:0;">
+                      <button type="submit" style="background:none;border:none;color:var(--gris-borde);cursor:pointer;font-size:15px;" title="Eliminar">
+                        <i class="ti ti-trash"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                <% }) %>
+              <% } else { %>
+                <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
+                  Sin insumos. Agregá el primero.
+                </td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PLATOS -->
+      <div>
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--azul);margin-bottom:14px;">
+          <i class="ti ti-tools-kitchen-2"></i> Costeo de platos
+        </p>
+        <div class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Plato</th>
+                <th>Costo</th>
+                <th>Margen</th>
+                <th>Precio venta</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (platos.length > 0) { %>
+                <% platos.forEach(p => { %>
+                <tr>
+                  <td style="font-weight:500;">
+                    <a href="/costos/plato/<%= p.id %>" style="color:var(--negro);text-decoration:none;">
+                      <%= p.nombre %>
+                    </a>
+                  </td>
+                  <td style="color:var(--azul);font-weight:600;">$<%= parseFloat(p.costo_total).toFixed(2) %></td>
+                  <td>
+                    <span style="font-size:0.72rem;background:var(--azul-claro);color:var(--azul);padding:2px 8px;border-radius:20px;font-weight:500;">
+                      <%= p.margen_ganancia %>%
+                    </span>
+                  </td>
+                  <td style="font-weight:600;color:#16a34a;">
+                    $<%= (parseFloat(p.costo_total) * (1 + parseFloat(p.margen_ganancia)/100)).toFixed(2) %>
+                  </td>
+                  <td>
+                    <a href="/costos/plato/<%= p.id %>" class="btn-sm">Ver</a>
+                  </td>
+                </tr>
+                <% }) %>
+              <% } else { %>
+                <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
+                  Sin platos. Agregá el primero.
+                </td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal nuevo insumo -->
+<div id="modal-insumo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Nuevo insumo</h2>
+      <button onclick="hideModal('modal-insumo')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <form method="POST" action="/costos/insumo/nuevo">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="field" style="grid-column:1/-1;">
+          <label>Nombre del insumo</label>
+          <input type="text" name="nombre" placeholder="Ej: Harina 000" required>
+        </div>
+        <div class="field">
+          <label>Categoría</label>
+          <input type="text" name="categoria" placeholder="Ej: Lácteos, Carnes">
+        </div>
+        <div class="field">
+          <label>Unidad de medida</label>
+          <select name="unidad" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="lt">lt</option>
+            <option value="ml">ml</option>
+            <option value="unidad">unidad</option>
+            <option value="docena">docena</option>
+            <option value="caja">caja</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Precio por unidad ($)</label>
+          <input type="number" name="precio_unitario" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="field">
+          <label>Stock actual</label>
+          <input type="number" name="stock_actual" placeholder="0" step="0.01" min="0">
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Proveedor</label>
+          <input type="text" name="proveedor" placeholder="Ej: Distribuidora XYZ">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
+        <button type="button" onclick="hideModal('modal-insumo')" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> Agregar insumo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal nuevo plato -->
+<div id="modal-plato" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Nuevo plato</h2>
+      <button onclick="hideModal('modal-plato')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <form method="POST" action="/costos/plato/nuevo">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="field" style="grid-column:1/-1;">
+          <label>Nombre del plato</label>
+          <input type="text" name="nombre" placeholder="Ej: Risotto de hongos" required>
+        </div>
+        <div class="field">
+          <label>Categoría</label>
+          <input type="text" name="categoria" placeholder="Ej: Principal">
+        </div>
+        <div class="field">
+          <label>Porciones que rinde</label>
+          <input type="number" name="porciones" placeholder="1" min="1" value="1">
+        </div>
+        <div class="field">
+          <label>Margen de ganancia (%)</label>
+          <input type="number" name="margen_ganancia" placeholder="30" min="0" max="100" value="30">
+        </div>
+        <div class="field">
+          <label>Precio de venta ($)</label>
+          <input type="number" name="precio_venta" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
+        <button type="button" onclick="hideModal('modal-plato')" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> Crear plato</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.puesto-badge { font-size:0.68rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:2px 8px;border-radius:20px; }
+.field { margin-bottom:0; }
+.field label { display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px; }
+.field input, .field select { width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;transition:border-color 0.2s; }
+.field input:focus { border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);background:var(--blanco); }
+</style>
+
+<script>
+function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+</script>
+
+</body>
+</html>

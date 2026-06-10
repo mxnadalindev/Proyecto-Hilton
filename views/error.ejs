@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--gris-fondo);">
+  <div style="background:var(--blanco);border-radius:16px;padding:48px;max-width:480px;width:90%;text-align:center;box-shadow:var(--sombra-md);">
+    <div style="width:64px;height:64px;background:#fef2f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:#dc2626;">
+      <i class="ti ti-lock" aria-hidden="true"></i>
+    </div>
+    <h1 style="font-family:var(--font-serif);font-size:1.6rem;font-weight:400;color:var(--negro);margin-bottom:12px;">Acceso denegado</h1>
+    <p style="font-size:0.85rem;color:var(--gris-texto);line-height:1.6;margin-bottom:28px;"><%= mensaje %></p>
+    <a href="<%= volver %>" class="btn-primary" style="display:inline-flex;">
+      <i class="ti ti-arrow-left"></i> Volver
+    </a>
+  </div>
+</div>
+</body>
+</html>

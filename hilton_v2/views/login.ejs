@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso — Hilton Buenos Aires</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-visual">
+    <div class="login-visual-inner">
+      <div class="login-logo-text"><span class="logo-moneda">Hilton</span></div>
+      <div class="login-logo-sub">Buenos Aires · Portal Interno</div>
+      <div class="login-divider"></div>
+      <p class="login-tagline">Bienvenido al sistema<br>de gestión del equipo.</p>
+    </div>
+  </div>
+
+  <div class="login-form-side">
+    <div class="login-form-box">
+      <h1 class="login-form-title">Acceso</h1>
+      <p class="login-form-hint">Ingresá con tu cuenta corporativa</p>
+
+      <% if (error) { %>
+        <div class="error-msg"><%= error %></div>
+      <% } %>
+
+      <form method="POST" action="/login">
+        <div class="form-field">
+          <label for="email">Correo electrónico</label>
+          <input type="email" id="email" name="email" placeholder="tu.nombre@hilton.com" required autocomplete="email">
+        </div>
+        <div class="form-field">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" name="password" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn-login">Ingresar al portal</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

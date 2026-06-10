@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0f172a">
+  <title>Acceso — Hilton Buenos Aires</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:      #0f172a;
+      --navy-800:  #1e293b;
+      --navy-700:  #334155;
+      --navy-600:  #475569;
+      --slate-400: #94a3b8;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --white:     #ffffff;
+      --accent:    #2563eb;
+      --accent-h:  #1d4ed8;
+      --accent-l:  #dbeafe;
+      --gold:      #c9a84c;
+      --error:     #ef4444;
+      --error-l:   #fef2f2;
+      --success:   #22c55e;
+      --info-l:    #eff6ff;
+      --info:      #1d4ed8;
+      --tr:        0.2s ease;
+    }
+    html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; }
+    body {
+      background: var(--navy);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* ── Panel izquierdo ── */
+    .panel-left {
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      padding: 48px; position: relative; overflow: hidden;
+    }
+    .panel-left::before {
+      content: ''; position: absolute; top: -200px; left: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .panel-left::after {
+      content: ''; position: absolute; bottom: -150px; right: -100px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .brand { position: relative; z-index: 1; }
+    .brand-logo { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 48px; }
+    .brand-icon {
+      width: 42px; height: 42px; background: var(--accent);
+      border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; font-size: 20px; color: var(--white);
+    }
+    .brand-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 500; color: var(--white); }
+    .brand-sub { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--slate-400); }
+    .hero-content { position: relative; z-index: 1; }
+    .hero-eyebrow {
+      font-size: 0.68rem; font-weight: 500; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .hero-eyebrow::before { content: ''; display: block; width: 24px; height: 1px; background: var(--accent); }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 400;
+      line-height: 1.2; color: var(--white); margin-bottom: 20px;
+    }
+    .hero-title span { color: var(--gold); }
+    .hero-desc { font-size: 0.9rem; line-height: 1.7; color: var(--slate-400); max-width: 360px; margin-bottom: 48px; }
+    .features { display: flex; flex-direction: column; gap: 16px; }
+    .feature { display: flex; align-items: flex-start; gap: 12px; }
+    .feature-icon {
+      width: 32px; height: 32px; flex-shrink: 0;
+      background: rgba(37,99,235,0.1); border: 1px solid rgba(37,99,235,0.2);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-size: 15px; color: var(--accent);
+    }
+    .feature-text strong { display: block; font-size: 0.83rem; font-weight: 500; color: var(--white); margin-bottom: 2px; }
+    .feature-text span { font-size: 0.75rem; color: var(--slate-400); }
+    .panel-footer { position: relative; z-index: 1; font-size: 0.72rem; color: var(--navy-600); }
+
+    /* ── Panel derecho ── */
+    .panel-right {
+      background: var(--white); display: flex;
+      align-items: center; justify-content: center; padding: 48px;
+    }
+    .form-box { width: 100%; max-width: 420px; }
+
+    /* Tabs login / registro */
+    .tabs {
+      display: flex; border-bottom: 2px solid var(--slate-200);
+      margin-bottom: 28px; gap: 0;
+    }
+    .tab-btn {
+      flex: 1; background: none; border: none; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 500;
+      color: var(--slate-400); padding: 12px 8px;
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      transition: all var(--tr);
+    }
+    .tab-btn.activo { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-btn:hover:not(.activo) { color: var(--navy); }
+
+    /* Paneles de tab */
+    .tab-panel { display: none; }
+    .tab-panel.activo { display: block; }
+
+    .form-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 400; color: var(--navy); margin-bottom: 6px; }
+    .form-subtitle { font-size: 0.85rem; color: var(--navy-600); margin-bottom: 24px; }
+
+    /* Banners */
+    .banner {
+      display: flex; align-items: center; gap: 10px;
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 18px;
+      font-size: 0.82rem; animation: slideDown 0.2s ease;
+    }
+    @keyframes slideDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+    .banner-error { background: var(--error-l); border: 1px solid #fecaca; color: #dc2626; }
+    .banner-info  { background: var(--info-l);  border: 1px solid #bfdbfe; color: var(--info); }
+    .banner-ok    { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
+
+    /* Campos */
+    .field { margin-bottom: 16px; }
+    .field-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+    .field-label span { font-size: 0.75rem; font-weight: 500; color: var(--navy); }
+    .field-label a { font-size: 0.72rem; color: var(--accent); text-decoration: none; cursor: pointer; }
+    .field-label a:hover { text-decoration: underline; }
+    .input-wrap { position: relative; display: flex; align-items: center; }
+    .input-icon { position: absolute; left: 14px; font-size: 17px; color: var(--slate-400); pointer-events: none; transition: color var(--tr); }
+    .input-wrap input {
+      width: 100%; height: 46px;
+      background: var(--slate-100); border: 1.5px solid var(--slate-200);
+      border-radius: 10px; padding: 0 44px;
+      font-family: 'Inter', sans-serif; font-size: 0.88rem; color: var(--navy);
+      outline: none; transition: border-color var(--tr), box-shadow var(--tr), background var(--tr);
+    }
+    .input-wrap input::placeholder { color: var(--slate-400); }
+    .input-wrap input:focus {
+      background: var(--white); border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+    .toggle-pass {
+      position: absolute; right: 14px; background: none; border: none;
+      font-size: 17px; color: var(--slate-400); cursor: pointer; padding: 4px;
+      transition: color var(--tr);
+    }
+    .toggle-pass:hover { color: var(--navy); }
+
+    /* Recordar usuarios */
+    .usuarios-recordados {
+      background: var(--slate-100); border: 1px solid var(--slate-200);
+      border-radius: 8px; margin-top: 4px; overflow: hidden;
+      display: none; max-height: 160px; overflow-y: auto;
+    }
+    .usuario-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px; cursor: pointer;
+      transition: background var(--tr); font-size: 0.82rem; color: var(--navy);
+    }
+    .usuario-item:hover { background: var(--accent-l, #dbeafe); }
+    .usuario-item i { color: var(--slate-400); font-size: 15px; }
+    .usuario-item-email { flex: 1; }
+    .usuario-item-del {
+      background: none; border: none; cursor: pointer;
+      color: var(--slate-400); font-size: 14px; padding: 2px 4px;
+      border-radius: 4px; transition: color var(--tr);
+    }
+    .usuario-item-del:hover { color: #dc2626; }
+
+    /* Checkbox */
+    .check-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .check-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+    .check-row label { font-size: 0.8rem; color: var(--navy-600); cursor: pointer; user-select: none; }
+
+    /* Botón principal */
+    .btn-submit {
+      width: 100%; height: 48px; background: var(--accent); border: none;
+      border-radius: 10px; color: var(--white);
+      font-family: 'Inter', sans-serif; font-size: 0.82rem;
+      font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 8px; transition: background var(--tr), transform var(--tr), box-shadow var(--tr);
+      position: relative;
+    }
+    .btn-submit:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(37,99,235,0.3); }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: var(--white); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-submit.loading .spinner { display: block; }
+    .btn-submit.loading .btn-text { opacity: 0; position: absolute; }
+
+    /* Password strength */
+    .pass-strength { margin-top: 6px; }
+    .strength-bar { height: 3px; border-radius: 3px; background: var(--slate-200); margin-bottom: 4px; overflow: hidden; }
+    .strength-fill { height: 100%; border-radius: 3px; transition: all var(--tr); width: 0%; }
+    .strength-text { font-size: 0.68rem; color: var(--slate-400); }
+
+    /* Divider */
+    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--slate-200); }
+    .divider span { font-size: 0.72rem; color: var(--slate-400); }
+
+    .system-badge {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px; background: var(--slate-100); border-radius: 10px;
+      font-size: 0.72rem; color: var(--navy-600);
+    }
+    .system-badge i { font-size: 15px; color: var(--accent); }
+
+    /* Panel recuperar contraseña */
+    #panel-recuperar { display: none; }
+    #panel-recuperar.activo { display: block; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body { grid-template-columns: 1fr; }
+      .panel-left { display: none; }
+      .panel-right { padding: 32px 24px; min-height: 100vh; background: var(--navy); }
+      .form-box { max-width: 100%; }
+      .form-title, .tab-btn { color: var(--white); }
+      .tab-btn.activo { color: var(--accent); }
+      .form-subtitle, .field-label span, .check-row label { color: var(--slate-400); }
+      .tabs { border-bottom-color: var(--navy-700); }
+      .input-wrap input { background: var(--navy-800); border-color: var(--navy-700); color: var(--white); }
+      .input-wrap input::placeholder { color: var(--navy-600); }
+      .input-wrap input:focus { background: var(--navy-700); }
+      .system-badge { background: var(--navy-800); }
+      .usuarios-recordados { background: var(--navy-700); border-color: var(--navy-600); }
+      .usuario-item { color: var(--white); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Panel izquierdo -->
+<div class="panel-left">
+  <div class="brand">
+    <div class="brand-logo">
+      <div class="brand-icon"><i class="ti ti-building"></i></div>
+      <div>
+        <div class="brand-name">Hilton</div>
+        <div class="brand-sub">Buenos Aires</div>
+      </div>
+    </div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">Portal interno</p>
+      <h1 class="hero-title">Gestión<br>gastronómica<br><span>inteligente</span></h1>
+      <p class="hero-desc">Plataforma centralizada para la gestión operativa del equipo de cocina. Horarios, recetas, eventos y costos en un solo lugar.</p>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon"><i class="ti ti-clock"></i></div>
+          <div class="feature-text"><strong>Horarios automáticos</strong><span>Generación inteligente por turnos</span></div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon"><i class="ti ti-chef-hat"></i></div>
+          <div class="feature-text"><strong>Biblioteca de recetas</strong><span>Recetario digital con videos</span></div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon"><i class="ti ti-coin"></i></div>
+          <div class="feature-text"><strong>Control de costos</strong><span>Costeo automático de platos</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel-footer">© 2026 Hilton Buenos Aires · Future Lab</div>
+</div>
+
+<!-- Panel derecho -->
+<div class="panel-right">
+  <div class="form-box">
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn activo" onclick="cambiarTab('login', this)">
+        <i class="ti ti-login"></i> Iniciar sesión
+      </button>
+      <button class="tab-btn" onclick="cambiarTab('registro', this)">
+        <i class="ti ti-user-plus"></i> Crear cuenta
+      </button>
+    </div>
+
+    <!-- ══ TAB LOGIN ══ -->
+    <div id="tab-login" class="tab-panel activo">
+
+      <h2 class="form-title">Bienvenido</h2>
+      <p class="form-subtitle">Ingresá con tu cuenta corporativa</p>
+
+      <% if (typeof info !== 'undefined' && info) { %>
+      <div class="banner banner-info"><i class="ti ti-info-circle"></i><%= info %></div>
+      <% } %>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+      <div class="banner banner-error"><i class="ti ti-alert-circle"></i><%= error %></div>
+      <% } %>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+      <div class="banner banner-ok"><i class="ti ti-check"></i><%= success %></div>
+      <% } %>
+
+      <form method="POST" action="/login" id="loginForm" novalidate autocomplete="off">
+
+        <div class="field">
+          <div class="field-label"><span>Correo electrónico</span></div>
+          <div class="input-wrap">
+            <i class="ti ti-mail input-icon"></i>
+            <input type="email" name="email" id="emailInput"
+                   placeholder="tu.nombre@hilton.com"
+                   autocomplete="email" required
+                   onfocus="mostrarRecordados()"
+                   onblur="setTimeout(()=>ocultarRecordados(),200)"
+                   oninput="filtrarRecordados(this.value)">
+            <button type="button" id="btnLimpiarEmail"
+                    style="display:none;position:absolute;right:12px;background:none;border:none;cursor:pointer;color:var(--slate-400);font-size:16px;"
+                    onclick="limpiarEmail()">
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
+          <!-- Lista usuarios recordados -->
+          <div class="usuarios-recordados" id="listaRecordados"></div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <span>Contraseña</span>
+            <a onclick="mostrarRecuperar()">¿Olvidaste tu contraseña?</a>
+          </div>
+          <div class="input-wrap">
+            <i class="ti ti-lock input-icon"></i>
+            <input type="password" name="password" id="passLogin"
+                   placeholder="••••••••" autocomplete="current-password" required>
+            <button type="button" class="toggle-pass" onclick="togglePass('passLogin', 'eyeLogin')">
+              <i class="ti ti-eye" id="eyeLogin"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="check-row">
+          <input type="checkbox" id="recordarme" name="recordarme" checked>
+          <label for="recordarme">Recordar mi usuario en este dispositivo</label>
+        </div>
+
+        <button type="submit" class="btn-submit" id="btnLogin">
+          <div class="spinner"></div>
+          <span class="btn-text">Ingresar al portal</span>
+          <i class="ti ti-arrow-right btn-text"></i>
+        </button>
+
+      </form>
+
+      <div class="divider"><span>acceso seguro</span></div>
+      <div class="system-badge">
+        <i class="ti ti-shield-check"></i>
+        Acceso restringido · Red interna Hilton
+      </div>
+    </div>
+
+    <!-- ══ TAB REGISTRO ══ -->
+    <div id="tab-registro" class="tab-panel">
+
+      <h2 class="form-title">Crear cuenta</h2>
+      <p class="form-subtitle">Completá los datos para registrarte</p>
+
+      <% if (typeof errorReg !== 'undefined' && errorReg) { %>
+      <div class="banner banner-error"><i class="ti ti-alert-circle"></i><%= errorReg %></div>
+      <% } %>
+
+      <form method="POST" action="/registro" id="regForm" novalidate>
+
+        <div class="field">
+          <div class="field-label"><span>Nombre completo</span></div>
+          <div class="input-wrap">
+            <i class="ti ti-user input-icon"></i>
+            <input type="text" name="nombre" placeholder="Juan García" required
+                   style="padding: 0 14px 0 44px;">
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><span>Correo electrónico</span></div>
+          <div class="input-wrap">
+            <i class="ti ti-mail input-icon"></i>
+            <input type="email" name="email" placeholder="tu.nombre@hilton.com" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><span>Contraseña</span></div>
+          <div class="input-wrap">
+            <i class="ti ti-lock input-icon"></i>
+            <input type="password" name="password" id="passReg"
+                   placeholder="Mín. 8 caracteres" required
+                   oninput="checkStrength(this.value)">
+            <button type="button" class="toggle-pass" onclick="togglePass('passReg', 'eyeReg')">
+              <i class="ti ti-eye" id="eyeReg"></i>
+            </button>
+          </div>
+          <div class="pass-strength">
+            <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+            <span class="strength-text" id="strengthText">Ingresá una contraseña</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><span>Confirmar contraseña</span></div>
+          <div class="input-wrap">
+            <i class="ti ti-lock-check input-icon"></i>
+            <input type="password" name="password2" id="passReg2"
+                   placeholder="Repetí la contraseña" required
+                   oninput="checkMatch()">
+            <button type="button" class="toggle-pass" onclick="togglePass('passReg2', 'eyeReg2')">
+              <i class="ti ti-eye" id="eyeReg2"></i>
+            </button>
+          </div>
+          <p id="matchMsg" style="font-size:0.7rem;margin-top:4px;display:none;"></p>
+        </div>
+
+        <div style="background:var(--info-l);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.75rem;color:var(--info);">
+          <i class="ti ti-info-circle"></i> La cuenta nueva quedará con rol <strong>empleado</strong>. Un administrador puede cambiar el rol desde la sección Personal.
+        </div>
+
+        <button type="submit" class="btn-submit" id="btnReg">
+          <div class="spinner"></div>
+          <span class="btn-text">Crear cuenta</span>
+          <i class="ti ti-user-plus btn-text"></i>
+        </button>
+
+      </form>
+    </div>
+
+    <!-- ══ PANEL RECUPERAR CONTRASEÑA ══ -->
+    <div id="panel-recuperar">
+      <button onclick="ocultarRecuperar()"
+              style="background:none;border:none;cursor:pointer;color:var(--slate-400);font-size:0.8rem;display:flex;align-items:center;gap:4px;margin-bottom:16px;">
+        <i class="ti ti-arrow-left"></i> Volver al login
+      </button>
+
+      <h2 class="form-title">Recuperar acceso</h2>
+      <p class="form-subtitle" style="margin-bottom:20px;">
+        Contactá al administrador del sistema para que resetee tu contraseña desde la sección <strong>Personal</strong>.
+      </p>
+
+      <div style="background:var(--slate-100);border-radius:12px;padding:20px;text-align:center;">
+        <div style="width:48px;height:48px;background:var(--accent-l);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;color:var(--accent);">
+          <i class="ti ti-user-circle"></i>
+        </div>
+        <p style="font-size:0.82rem;color:var(--navy-600);line-height:1.6;">
+          El administrador puede restablecer tu contraseña desde<br>
+          <strong>Personal → botón 🔑 → Nueva contraseña</strong>
+        </p>
+      </div>
+
+      <div class="divider"><span>o si recordás tu contraseña</span></div>
+
+      <button onclick="ocultarRecuperar()" class="btn-submit">
+        <i class="ti ti-login btn-text"></i>
+        <span class="btn-text">Volver a iniciar sesión</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Usuarios recordados ──────────────────────────────
+const KEY_USUARIOS = 'hilton_usuarios_recordados';
+
+function getUsuariosRecordados() {
+  try { return JSON.parse(localStorage.getItem(KEY_USUARIOS) || '[]'); }
+  catch(e) { return []; }
+}
+
+function guardarUsuario(email) {
+  let lista = getUsuariosRecordados();
+  lista = lista.filter(u => u !== email);
+  lista.unshift(email);
+  if (lista.length > 5) lista = lista.slice(0, 5);
+  localStorage.setItem(KEY_USUARIOS, JSON.stringify(lista));
+}
+
+function eliminarUsuario(email, e) {
+  e.stopPropagation();
+  let lista = getUsuariosRecordados();
+  lista = lista.filter(u => u !== email);
+  localStorage.setItem(KEY_USUARIOS, JSON.stringify(lista));
+  renderRecordados(lista);
+}
+
+function renderRecordados(lista) {
+  const contenedor = document.getElementById('listaRecordados');
+  if (!lista || lista.length === 0) {
+    contenedor.style.display = 'none';
+    return;
+  }
+  contenedor.innerHTML = lista.map(u => `
+    <div class="usuario-item" onclick="seleccionarUsuario('${u}')">
+      <i class="ti ti-user-circle"></i>
+      <span class="usuario-item-email">${u}</span>
+      <button class="usuario-item-del" onclick="eliminarUsuario('${u}', event)" title="Olvidar">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+  `).join('');
+  contenedor.style.display = 'block';
+}
+
+function mostrarRecordados() {
+  const lista = getUsuariosRecordados();
+  if (lista.length > 0) renderRecordados(lista);
+}
+
+function ocultarRecordados() {
+  document.getElementById('listaRecordados').style.display = 'none';
+}
+
+function filtrarRecordados(valor) {
+  const lista = getUsuariosRecordados().filter(u => u.includes(valor.toLowerCase()));
+  if (valor.length > 0) {
+    document.getElementById('btnLimpiarEmail').style.display = 'flex';
+  } else {
+    document.getElementById('btnLimpiarEmail').style.display = 'none';
+  }
+  renderRecordados(lista);
+}
+
+function seleccionarUsuario(email) {
+  document.getElementById('emailInput').value = email;
+  document.getElementById('btnLimpiarEmail').style.display = 'flex';
+  ocultarRecordados();
+  document.getElementById('passLogin').focus();
+}
+
+function limpiarEmail() {
+  document.getElementById('emailInput').value = '';
+  document.getElementById('btnLimpiarEmail').style.display = 'none';
+  document.getElementById('emailInput').focus();
+  ocultarRecordados();
+}
+
+// Guardar usuario al hacer login
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+  const email = document.getElementById('emailInput').value;
+  const recordar = document.getElementById('recordarme').checked;
+  if (recordar && email) guardarUsuario(email);
+  const btn = document.getElementById('btnLogin');
+  btn.classList.add('loading');
+  btn.disabled = true;
+});
+
+// ── Toggle contraseña ────────────────────────────────
+function togglePass(inputId, iconId) {
+  const input = document.getElementById(inputId);
+  const icon  = document.getElementById(iconId);
+  const visible = input.type === 'text';
+  input.type = visible ? 'password' : 'text';
+  icon.className = visible ? 'ti ti-eye' : 'ti ti-eye-off';
+}
+
+// ── Tabs ─────────────────────────────────────────────
+function cambiarTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('activo'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('activo'));
+  btn.classList.add('activo');
+  document.getElementById('tab-' + tab).classList.add('activo');
+  document.getElementById('panel-recuperar').classList.remove('activo');
+  document.getElementById('panel-recuperar').style.display = 'none';
+}
+
+// ── Recuperar contraseña ─────────────────────────────
+function mostrarRecuperar() {
+  document.querySelectorAll('.tab-panel').forEach(p => { p.classList.remove('activo'); p.style.display = 'none'; });
+  document.getElementById('panel-recuperar').style.display = 'block';
+  setTimeout(() => document.getElementById('panel-recuperar').classList.add('activo'), 10);
+}
+
+function ocultarRecuperar() {
+  document.getElementById('panel-recuperar').classList.remove('activo');
+  document.getElementById('panel-recuperar').style.display = 'none';
+  document.getElementById('tab-login').classList.add('activo');
+  document.getElementById('tab-login').style.display = 'block';
+}
+
+// ── Validación registro ──────────────────────────────
+function checkStrength(pass) {
+  const fill = document.getElementById('strengthFill');
+  const text = document.getElementById('strengthText');
+  let score = 0;
+  if (pass.length >= 8) score++;
+  if (/[A-Z]/.test(pass)) score++;
+  if (/[0-9]/.test(pass)) score++;
+  if (/[^A-Za-z0-9]/.test(pass)) score++;
+  const configs = [
+    { w: '0%',   color: '#e2e8f0', label: 'Ingresá una contraseña' },
+    { w: '25%',  color: '#ef4444', label: 'Contraseña débil' },
+    { w: '50%',  color: '#f59e0b', label: 'Contraseña regular' },
+    { w: '75%',  color: '#3b82f6', label: 'Contraseña buena' },
+    { w: '100%', color: '#22c55e', label: 'Contraseña segura ✓' },
+  ];
+  const c = configs[pass.length === 0 ? 0 : score];
+  fill.style.width = c.w;
+  fill.style.background = c.color;
+  text.textContent = c.label;
+  text.style.color = c.color;
+}
+
+function checkMatch() {
+  const p1 = document.getElementById('passReg').value;
+  const p2 = document.getElementById('passReg2').value;
+  const msg = document.getElementById('matchMsg');
+  if (!p2) { msg.style.display = 'none'; return; }
+  msg.style.display = 'block';
+  if (p1 === p2) {
+    msg.textContent = '✓ Las contraseñas coinciden';
+    msg.style.color = '#22c55e';
+  } else {
+    msg.textContent = '✗ Las contraseñas no coinciden';
+    msg.style.color = '#ef4444';
+  }
+}
+
+document.getElementById('regForm').addEventListener('submit', function(e) {
+  const p1 = document.getElementById('passReg').value;
+  const p2 = document.getElementById('passReg2').value;
+  if (p1 !== p2) { e.preventDefault(); alert('Las contraseñas no coinciden.'); return; }
+  const btn = document.getElementById('btnReg');
+  btn.classList.add('loading'); btn.disabled = true;
+});
+
+// Mostrar tab registro si hay error de registro
+<% if (typeof errorReg !== 'undefined' && errorReg) { %>
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.tab-btn')[1].click();
+});
+<% } %>
+</script>
+
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recetas — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <header class="header">
+    <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
+    <nav class="header-nav">
+      <a href="/eventos" class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
+      <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
+      <a href="/recetas" class="nav-link activo"><i class="ti ti-chef-hat"></i> Recetas</a>
+    </nav>
+    <div class="header-user">
+      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+      <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i> Salir</a>
+    </div>
+  </header>
+  <main class="main-content">
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Portal interno</p>
+        <h1 class="seccion-titulo">Recetas</h1>
+      </div>
+      <a href="/recetas/nueva" class="btn-primary"><i class="ti ti-plus"></i> Nueva receta</a>
+    </div>
+
+    <!-- Búsqueda -->
+    <form method="GET" action="/recetas" style="margin-bottom:24px;">
+      <div style="display:flex;gap:10px;max-width:400px;">
+        <input type="text" name="q" value="<%= busqueda %>" placeholder="Buscar receta..."
+               style="flex:1;padding:10px 14px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.85rem;outline:none;background:var(--blanco);">
+        <button type="submit" class="btn-primary" style="padding:10px 16px;">
+          <i class="ti ti-search"></i>
+        </button>
+      </div>
+    </form>
+
+    <% if (recetas.length > 0) { %>
+    <div class="content-grid">
+      <% recetas.forEach(r => { %>
+      <a href="/recetas/<%= r.id %>" class="content-card fade-up" style="text-decoration:none;">
+        <% if (r.imagen) { %>
+          <img src="/uploads/<%= r.imagen %>" alt="<%= r.nombre %>"
+               style="width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:14px;">
+        <% } %>
+        <p class="content-card-label"><%= r.categoria || 'Cocina' %></p>
+        <h2 class="content-card-titulo"><%= r.nombre %></h2>
+        <% if (r.ingredientes) { %>
+          <p class="content-card-texto"><%= r.ingredientes.substring(0,100) %><%= r.ingredientes.length > 100 ? '…' : '' %></p>
+        <% } %>
+        <% if (r.video_url) { %>
+          <p style="margin-top:10px;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--azul);">
+            <i class="ti ti-player-play"></i> Ver video
+          </p>
+        <% } %>
+      </a>
+      <% }) %>
+    </div>
+    <% } else { %>
+    <div class="empty-state">
+      <i class="ti ti-chef-hat" style="font-size:2.5rem;color:var(--gris-borde);margin-bottom:16px;display:block;"></i>
+      <p>No hay recetas todavía.</p>
+      <a href="/recetas/nueva" class="btn-primary" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> Crear la primera receta</a>
+    </div>
+    <% } %>
+  </main>
+</div>
+</body>
+</html>

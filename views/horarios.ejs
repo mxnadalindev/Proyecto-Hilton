@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horarios — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <header class="header">
+    <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
+    <nav class="header-nav">
+      <a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
+      <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
+      <a href="/horarios" class="nav-link activo"><i class="ti ti-clock"></i> Horarios</a>
+      <a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
+    </nav>
+    <div class="header-user">
+      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+      <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i> Salir</a>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Portal interno</p>
+        <h1 class="seccion-titulo">Horarios</h1>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <a href="/inicio" class="btn-secondary">
+          <i class="ti ti-home"></i> Menú
+        </a>
+        <button onclick="document.getElementById('modal-generar').style.display='flex'" class="btn-primary">
+          <i class="ti ti-wand"></i> Generar horario
+        </button>
+      </div>
+    </div>
+
+    <!-- Selector de fecha + acciones -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:28px;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:16px 20px;box-shadow:var(--sombra);">
+      
+      <div style="display:flex;align-items:center;gap:12px;">
+        <form method="GET" action="/horarios" style="display:flex;align-items:center;gap:10px;">
+          <label style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gris-texto);">Fecha</label>
+          <input type="date" name="fecha" value="<%= fecha %>"
+                 onchange="this.form.submit()"
+                 style="padding:8px 12px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.85rem;outline:none;background:var(--blanco);">
+        </form>
+        <span style="font-size:0.8rem;color:var(--gris-texto);">
+          <i class="ti ti-users"></i> <strong><%= totalAsignados %></strong> empleados asignados
+        </span>
+      </div>
+
+      <!-- Botones descarga y WhatsApp -->
+      <div style="display:flex;gap:8px;">
+        <% if (totalAsignados > 0) { %>
+          <a href="/horarios/excel?fecha=<%= fecha %>" class="btn-excel">
+            <i class="ti ti-file-spreadsheet"></i> Descargar Excel
+          </a>
+          <button onclick="compartirWhatsApp()" class="btn-whatsapp">
+            <i class="ti ti-brand-whatsapp"></i> Enviar por WhatsApp
+          </button>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Grid de turnos -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;">
+
+      <!-- MAÑANA -->
+      <div class="turno-card">
+        <div class="turno-header turno-manana">
+          <i class="ti ti-sun"></i>
+          <div>
+            <p class="turno-nombre">Mañana</p>
+            <p class="turno-horario">06:00 — 14:00</p>
+          </div>
+          <span class="turno-count"><%= porTurno.manana.length %></span>
+        </div>
+        <div class="turno-empleados">
+          <% if (porTurno.manana.length > 0) { %>
+            <% porTurno.manana.forEach(h => { %>
+            <div class="empleado-row">
+              <div class="emp-avatar"><%= h.empleado.charAt(0) %></div>
+              <div class="emp-info">
+                <p class="emp-nombre"><%= h.empleado %></p>
+                <p class="emp-puesto"><%= h.puesto %></p>
+              </div>
+              <form method="POST" action="/horarios/<%= h.id %>/eliminar" style="margin:0;">
+                <button type="submit" class="btn-remove-emp" title="Quitar"><i class="ti ti-x"></i></button>
+              </form>
+            </div>
+            <% }) %>
+          <% } else { %>
+            <p class="turno-vacio">Sin asignaciones</p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- TARDE -->
+      <div class="turno-card">
+        <div class="turno-header turno-tarde">
+          <i class="ti ti-sun-low"></i>
+          <div>
+            <p class="turno-nombre">Tarde</p>
+            <p class="turno-horario">14:00 — 22:00</p>
+          </div>
+          <span class="turno-count"><%= porTurno.tarde.length %></span>
+        </div>
+        <div class="turno-empleados">
+          <% if (porTurno.tarde.length > 0) { %>
+            <% porTurno.tarde.forEach(h => { %>
+            <div class="empleado-row">
+              <div class="emp-avatar emp-avatar-tarde"><%= h.empleado.charAt(0) %></div>
+              <div class="emp-info">
+                <p class="emp-nombre"><%= h.empleado %></p>
+                <p class="emp-puesto"><%= h.puesto %></p>
+              </div>
+              <form method="POST" action="/horarios/<%= h.id %>/eliminar" style="margin:0;">
+                <button type="submit" class="btn-remove-emp" title="Quitar"><i class="ti ti-x"></i></button>
+              </form>
+            </div>
+            <% }) %>
+          <% } else { %>
+            <p class="turno-vacio">Sin asignaciones</p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- NOCHE -->
+      <div class="turno-card">
+        <div class="turno-header turno-noche">
+          <i class="ti ti-moon"></i>
+          <div>
+            <p class="turno-nombre">Noche</p>
+            <p class="turno-horario">22:00 — 06:00</p>
+          </div>
+          <span class="turno-count"><%= porTurno.noche.length %></span>
+        </div>
+        <div class="turno-empleados">
+          <% if (porTurno.noche.length > 0) { %>
+            <% porTurno.noche.forEach(h => { %>
+            <div class="empleado-row">
+              <div class="emp-avatar emp-avatar-noche"><%= h.empleado.charAt(0) %></div>
+              <div class="emp-info">
+                <p class="emp-nombre"><%= h.empleado %></p>
+                <p class="emp-puesto"><%= h.puesto %></p>
+              </div>
+              <form method="POST" action="/horarios/<%= h.id %>/eliminar" style="margin:0;">
+                <button type="submit" class="btn-remove-emp" title="Quitar"><i class="ti ti-x"></i></button>
+              </form>
+            </div>
+            <% }) %>
+          <% } else { %>
+            <p class="turno-vacio">Sin asignaciones</p>
+          <% } %>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Botón volver -->
+    <div style="display:flex;justify-content:flex-start;margin-top:8px;">
+      <a href="/inicio" class="btn-secondary">
+        <i class="ti ti-arrow-left"></i> Volver al menú
+      </a>
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal generar horario -->
+<div id="modal-generar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.5rem;font-weight:400;">Generar horario</h2>
+      <button onclick="document.getElementById('modal-generar').style.display='none'"
+              style="background:none;border:none;cursor:pointer;color:var(--gris-texto);font-size:20px;">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <form method="POST" action="/horarios/generar">
+
+      <div class="field" style="margin-bottom:16px;">
+        <label>Fecha</label>
+        <input type="date" name="fecha" value="<%= fecha %>" required>
+      </div>
+
+      <div class="field" style="margin-bottom:20px;">
+        <label>Evento asociado (opcional)</label>
+        <select name="evento_id" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+          <option value="">Sin evento específico</option>
+          <% eventos.forEach(e => { %>
+            <option value="<%= e.id %>"><%= e.nombre %> — <%= e.fecha %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--azul);margin-bottom:14px;">
+        Personas necesarias por turno
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+        <div>
+          <label style="display:flex;align-items:center;gap:5px;font-size:0.7rem;font-weight:500;color:var(--negro);margin-bottom:8px;">
+            <i class="ti ti-sun" style="color:#f59e0b;"></i> Mañana
+          </label>
+          <input type="number" name="cant_manana" min="0" max="20" value="2"
+                 style="width:100%;padding:12px;border:1px solid var(--gris-borde);border-radius:8px;font-size:1.2rem;font-weight:700;text-align:center;outline:none;background:var(--gris-fondo);">
+        </div>
+        <div>
+          <label style="display:flex;align-items:center;gap:5px;font-size:0.7rem;font-weight:500;color:var(--negro);margin-bottom:8px;">
+            <i class="ti ti-sun-low" style="color:#f97316;"></i> Tarde
+          </label>
+          <input type="number" name="cant_tarde" min="0" max="20" value="2"
+                 style="width:100%;padding:12px;border:1px solid var(--gris-borde);border-radius:8px;font-size:1.2rem;font-weight:700;text-align:center;outline:none;background:var(--gris-fondo);">
+        </div>
+        <div>
+          <label style="display:flex;align-items:center;gap:5px;font-size:0.7rem;font-weight:500;color:var(--negro);margin-bottom:8px;">
+            <i class="ti ti-moon" style="color:#6366f1;"></i> Noche
+          </label>
+          <input type="number" name="cant_noche" min="0" max="20" value="1"
+                 style="width:100%;padding:12px;border:1px solid var(--gris-borde);border-radius:8px;font-size:1.2rem;font-weight:700;text-align:center;outline:none;background:var(--gris-fondo);">
+        </div>
+      </div>
+
+      <div style="background:var(--azul-claro);border-radius:8px;padding:12px;margin-bottom:20px;font-size:0.78rem;color:var(--azul);line-height:1.6;">
+        <i class="ti ti-info-circle"></i> El sistema asigna automáticamente priorizando jerarquía: Chef → Subchef → Encargado → Cocinero.
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:12px;">
+        <button type="button" onclick="document.getElementById('modal-generar').style.display='none'" class="btn-secondary">
+          Cancelar
+        </button>
+        <button type="submit" class="btn-primary">
+          <i class="ti ti-wand"></i> Generar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.turno-card { background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;overflow:hidden;box-shadow:var(--sombra); }
+.turno-header { display:flex;align-items:center;gap:12px;padding:16px 18px;color:#fff; }
+.turno-manana { background:linear-gradient(135deg,#f59e0b,#fbbf24); }
+.turno-tarde  { background:linear-gradient(135deg,#f97316,#fb923c); }
+.turno-noche  { background:linear-gradient(135deg,#6366f1,#818cf8); }
+.turno-header i { font-size:20px; }
+.turno-nombre { font-size:0.9rem;font-weight:600;margin:0 0 2px; }
+.turno-horario { font-size:0.68rem;opacity:0.85;margin:0; }
+.turno-count { margin-left:auto;background:rgba(255,255,255,0.25);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.9rem;font-weight:700; }
+.turno-empleados { padding:12px; }
+.turno-vacio { font-size:0.78rem;color:var(--gris-texto);font-style:italic;padding:16px 0;text-align:center; }
+.empleado-row { display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gris-borde); }
+.empleado-row:last-child { border-bottom:none; }
+.emp-avatar { width:32px;height:32px;border-radius:50%;background:var(--azul-claro);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;flex-shrink:0; }
+.emp-avatar-tarde { background:#fff3e0;color:#f97316; }
+.emp-avatar-noche { background:#ede9fe;color:#6366f1; }
+.emp-info { flex:1; }
+.emp-nombre { font-size:0.82rem;font-weight:500;color:var(--negro);margin:0 0 1px; }
+.emp-puesto { font-size:0.65rem;color:var(--gris-texto);margin:0;text-transform:uppercase;letter-spacing:0.05em; }
+.btn-remove-emp { background:none;border:none;color:var(--gris-borde);cursor:pointer;padding:4px;border-radius:4px;transition:all 0.2s;font-size:14px; }
+.btn-remove-emp:hover { color:#dc2626;background:#fef2f2; }
+.btn-excel { display:inline-flex;align-items:center;gap:6px;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-sans);font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background 0.2s; }
+.btn-excel:hover { background:#15803d; }
+.btn-whatsapp { display:inline-flex;align-items:center;gap:6px;background:#25d366;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-sans);font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:background 0.2s; }
+.btn-whatsapp:hover { background:#128c7e; }
+.field label { display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px; }
+.field input { width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none; }
+.field input:focus { border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);background:var(--blanco); }
+</style>
+
+<script>
+function compartirWhatsApp() {
+  const fecha = '<%= fecha %>';
+  const manana = <%= porTurno.manana.length %>;
+  const tarde = <%= porTurno.tarde.length %>;
+  const noche = <%= porTurno.noche.length %>;
+
+  let texto = `*HORARIOS HILTON BUENOS AIRES*\n📅 Fecha: ${fecha}\n\n`;
+
+  <% if (porTurno.manana.length > 0) { %>
+  texto += `☀️ *TURNO MAÑANA (06:00 - 14:00)*\n`;
+  <% porTurno.manana.forEach(h => { %>
+  texto += `• <%= h.empleado %> — <%= h.puesto %>\n`;
+  <% }) %>
+  texto += '\n';
+  <% } %>
+
+  <% if (porTurno.tarde.length > 0) { %>
+  texto += `🌤️ *TURNO TARDE (14:00 - 22:00)*\n`;
+  <% porTurno.tarde.forEach(h => { %>
+  texto += `• <%= h.empleado %> — <%= h.puesto %>\n`;
+  <% }) %>
+  texto += '\n';
+  <% } %>
+
+  <% if (porTurno.noche.length > 0) { %>
+  texto += `🌙 *TURNO NOCHE (22:00 - 06:00)*\n`;
+  <% porTurno.noche.forEach(h => { %>
+  texto += `• <%= h.empleado %> — <%= h.puesto %>\n`;
+  <% }) %>
+  <% } %>
+
+  texto += `\n_Generado desde Portal Hilton_`;
+
+  const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+  window.open(url, '_blank');
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "Hilton BA Portal",
+  "short_name": "Hilton",
+  "description": "Portal interno Hilton Buenos Aires",
+  "start_url": "/inicio",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

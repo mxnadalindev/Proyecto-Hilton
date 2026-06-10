@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inicio — Hilton Buenos Aires</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <header class="header">
+    <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
+    <nav class="header-nav">
+      <a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
+      <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
+      <a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
+    </nav>
+    <div class="header-user">
+      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+      <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i> Salir</a>
+    </div>
+  </header>
+  <main class="main-content">
+    <div class="inicio-hero">
+      <p class="inicio-saludo">Portal interno · Hilton Buenos Aires</p>
+      <h1 class="inicio-titulo">Bienvenido,<br><span><%= usuario?.nombre %></span></h1>
+      <div class="inicio-grid">
+        <a href="/eventos" class="inicio-card fade-up">
+          <div class="card-icon"><i class="ti ti-calendar-event"></i></div>
+          <span class="card-num">01</span>
+          <span class="card-nombre">Eventos</span>
+          <span class="card-desc">Calendario y novedades<br>del hotel</span>
+        </a>
+        <a href="/personal" class="inicio-card fade-up">
+          <div class="card-icon"><i class="ti ti-users"></i></div>
+          <span class="card-num">02</span>
+          <span class="card-nombre">Personal</span>
+          <span class="card-desc">Equipo y directorio<br>interno</span>
+        </a>
+        <a href="/recetas" class="inicio-card fade-up">
+          <div class="card-icon"><i class="ti ti-chef-hat"></i></div>
+          <span class="card-num">03</span>
+          <span class="card-nombre">Recetas</span>
+          <span class="card-desc">Recetario y videos<br>de cocina</span>
+        </a>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

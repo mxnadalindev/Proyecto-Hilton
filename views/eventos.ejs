@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eventos — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <header class="header">
+    <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
+    <nav class="header-nav">
+      <a href="/eventos" class="nav-link activo"><i class="ti ti-calendar-event"></i> Eventos</a>
+      <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
+      <a href="/recetas" class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
+    </nav>
+    <div class="header-user">
+      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+      <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
+    </div>
+  </header>
+  <main class="main-content">
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Portal interno</p>
+        <h1 class="seccion-titulo">Eventos</h1>
+      </div>
+      <a href="/eventos/nuevo" class="btn-primary"><i class="ti ti-plus"></i> Nuevo evento</a>
+    </div>
+
+    <% if (eventos.length > 0) { %>
+    <div class="tabla-wrap">
+      <table class="tabla">
+        <thead><tr><th>Nombre</th><th>Fecha</th><th>Horario</th><th>Personal</th><th>Costo total</th><th></th></tr></thead>
+        <tbody>
+          <% eventos.forEach(e => { %>
+          <tr>
+            <td><a href="/eventos/<%= e.id %>" class="link-tabla"><%= e.nombre %></a></td>
+            <td><%= e.fecha %></td>
+            <td><%= e.hora_inicio ? e.hora_inicio + (e.hora_fin ? ' — ' + e.hora_fin : '') : '—' %></td>
+            <td><span class="badge-num"><i class="ti ti-users"></i> <%= e.cantidad_personal %></span></td>
+            <td style="font-weight:500;color:var(--azul);">$<%= parseFloat(e.costo_total).toFixed(2) %></td>
+            <td><a href="/eventos/<%= e.id %>" class="btn-sm">Ver detalle</a></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="empty-state">
+      <i class="ti ti-calendar-off" style="font-size:2.5rem;color:var(--gris-borde);margin-bottom:16px;display:block;"></i>
+      <p>No hay eventos todavía.</p>
+      <a href="/eventos/nuevo" class="btn-primary" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> Crear el primer evento</a>
+    </div>
+    <% } %>
+  </main>
+</div>
+</body>
+</html>
