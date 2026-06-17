@@ -10,29 +10,44 @@
 <div class="app-layout">
   <header class="header">
     <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
-    <nav class="header-nav">
-      <a href="/eventos" class="nav-link activo"><i class="ti ti-calendar-event"></i> Eventos</a>
+    <nav class="header-nav desktop-only">
+      <a href="/eventos"  class="nav-link activo"><i class="ti ti-calendar-event"></i> Eventos</a>
       <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
-      <a href="/recetas" class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
+      <a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a>
+      <a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
+      <a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a>
     </nav>
     <div class="header-user">
-      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+      <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
       <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
     </div>
   </header>
   <main class="main-content">
+
     <div class="seccion-header">
       <div class="seccion-header-left">
         <p class="seccion-label">Portal interno</p>
         <h1 class="seccion-titulo">Eventos</h1>
       </div>
-      <a href="/eventos/nuevo" class="btn-primary"><i class="ti ti-plus"></i> Nuevo evento</a>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+        <a href="/eventos/nuevo" class="btn-primary"><i class="ti ti-plus"></i> Nuevo evento</a>
+      </div>
     </div>
 
     <% if (eventos.length > 0) { %>
     <div class="tabla-wrap">
       <table class="tabla">
-        <thead><tr><th>Nombre</th><th>Fecha</th><th>Horario</th><th>Personal</th><th>Costo total</th><th></th></tr></thead>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Fecha</th>
+            <th>Horario</th>
+            <th>Personal</th>
+            <th>Costo total</th>
+            <th></th>
+          </tr>
+        </thead>
         <tbody>
           <% eventos.forEach(e => { %>
           <tr>
@@ -51,10 +66,24 @@
     <div class="empty-state">
       <i class="ti ti-calendar-off" style="font-size:2.5rem;color:var(--gris-borde);margin-bottom:16px;display:block;"></i>
       <p>No hay eventos todavía.</p>
-      <a href="/eventos/nuevo" class="btn-primary" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> Crear el primer evento</a>
+      <a href="/eventos/nuevo" class="btn-primary" style="margin-top:20px;display:inline-flex;">
+        <i class="ti ti-plus"></i> Crear el primer evento
+      </a>
     </div>
     <% } %>
+
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--gris-borde);">
+      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
+    </div>
+
   </main>
+  <nav class="mobile-nav">
+    <a href="/eventos"  class="mobile-nav-link activo"><i class="ti ti-calendar-event"></i>Eventos</a>
+    <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i>Personal</a>
+    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i>Horarios</a>
+    <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i>Recetas</a>
+    <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i>Costos</a>
+  </nav>
 </div>
 </body>
 </html>

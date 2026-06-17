@@ -10,159 +10,196 @@
 <div class="app-layout">
   <header class="header">
     <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
-    <nav class="header-nav">
-      <a href="/eventos" class="nav-link activo"><i class="ti ti-calendar-event"></i> Eventos</a>
+    <nav class="header-nav desktop-only">
+      <a href="/eventos"  class="nav-link activo"><i class="ti ti-calendar-event"></i> Eventos</a>
       <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
-      <a href="/recetas" class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
+      <a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a>
+      <a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
+      <a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a>
     </nav>
     <div class="header-user">
-      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+      <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
       <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
     </div>
   </header>
   <main class="main-content">
 
-
-
-
-<div class="seccion-header">
-  <div class="seccion-header-left">
-    <p class="seccion-label"><a href="/eventos" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> Eventos</a></p>
-    <h1 class="seccion-titulo"><%= evento.nombre %></h1>
-  </div>
-  <form method="POST" action="/eventos/<%= evento.id %>/eliminar"
-        onsubmit="return confirm('¿Eliminar este evento?')">
-    <button type="submit" class="btn-danger">
-      <i class="ti ti-trash" aria-hidden="true"></i> Eliminar
-    </button>
-  </form>
-</div>
-
-<div class="detalle-grid">
-
-  <!-- Info general -->
-  <div class="detalle-card">
-    <p class="detalle-card-title"><i class="ti ti-info-circle" aria-hidden="true"></i> Información general</p>
-    <div class="info-rows">
-      <div class="info-row"><span class="info-label">Fecha</span><span class="info-val"><%= evento.fecha %></span></div>
-      <div class="info-row">
-        <span class="info-label">Horario</span>
-        <span class="info-val">
-          <% if (evento.hora_inicio) { %><%= evento.hora_inicio %><% if (evento.hora_fin) { %> — <%= evento.hora_fin %><% } %><% } else { %>—<% } %>
-        </span>
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">
+          <a href="/inicio" class="back-link"><i class="ti ti-home"></i> Menú principal</a>
+          &nbsp;/&nbsp;
+          <a href="/eventos" class="back-link"><i class="ti ti-arrow-left"></i> Eventos</a>
+        </p>
+        <h1 class="seccion-titulo"><%= evento.nombre %></h1>
       </div>
-      <div class="info-row"><span class="info-label">Hs. producción</span><span class="info-val"><%= evento.horas_produccion || 0 %> hs</span></div>
-      <div class="info-row"><span class="info-label">Personal</span><span class="info-val"><%= evento.cantidad_personal %> personas</span></div>
-      <div class="info-row"><span class="info-label">Costo total</span><span class="info-val costo-grande">${{ parseFloat(evento.costo_total).toFixed(2) }}</span></div>
-      <% if (evento.descripcion) { %>
-      <div class="info-row"><span class="info-label">Notas</span><span class="info-val"><%= evento.descripcion %></span></div>
-      <% } %>
-      <div class="info-row"><span class="info-label">Creado por</span><span class="info-val"><%= evento.creador || '—' %></span></div>
+      <form method="POST" action="/eventos/<%= evento.id %>/eliminar"
+            onsubmit="return confirm('¿Eliminar este evento?')">
+        <button type="submit" class="btn-danger">
+          <i class="ti ti-trash"></i> Eliminar
+        </button>
+      </form>
     </div>
-  </div>
 
-  <!-- Platos -->
-  <div class="detalle-card">
-    <p class="detalle-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Platos del menú</p>
-    <% if (platos.length > 0) { %>
-      <table class="tabla-interna">
-        <thead><tr><th>Plato</th><th>Porciones</th><th>Costo/porc.</th><th>Subtotal</th></tr></thead>
-        <tbody>
-          <% platos.forEach(p => { %>
-          <tr>
-            <td><%= p.plato_nombre %></td>
-            <td>{{ p.cantidad_porciones }}</td>
-            <td>${{ parseFloat(p.costo_porcion).toFixed(2) }}</td>
-            <td style="font-weight:600;color:var(--azul)">${{ parseFloat(p.subtotal).toFixed(2) }}</td>
-          </tr>
-          <% }) %>
-        </tbody>
-      </table>
-      <div class="total-row">
-        <span>Total platos:</span>
-        <strong>${{ parseFloat(evento.costo_total).toFixed(2) }}</strong>
-      </div>
-    <% } else { %>
-      <p class="list-empty">Sin platos registrados.</p>
-    <% } %>
-  </div>
+    <div class="detalle-grid">
 
-  <!-- Personal -->
-  <div class="detalle-card">
-    <p class="detalle-card-title"><i class="ti ti-users" aria-hidden="true"></i> Personal asignado</p>
-    <% if (personal.length > 0) { %>
-      <div class="personal-lista-detalle">
-        <% personal.forEach(p => { %>
-        <div class="personal-item-detalle">
-          <div class="avatar"><%= p.nombre[0] %></div>
-          <div>
-            <p class="p-nombre"><%= p.nombre %></p>
-            <p class="p-rol"><%= p.rol %></p>
+      <!-- Info general -->
+      <div class="detalle-card">
+        <p class="detalle-card-title"><i class="ti ti-info-circle"></i> Información general</p>
+        <div class="info-rows">
+          <div class="info-row">
+            <span class="info-label">Fecha</span>
+            <span class="info-val"><%= evento.fecha %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Horario del evento</span>
+            <span class="info-val">
+              <% if (evento.hora_inicio) { %>
+                <%= evento.hora_inicio %><% if (evento.hora_fin) { %> — <%= evento.hora_fin %><% } %>
+              <% } else { %>—<% } %>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Hs. de producción</span>
+            <span class="info-val"><%= evento.horas_produccion || 0 %> hs</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Personal asignado</span>
+            <span class="info-val"><%= evento.cantidad_personal %> personas</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Costo total</span>
+            <span class="info-val costo-grande">$<%= parseFloat(evento.costo_total).toFixed(2) %></span>
+          </div>
+          <% if (evento.descripcion) { %>
+          <div class="info-row">
+            <span class="info-label">Notas</span>
+            <span class="info-val"><%= evento.descripcion %></span>
+          </div>
+          <% } %>
+          <div class="info-row">
+            <span class="info-label">Creado por</span>
+            <span class="info-val"><%= evento.creador || '—' %></span>
           </div>
         </div>
-        <% }) %>
       </div>
-    <% } else { %>
-      <p class="list-empty">Sin personal asignado.</p>
-    <% } %>
-  </div>
 
-  <!-- Vajilla -->
-  <div class="detalle-card">
-    <p class="detalle-card-title"><i class="ti ti-bowl" aria-hidden="true"></i> Vajilla necesaria</p>
-    <% if (vajilla.length > 0) { %>
-      <div class="vajilla-lista">
-        <% vajilla.forEach(v => { %>
-        <div class="vajilla-item">
-          <span class="vajilla-nombre"><%= v.vajilla_nombre %></span>
-          <span class="vajilla-cant"><%= v.cantidad %> uds.</span>
-        </div>
-        <% }) %>
+      <!-- Platos -->
+      <div class="detalle-card">
+        <p class="detalle-card-title"><i class="ti ti-tools-kitchen-2"></i> Platos del menú</p>
+        <% if (platos.length > 0) { %>
+          <table class="tabla-interna">
+            <thead>
+              <tr><th>Plato</th><th>Porciones</th><th>Costo/porc.</th><th>Subtotal</th></tr>
+            </thead>
+            <tbody>
+              <% platos.forEach(p => { %>
+              <tr>
+                <td><%= p.plato_nombre %></td>
+                <td><%= p.cantidad_porciones %></td>
+                <td>$<%= parseFloat(p.costo_porcion).toFixed(2) %></td>
+                <td style="font-weight:600;color:var(--azul);">$<%= parseFloat(p.subtotal).toFixed(2) %></td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+          <div class="total-row">
+            <span>Total platos:</span>
+            <strong>$<%= parseFloat(evento.costo_total).toFixed(2) %></strong>
+          </div>
+        <% } else { %>
+          <p class="list-empty">Sin platos registrados.</p>
+        <% } %>
       </div>
-    <% } else { %>
-      <p class="list-empty">Sin vajilla registrada.</p>
-    <% } %>
-  </div>
 
+      <!-- Personal -->
+      <div class="detalle-card">
+        <p class="detalle-card-title"><i class="ti ti-users"></i> Personal asignado</p>
+        <% if (personal.length > 0) { %>
+          <div class="personal-lista-detalle">
+            <% personal.forEach(p => { %>
+            <div class="personal-item-detalle">
+              <div class="avatar"><%= p.nombre[0] %></div>
+              <div>
+                <p class="p-nombre"><%= p.nombre %></p>
+                <p class="p-rol"><%= p.rol %></p>
+              </div>
+            </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="list-empty">Sin personal asignado.</p>
+        <% } %>
+      </div>
+
+      <!-- Vajilla -->
+      <div class="detalle-card">
+        <p class="detalle-card-title"><i class="ti ti-bowl"></i> Vajilla necesaria</p>
+        <% if (vajilla.length > 0) { %>
+          <div class="vajilla-lista">
+            <% vajilla.forEach(v => { %>
+            <div class="vajilla-item">
+              <span class="vajilla-nombre"><%= v.vajilla_nombre %></span>
+              <span class="vajilla-cant"><%= v.cantidad %> uds.</span>
+            </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="list-empty">Sin vajilla registrada.</p>
+        <% } %>
+      </div>
+
+    </div>
+
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--gris-borde);display:flex;gap:10px;">
+      <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+      <a href="/eventos" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver a Eventos</a>
+    </div>
+
+  </main>
+  <nav class="mobile-nav">
+    <a href="/eventos"  class="mobile-nav-link activo"><i class="ti ti-calendar-event"></i>Eventos</a>
+    <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i>Personal</a>
+    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i>Horarios</a>
+    <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i>Recetas</a>
+    <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i>Costos</a>
+  </nav>
 </div>
 
 <style>
-.detalle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.detalle-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
-.detalle-card-title { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
-.info-rows { display: flex; flex-direction: column; gap: 0; }
-.info-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--gris-borde); }
-.info-row:last-child { border-bottom: none; }
-.info-label { font-size: 0.75rem; color: var(--gris-texto); }
-.info-val { font-size: 0.85rem; color: var(--negro); font-weight: 500; text-align: right; max-width: 60%; }
-.costo-grande { color: var(--azul); font-size: 1.1rem; font-weight: 700; }
-.tabla-interna { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-.tabla-interna th { font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gris-texto); padding: 8px 0; border-bottom: 1px solid var(--gris-borde); text-align: left; }
-.tabla-interna td { padding: 10px 0; border-bottom: 1px solid var(--gris-borde); color: var(--negro); }
-.tabla-interna tr:last-child td { border-bottom: none; }
-.total-row { display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--gris-borde); margin-top: 8px; font-size: 0.82rem; color: var(--gris-texto); }
-.total-row strong { color: var(--azul); font-size: 1rem; }
-.personal-lista-detalle { display: flex; flex-direction: column; gap: 8px; }
-.personal-item-detalle { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--gris-borde); }
-.personal-item-detalle:last-child { border-bottom: none; }
-.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--azul-claro); color: var(--azul); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; flex-shrink: 0; }
-.p-nombre { font-size: 0.85rem; font-weight: 500; color: var(--negro); margin: 0 0 2px; }
-.p-rol { font-size: 0.65rem; color: var(--gris-texto); text-transform: uppercase; letter-spacing: 0.08em; margin: 0; }
-.vajilla-lista { display: flex; flex-direction: column; gap: 4px; }
-.vajilla-item { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--gris-borde); }
-.vajilla-item:last-child { border-bottom: none; }
-.vajilla-nombre { font-size: 0.85rem; color: var(--negro); font-weight: 500; }
-.vajilla-cant { font-size: 0.78rem; color: var(--gris-texto); }
-.list-empty { font-size: 0.78rem; color: var(--gris-texto); font-style: italic; padding: 8px 0; }
-.back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; }
-.back-link:hover { color: var(--azul); }
-.btn-danger { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all var(--tr); }
-.btn-danger:hover { background: #dc2626; color: #fff; }
-@media (max-width: 900px) { .detalle-grid { grid-template-columns: 1fr; } }
+.detalle-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.detalle-card{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px;box-shadow:var(--sombra);}
+.detalle-card-title{font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin-bottom:18px;display:flex;align-items:center;gap:7px;}
+.info-rows{display:flex;flex-direction:column;}
+.info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--gris-borde);}
+.info-row:last-child{border-bottom:none;}
+.info-label{font-size:0.75rem;color:var(--gris-texto);}
+.info-val{font-size:0.85rem;color:var(--negro);font-weight:500;text-align:right;max-width:60%;}
+.costo-grande{color:var(--azul);font-size:1.1rem;font-weight:700;}
+.tabla-interna{width:100%;border-collapse:collapse;font-size:0.82rem;}
+.tabla-interna th{font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);padding:8px 0;border-bottom:1px solid var(--gris-borde);text-align:left;}
+.tabla-interna td{padding:10px 0;border-bottom:1px solid var(--gris-borde);color:var(--negro);}
+.tabla-interna tr:last-child td{border-bottom:none;}
+.total-row{display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid var(--gris-borde);margin-top:8px;font-size:0.82rem;color:var(--gris-texto);}
+.total-row strong{color:var(--azul);font-size:1rem;}
+.personal-lista-detalle{display:flex;flex-direction:column;gap:8px;}
+.personal-item-detalle{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--gris-borde);}
+.personal-item-detalle:last-child{border-bottom:none;}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--azul-claro);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:600;flex-shrink:0;}
+.p-nombre{font-size:0.85rem;font-weight:500;color:var(--negro);margin:0 0 2px;}
+.p-rol{font-size:0.65rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.08em;margin:0;}
+.vajilla-lista{display:flex;flex-direction:column;gap:4px;}
+.vajilla-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--gris-borde);}
+.vajilla-item:last-child{border-bottom:none;}
+.vajilla-nombre{font-size:0.85rem;color:var(--negro);font-weight:500;}
+.vajilla-cant{font-size:0.78rem;color:var(--gris-texto);}
+.list-empty{font-size:0.78rem;color:var(--gris-texto);font-style:italic;padding:8px 0;}
+.back-link{color:var(--gris-texto);text-decoration:none;font-size:0.75rem;display:inline-flex;align-items:center;gap:4px;}
+.back-link:hover{color:var(--azul);}
+.btn-danger{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-family:var(--font-sans);font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all var(--tr);}
+.btn-danger:hover{background:#dc2626;color:#fff;}
+@media(max-width:900px){.detalle-grid{grid-template-columns:1fr;}}
 </style>
 
-
-  </main>
-</div>
 </body>
 </html>

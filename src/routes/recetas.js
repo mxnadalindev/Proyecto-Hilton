@@ -9,7 +9,7 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
-const upload = multer({ storage, limits: { fileSize: 500*1024*1024 } });
+const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 * 1024 } });
 
 router.get('/', loginRequerido, async (req, res) => {
   const busqueda = req.query.q || '';
@@ -27,9 +27,24 @@ router.post('/nueva', loginRequerido, upload.fields([
   { name: 'imagen', maxCount: 1 },
   { name: 'video', maxCount: 1 }
 ]), async (req, res) => {
-  const { nombre, categoria, ingredientes, pasos, video_url, area } = req.body;
+  // Categoría y área: puede venir del select o del campo "otro"
+  const categoria = req.body.categoria === 'otro'
+    ? (req.body.categoria_otro || '').trim()
+    : (req.body.categoria || '').trim();
+
+  const area = req.body.area === 'otro'
+    ? (req.body.area_otro || '').trim()
+    : (req.body.area || '').trim();
+
+  // Ingredientes: viene del hidden field (texto plano)
+  const ingredientes = req.body.ingredientes || '';
+  const pasos        = req.body.pasos || '';
+  const nombre       = req.body.nombre || '';
+  const video_url    = req.body.video_url || '';
+
   const imagen = req.files?.imagen?.[0]?.filename || null;
   const video  = req.files?.video?.[0]?.filename  || video_url || null;
+
   await db.run2(
     "INSERT INTO recetas (nombre,categoria,ingredientes,pasos,video_url,imagen,area) VALUES ($1,$2,$3,$4,$5,$6,$7)",
     [nombre, categoria, ingredientes, pasos, video, imagen, area]

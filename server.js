@@ -11,8 +11,8 @@ const os = require('os');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(express.urlencoded({ extended: true, limit: '500mb' }));
-app.use(express.json({ limit: '500mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2gb' }));
+app.use(express.json({ limit: '2gb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

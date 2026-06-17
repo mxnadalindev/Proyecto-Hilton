@@ -19,6 +19,10 @@
   --tr:          0.25s ease;
   --sombra:      0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
   --sombra-md:   0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+
+  /* Altura del header y nav para cálculos de padding */
+  --header-h:    60px;
+  --mobile-nav-h: 62px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -53,16 +57,23 @@ body {
 }
 
 /* ══════════════════════════════
-   HEADER
+   LAYOUT GENERAL
    ══════════════════════════════ */
-.app-layout { display: grid; grid-template-rows: auto 1fr; min-height: 100vh; }
+.app-layout {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+}
 
+/* ══════════════════════════════
+   HEADER — DESKTOP
+   ══════════════════════════════ */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
-  height: 60px;
+  height: var(--header-h);
   background: var(--blanco);
   border-bottom: 1px solid var(--gris-borde);
   box-shadow: var(--sombra);
@@ -104,7 +115,7 @@ body {
   white-space: nowrap;
 }
 
-/* ── Botón cerrar sesión — siempre visible ── */
+/* ── Botón cerrar sesión ── */
 .btn-logout {
   display: inline-flex;
   align-items: center;
@@ -123,6 +134,7 @@ body {
   cursor: pointer;
   transition: all var(--tr);
   white-space: nowrap;
+  min-height: 36px;
 }
 .btn-logout:hover {
   background: var(--rojo);
@@ -355,38 +367,59 @@ body {
 }
 
 /* ══════════════════════════════
-   MOBILE RESPONSIVE
+   MOBILE NAV — oculto en desktop
+   ══════════════════════════════ */
+.mobile-nav { display: none; }
+
+/* ══════════════════════════════
+   MOBILE RESPONSIVE ≤ 768px
    ══════════════════════════════ */
 @media (max-width: 768px) {
+
+  /* ── Header fijo ── */
   .header {
     padding: 0 16px;
-    height: 56px;
+    height: var(--header-h);
     position: fixed;
     width: 100%;
+    top: 0;
+    left: 0;
   }
-  .header-logo { font-size: 1.2rem; }
-  .header-nav { display: none; }
-  .user-name { display: none; }
 
-  /* Botón cerrar sesión en mobile — compacto pero siempre visible */
+  /* Ocultar nav y nombre en mobile */
+  .header-nav { display: none; }
+  .user-name   { display: none; }
+  .header-logo { font-size: 1.2rem; }
+
+  /* Botón salir: solo ícono en mobile */
   .btn-logout {
-    padding: 6px 10px;
+    padding: 8px 10px;
     font-size: 0.6rem;
-    gap: 4px;
+    min-height: 44px;
+    border-radius: 8px;
   }
   .btn-logout .logout-text { display: none; }
 
-  .main-content { padding: 72px 16px 100px; }
+  /* ── Contenido: compensa header fijo + nav inferior ── */
+  .main-content {
+    padding-top: calc(var(--header-h) + 20px);
+    padding-bottom: calc(var(--mobile-nav-h) + 16px);
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 
-  /* Menú inferior mobile */
+  /* ── Menú inferior mobile ── */
   .mobile-nav {
     display: flex;
     position: fixed;
     bottom: 0; left: 0; right: 0;
+    height: var(--mobile-nav-h);
     background: var(--blanco);
     border-top: 1px solid var(--gris-borde);
     z-index: 100;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+    /* Safe area para teléfonos con notch inferior */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   .mobile-nav-link {
     flex: 1;
@@ -394,43 +427,78 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 8px 4px;
+    padding: 6px 2px;
     text-decoration: none;
     color: var(--gris-texto);
-    font-size: 0.55rem;
-    letter-spacing: 0.05em;
+    font-size: 0.5rem;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    gap: 4px;
+    gap: 3px;
     transition: color 0.2s;
+    min-height: 44px;
   }
-  .mobile-nav-link i { font-size: 20px; }
+  .mobile-nav-link i    { font-size: 20px; }
+  .mobile-nav-link span { line-height: 1; }
   .mobile-nav-link.activo { color: var(--azul); }
-  .mobile-nav-link:hover { color: var(--azul); }
+  .mobile-nav-link:hover  { color: var(--azul); }
 
-  .inicio-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 12px !important;
-    max-width: 100% !important;
+  /* Indicador activo con dot */
+  .mobile-nav-link.activo i {
+    position: relative;
   }
-  .inicio-card { padding: 24px 16px; gap: 10px; }
-  .card-nombre { font-size: 1.1rem; }
-  .card-desc { font-size: 0.62rem; }
+  .mobile-nav-link.activo::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 2px;
+    background: var(--azul);
+    border-radius: 0 0 2px 2px;
+  }
 
-  .tabla-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .tabla { min-width: 500px; }
-  .tabla th, .tabla td { padding: 10px 12px; font-size: 0.78rem; }
+  /* ── Inicio grid: 2 columnas en mobile ── */
+  .inicio-hero { padding: 32px 0 48px; }
+  .inicio-titulo { margin-bottom: 32px; }
+  .inicio-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    max-width: 100%;
+  }
+  .inicio-card  { padding: 20px 14px; gap: 10px; }
+  .card-nombre  { font-size: 1.1rem; }
+  .card-desc    { font-size: 0.62rem; }
+  .card-icon    { width: 44px; height: 44px; font-size: 18px; }
 
-  .form-grid { grid-template-columns: 1fr !important; }
-  .field-row { grid-template-columns: 1fr !important; }
-  .form-actions { flex-direction: column; }
-  .form-actions a, .form-actions button { width: 100%; justify-content: center; }
-  .detalle-grid { grid-template-columns: 1fr !important; }
-  .turno-card { margin-bottom: 12px; }
+  /* ── Tablas: scroll horizontal ── */
+  .tabla-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+  .tabla         { min-width: 520px; }
+  .tabla th,
+  .tabla td      { padding: 10px 12px; font-size: 0.78rem; }
 
+  /* ── Formularios: todo en columna ── */
+  .form-grid,
+  .field-row,
+  .detalle-grid,
+  .costos-cols   { grid-template-columns: 1fr !important; }
+
+  .form-actions  { flex-direction: column; gap: 8px; }
+  .form-actions a,
+  .form-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ── Sección header: apilado ── */
   .seccion-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 14px;
   }
   .seccion-header > div:last-child {
     width: 100%;
@@ -443,20 +511,184 @@ body {
     text-align: center;
   }
   .seccion-titulo { font-size: 1.5rem; }
-  .costos-cols { grid-template-columns: 1fr !important; }
 
-  .btn-primary, .btn-secondary { padding: 12px 16px; font-size: 0.72rem; }
-  .btn-sm { padding: 8px 12px; font-size: 0.7rem; }
-  .desktop-only { display: none !important; }
+  /* ── Botones: más grandes para touch ── */
+  .btn-primary,
+  .btn-secondary { padding: 12px 16px; font-size: 0.72rem; min-height: 44px; }
+  .btn-sm        { padding: 8px 12px; font-size: 0.7rem; min-height: 38px; }
 
-  button, a, input[type="submit"] { min-height: 44px; }
+  /* ── Touch targets mínimos ── */
+  button,
+  a,
+  input[type="submit"] { min-height: 44px; }
+
+  /* ── Inputs: evita zoom automático en iOS ── */
   input, select, textarea {
     font-size: 16px !important;
     padding: 12px !important;
   }
+
+  /* ── Clases utilitarias ── */
+  .desktop-only { display: none !important; }
 }
 
+/* ══════════════════════════════
+   DESKTOP: ocultar elementos mobile
+   ══════════════════════════════ */
 @media (min-width: 769px) {
-  .mobile-nav { display: none !important; }
   .mobile-only { display: none !important; }
+}
+
+/* ══════════════════════════════
+   INICIO — grid de 5 columnas
+   ══════════════════════════════ */
+.inicio-grid-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .inicio-grid-5 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .inicio-grid-5 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+    max-width: 100% !important;
+  }
+  /* La 5ta card ocupa todo el ancho */
+  .inicio-grid-5 .inicio-card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ══════════════════════════════
+   HORARIOS — grid de turnos
+   ══════════════════════════════ */
+.turnos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 768px) {
+  .turnos-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Selector de fecha apilado */
+  .horarios-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .horarios-toolbar > div {
+    width: 100%;
+  }
+  .horarios-acciones {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+  .horarios-acciones a,
+  .horarios-acciones button {
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+  }
+
+  /* Modal generar horario: columnas a 1 en mobile */
+  .modal-turnos-grid {
+    grid-template-columns: 1fr !important;
+  }
+  /* Chips de personal: scroll horizontal en mobile */
+  .chips-personal {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    padding-bottom: 6px;
+  }
+}
+
+/* ══════════════════════════════
+   PERSONAL — tabla con scroll
+   y acciones compactas
+   ══════════════════════════════ */
+@media (max-width: 768px) {
+  /* Ocultar columnas secundarias en mobile */
+  .col-legajo,
+  .col-email   { display: none; }
+
+  /* Acciones en columna */
+  .td-acciones > div {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+  .td-acciones button,
+  .td-acciones .btn-baja,
+  .td-acciones .btn-activar {
+    width: 100%;
+    justify-content: center;
+    min-height: 36px;
+  }
+
+  /* Modal empleado: grid a 1 columna */
+  .modal-empleado-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .modal-empleado-grid .field-full {
+    grid-column: 1 !important;
+  }
+}
+
+/* ══════════════════════════════
+   RECETA DETALLE — grid
+   ══════════════════════════════ */
+@media (max-width: 768px) {
+  .detalle-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .detalle-grid > .detalle-card[style*="grid-column"] {
+    grid-column: 1 !important;
+  }
+}
+
+/* ══════════════════════════════
+   FORMULARIOS GENERALES
+   ══════════════════════════════ */
+@media (max-width: 768px) {
+  /* receta_nueva form-grid */
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+  }
+
+  /* Ingredientes: inputs apilados */
+  .ing-inputs {
+    flex-direction: column;
+  }
+  .ing-inputs input,
+  .ing-inputs select {
+    width: 100% !important;
+  }
+
+  /* Eventos: campos en columna */
+  .evento-grid {
+    grid-template-columns: 1fr !important;
+  }
+  /* Costos: tabla costos con scroll */
+  .costos-tabla-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }

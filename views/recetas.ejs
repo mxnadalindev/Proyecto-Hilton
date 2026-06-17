@@ -10,65 +10,131 @@
 <div class="app-layout">
   <header class="header">
     <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
-    <nav class="header-nav">
-      <a href="/eventos" class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
+    <nav class="header-nav desktop-only">
+      <a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
       <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
-      <a href="/recetas" class="nav-link activo"><i class="ti ti-chef-hat"></i> Recetas</a>
+      <a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a>
+      <a href="/recetas"  class="nav-link activo"><i class="ti ti-chef-hat"></i> Recetas</a>
+      <a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a>
     </nav>
     <div class="header-user">
-      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+      <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
       <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
     </div>
   </header>
+
   <main class="main-content">
+
     <div class="seccion-header">
       <div class="seccion-header-left">
         <p class="seccion-label">Portal interno</p>
         <h1 class="seccion-titulo">Recetas</h1>
       </div>
-      <a href="/recetas/nueva" class="btn-primary"><i class="ti ti-plus"></i> Nueva receta</a>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+        <a href="/recetas/nueva" class="btn-primary"><i class="ti ti-plus"></i> Nueva receta</a>
+      </div>
     </div>
 
-    <!-- Búsqueda -->
     <form method="GET" action="/recetas" style="margin-bottom:24px;">
       <div style="display:flex;gap:10px;max-width:400px;">
         <input type="text" name="q" value="<%= busqueda %>" placeholder="Buscar receta..."
                style="flex:1;padding:10px 14px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.85rem;outline:none;background:var(--blanco);">
-        <button type="submit" class="btn-primary" style="padding:10px 16px;">
-          <i class="ti ti-search"></i>
-        </button>
+        <button type="submit" class="btn-primary" style="padding:10px 16px;"><i class="ti ti-search"></i></button>
+        <% if (busqueda) { %>
+        <a href="/recetas" class="btn-secondary" style="padding:10px 16px;"><i class="ti ti-x"></i></a>
+        <% } %>
       </div>
     </form>
 
     <% if (recetas.length > 0) { %>
     <div class="content-grid">
       <% recetas.forEach(r => { %>
-      <a href="/recetas/<%= r.id %>" class="content-card fade-up" style="text-decoration:none;">
+      <div class="content-card fade-up" style="position:relative;">
+
+        <!-- Botón eliminar -->
+        <form method="POST" action="/recetas/<%= r.id %>/eliminar"
+              onsubmit="return confirm('¿Eliminar la receta <%= r.nombre %>?')"
+              style="position:absolute;top:12px;right:12px;margin:0;z-index:2;">
+          <button type="submit"
+                  style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:4px;"
+                  title="Eliminar receta">
+            <i class="ti ti-trash"></i>
+          </button>
+        </form>
+
+        <!-- 1. Mostrar imagen o preview de video -->
         <% if (r.imagen) { %>
           <img src="/uploads/<%= r.imagen %>" alt="<%= r.nombre %>"
                style="width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:14px;">
+        <% } else if (r.video_url) { %>
+          <%
+            let ytId = null;
+            if (r.video_url.includes('youtube.com') || r.video_url.includes('youtu.be')) {
+              if (r.video_url.includes('youtu.be')) {
+                ytId = r.video_url.split('/').pop().split('?')[0];
+              } else {
+                const match = r.video_url.match(/[?&]v=([^&]+)/);
+                ytId = match ? match[1] : null;
+              }
+            }
+          %>
+          <% if (ytId) { %>
+            <div style="width:100%;height:160px;border-radius:8px;margin-bottom:14px;overflow:hidden;position:relative;background:#000;">
+              <iframe src="https://www.youtube.com/embed/<%= ytId %>"
+                      style="width:100%;height:100%;border:none;" loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowfullscreen></iframe>
+            </div>
+          <% } else if (!r.video_url.startsWith('http')) { %>
+            <video style="width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:14px;" controls>
+              <source src="/uploads/<%= r.video_url %>">
+            </video>
+          <% } else { %>
+            <div style="width:100%;height:160px;border-radius:8px;margin-bottom:14px;background:var(--gris-fondo);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
+              <i class="ti ti-video" style="font-size:32px;color:var(--azul-borde);"></i>
+              <p style="font-size:0.72rem;color:var(--gris-texto);">Video disponible</p>
+            </div>
+          <% } %>
         <% } %>
-        <p class="content-card-label"><%= r.categoria || 'Cocina' %></p>
+
+        <p class="content-card-label"><%= r.categoria || 'Cocina' %><% if (r.area) { %> · <%= r.area %><% } %></p>
         <h2 class="content-card-titulo"><%= r.nombre %></h2>
         <% if (r.ingredientes) { %>
           <p class="content-card-texto"><%= r.ingredientes.substring(0,100) %><%= r.ingredientes.length > 100 ? '…' : '' %></p>
         <% } %>
-        <% if (r.video_url) { %>
-          <p style="margin-top:10px;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--azul);">
-            <i class="ti ti-player-play"></i> Ver video
-          </p>
-        <% } %>
-      </a>
+
+        <a href="/recetas/<%= r.id %>"
+           style="display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--azul);text-decoration:none;">
+          Ver receta completa <i class="ti ti-arrow-right"></i>
+        </a>
+
+      </div>
       <% }) %>
     </div>
     <% } else { %>
     <div class="empty-state">
       <i class="ti ti-chef-hat" style="font-size:2.5rem;color:var(--gris-borde);margin-bottom:16px;display:block;"></i>
       <p>No hay recetas todavía.</p>
-      <a href="/recetas/nueva" class="btn-primary" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> Crear la primera receta</a>
+      <a href="/recetas/nueva" class="btn-primary" style="margin-top:20px;display:inline-flex;">
+        <i class="ti ti-plus"></i> Crear la primera receta
+      </a>
     </div>
     <% } %>
+
+    <div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--gris-borde);">
+      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
+    </div>
+
   </main>
+
+  <nav class="mobile-nav">
+    <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i>Eventos</a>
+    <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i>Personal</a>
+    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i>Horarios</a>
+    <a href="/recetas"  class="mobile-nav-link activo"><i class="ti ti-chef-hat"></i>Recetas</a>
+    <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i>Costos</a>
+  </nav>
 </div>
 </body>
 </html>

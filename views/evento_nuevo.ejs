@@ -10,384 +10,404 @@
 <div class="app-layout">
   <header class="header">
     <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
-    <nav class="header-nav">
-      <a href="/eventos" class="nav-link activo"><i class="ti ti-calendar-event"></i> Eventos</a>
+    <nav class="header-nav desktop-only">
+      <a href="/eventos"  class="nav-link activo"><i class="ti ti-calendar-event"></i> Eventos</a>
       <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
-      <a href="/recetas" class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
+      <a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a>
+      <a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
+      <a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a>
     </nav>
     <div class="header-user">
-      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+      <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
       <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
     </div>
   </header>
   <main class="main-content">
 
-
-
-
-<div class="seccion-header">
-  <div class="seccion-header-left">
-    <p class="seccion-label"><a href="/eventos" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> Eventos</a></p>
-    <h1 class="seccion-titulo">Nuevo evento</h1>
-  </div>
-</div>
-
-<form method="POST" action="/eventos/nuevo" id="form-evento">
-<input type="hidden" name="platos_json" id="platos_json" value="[]">
-<input type="hidden" name="personal_json" id="personal_json" value="[]">
-<input type="hidden" name="vajilla_json" id="vajilla_json" value="[]">
-
-<div class="form-grid">
-
-  <!-- ── Columna izquierda ── -->
-  <div class="form-col">
-
-    <!-- Info general -->
-    <div class="form-card">
-      <p class="form-card-title"><i class="ti ti-info-circle" aria-hidden="true"></i> Información general</p>
-
-      <div class="field">
-        <label>Nombre del evento</label>
-        <input type="text" name="nombre" placeholder="Ej: Casamiento García" required>
-      </div>
-
-      <div class="field-row">
-        <div class="field">
-          <label>Fecha</label>
-          <input type="date" name="fecha" id="campo-fecha" required>
-        </div>
-        <div class="field">
-          <label>Hora inicio</label>
-          <input type="time" name="hora_inicio">
-        </div>
-        <div class="field">
-          <label>Hora fin</label>
-          <input type="time" name="hora_fin">
-        </div>
-      </div>
-
-      <div class="field-row">
-        <div class="field">
-          <label>Horas de producción</label>
-          <input type="number" name="horas_produccion" placeholder="0" min="0" step="0.5">
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Descripción (opcional)</label>
-        <textarea name="descripcion" rows="3" placeholder="Notas del evento..."></textarea>
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">
+          <a href="/inicio" class="back-link"><i class="ti ti-home"></i> Menú principal</a>
+          &nbsp;/&nbsp;
+          <a href="/eventos" class="back-link"><i class="ti ti-arrow-left"></i> Eventos</a>
+        </p>
+        <h1 class="seccion-titulo">Nuevo evento</h1>
       </div>
     </div>
 
-    <!-- Calendario visual -->
-    <div class="form-card">
-      <p class="form-card-title"><i class="ti ti-calendar" aria-hidden="true"></i> Calendario</p>
-      <div id="mini-cal"></div>
-    </div>
+    <form method="POST" action="/eventos/nuevo" id="form-evento">
+      <input type="hidden" name="platos_json"   id="platos_json"   value="[]">
+      <input type="hidden" name="personal_json" id="personal_json" value="[]">
+      <input type="hidden" name="vajilla_json"  id="vajilla_json"  value="[]">
 
-  </div>
+      <div class="form-grid">
 
-  <!-- ── Columna derecha ── -->
-  <div class="form-col">
+        <!-- ── Columna izquierda ── -->
+        <div class="form-col">
 
-    <!-- Platos -->
-    <div class="form-card">
-      <p class="form-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Platos del menú</p>
+          <!-- Info general -->
+          <div class="form-card">
+            <p class="form-card-title"><i class="ti ti-info-circle"></i> Información general</p>
 
-      <div class="add-row">
-        <input type="text" id="plato-nombre" placeholder="Nombre del plato">
-        <input type="number" id="plato-porciones" placeholder="Porciones" min="1" value="1">
-        <input type="number" id="plato-costo" placeholder="Costo por porción $" min="0" step="0.01">
-        <button type="button" class="btn-add" onclick="agregarPlato()">
-          <i class="ti ti-plus" aria-hidden="true"></i>
+            <div class="field">
+              <label>Nombre del evento</label>
+              <input type="text" name="nombre" placeholder="Ej: Casamiento García" required>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label>Fecha</label>
+                <input type="date" name="fecha" id="campo-fecha" required>
+              </div>
+              <div class="field">
+                <label>Hora inicio</label>
+                <input type="time" name="hora_inicio" id="hora_inicio">
+              </div>
+              <div class="field">
+                <label>Hora fin</label>
+                <input type="time" name="hora_fin" id="hora_fin">
+              </div>
+            </div>
+
+            <!-- Horario de producción como rango -->
+            <div class="field-row">
+              <div class="field">
+                <label>Producción desde</label>
+                <input type="time" name="prod_inicio" id="prod_inicio" placeholder="08:00">
+              </div>
+              <div class="field">
+                <label>Producción hasta</label>
+                <input type="time" name="prod_fin" id="prod_fin" placeholder="12:00">
+              </div>
+              <div class="field">
+                <label>Hs. producción</label>
+                <input type="text" name="horas_produccion" id="horas_produccion_display" placeholder="Auto" readonly
+                       style="background:var(--azul-claro);color:var(--azul);font-weight:600;cursor:default;">
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Descripción (opcional)</label>
+              <textarea name="descripcion" rows="3" placeholder="Notas del evento..."></textarea>
+            </div>
+          </div>
+
+          <!-- Calendario visual -->
+          <div class="form-card">
+            <p class="form-card-title"><i class="ti ti-calendar"></i> Calendario</p>
+            <div id="mini-cal"></div>
+          </div>
+
+        </div>
+
+        <!-- ── Columna derecha ── -->
+        <div class="form-col">
+
+          <!-- Platos -->
+          <div class="form-card">
+            <p class="form-card-title"><i class="ti ti-tools-kitchen-2"></i> Platos del menú</p>
+
+            <div class="add-row" style="flex-wrap:wrap;gap:6px;">
+              <input type="text" id="plato-nombre" placeholder="Nombre del plato" style="flex:2;min-width:120px;">
+              <select id="plato-receta" style="flex:2;min-width:120px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:9px 10px;font-family:var(--font-sans);font-size:0.8rem;color:var(--negro);outline:none;">
+                <option value="">Desde receta / costo...</option>
+                <% if (typeof recetas !== 'undefined') { recetas.forEach(r => { %>
+                  <option value="<%= r.nombre %>" data-costo="<%= r.costo_unitario || 0 %>"><%= r.nombre %></option>
+                <% }) } %>
+                <% if (typeof platosConCosto !== 'undefined') { platosConCosto.forEach(p => { %>
+                  <option value="<%= p.nombre %>" data-costo="<%= (p.costo_total / (p.porciones || 1)).toFixed(2) %>"><%= p.nombre %> ($<%= (p.costo_total/(p.porciones||1)).toFixed(2) %>)</option>
+                <% }) } %>
+              </select>
+              <input type="number" id="plato-porciones" placeholder="Porciones" min="1" value="1" style="flex:1;min-width:80px;">
+              <input type="number" id="plato-costo" placeholder="Costo/porc $" min="0" step="0.01" style="flex:1;min-width:90px;">
+              <button type="button" class="btn-add" onclick="agregarPlato()">
+                <i class="ti ti-plus"></i>
+              </button>
+            </div>
+
+            <div id="lista-platos" class="items-list">
+              <p class="list-empty">No hay platos agregados todavía.</p>
+            </div>
+
+            <div class="subtotal-row">
+              <span>Costo total de platos:</span>
+              <strong id="costo-total-display">$0.00</strong>
+            </div>
+          </div>
+
+          <!-- Personal -->
+          <div class="form-card">
+            <p class="form-card-title"><i class="ti ti-users"></i> Personal asignado</p>
+            <div class="personal-grid">
+              <% if (personal.length > 0) { %>
+                <% personal.forEach(p => { %>
+                <label class="personal-item">
+                  <input type="checkbox" class="chk-personal" value="<%= p.id %>" data-nombre="<%= p.nombre %>">
+                  <span class="personal-nombre"><%= p.nombre %></span>
+                  <span class="personal-rol"><%= p.rol %></span>
+                </label>
+                <% }) %>
+              <% } else { %>
+                <p class="list-empty">No hay personal registrado.</p>
+              <% } %>
+            </div>
+            <div class="subtotal-row">
+              <span>Personal seleccionado:</span>
+              <strong id="personal-count">0 personas</strong>
+            </div>
+          </div>
+
+          <!-- Vajilla -->
+          <div class="form-card">
+            <p class="form-card-title"><i class="ti ti-bowl"></i> Vajilla necesaria</p>
+            <div class="add-row">
+              <select id="vajilla-tipo" style="flex:2;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:9px 10px;font-family:var(--font-sans);font-size:0.83rem;color:var(--negro);outline:none;">
+                <option value="">Seleccionar tipo...</option>
+                <option>Platos planos</option>
+                <option>Platos hondos</option>
+                <option>Platos de postre</option>
+                <option>Copas de vino tinto</option>
+                <option>Copas de vino blanco</option>
+                <option>Copas de champagne</option>
+                <option>Vasos de agua</option>
+                <option>Tazas de café</option>
+                <option>Tazas de té</option>
+                <option>Cubiertos completos</option>
+                <option>Cucharas de postre</option>
+                <option>Fuentes de servicio</option>
+                <option>Bandejas</option>
+                <option>Bowls de ensalada</option>
+                <option>Jarras de agua</option>
+                <option value="otro">Otro (escribir)</option>
+              </select>
+              <input type="text" id="vajilla-otro" placeholder="Especificar..." style="display:none;flex:2;">
+              <input type="number" id="vajilla-cantidad" placeholder="Cant." min="1" value="" style="flex:1;min-width:70px;">
+              <button type="button" class="btn-add" onclick="agregarVajilla()">
+                <i class="ti ti-plus"></i>
+              </button>
+            </div>
+
+            <div id="lista-vajilla" class="items-list">
+              <p class="list-empty">No hay vajilla agregada todavía.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="form-actions">
+        <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+        <a href="/eventos" class="btn-secondary">Cancelar</a>
+        <button type="submit" class="btn-primary">
+          <i class="ti ti-device-floppy"></i> Guardar evento
         </button>
       </div>
 
-      <div id="lista-platos" class="items-list">
-        <p class="list-empty">No hay platos agregados todavía.</p>
-      </div>
-
-      <div class="subtotal-row">
-        <span>Costo total de platos:</span>
-        <strong id="costo-total-display">$0.00</strong>
-      </div>
-    </div>
-
-    <!-- Personal -->
-    <div class="form-card">
-      <p class="form-card-title"><i class="ti ti-users" aria-hidden="true"></i> Personal asignado</p>
-
-      <div class="personal-grid">
-        <% if (personal.length > 0) { %>
-          <% personal.forEach(p => { %>
-          <label class="personal-item">
-            <input type="checkbox" class="chk-personal" value="<%= p.id %>" data-nombre="<%= p.nombre %>">
-            <span class="personal-nombre"><%= p.nombre %></span>
-            <span class="personal-rol"><%= p.rol %></span>
-          </label>
-          <% }) %>
-        <% } else { %>
-          <p class="list-empty">No hay personal registrado todavía.</p>
-        <% } %>
-      </div>
-
-      <div class="subtotal-row">
-        <span>Personal seleccionado:</span>
-        <strong id="personal-count">0 personas</strong>
-      </div>
-    </div>
-
-    <!-- Vajilla -->
-    <div class="form-card">
-      <p class="form-card-title"><i class="ti ti-bowl" aria-hidden="true"></i> Vajilla necesaria</p>
-
-      <div class="add-row">
-        <input type="text" id="vajilla-nombre" placeholder="Tipo de vajilla">
-        <input type="number" id="vajilla-cantidad" placeholder="Cantidad" min="1" value="1">
-        <button type="button" class="btn-add" onclick="agregarVajilla()">
-          <i class="ti ti-plus" aria-hidden="true"></i>
-        </button>
-      </div>
-
-      <div id="lista-vajilla" class="items-list">
-        <p class="list-empty">No hay vajilla agregada todavía.</p>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- Botones -->
-<div class="form-actions">
-  <a href="/eventos" class="btn-secondary">Cancelar</a>
-  <button type="submit" class="btn-primary">
-    <i class="ti ti-device-floppy" aria-hidden="true"></i> Guardar evento
-  </button>
-</div>
-
-</form>
+    </form>
 
 <style>
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.form-col { display: flex; flex-direction: column; gap: 20px; }
-.form-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
-.form-card-title { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
-.field { margin-bottom: 14px; }
-.field:last-child { margin-bottom: 0; }
-.field label { display: block; font-size: 0.68rem; font-weight: 500; color: var(--negro); margin-bottom: 6px; letter-spacing: 0.05em; }
-.field input, .field textarea, .field select {
-  width: 100%; background: var(--gris-fondo); border: 1px solid var(--gris-borde);
-  border-radius: 8px; padding: 10px 12px; font-family: var(--font-sans);
-  font-size: 0.85rem; color: var(--negro); outline: none;
-  transition: border-color var(--tr), box-shadow var(--tr);
-}
-.field input:focus, .field textarea:focus { border-color: var(--azul); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: var(--blanco); }
-.field-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
-.add-row { display: flex; gap: 8px; margin-bottom: 12px; }
-.add-row input { flex: 1; background: var(--gris-fondo); border: 1px solid var(--gris-borde); border-radius: 8px; padding: 9px 12px; font-family: var(--font-sans); font-size: 0.83rem; color: var(--negro); outline: none; transition: border-color var(--tr); }
-.add-row input:focus { border-color: var(--azul); background: var(--blanco); }
-.btn-add { width: 36px; height: 36px; background: var(--azul); border: none; border-radius: 8px; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background var(--tr); }
-.btn-add:hover { background: var(--azul-hover); }
-.items-list { min-height: 40px; }
-.list-empty { font-size: 0.78rem; color: var(--gris-texto); font-style: italic; padding: 8px 0; }
-.item-row { display: flex; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--gris-borde); font-size: 0.83rem; }
-.item-row:last-child { border-bottom: none; }
-.item-nombre { flex: 1; color: var(--negro); font-weight: 500; }
-.item-detalle { color: var(--gris-texto); font-size: 0.75rem; }
-.item-costo { color: var(--azul); font-weight: 600; min-width: 70px; text-align: right; }
-.btn-remove { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 16px; padding: 2px; line-height: 1; }
-.btn-remove:hover { color: #991b1b; }
-.subtotal-row { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--gris-borde); margin-top: 8px; font-size: 0.82rem; color: var(--gris-texto); }
-.subtotal-row strong { color: var(--azul); font-size: 1rem; }
-.personal-grid { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; margin-bottom: 12px; }
-.personal-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; transition: background var(--tr); }
-.personal-item:hover { background: var(--azul-claro); }
-.personal-item input { width: 16px; height: 16px; accent-color: var(--azul); flex-shrink: 0; }
-.personal-nombre { flex: 1; font-size: 0.83rem; color: var(--negro); font-weight: 500; }
-.personal-rol { font-size: 0.65rem; color: var(--gris-texto); text-transform: uppercase; letter-spacing: 0.08em; }
-.form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--gris-borde); }
-.back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: flex; align-items: center; gap: 4px; }
-.back-link:hover { color: var(--azul); }
-
-/* Calendario mini */
-#mini-cal { font-family: var(--font-sans); }
-.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.cal-header span { font-size: 0.85rem; font-weight: 600; color: var(--negro); }
-.cal-nav { background: none; border: 1px solid var(--gris-borde); border-radius: 6px; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gris-texto); font-size: 14px; transition: all var(--tr); }
-.cal-nav:hover { border-color: var(--azul); color: var(--azul); }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-.cal-day-name { text-align: center; font-size: 0.6rem; font-weight: 600; color: var(--gris-texto); padding: 4px 0; letter-spacing: 0.05em; }
-.cal-day { text-align: center; font-size: 0.78rem; padding: 6px 4px; border-radius: 6px; cursor: pointer; color: var(--negro); transition: all var(--tr); }
-.cal-day:hover { background: var(--azul-claro); color: var(--azul); }
-.cal-day.hoy { background: var(--azul-claro); color: var(--azul); font-weight: 600; }
-.cal-day.seleccionado { background: var(--azul); color: #fff; font-weight: 600; }
-.cal-day.vacio { visibility: hidden; }
-.cal-day.otro-mes { color: var(--gris-borde); cursor: default; }
-.cal-day.otro-mes:hover { background: none; }
-
-@media (max-width: 900px) {
-  .form-grid { grid-template-columns: 1fr; }
-  .field-row { grid-template-columns: 1fr 1fr; }
-}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.form-col{display:flex;flex-direction:column;gap:20px;}
+.form-card{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px;box-shadow:var(--sombra);}
+.form-card-title{font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin-bottom:18px;display:flex;align-items:center;gap:7px;}
+.field{margin-bottom:14px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;letter-spacing:0.05em;}
+.field input,.field textarea,.field select{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;transition:border-color var(--tr),box-shadow var(--tr);}
+.field input:focus,.field textarea:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);background:var(--blanco);}
+.field-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.add-row{display:flex;gap:8px;margin-bottom:12px;}
+.add-row input,.add-row select{flex:1;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:9px 12px;font-family:var(--font-sans);font-size:0.83rem;color:var(--negro);outline:none;transition:border-color var(--tr);}
+.add-row input:focus,.add-row select:focus{border-color:var(--azul);background:var(--blanco);}
+.btn-add{width:36px;height:36px;background:var(--azul);border:none;border-radius:8px;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background var(--tr);}
+.btn-add:hover{background:var(--azul-hover);}
+.items-list{min-height:40px;}
+.list-empty{font-size:0.78rem;color:var(--gris-texto);font-style:italic;padding:8px 0;}
+.item-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--gris-borde);font-size:0.83rem;}
+.item-row:last-child{border-bottom:none;}
+.item-nombre{flex:1;color:var(--negro);font-weight:500;}
+.item-detalle{color:var(--gris-texto);font-size:0.75rem;}
+.item-costo{color:var(--azul);font-weight:600;min-width:70px;text-align:right;}
+.btn-remove{background:none;border:none;color:#dc2626;cursor:pointer;font-size:16px;padding:2px;line-height:1;}
+.subtotal-row{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--gris-borde);margin-top:8px;font-size:0.82rem;color:var(--gris-texto);}
+.subtotal-row strong{color:var(--azul);font-size:1rem;}
+.personal-grid{display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;margin-bottom:12px;}
+.personal-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background var(--tr);}
+.personal-item:hover{background:var(--azul-claro);}
+.personal-item input{width:16px;height:16px;accent-color:var(--azul);flex-shrink:0;}
+.personal-nombre{flex:1;font-size:0.83rem;color:var(--negro);font-weight:500;}
+.personal-rol{font-size:0.65rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.08em;}
+.form-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px;padding-top:24px;border-top:1px solid var(--gris-borde);}
+.back-link{color:var(--gris-texto);text-decoration:none;font-size:0.75rem;display:inline-flex;align-items:center;gap:4px;}
+.back-link:hover{color:var(--azul);}
+/* Calendario */
+#mini-cal{font-family:var(--font-sans);}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cal-header span{font-size:0.85rem;font-weight:600;color:var(--negro);}
+.cal-nav{background:none;border:1px solid var(--gris-borde);border-radius:6px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:14px;transition:all var(--tr);}
+.cal-nav:hover{border-color:var(--azul);color:var(--azul);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-day-name{text-align:center;font-size:0.6rem;font-weight:600;color:var(--gris-texto);padding:4px 0;letter-spacing:0.05em;}
+.cal-day{text-align:center;font-size:0.78rem;padding:6px 4px;border-radius:6px;cursor:pointer;color:var(--negro);transition:all var(--tr);}
+.cal-day:hover{background:var(--azul-claro);color:var(--azul);}
+.cal-day.hoy{background:var(--azul-claro);color:var(--azul);font-weight:600;}
+.cal-day.seleccionado{background:var(--azul);color:#fff;font-weight:600;}
+.cal-day.vacio{visibility:hidden;}
+@media(max-width:900px){.form-grid{grid-template-columns:1fr;}.field-row{grid-template-columns:1fr 1fr;}}
 </style>
 
 <script>
-// ── Estado ──────────────────────────────────────────
-let platos = [];
-let vajilla = [];
+// ── Horas de producción automáticas ─────────────────
+function calcularHorasProduccion() {
+  const ini = document.getElementById('prod_inicio').value;
+  const fin = document.getElementById('prod_fin').value;
+  if (ini && fin) {
+    const [h1,m1] = ini.split(':').map(Number);
+    const [h2,m2] = fin.split(':').map(Number);
+    let mins = (h2*60+m2) - (h1*60+m1);
+    if (mins < 0) mins += 24*60;
+    const horas = (mins/60).toFixed(1);
+    document.getElementById('horas_produccion_display').value = horas + ' hs (' + ini + ' — ' + fin + ')';
+    // Guardar el valor numérico en un campo oculto
+    document.getElementById('horas_produccion_display').name = 'horas_produccion';
+  }
+}
+document.getElementById('prod_inicio').addEventListener('change', calcularHorasProduccion);
+document.getElementById('prod_fin').addEventListener('change', calcularHorasProduccion);
 
-// ── Platos ──────────────────────────────────────────
+// ── Platos desde receta/costo ────────────────────────
+document.getElementById('plato-receta').addEventListener('change', function() {
+  const opt = this.options[this.selectedIndex];
+  if (opt.value) {
+    document.getElementById('plato-nombre').value = opt.value;
+    const costo = opt.dataset.costo;
+    if (costo && parseFloat(costo) > 0) {
+      document.getElementById('plato-costo').value = parseFloat(costo).toFixed(2);
+    }
+  }
+});
+
+let platos = [];
 function agregarPlato() {
-  const nombre = document.getElementById('plato-nombre').value.trim();
-  const porciones = parseInt(document.getElementById('plato-porciones').value) || 1;
-  const costo = parseFloat(document.getElementById('plato-costo').value) || 0;
+  const nombre   = document.getElementById('plato-nombre').value.trim();
+  const porciones= parseInt(document.getElementById('plato-porciones').value) || 1;
+  const costo    = parseFloat(document.getElementById('plato-costo').value) || 0;
   if (!nombre) { document.getElementById('plato-nombre').focus(); return; }
-  const subtotal = porciones * costo;
-  platos.push({ nombre, porciones, costo, subtotal });
+  platos.push({ nombre, porciones, costo, subtotal: porciones * costo });
   document.getElementById('plato-nombre').value = '';
   document.getElementById('plato-porciones').value = '1';
   document.getElementById('plato-costo').value = '';
-  renderPlatos();
-  actualizarCosto();
+  document.getElementById('plato-receta').value = '';
+  renderPlatos(); actualizarCosto();
 }
-
-function eliminarPlato(i) {
-  platos.splice(i, 1);
-  renderPlatos();
-  actualizarCosto();
-}
-
+function eliminarPlato(i) { platos.splice(i,1); renderPlatos(); actualizarCosto(); }
 function renderPlatos() {
   const el = document.getElementById('lista-platos');
-  if (!platos.length) {
-    el.innerHTML = '<p class="list-empty">No hay platos agregados todavía.</p>';
-    return;
-  }
-  el.innerHTML = platos.map((p, i) => `
+  if (!platos.length) { el.innerHTML='<p class="list-empty">No hay platos agregados todavía.</p>'; return; }
+  el.innerHTML = platos.map((p,i)=>`
     <div class="item-row">
       <span class="item-nombre">${p.nombre}</span>
       <span class="item-detalle">${p.porciones} porc. × $${p.costo.toFixed(2)}</span>
       <span class="item-costo">$${p.subtotal.toFixed(2)}</span>
-      <button type="button" class="btn-remove" onclick="eliminarPlato(${i})">
-        <i class="ti ti-x" aria-hidden="true"></i>
-      </button>
-    </div>
-  `).join('');
+      <button type="button" class="btn-remove" onclick="eliminarPlato(${i})"><i class="ti ti-x"></i></button>
+    </div>`).join('');
 }
-
 function actualizarCosto() {
-  const total = platos.reduce((s, p) => s + p.subtotal, 0);
-  document.getElementById('costo-total-display').textContent = '$' + total.toFixed(2);
-  document.getElementById('platos_json').value = JSON.stringify(platos);
+  const total = platos.reduce((s,p)=>s+p.subtotal,0);
+  document.getElementById('costo-total-display').textContent='$'+total.toFixed(2);
+  document.getElementById('platos_json').value=JSON.stringify(platos);
 }
 
 // ── Personal ─────────────────────────────────────────
-document.querySelectorAll('.chk-personal').forEach(chk => {
-  chk.addEventListener('change', actualizarPersonal);
+document.querySelectorAll('.chk-personal').forEach(c=>c.addEventListener('change',actualizarPersonal));
+function actualizarPersonal() {
+  const sel=[...document.querySelectorAll('.chk-personal:checked')];
+  document.getElementById('personal-count').textContent=sel.length+' persona'+(sel.length!==1?'s':'');
+  document.getElementById('personal_json').value=JSON.stringify(sel.map(c=>c.value));
+}
+
+// ── Vajilla con menú ─────────────────────────────────
+document.getElementById('vajilla-tipo').addEventListener('change', function() {
+  const otro = document.getElementById('vajilla-otro');
+  if (this.value === 'otro') {
+    otro.style.display = 'flex';
+    otro.focus();
+  } else {
+    otro.style.display = 'none';
+  }
 });
 
-function actualizarPersonal() {
-  const sel = [...document.querySelectorAll('.chk-personal:checked')];
-  document.getElementById('personal-count').textContent = sel.length + ' persona' + (sel.length !== 1 ? 's' : '');
-  document.getElementById('personal_json').value = JSON.stringify(sel.map(c => c.value));
-}
-
-// ── Vajilla ──────────────────────────────────────────
+let vajilla = [];
 function agregarVajilla() {
-  const nombre = document.getElementById('vajilla-nombre').value.trim();
+  const select   = document.getElementById('vajilla-tipo');
+  const otroInput= document.getElementById('vajilla-otro');
+  const nombre   = select.value === 'otro' ? otroInput.value.trim() : select.value.trim();
   const cantidad = parseInt(document.getElementById('vajilla-cantidad').value) || 1;
-  if (!nombre) { document.getElementById('vajilla-nombre').focus(); return; }
+  if (!nombre) { select.focus(); return; }
   vajilla.push({ nombre, cantidad });
-  document.getElementById('vajilla-nombre').value = '';
-  document.getElementById('vajilla-cantidad').value = '1';
+  select.value = '';
+  otroInput.value = '';
+  otroInput.style.display = 'none';
+  document.getElementById('vajilla-cantidad').value = '';
   renderVajilla();
 }
-
-function eliminarVajilla(i) {
-  vajilla.splice(i, 1);
-  renderVajilla();
-}
-
+function eliminarVajilla(i) { vajilla.splice(i,1); renderVajilla(); }
 function renderVajilla() {
   const el = document.getElementById('lista-vajilla');
-  if (!vajilla.length) {
-    el.innerHTML = '<p class="list-empty">No hay vajilla agregada todavía.</p>';
-    return;
-  }
-  el.innerHTML = vajilla.map((v, i) => `
+  if (!vajilla.length) { el.innerHTML='<p class="list-empty">No hay vajilla agregada todavía.</p>'; return; }
+  el.innerHTML = vajilla.map((v,i)=>`
     <div class="item-row">
       <span class="item-nombre">${v.nombre}</span>
       <span class="item-detalle">${v.cantidad} unidades</span>
-      <button type="button" class="btn-remove" onclick="eliminarVajilla(${i})">
-        <i class="ti ti-x" aria-hidden="true"></i>
-      </button>
-    </div>
-  `).join('');
-  document.getElementById('vajilla_json').value = JSON.stringify(vajilla);
+      <button type="button" class="btn-remove" onclick="eliminarVajilla(${i})"><i class="ti ti-x"></i></button>
+    </div>`).join('');
+  document.getElementById('vajilla_json').value=JSON.stringify(vajilla);
 }
 
-// ── Calendario mini ──────────────────────────────────
-const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const DIAS = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
-let calFecha = new Date();
-let calSeleccionado = null;
-
+// ── Calendario ───────────────────────────────────────
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+let calFecha=new Date(), calSel=null;
 function renderCal() {
-  const hoy = new Date();
-  const anio = calFecha.getFullYear();
-  const mes = calFecha.getMonth();
-  const primerDia = new Date(anio, mes, 1).getDay();
-  const diasMes = new Date(anio, mes + 1, 0).getDate();
-
-  let html = `
-    <div class="cal-header">
-      <button type="button" class="cal-nav" onclick="calMes(-1)">&#8249;</button>
-      <span>${MESES[mes]} ${anio}</span>
-      <button type="button" class="cal-nav" onclick="calMes(1)">&#8250;</button>
-    </div>
-    <div class="cal-grid">
-  `;
-  DIAS.forEach(d => html += `<div class="cal-day-name">${d}</div>`);
-  for (let i = 0; i < primerDia; i++) html += `<div class="cal-day vacio"></div>`;
-  for (let d = 1; d <= diasMes; d++) {
-    const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    let cls = 'cal-day';
-    if (hoy.getDate()===d && hoy.getMonth()===mes && hoy.getFullYear()===anio) cls += ' hoy';
-    if (calSeleccionado === fechaStr) cls += ' seleccionado';
-    html += `<div class="${cls}" onclick="selDia('${fechaStr}', ${d})">${d}</div>`;
+  const hoy=new Date(), anio=calFecha.getFullYear(), mes=calFecha.getMonth();
+  const primerDia=new Date(anio,mes,1).getDay(), diasMes=new Date(anio,mes+1,0).getDate();
+  let html=`<div class="cal-header">
+    <button type="button" class="cal-nav" onclick="calMes(-1)">&#8249;</button>
+    <span>${MESES[mes]} ${anio}</span>
+    <button type="button" class="cal-nav" onclick="calMes(1)">&#8250;</button>
+  </div><div class="cal-grid">`;
+  DIAS.forEach(d=>html+=`<div class="cal-day-name">${d}</div>`);
+  for(let i=0;i<primerDia;i++) html+=`<div class="cal-day vacio"></div>`;
+  for(let d=1;d<=diasMes;d++) {
+    const fs=`${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let cls='cal-day';
+    if(hoy.getDate()===d&&hoy.getMonth()===mes&&hoy.getFullYear()===anio) cls+=' hoy';
+    if(calSel===fs) cls+=' seleccionado';
+    html+=`<div class="${cls}" onclick="selDia('${fs}')">${d}</div>`;
   }
-  html += '</div>';
-  document.getElementById('mini-cal').innerHTML = html;
+  html+='</div>';
+  document.getElementById('mini-cal').innerHTML=html;
 }
-
-function calMes(dir) {
-  calFecha.setMonth(calFecha.getMonth() + dir);
-  renderCal();
-}
-
-function selDia(fechaStr, dia) {
-  calSeleccionado = fechaStr;
-  document.getElementById('campo-fecha').value = fechaStr;
-  renderCal();
-}
-
-// Sincronizar calendario con el input de fecha
-document.getElementById('campo-fecha').addEventListener('change', function() {
-  if (this.value) {
-    calSeleccionado = this.value;
-    calFecha = new Date(this.value + 'T00:00:00');
-    renderCal();
-  }
+function calMes(dir){calFecha.setMonth(calFecha.getMonth()+dir);renderCal();}
+function selDia(fs){calSel=fs;document.getElementById('campo-fecha').value=fs;renderCal();}
+document.getElementById('campo-fecha').addEventListener('change',function(){
+  if(this.value){calSel=this.value;calFecha=new Date(this.value+'T00:00:00');renderCal();}
 });
-
 renderCal();
 
-// ── Enter en inputs de platos/vajilla ────────────────
-document.getElementById('plato-costo').addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();agregarPlato();} });
-document.getElementById('vajilla-cantidad').addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();agregarVajilla();} });
+document.getElementById('plato-costo').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();agregarPlato();}});
+document.getElementById('vajilla-cantidad').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();agregarVajilla();}});
 </script>
 
   </main>
+  <nav class="mobile-nav">
+    <a href="/eventos"  class="mobile-nav-link activo"><i class="ti ti-calendar-event"></i>Eventos</a>
+    <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i>Personal</a>
+    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i>Horarios</a>
+    <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i>Recetas</a>
+    <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i>Costos</a>
+  </nav>
 </div>
 </body>
 </html>

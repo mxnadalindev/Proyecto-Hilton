@@ -37,7 +37,8 @@
       <p class="inicio-saludo">Portal interno · Hilton Buenos Aires</p>
       <h1 class="inicio-titulo">Bienvenido,<br><span><%= usuario?.nombre %></span></h1>
 
-      <div class="inicio-grid" style="grid-template-columns:repeat(5,1fr);max-width:1100px;">
+      <%# Grid de 5 módulos — clase CSS en vez de style inline para que el responsive funcione %>
+      <div class="inicio-grid inicio-grid-5">
 
         <a href="/eventos" class="inicio-card fade-up">
           <div class="card-icon"><i class="ti ti-calendar-event"></i></div>
@@ -79,11 +80,11 @@
   </main>
 
   <nav class="mobile-nav">
-    <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i>Eventos</a>
-    <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i>Personal</a>
-    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i>Horarios</a>
-    <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i>Recetas</a>
-    <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i>Costos</a>
+    <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
+    <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i><span>Personal</span></a>
+    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
+    <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
+    <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span>Costos</span></a>
   </nav>
 
 </div>

@@ -8,16 +8,17 @@
 </head>
 <body>
 <div class="app-layout">
-
   <header class="header">
     <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
-    <nav class="header-nav">
+    <nav class="header-nav desktop-only">
       <a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
       <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
+      <a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a>
       <a href="/recetas"  class="nav-link activo"><i class="ti ti-chef-hat"></i> Recetas</a>
+      <a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a>
     </nav>
     <div class="header-user">
-      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+      <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
       <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
     </div>
   </header>
@@ -26,36 +27,84 @@
 
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label"><a href="/recetas" class="back-link"><i class="ti ti-arrow-left"></i> Recetas</a></p>
+        <p class="seccion-label">
+          <a href="/inicio" class="back-link"><i class="ti ti-home"></i> Menú principal</a>
+          &nbsp;/&nbsp;
+          <a href="/recetas" class="back-link"><i class="ti ti-arrow-left"></i> Recetas</a>
+        </p>
         <h1 class="seccion-titulo">Nueva receta</h1>
       </div>
     </div>
 
-    <form method="POST" action="/recetas/nueva" enctype="multipart/form-data">
+    <form method="POST" action="/recetas/nueva" enctype="multipart/form-data" id="form-receta">
+      <!-- Ingredientes como JSON -->
+      <input type="hidden" name="ingredientes" id="ingredientes_json">
+
       <div class="form-grid">
 
         <!-- Columna izquierda -->
         <div class="form-col">
+
+          <!-- 3. Información general con menús desplegables -->
           <div class="form-card">
             <p class="form-card-title"><i class="ti ti-info-circle"></i> Información general</p>
+
             <div class="field">
               <label>Nombre de la receta</label>
               <input type="text" name="nombre" placeholder="Ej: Risotto de hongos" required>
             </div>
+
+            <!-- 3. Categoría con desplegable -->
             <div class="field">
               <label>Categoría</label>
-              <input type="text" name="categoria" placeholder="Ej: Entrada, Principal, Postre">
+              <select name="categoria" id="sel-categoria" onchange="toggleOtro('categoria')"
+                      style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+                <option value="">Seleccionar...</option>
+                <option>Entrada</option>
+                <option>Sopa</option>
+                <option>Ensalada</option>
+                <option>Principal</option>
+                <option>Guarnición</option>
+                <option>Postre</option>
+                <option>Desayuno</option>
+                <option>Merienda</option>
+                <option>Bebida</option>
+                <option>Snack</option>
+                <option>Panadería</option>
+                <option>Pastelería</option>
+                <option value="otro">Otro (escribir)</option>
+              </select>
+              <input type="text" id="otro-categoria" name="categoria_otro"
+                     placeholder="Escribir categoría..." style="display:none;margin-top:6px;width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             </div>
+
+            <!-- 3. Área con desplegable -->
             <div class="field">
-              <label>Área</label>
-              <input type="text" name="area" placeholder="Ej: Cocina caliente">
+              <label>Área de cocina</label>
+              <select name="area" id="sel-area" onchange="toggleOtro('area')"
+                      style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+                <option value="">Seleccionar...</option>
+                <option>Cocina caliente</option>
+                <option>Cocina fría</option>
+                <option>Pastelería</option>
+                <option>Panadería</option>
+                <option>Garde manger</option>
+                <option>Banquetes</option>
+                <option>Room service</option>
+                <option>Bar</option>
+                <option value="otro">Otro (escribir)</option>
+              </select>
+              <input type="text" id="otro-area" name="area_otro"
+                     placeholder="Escribir área..." style="display:none;margin-top:6px;width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             </div>
+
             <div class="field">
               <label>Imagen del plato</label>
               <input type="file" name="imagen" accept="image/*" style="padding:8px 0;">
             </div>
           </div>
 
+          <!-- Video -->
           <div class="form-card">
             <p class="form-card-title"><i class="ti ti-video"></i> Video de preparación</p>
             <div class="field">
@@ -67,69 +116,201 @@
               <input type="text" name="video_url" placeholder="https://...">
             </div>
           </div>
+
         </div>
 
         <!-- Columna derecha -->
         <div class="form-col">
+
+          <!-- 2. Ingredientes con celdas separadas -->
           <div class="form-card">
             <p class="form-card-title"><i class="ti ti-list"></i> Ingredientes</p>
-            <div class="field">
-              <label>Un ingrediente por línea con cantidad</label>
-              <textarea name="ingredientes" rows="7"
-                placeholder="200g harina&#10;3 huevos&#10;100ml leche&#10;50g manteca&#10;..."></textarea>
+
+            <!-- Agregar ingrediente -->
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+              <input type="text" id="ing-nombre" placeholder="Ingrediente (ej: Harina)"
+                     style="flex:2;min-width:100px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:9px 12px;font-family:var(--font-sans);font-size:0.83rem;color:var(--negro);outline:none;">
+              <input type="number" id="ing-cantidad" placeholder="Cant." min="0" step="0.01"
+                     style="flex:1;min-width:70px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:9px 12px;font-family:var(--font-sans);font-size:0.83rem;color:var(--negro);outline:none;">
+              <select id="ing-unidad"
+                      style="flex:1;min-width:70px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:9px 10px;font-family:var(--font-sans);font-size:0.83rem;color:var(--negro);outline:none;">
+                <option value="g">g</option>
+                <option value="kg">kg</option>
+                <option value="ml">ml</option>
+                <option value="lt">lt</option>
+                <option value="unidad">unid.</option>
+                <option value="cucharada">cdas.</option>
+                <option value="cucharadita">cdita.</option>
+                <option value="taza">taza</option>
+                <option value="pizca">pizca</option>
+                <option value="al gusto">al gusto</option>
+              </select>
+              <button type="button" onclick="agregarIngrediente()"
+                      style="width:36px;height:36px;background:var(--azul);border:none;border-radius:8px;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="ti ti-plus"></i>
+              </button>
             </div>
+
+            <!-- Lista de ingredientes -->
+            <div id="lista-ingredientes" style="min-height:40px;margin-bottom:8px;">
+              <p id="ing-empty" style="font-size:0.78rem;color:var(--gris-texto);font-style:italic;padding:8px 0;">
+                Agregá los ingredientes uno por uno.
+              </p>
+            </div>
+
+            <p style="font-size:0.68rem;color:var(--gris-texto);border-top:1px solid var(--gris-borde);padding-top:8px;">
+              También podés escribir los ingredientes directamente:
+            </p>
+            <textarea id="ing-libre" rows="3"
+                      placeholder="Ej: 200g harina&#10;3 huevos&#10;100ml leche"
+                      style="width:100%;margin-top:6px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.83rem;color:var(--negro);outline:none;resize:vertical;"
+                      oninput="syncLibre()"></textarea>
           </div>
 
+          <!-- Pasos -->
           <div class="form-card">
             <p class="form-card-title"><i class="ti ti-list-numbers"></i> Pasos de preparación</p>
             <div class="field">
-              <label>Describí cada paso</label>
-              <textarea name="pasos" rows="7"
-                placeholder="Paso 1: Mezclar la harina con los huevos.&#10;Paso 2: Agregar la leche de a poco.&#10;..."></textarea>
+              <textarea name="pasos" rows="8"
+                        placeholder="Paso 1: Mezclar la harina con los huevos.&#10;Paso 2: Agregar la leche de a poco.&#10;..."></textarea>
             </div>
           </div>
-        </div>
 
+        </div>
       </div>
 
       <div class="form-actions">
         <a href="/recetas" class="btn-secondary">Cancelar</a>
-        <button type="submit" class="btn-primary">
+        <button type="submit" class="btn-primary" onclick="prepararEnvio()">
           <i class="ti ti-device-floppy"></i> Guardar receta
         </button>
       </div>
     </form>
 
   </main>
+
+  <nav class="mobile-nav">
+    <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i>Eventos</a>
+    <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i>Personal</a>
+    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i>Horarios</a>
+    <a href="/recetas"  class="mobile-nav-link activo"><i class="ti ti-chef-hat"></i>Recetas</a>
+    <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i>Costos</a>
+  </nav>
 </div>
 
 <style>
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.form-col { display: flex; flex-direction: column; gap: 20px; }
-.form-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
-.form-card-title { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
-.field { margin-bottom: 16px; }
-.field:last-child { margin-bottom: 0; }
-.field label { display: block; font-size: 0.68rem; font-weight: 500; color: var(--negro); margin-bottom: 6px; letter-spacing: 0.05em; }
-.field input[type="text"],
-.field input[type="number"],
-.field textarea {
-  width: 100%; background: var(--gris-fondo); border: 1px solid var(--gris-borde);
-  border-radius: 8px; padding: 10px 12px; font-family: var(--font-sans);
-  font-size: 0.85rem; color: var(--negro); outline: none;
-  transition: border-color var(--tr), box-shadow var(--tr);
-  resize: vertical;
-}
-.field input:focus, .field textarea:focus {
-  border-color: var(--azul);
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-  background: var(--blanco);
-}
-.form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--gris-borde); }
-.back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; }
-.back-link:hover { color: var(--azul); }
-@media (max-width: 900px) { .form-grid { grid-template-columns: 1fr; } }
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.form-col{display:flex;flex-direction:column;gap:20px;}
+.form-card{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px;box-shadow:var(--sombra);}
+.form-card-title{font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin-bottom:18px;display:flex;align-items:center;gap:7px;}
+.field{margin-bottom:14px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;letter-spacing:0.05em;}
+.field input[type="text"],.field input[type="number"],.field textarea{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;resize:vertical;}
+.field input:focus,.field textarea:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);background:var(--blanco);}
+.form-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px;padding-top:24px;border-top:1px solid var(--gris-borde);}
+.back-link{color:var(--gris-texto);text-decoration:none;font-size:0.75rem;display:inline-flex;align-items:center;gap:4px;}
+.back-link:hover{color:var(--azul);}
+.ing-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--gris-borde);font-size:0.83rem;}
+.ing-row:last-child{border-bottom:none;}
+.ing-nombre{flex:1;color:var(--negro);font-weight:500;}
+.ing-cant{color:var(--azul);font-weight:600;min-width:70px;text-align:right;}
+.ing-del{background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:2px;}
+@media(max-width:900px){.form-grid{grid-template-columns:1fr;}}
 </style>
+
+<script>
+let ingredientes = [];
+
+// 2. Agregar ingrediente estructurado
+function agregarIngrediente() {
+  const nombre   = document.getElementById('ing-nombre').value.trim();
+  const cantidad = document.getElementById('ing-cantidad').value;
+  const unidad   = document.getElementById('ing-unidad').value;
+  if (!nombre) { document.getElementById('ing-nombre').focus(); return; }
+  ingredientes.push({ nombre, cantidad: parseFloat(cantidad)||0, unidad });
+  document.getElementById('ing-nombre').value   = '';
+  document.getElementById('ing-cantidad').value = '';
+  renderIngredientes();
+}
+
+function eliminarIngrediente(i) {
+  ingredientes.splice(i, 1);
+  renderIngredientes();
+}
+
+function renderIngredientes() {
+  const el    = document.getElementById('lista-ingredientes');
+  const empty = document.getElementById('ing-empty');
+  if (!ingredientes.length) {
+    el.innerHTML = '';
+    el.appendChild(empty || document.createElement('p'));
+    if (empty) empty.style.display = '';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  el.innerHTML = ingredientes.map((ing, i) => `
+    <div class="ing-row">
+      <span class="ing-nombre">${ing.nombre}</span>
+      <span class="ing-cant">${ing.cantidad > 0 ? ing.cantidad + ' ' + ing.unidad : ing.unidad}</span>
+      <button type="button" class="ing-del" onclick="eliminarIngrediente(${i})"><i class="ti ti-x"></i></button>
+    </div>
+  `).join('');
+  sincronizarLibre();
+}
+
+function sincronizarLibre() {
+  document.getElementById('ing-libre').value = ingredientes
+    .map(ing => ing.cantidad > 0 ? `${ing.cantidad}${ing.unidad} ${ing.nombre}` : `${ing.nombre}`)
+    .join('\n');
+}
+
+function syncLibre() {
+  // Al editar el textarea libre, limpiar ingredientes estructurados
+  ingredientes = [];
+  document.getElementById('lista-ingredientes').innerHTML = '';
+}
+
+function prepararEnvio() {
+  // Si hay ingredientes estructurados, usarlos
+  // Si no, usar el textarea libre
+  const libre = document.getElementById('ing-libre').value.trim();
+  const texto = ingredientes.length > 0
+    ? ingredientes.map(i => i.cantidad > 0 ? `${i.cantidad}${i.unidad} ${i.nombre}` : i.nombre).join('\n')
+    : libre;
+  document.getElementById('ingredientes_json').value = texto;
+
+  // Manejar "otro" en categoría y área
+  const selCat = document.getElementById('sel-categoria');
+  const otroCat = document.getElementById('otro-categoria');
+  if (selCat.value === 'otro' && otroCat.value.trim()) {
+    selCat.name = '';
+    otroCat.name = 'categoria';
+  }
+  const selArea = document.getElementById('sel-area');
+  const otroArea = document.getElementById('otro-area');
+  if (selArea.value === 'otro' && otroArea.value.trim()) {
+    selArea.name = '';
+    otroArea.name = 'area';
+  }
+}
+
+// 3. Mostrar/ocultar campo "otro"
+function toggleOtro(campo) {
+  const sel   = document.getElementById('sel-' + campo);
+  const otro  = document.getElementById('otro-' + campo);
+  otro.style.display = sel.value === 'otro' ? 'block' : 'none';
+  if (sel.value === 'otro') otro.focus();
+}
+
+// Enter en ingrediente avanza
+document.getElementById('ing-nombre').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('ing-cantidad').focus(); }
+});
+document.getElementById('ing-cantidad').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); agregarIngrediente(); }
+});
+</script>
 
 </body>
 </html>
