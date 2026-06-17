@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#2563eb">
+  <title>Portal Hilton Buenos Aires</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #f4f6f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .logo {
+      font-size: 2rem;
+      font-weight: 300;
+      color: #2563eb;
+      letter-spacing: 0.15em;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 36px;
+    }
+    .label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #1a202c;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    .input-wrap {
+      position: relative;
+      margin-bottom: 8px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.85rem;
+      color: #1a202c;
+      outline: none;
+      background: #f4f6f9;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus {
+      border-color: #2563eb;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .hint {
+      font-size: 0.65rem;
+      color: #64748b;
+      text-align: left;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      min-height: 48px;
+    }
+    .btn:hover { background: #1d4ed8; }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { background: #bfdbfe; cursor: not-allowed; }
+    .saved-wrap {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      display: none;
+    }
+    .saved-label {
+      font-size: 0.62rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+    .btn-saved {
+      width: 100%;
+      padding: 12px;
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 10px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-height: 44px;
+    }
+    .btn-saved:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.75rem;
+      margin-top: 12px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <p class="logo">Hilton</p>
+  <p class="subtitle">Portal Interno · Buenos Aires</p>
+
+  <p class="label">URL del servidor</p>
+  <div class="input-wrap">
+    <input type="text" id="url-input"
+           placeholder="https://xxxx-xxxx.ngrok-free.app"
+           autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+  </div>
+  <p class="hint">Ingresá la URL de ngrok activa. Se guarda automáticamente para la próxima vez.</p>
+
+  <button class="btn" id="btn-ingresar" onclick="ingresar()">
+    Ingresar al Portal
+  </button>
+
+  <div class="error" id="error-msg">
+    La URL no parece válida. Debe empezar con https://
+  </div>
+
+  <div class="saved-wrap" id="saved-wrap">
+    <p class="saved-label">Última URL guardada</p>
+    <button class="btn-saved" id="btn-saved" onclick="usarGuardada()">
+      Usar URL anterior
+    </button>
+  </div>
+</div>
+
+<script>
+  const KEY = 'hilton_ngrok_url';
+
+  // Mostrar URL guardada si existe
+  window.addEventListener('DOMContentLoaded', () => {
+    const guardada = localStorage.getItem(KEY);
+    if (guardada) {
+      document.getElementById('url-input').value = guardada;
+      const wrap = document.getElementById('saved-wrap');
+      const btn  = document.getElementById('btn-saved');
+      wrap.style.display = 'block';
+      // Mostrar solo el dominio en el botón
+      try {
+        const dominio = new URL(guardada).hostname;
+        btn.textContent = dominio;
+      } catch(e) {
+        btn.textContent = guardada;
+      }
+    }
+  });
+
+  function ingresar() {
+    let url = document.getElementById('url-input').value.trim();
+    const error = document.getElementById('error-msg');
+    error.style.display = 'none';
+
+    // Agregar https:// si falta
+    if (url && !url.startsWith('http')) url = 'https://' + url;
+
+    if (!url || !url.startsWith('https://')) {
+      error.style.display = 'block';
+      return;
+    }
+
+    // Quitar barra final
+    url = url.replace(/\/$/, '');
+
+    // Guardar
+    localStorage.setItem(KEY, url);
+
+    // Redirigir
+    window.location.href = url;
+  }
+
+  function usarGuardada() {
+    const guardada = localStorage.getItem(KEY);
+    if (guardada) window.location.href = guardada;
+  }
+
+  // Enter para ingresar
+  document.getElementById('url-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') ingresar();
+  });
+</script>
+
+</body>
+</html>
