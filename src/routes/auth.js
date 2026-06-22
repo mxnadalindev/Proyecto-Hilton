@@ -69,7 +69,8 @@ router.post('/login', async (req, res) => {
 
     if (user && password && bcrypt.compareSync(password, user.password)) {
       registrarIntento(email, true);
-      req.session.usuario = { id: user.id, nombre: user.nombre, rol: user.rol, email: user.email };
+      // ── Se agrega departamento a la sesión para el filtro por depto ──
+      req.session.usuario = { id: user.id, nombre: user.nombre, rol: user.rol, email: user.email, departamento: user.departamento };
       return res.redirect('/inicio');
     }
 

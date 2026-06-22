@@ -17,11 +17,20 @@
   <header class="header">
     <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
     <nav class="header-nav desktop-only">
-      <a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
-      <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
-      <a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a>
-      <a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
-      <a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a>
+      <% const _d = usuario?.departamento; %>
+      <% if (_d === 'cocina' || _d === 'ayb') { %>
+        <a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
+        <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
+        <a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a>
+        <a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
+        <a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a>
+      <% } %>
+      <% if (_d === 'compras') { %>
+        <a href="/compras"  class="nav-link"><i class="ti ti-shopping-cart"></i> Compras</a>
+      <% } %>
+      <% if (_d === 'finanzas') { %>
+        <a href="/finanzas" class="nav-link"><i class="ti ti-report-money"></i> Finanzas</a>
+      <% } %>
     </nav>
     <div class="header-user">
       <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
@@ -37,54 +46,56 @@
       <p class="inicio-saludo">Portal interno · Hilton Buenos Aires</p>
       <h1 class="inicio-titulo">Bienvenido,<br><span><%= usuario?.nombre %></span></h1>
 
-      <%# Grid de 5 módulos — clase CSS en vez de style inline para que el responsive funcione %>
-      <div class="inicio-grid inicio-grid-5">
+      <%
+        const depto = usuario?.departamento;
+        let modulos = [];
+        if (depto === 'cocina' || depto === 'ayb') {
+          modulos = [
+            { href: '/eventos',  icon: 'ti-calendar-event', nombre: 'Eventos',  desc: 'Gestión y presupuestos' },
+            { href: '/personal', icon: 'ti-users',          nombre: 'Personal', desc: 'Equipo interno' },
+            { href: '/horarios', icon: 'ti-clock',          nombre: 'Horarios', desc: 'Turnos automáticos' },
+            { href: '/recetas',  icon: 'ti-chef-hat',       nombre: 'Recetas',  desc: 'Recetario y videos' },
+            { href: '/costos',   icon: 'ti-coin',           nombre: 'Costos',   desc: 'Insumos y precios' },
+          ];
+        } else if (depto === 'compras') {
+          modulos = [
+            { href: '/compras', icon: 'ti-shopping-cart', nombre: 'Compras', desc: 'Órdenes y proveedores' },
+          ];
+        } else if (depto === 'finanzas') {
+          modulos = [
+            { href: '/finanzas', icon: 'ti-report-money', nombre: 'Finanzas', desc: 'Reportes y presupuestos' },
+          ];
+        }
+      %>
 
-        <a href="/eventos" class="inicio-card fade-up">
-          <div class="card-icon"><i class="ti ti-calendar-event"></i></div>
-          <span class="card-num">01</span>
-          <span class="card-nombre">Eventos</span>
-          <span class="card-desc">Gestión y presupuestos</span>
-        </a>
-
-        <a href="/personal" class="inicio-card fade-up">
-          <div class="card-icon"><i class="ti ti-users"></i></div>
-          <span class="card-num">02</span>
-          <span class="card-nombre">Personal</span>
-          <span class="card-desc">Equipo interno</span>
-        </a>
-
-        <a href="/horarios" class="inicio-card fade-up">
-          <div class="card-icon"><i class="ti ti-clock"></i></div>
-          <span class="card-num">03</span>
-          <span class="card-nombre">Horarios</span>
-          <span class="card-desc">Turnos automáticos</span>
-        </a>
-
-        <a href="/recetas" class="inicio-card fade-up">
-          <div class="card-icon"><i class="ti ti-chef-hat"></i></div>
-          <span class="card-num">04</span>
-          <span class="card-nombre">Recetas</span>
-          <span class="card-desc">Recetario y videos</span>
-        </a>
-
-        <a href="/costos" class="inicio-card fade-up">
-          <div class="card-icon"><i class="ti ti-coin"></i></div>
-          <span class="card-num">05</span>
-          <span class="card-nombre">Costos</span>
-          <span class="card-desc">Insumos y precios</span>
-        </a>
-
+      <div class="inicio-grid inicio-grid-<%= modulos.length %>">
+        <% modulos.forEach((m, i) => { %>
+          <a href="<%= m.href %>" class="inicio-card fade-up">
+            <div class="card-icon"><i class="ti <%= m.icon %>"></i></div>
+            <span class="card-num"><%= String(i + 1).padStart(2, '0') %></span>
+            <span class="card-nombre"><%= m.nombre %></span>
+            <span class="card-desc"><%= m.desc %></span>
+          </a>
+        <% }) %>
       </div>
+
     </div>
   </main>
 
   <nav class="mobile-nav">
-    <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
-    <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i><span>Personal</span></a>
-    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
-    <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
-    <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span>Costos</span></a>
+    <% if (depto === 'cocina' || depto === 'ayb') { %>
+      <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
+      <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i><span>Personal</span></a>
+      <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
+      <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
+      <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span>Costos</span></a>
+    <% } %>
+    <% if (depto === 'compras') { %>
+      <a href="/compras"  class="mobile-nav-link"><i class="ti ti-shopping-cart"></i><span>Compras</span></a>
+    <% } %>
+    <% if (depto === 'finanzas') { %>
+      <a href="/finanzas" class="mobile-nav-link"><i class="ti ti-report-money"></i><span>Finanzas</span></a>
+    <% } %>
   </nav>
 
 </div>

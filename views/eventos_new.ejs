@@ -8,18 +8,9 @@
 </head>
 <body>
 <div class="app-layout">
-  <header class="header">
-    <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
-    <nav class="header-nav">
-      <a href="/eventos" class="nav-link activo"><i class="ti ti-calendar-event"></i> Eventos</a>
-      <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
-      <a href="/recetas" class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
-    </nav>
-    <div class="header-user">
-      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
-      <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
-    </div>
-  </header>
+
+  <%- include('partials/nav', { path: 'eventos' }) %>
+
   <main class="main-content">
     <div class="seccion-header">
       <div class="seccion-header-left">
@@ -55,6 +46,8 @@
     </div>
     <% } %>
   </main>
+
+  <%- include('partials/mobile-nav', { path: 'eventos' }) %>
 </div>
 </body>
 </html>

@@ -25,11 +25,15 @@
 
   <main class="main-content">
 
-    <% if (typeof msg !== 'undefined' && msg === 'password_reseteada') { %>
+    <% if (typeof msg !== 'undefined' && msg === 'turno_asignado') { %>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
+      <i class="ti ti-check"></i> Turno asignado correctamente.
+    </div>
+    <% } else if (typeof msg !== 'undefined' && msg === 'password_reseteada') { %>
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
       <i class="ti ti-check"></i> Contraseña reseteada correctamente.
     </div>
-    <% } else if (typeof msg !== 'undefined' && msg && msg !== 'password_reseteada') { %>
+    <% } else if (typeof msg !== 'undefined' && msg && msg !== 'password_reseteada' && msg !== 'turno_asignado') { %>
     <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#dc2626;display:flex;align-items:center;gap:8px;">
       <i class="ti ti-alert-circle"></i> <%= decodeURIComponent(msg) %>
     </div>
@@ -41,9 +45,7 @@
         <h1 class="seccion-titulo">Personal</h1>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <!-- 1. Botón dice "Menú principal" -->
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
-        <a href="/horarios" class="btn-secondary"><i class="ti ti-clock"></i> Horarios</a>
         <% if (esAdmin) { %>
         <button onclick="showModal('modal-nuevo')" class="btn-primary">
           <i class="ti ti-plus"></i> Nuevo empleado
@@ -52,7 +54,6 @@
       </div>
     </div>
 
-    <!-- 3. Filtro activos/todos -->
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
       <label style="font-size:0.75rem;color:var(--gris-texto);display:flex;align-items:center;gap:6px;cursor:pointer;">
         <input type="checkbox" id="mostrarInactivos" onchange="filtrarPersonal()"
@@ -63,65 +64,102 @@
     </div>
 
     <div class="tabla-wrap">
-      <table class="tabla">
+      <table class="tabla" style="table-layout:fixed;width:100%;">
+        <colgroup>
+          <col style="width:22%">
+          <col style="width:14%">
+          <col style="width:10%">
+          <col style="width:46%">
+          <col style="width:8%">
+        </colgroup>
         <thead>
           <tr>
             <th>Nombre y apellido</th>
-            <th>Legajo</th>
             <th>Puesto</th>
-            <th>Email</th>
             <th>Rol</th>
-            <th>Estado</th>
-            <% if (esAdmin) { %><th>Acciones</th><% } %>
+            <th>Horario de entrada</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="tbody-personal">
           <% if (personal.length > 0) { %>
             <% personal.forEach(p => { %>
-            <!-- 3. Filas inactivas ocultas por defecto -->
             <tr class="fila-empleado <%= p.activo ? 'fila-activo' : 'fila-inactivo' %>"
                 style="<%= p.activo ? '' : 'display:none;' %>">
-              <td style="font-weight:500;color:var(--negro);">
-                <div style="display:flex;align-items:center;gap:10px;">
-                  <div style="width:34px;height:34px;border-radius:50%;background:<%= p.activo ? 'var(--azul-claro)' : 'var(--gris-fondo)' %>;color:<%= p.activo ? 'var(--azul)' : 'var(--gris-texto)' %>;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;flex-shrink:0;">
+
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;overflow:hidden;">
+                  <div style="width:32px;height:32px;border-radius:50%;background:<%= p.activo ? 'var(--azul-claro)' : 'var(--gris-fondo)' %>;color:<%= p.activo ? 'var(--azul)' : 'var(--gris-texto)' %>;display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:600;flex-shrink:0;">
                     <%= p.nombre.charAt(0).toUpperCase() %>
                   </div>
-                  <span style="<%= p.activo ? '' : 'color:var(--gris-texto);text-decoration:line-through;' %>">
+                  <span style="font-size:0.83rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;<%= p.activo ? '' : 'color:var(--gris-texto);text-decoration:line-through;' %>">
                     <%= p.nombre %>
                   </span>
                 </div>
               </td>
-              <td><span style="font-family:monospace;font-size:0.82rem;color:var(--gris-texto);">#<%= p.legajo || '—' %></span></td>
+
               <td><span class="puesto-badge"><%= p.puesto || '—' %></span></td>
-              <td style="font-size:0.8rem;color:var(--gris-texto);"><%= p.email %></td>
               <td><span class="rol-badge <%= p.rol === 'admin' ? 'rol-admin' : 'rol-empleado' %>"><%= p.rol %></span></td>
-              <td><span class="estado-badge <%= p.activo ? 'estado-activo' : 'estado-inactivo' %>"><%= p.activo ? 'Activo' : 'Dado de baja' %></span></td>
-              <% if (esAdmin) { %>
+
+              <%# ── Horario inline ── %>
               <td>
-                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                  <button onclick="abrirReset(<%= p.id %>, '<%= p.nombre.replace(/'/g, '') %>')"
-                          class="btn-sm" title="Resetear contraseña"
-                          style="background:var(--azul-claro);color:var(--azul);display:inline-flex;align-items:center;gap:4px;">
+                <% if (p.activo) { %>
+                <form method="POST" action="/personal/asignar-turno"
+                      style="display:flex;align-items:center;gap:5px;">
+                  <input type="hidden" name="usuario_id" value="<%= p.id %>">
+                  <input type="date" name="fecha"
+                         value="<%= new Date().toISOString().split('T')[0] %>"
+                         style="padding:5px 6px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.73rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;width:120px;">
+                  <input type="time" name="hora_entrada" value="<%= (horarioMap[p.id] && horarioMap[p.id].hora) ? horarioMap[p.id].hora : '08:00' %>"
+                         style="padding:5px 6px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.73rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;width:82px;">
+                  <select name="seccion"
+                          style="padding:5px 6px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.73rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;flex:1;min-width:0;">
+                    <% const _secciones = ['Cocina Principal','Cocina Fría','Pastelería','Parrilla','Salón Principal','Salón Eventos','Bar','Otra']; %>
+                    <% const _secActual = horarioMap[p.id]?.seccion || 'Cocina Principal'; %>
+                    <% _secciones.forEach(s => { %>
+                      <option value="<%= s %>" <%= s === _secActual ? 'selected' : '' %>><%= s %></option>
+                    <% }) %>
+                  </select>
+                  <button type="submit" class="btn-asignar" title="Asignar">
+                    <i class="ti ti-check"></i>
+                  </button>
+                </form>
+                <% } %>
+              </td>
+
+              <%# ── Menú tres puntitos ── %>
+              <td style="text-align:center;position:relative;">
+                <% if (esAdmin) { %>
+                <button class="btn-menu" onclick="toggleMenu(<%= p.id %>)" title="Opciones">
+                  <i class="ti ti-dots-vertical"></i>
+                </button>
+                <div id="menu-<%= p.id %>" class="dropdown-menu" style="display:none;">
+                  <button onclick="abrirReset(<%= p.id %>, '<%= p.nombre.replace(/'/g, '') %>')" class="dropdown-item">
                     <i class="ti ti-key"></i> Contraseña
                   </button>
                   <% if (p.activo) { %>
-                    <form method="POST" action="/personal/<%= p.id %>/eliminar" style="margin:0;"
-                          onsubmit="return confirm('¿Dar de baja a <%= p.nombre %>?')">
-                      <button type="submit" class="btn-baja">Dar de baja</button>
-                    </form>
+                  <form method="POST" action="/personal/<%= p.id %>/eliminar" style="margin:0;"
+                        onsubmit="return confirm('¿Dar de baja a <%= p.nombre %>?')">
+                    <button type="submit" class="dropdown-item dropdown-danger">
+                      <i class="ti ti-user-off"></i> Dar de baja
+                    </button>
+                  </form>
                   <% } else { %>
-                    <form method="POST" action="/personal/<%= p.id %>/activar" style="margin:0;">
-                      <button type="submit" class="btn-activar">Reactivar</button>
-                    </form>
+                  <form method="POST" action="/personal/<%= p.id %>/activar" style="margin:0;">
+                    <button type="submit" class="dropdown-item dropdown-success">
+                      <i class="ti ti-user-check"></i> Reactivar
+                    </button>
+                  </form>
                   <% } %>
                 </div>
+                <% } %>
               </td>
-              <% } %>
+
             </tr>
             <% }) %>
           <% } else { %>
             <tr>
-              <td colspan="7" style="text-align:center;padding:48px;color:var(--gris-texto);font-style:italic;">
+              <td colspan="5" style="text-align:center;padding:48px;color:var(--gris-texto);font-style:italic;">
                 No hay personal registrado todavía.
               </td>
             </tr>
@@ -130,11 +168,15 @@
       </table>
     </div>
 
+    <%
+      const hoy = new Date().toISOString().split('T')[0];
+    %>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--gris-borde);">
       <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
-      <a href="/horarios" class="btn-primary"><i class="ti ti-clock"></i> Continuar a Horarios</a>
+      <a href="/horarios?fecha=<%= hoy %>" class="btn-primary">
+        <i class="ti ti-clock"></i> Ver horarios de hoy
+      </a>
     </div>
-
   </main>
 
   <nav class="mobile-nav">
@@ -150,10 +192,9 @@
 <div id="modal-nuevo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;color:var(--negro);">Nuevo empleado</h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Nuevo empleado</h2>
       <button onclick="hideModal('modal-nuevo')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
-    <!-- 2. Tab entre campos con tabindex -->
     <form method="POST" action="/personal/nuevo" id="form-nuevo">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="field" style="grid-column:1/-1;">
@@ -167,9 +208,7 @@
         <div class="field">
           <label>Puesto</label>
           <select name="puesto" required tabindex="3" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
-            <% puestos.forEach(p => { %>
-              <option value="<%= p %>"><%= p %></option>
-            <% }) %>
+            <% puestos.forEach(pt => { %><option value="<%= pt %>"><%= pt %></option><% }) %>
           </select>
         </div>
         <div class="field" style="grid-column:1/-1;">
@@ -179,9 +218,7 @@
         <div class="field">
           <label>Rol en el sistema</label>
           <select name="rol" tabindex="5" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
-            <% roles.forEach(r => { %>
-              <option value="<%= r %>"><%= r %></option>
-            <% }) %>
+            <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>
           </select>
         </div>
         <div class="field">
@@ -201,20 +238,19 @@
 <div id="modal-reset" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;color:var(--negro);">Resetear contraseña</h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Resetear contraseña</h2>
       <button onclick="hideModal('modal-reset')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
     <p style="font-size:0.83rem;color:var(--gris-texto);margin-bottom:20px;">
-      Reseteando contraseña de <strong id="reset-nombre" style="color:var(--negro);"></strong>.
+      Reseteando contraseña de <strong id="reset-nombre"></strong>.
     </p>
     <form id="form-reset" method="POST">
       <div class="field" style="margin-bottom:8px;">
-        <label style="display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;">Nueva contraseña</label>
+        <label style="display:block;font-size:0.68rem;font-weight:500;margin-bottom:6px;">Nueva contraseña</label>
         <div style="position:relative;display:flex;align-items:center;">
           <input type="password" name="password_nuevo" id="input-nuevo-pass"
-                 placeholder="Mín. 8 caracteres, 1 mayúscula, 1 número"
-                 minlength="8" required
-                 style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 44px 10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+                 placeholder="Mín. 8 caracteres, 1 mayúscula, 1 número" minlength="8" required
+                 style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 44px 10px 12px;font-family:var(--font-sans);font-size:0.85rem;outline:none;">
           <button type="button" onclick="toggleResetPass()"
                   style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:var(--gris-texto);font-size:16px;">
             <i class="ti ti-eye" id="eyeReset"></i>
@@ -224,20 +260,28 @@
       <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:20px;">Mínimo 8 caracteres, una mayúscula y un número.</p>
       <div style="display:flex;justify-content:flex-end;gap:12px;">
         <button type="button" onclick="hideModal('modal-reset')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-key"></i> Guardar contraseña</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-key"></i> Guardar</button>
       </div>
     </form>
   </div>
 </div>
 
 <style>
-.puesto-badge{font-size:0.72rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:3px 10px;border-radius:20px;}
-.estado-activo{font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#16a34a;background:#f0fdf4;padding:3px 10px;border-radius:20px;}
-.estado-inactivo{font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#dc2626;background:#fef2f2;padding:3px 10px;border-radius:20px;}
-.btn-baja{font-size:0.65rem;font-weight:500;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:5px 10px;cursor:pointer;transition:all 0.2s;}
-.btn-baja:hover{background:#dc2626;color:#fff;}
-.btn-activar{font-size:0.65rem;font-weight:500;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:5px 10px;cursor:pointer;transition:all 0.2s;}
-.btn-activar:hover{background:#16a34a;color:#fff;}
+.puesto-badge{font-size:0.7rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:3px 8px;border-radius:20px;white-space:nowrap;}
+.rol-badge{font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:20px;white-space:nowrap;}
+.rol-admin{color:#7c3aed;background:#f5f3ff;}
+.rol-empleado{color:var(--gris-texto);background:var(--gris-fondo);}
+.btn-asignar{background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;transition:background 0.2s;display:inline-flex;align-items:center;flex-shrink:0;}
+.btn-asignar:hover{background:#6d28d9;}
+.btn-menu{background:none;border:none;cursor:pointer;color:var(--gris-texto);font-size:18px;padding:4px;border-radius:6px;transition:all 0.15s;}
+.btn-menu:hover{background:var(--gris-fondo);color:var(--negro);}
+.dropdown-menu{position:absolute;right:0;top:36px;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:100;min-width:150px;padding:4px;}
+.dropdown-item{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;padding:8px 12px;font-size:0.78rem;font-family:var(--font-sans);color:var(--negro);cursor:pointer;border-radius:6px;text-align:left;transition:background 0.15s;}
+.dropdown-item:hover{background:var(--gris-fondo);}
+.dropdown-danger{color:#dc2626;}
+.dropdown-danger:hover{background:#fef2f2;}
+.dropdown-success{color:#16a34a;}
+.dropdown-success:hover{background:#f0fdf4;}
 .field label{display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;}
 .field input{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;transition:border-color 0.2s;}
 .field input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);background:var(--blanco);}
@@ -246,15 +290,27 @@
 <script>
 function showModal(id){
   document.getElementById(id).style.display='flex';
-  // 2. Foco automático al primer campo al abrir modal
-  setTimeout(()=>{
-    const primer = document.querySelector('#'+id+' input:not([type=hidden])');
-    if(primer) primer.focus();
-  }, 100);
+  setTimeout(()=>{ const p=document.querySelector('#'+id+' input:not([type=hidden])'); if(p) p.focus(); },100);
 }
 function hideModal(id){ document.getElementById(id).style.display='none'; }
 
+// Menú tres puntitos
+function toggleMenu(id) {
+  const menu = document.getElementById('menu-' + id);
+  const abierto = menu.style.display === 'block';
+  // Cerrar todos
+  document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
+  if (!abierto) menu.style.display = 'block';
+}
+// Cerrar al click fuera
+document.addEventListener('click', e => {
+  if (!e.target.closest('.btn-menu') && !e.target.closest('.dropdown-menu')) {
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
+  }
+});
+
 function abrirReset(id, nombre) {
+  document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
   document.getElementById('reset-nombre').textContent = nombre;
   document.getElementById('form-reset').action = '/personal/' + id + '/reset-password';
   document.getElementById('input-nuevo-pass').value = '';
@@ -264,20 +320,15 @@ function abrirReset(id, nombre) {
 function toggleResetPass() {
   const input = document.getElementById('input-nuevo-pass');
   const icon  = document.getElementById('eyeReset');
-  const visible = input.type === 'text';
-  input.type = visible ? 'password' : 'text';
-  icon.className = visible ? 'ti ti-eye' : 'ti ti-eye-off';
+  input.type = input.type === 'text' ? 'password' : 'text';
+  icon.className = input.type === 'text' ? 'ti ti-eye-off' : 'ti ti-eye';
 }
 
-// 3. Filtrar activos/inactivos
 function filtrarPersonal() {
   const mostrar = document.getElementById('mostrarInactivos').checked;
-  document.querySelectorAll('.fila-inactivo').forEach(f => {
-    f.style.display = mostrar ? '' : 'none';
-  });
+  document.querySelectorAll('.fila-inactivo').forEach(f => f.style.display = mostrar ? '' : 'none');
 }
 
-// Contador de activos
 window.addEventListener('DOMContentLoaded', () => {
   const activos   = document.querySelectorAll('.fila-activo').length;
   const inactivos = document.querySelectorAll('.fila-inactivo').length;
@@ -285,17 +336,13 @@ window.addEventListener('DOMContentLoaded', () => {
   if (el) el.textContent = activos + ' activo' + (activos!==1?'s':'') + (inactivos > 0 ? ' · ' + inactivos + ' dado'+(inactivos!==1?'s':'') + ' de baja' : '');
 });
 
-// 2. Enter avanza al siguiente campo en el modal
 document.getElementById('form-nuevo').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    const campos = [...this.querySelectorAll('input, select, button[type="submit"]')];
-    const idx = campos.indexOf(document.activeElement);
-    if (idx >= 0 && idx < campos.length - 1) campos[idx + 1].focus();
-    else if (document.activeElement.type === 'submit') this.submit();
-  }
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const campos = [...this.querySelectorAll('input, select, button[type="submit"]')];
+  const idx = campos.indexOf(document.activeElement);
+  if (idx >= 0 && idx < campos.length - 1) campos[idx + 1].focus();
 });
 </script>
-
 </body>
 </html>

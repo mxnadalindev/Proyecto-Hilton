@@ -8,20 +8,8 @@
 </head>
 <body>
 <div class="app-layout">
-  <header class="header">
-    <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
-    <nav class="header-nav desktop-only">
-      <a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
-      <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
-      <a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a>
-      <a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
-      <a href="/costos"   class="nav-link activo"><i class="ti ti-coin"></i> Costos</a>
-    </nav>
-    <div class="header-user">
-      <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
-      <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
-    </div>
-  </header>
+
+  <%- include('partials/nav', { path: 'costos' }) %>
 
   <main class="main-content">
 
@@ -54,7 +42,6 @@
     </div>
     <% } %>
 
-    <!-- 3. Subir factura — con instrucciones claras -->
     <div style="background:var(--blanco);border:1px dashed var(--azul-borde);border-radius:12px;padding:20px 24px;margin-bottom:28px;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;">
         <div>
@@ -80,7 +67,6 @@
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-
       <!-- INSUMOS -->
       <div>
         <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--azul);margin-bottom:14px;">
@@ -92,7 +78,6 @@
               <tr>
                 <th>Insumo</th>
                 <th>Categoría</th>
-                <!-- 1. Columna muestra cantidad + unidad -->
                 <th>Cantidad / Unidad</th>
                 <th>Precio unitario</th>
                 <th></th>
@@ -104,7 +89,6 @@
                 <tr>
                   <td style="font-weight:500;"><%= ins.nombre %></td>
                   <td><span class="puesto-badge"><%= ins.categoria %></span></td>
-                  <!-- 1. Muestra stock + unidad -->
                   <td style="color:var(--gris-texto);font-size:0.82rem;">
                     <% if (ins.stock_actual && parseFloat(ins.stock_actual) > 0) { %>
                       <strong style="color:var(--negro);"><%= ins.stock_actual %></strong> <%= ins.unidad %>
@@ -120,7 +104,6 @@
                       <button type="submit" class="btn-sm" style="padding:4px 8px;">✓</button>
                     </form>
                   </td>
-                  <!-- 2. Icono eliminar en azul -->
                   <td>
                     <form method="POST" action="/costos/insumo/<%= ins.id %>/eliminar"
                           onsubmit="return confirm('¿Eliminar este insumo?')" style="margin:0;">
@@ -194,22 +177,14 @@
           </table>
         </div>
       </div>
-
     </div>
 
     <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--gris-borde);">
       <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
     </div>
-
   </main>
 
-  <nav class="mobile-nav">
-    <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i>Eventos</a>
-    <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i>Personal</a>
-    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i>Horarios</a>
-    <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i>Recetas</a>
-    <a href="/costos"   class="mobile-nav-link activo"><i class="ti ti-coin"></i>Costos</a>
-  </nav>
+  <%- include('partials/mobile-nav', { path: 'costos' }) %>
 </div>
 
 <!-- Modal nuevo insumo -->
@@ -245,7 +220,6 @@
           <label>Precio por unidad ($)</label>
           <input type="number" name="precio_unitario" placeholder="0.00" step="0.01" min="0">
         </div>
-        <!-- 1. Stock con campo numérico claro -->
         <div class="field">
           <label>Stock actual (cantidad)</label>
           <input type="number" name="stock_actual" placeholder="Ej: 10" step="0.01" min="0">
@@ -276,27 +250,18 @@
           <label>Nombre del plato</label>
           <input type="text" name="nombre" placeholder="Ej: Risotto de hongos" required>
         </div>
-        <!-- 4. Categoría con desplegable -->
         <div class="field" style="grid-column:1/-1;">
           <label>Categoría</label>
           <select name="categoria" id="sel-cat-plato" onchange="toggleOtroPlato()"
                   style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;color:var(--negro);outline:none;">
             <option value="">Seleccionar...</option>
-            <option>Entrada</option>
-            <option>Sopa</option>
-            <option>Ensalada</option>
-            <option>Principal</option>
-            <option>Guarnición</option>
-            <option>Postre</option>
-            <option>Desayuno</option>
-            <option>Merienda</option>
-            <option>Panadería</option>
-            <option>Pastelería</option>
-            <option>Bebida</option>
+            <option>Entrada</option><option>Sopa</option><option>Ensalada</option>
+            <option>Principal</option><option>Guarnición</option><option>Postre</option>
+            <option>Desayuno</option><option>Merienda</option><option>Panadería</option>
+            <option>Pastelería</option><option>Bebida</option>
             <option value="otro">Otro (escribir)</option>
           </select>
-          <input type="text" id="otro-cat-plato" name="categoria_otro"
-                 placeholder="Escribir categoría..."
+          <input type="text" id="otro-cat-plato" name="categoria_otro" placeholder="Escribir categoría..."
                  style="display:none;margin-top:6px;width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;color:var(--negro);outline:none;">
         </div>
         <div class="field">
@@ -335,7 +300,6 @@ function showModal(id){
 }
 function hideModal(id){ document.getElementById(id).style.display='none'; }
 
-// 4. Toggle otro en categoría de plato
 function toggleOtroPlato() {
   const sel  = document.getElementById('sel-cat-plato');
   const otro = document.getElementById('otro-cat-plato');
@@ -352,6 +316,5 @@ function prepararPlato() {
   }
 }
 </script>
-
 </body>
 </html>

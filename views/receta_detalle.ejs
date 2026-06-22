@@ -11,15 +11,13 @@
 
   <header class="header">
     <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
-    <nav class="header-nav desktop-only">
+    <nav class="header-nav">
       <a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
       <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
-      <a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a>
       <a href="/recetas"  class="nav-link activo"><i class="ti ti-chef-hat"></i> Recetas</a>
-      <a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a>
     </nav>
     <div class="header-user">
-      <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
       <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
     </div>
   </header>
@@ -39,7 +37,6 @@
       </form>
     </div>
 
-    <%# detalle-grid: CSS responsive lo colapsa a 1 columna en mobile %>
     <div class="detalle-grid">
 
       <!-- Imagen -->
@@ -64,7 +61,7 @@
           </div>
           <div class="info-row">
             <span class="info-label">Cargada el</span>
-            <span class="info-val"><%= receta.creado_en ? new Date(receta.creado_en).toISOString().substring(0,10) : '—' %></span>
+            <span class="info-val"><%= receta.creado_en ? receta.creado_en.substring(0,10) : '—' %></span>
           </div>
         </div>
 
@@ -109,8 +106,8 @@
         <% } %>
       </div>
 
-      <!-- Pasos — ocupa ancho completo -->
-      <div class="detalle-card detalle-card-full">
+      <!-- Pasos -->
+      <div class="detalle-card" style="grid-column: 1 / -1;">
         <p class="detalle-card-title"><i class="ti ti-list-numbers"></i> Pasos de preparación</p>
         <% if (receta.pasos) { %>
           <div style="display:flex;flex-direction:column;gap:12px;">
@@ -133,21 +130,11 @@
     </div>
 
   </main>
-
-  <nav class="mobile-nav">
-    <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
-    <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i><span>Personal</span></a>
-    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
-    <a href="/recetas"  class="mobile-nav-link activo"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
-    <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span>Costos</span></a>
-  </nav>
 </div>
 
 <style>
 .detalle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .detalle-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
-/* Pasos: siempre ancho completo */
-.detalle-card-full { grid-column: 1 / -1; }
 .detalle-card-title { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
 .info-rows { display: flex; flex-direction: column; }
 .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--gris-borde); }
@@ -157,8 +144,9 @@
 .list-empty { font-size: 0.78rem; color: var(--gris-texto); font-style: italic; padding: 8px 0; }
 .back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; }
 .back-link:hover { color: var(--azul); }
-.btn-danger { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all var(--tr); min-height: 44px; }
+.btn-danger { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all var(--tr); }
 .btn-danger:hover { background: #dc2626; color: #fff; }
+@media (max-width: 900px) { .detalle-grid { grid-template-columns: 1fr; } }
 </style>
 
 </body>

@@ -43,6 +43,8 @@ app.use('/personal', require('./src/routes/personal'));
 app.use('/recetas',  require('./src/routes/recetas'));
 app.use('/horarios', require('./src/routes/horarios'));
 app.use('/costos',   require('./src/routes/costos'));
+app.use('/compras',  require('./src/routes/compras'));   // ← NUEVO
+app.use('/finanzas', require('./src/routes/finanzas'));  // ← NUEVO
 
 // Mostrar IPs de acceso
 function getIPs() {
