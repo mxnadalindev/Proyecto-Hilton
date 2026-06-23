@@ -1,0 +1,19 @@
+<nav class="mobile-nav">
+  <% const _dm = usuario?.departamento; const _rm = usuario?.rol; %>
+  <a href="/inicio" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'inicio') ? 'activo' : '' %>">
+    <i class="ti ti-home"></i><span>Inicio</span>
+  </a>
+  <% if (_dm === 'cocina' || _dm === 'ayb' || _rm === 'admin') { %>
+    <a href="/eventos"  class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'eventos')  ? 'activo' : '' %>"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
+    <a href="/personal" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'personal') ? 'activo' : '' %>"><i class="ti ti-users"></i><span>Personal</span></a>
+    <a href="/horarios" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>"><i class="ti ti-clock"></i><span>Horarios</span></a>
+    <a href="/recetas"  class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'recetas')  ? 'activo' : '' %>"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
+    <a href="/costos"   class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'costos')   ? 'activo' : '' %>"><i class="ti ti-coin"></i><span>Costos</span></a>
+  <% } %>
+  <% if (_dm === 'compras' || _rm === 'admin') { %>
+    <a href="/compras"  class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'compras')  ? 'activo' : '' %>"><i class="ti ti-shopping-cart"></i><span>Compras</span></a>
+  <% } %>
+  <% if (_dm === 'finanzas' || _rm === 'admin') { %>
+    <a href="/finanzas" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'finanzas') ? 'activo' : '' %>"><i class="ti ti-report-money"></i><span>Finanzas</span></a>
+  <% } %>
+</nav>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= receta.nombre %> — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <header class="header">
+    <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
+    <nav class="header-nav">
+      <a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
+      <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
+      <a href="/recetas"  class="nav-link activo"><i class="ti ti-chef-hat"></i> Recetas</a>
+    </nav>
+    <div class="header-user">
+      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+      <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label"><a href="/recetas" class="back-link"><i class="ti ti-arrow-left"></i> Recetas</a></p>
+        <h1 class="seccion-titulo"><%= receta.nombre %></h1>
+      </div>
+      <form method="POST" action="/recetas/<%= receta.id %>/eliminar"
+            onsubmit="return confirm('¿Eliminar esta receta?')">
+        <button type="submit" class="btn-danger">
+          <i class="ti ti-trash"></i> Eliminar
+        </button>
+      </form>
+    </div>
+
+    <div class="detalle-grid">
+
+      <!-- Imagen -->
+      <% if (receta.imagen) { %>
+      <div class="detalle-card" style="grid-column: 1 / -1; padding: 0; overflow: hidden;">
+        <img src="/uploads/<%= receta.imagen %>" alt="<%= receta.nombre %>"
+             style="width:100%; max-height:340px; object-fit:cover; border-radius:12px;">
+      </div>
+      <% } %>
+
+      <!-- Info general -->
+      <div class="detalle-card">
+        <p class="detalle-card-title"><i class="ti ti-info-circle"></i> Información general</p>
+        <div class="info-rows">
+          <div class="info-row">
+            <span class="info-label">Categoría</span>
+            <span class="info-val"><%= receta.categoria || '—' %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Área</span>
+            <span class="info-val"><%= receta.area || '—' %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Cargada el</span>
+            <span class="info-val"><%= receta.creado_en ? receta.creado_en.substring(0,10) : '—' %></span>
+          </div>
+        </div>
+
+        <!-- Video -->
+        <% if (receta.video_url) { %>
+        <div style="margin-top:20px;">
+          <p class="detalle-card-title"><i class="ti ti-video"></i> Video de preparación</p>
+          <% if (receta.video_url.includes('youtube') || receta.video_url.includes('youtu.be')) { %>
+            <% const ytId = receta.video_url.includes('youtu.be') ? receta.video_url.split('/').pop() : receta.video_url.split('v=')[1]?.split('&')[0]; %>
+            <iframe width="100%" height="200"
+              src="https://www.youtube.com/embed/<%= ytId %>"
+              frameborder="0" allowfullscreen style="border-radius:8px;"></iframe>
+          <% } else if (receta.video_url.startsWith('http')) { %>
+            <a href="<%= receta.video_url %>" target="_blank" class="btn-primary" style="display:inline-flex;margin-top:8px;">
+              <i class="ti ti-external-link"></i> Ver video
+            </a>
+          <% } else { %>
+            <video controls style="width:100%;border-radius:8px;margin-top:8px;">
+              <source src="/uploads/<%= receta.video_url %>">
+            </video>
+          <% } %>
+        </div>
+        <% } %>
+      </div>
+
+      <!-- Ingredientes -->
+      <div class="detalle-card">
+        <p class="detalle-card-title"><i class="ti ti-list"></i> Ingredientes</p>
+        <% if (receta.ingredientes) { %>
+          <div style="font-size:0.85rem;color:var(--negro);line-height:2;">
+            <% receta.ingredientes.split('\n').forEach(ing => { %>
+              <% if (ing.trim()) { %>
+                <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--gris-borde);">
+                  <i class="ti ti-circle-filled" style="font-size:6px;color:var(--azul);flex-shrink:0;"></i>
+                  <%= ing.trim() %>
+                </div>
+              <% } %>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="list-empty">Sin ingredientes cargados.</p>
+        <% } %>
+      </div>
+
+      <!-- Pasos -->
+      <div class="detalle-card" style="grid-column: 1 / -1;">
+        <p class="detalle-card-title"><i class="ti ti-list-numbers"></i> Pasos de preparación</p>
+        <% if (receta.pasos) { %>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <% receta.pasos.split('\n').forEach((paso, i) => { %>
+              <% if (paso.trim()) { %>
+                <div style="display:flex;gap:14px;align-items:flex-start;">
+                  <div style="width:28px;height:28px;border-radius:50%;background:var(--azul);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;flex-shrink:0;">
+                    <%= i + 1 %>
+                  </div>
+                  <p style="font-size:0.85rem;color:var(--negro);line-height:1.7;margin:4px 0;"><%= paso.replace(/^Paso \d+:\s*/i, '').trim() %></p>
+                </div>
+              <% } %>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="list-empty">Sin pasos cargados.</p>
+        <% } %>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<style>
+.detalle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.detalle-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
+.detalle-card-title { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
+.info-rows { display: flex; flex-direction: column; }
+.info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--gris-borde); }
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 0.75rem; color: var(--gris-texto); }
+.info-val { font-size: 0.85rem; color: var(--negro); font-weight: 500; }
+.list-empty { font-size: 0.78rem; color: var(--gris-texto); font-style: italic; padding: 8px 0; }
+.back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; }
+.back-link:hover { color: var(--azul); }
+.btn-danger { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all var(--tr); }
+.btn-danger:hover { background: #dc2626; color: #fff; }
+@media (max-width: 900px) { .detalle-grid { grid-template-columns: 1fr; } }
+</style>
+
+</body>
+</html>
