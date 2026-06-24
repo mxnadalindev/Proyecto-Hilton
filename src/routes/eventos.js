@@ -9,14 +9,14 @@ router.get('/', loginRequerido, async (req, res) => {
     LEFT JOIN usuarios u ON e.creado_por = u.id
     ORDER BY e.fecha DESC
   `);
-  res.render('eventos', { eventos });
+  res.render('eventos', { eventos, path: 'eventos' });
 });
 
 router.get('/nuevo', loginRequerido, async (req, res) => {
   const personal       = await db.all2("SELECT id,nombre,rol FROM usuarios WHERE activo=1 ORDER BY nombre");
   const recetas        = await db.all2("SELECT id,nombre FROM recetas ORDER BY nombre");
   const platosConCosto = await db.all2("SELECT id,nombre,costo_total,porciones FROM platos_costo WHERE costo_total>0 ORDER BY nombre");
-  res.render('evento_nuevo', { personal, recetas, platosConCosto });
+  res.render('evento_nuevo', { personal, recetas, platosConCosto, path: 'eventos' });
 });
 
 router.post('/nuevo', loginRequerido, async (req, res) => {
@@ -29,7 +29,6 @@ router.post('/nuevo', loginRequerido, async (req, res) => {
 
     const costo_total = platos.reduce((s,p) => s+(parseFloat(p.subtotal)||0), 0);
 
-    // Calcular horas de producción desde rango si se proporcionó
     let hs_prod = parseFloat(horas_produccion) || 0;
     if (prod_inicio && prod_fin && !hs_prod) {
       const [h1,m1] = prod_inicio.split(':').map(Number);
@@ -74,7 +73,7 @@ router.get('/:id', loginRequerido, async (req, res) => {
   const platos   = await db.all2("SELECT * FROM evento_platos WHERE evento_id=$1",  [req.params.id]);
   const personal = await db.all2(`SELECT u.nombre,u.rol FROM evento_personal ep JOIN usuarios u ON ep.usuario_id=u.id WHERE ep.evento_id=$1`, [req.params.id]);
   const vajilla  = await db.all2("SELECT * FROM evento_vajilla WHERE evento_id=$1", [req.params.id]);
-  res.render('evento_detalle', { evento, platos, personal, vajilla });
+  res.render('evento_detalle', { evento, platos, personal, vajilla, path: 'eventos' });
 });
 
 router.post('/:id/eliminar', loginRequerido, async (req, res) => {

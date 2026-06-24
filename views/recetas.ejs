@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,23 +9,7 @@
 <body>
 <div class="app-layout">
   <% var path = 'recetas'; %>
-<header class="header">
-  <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
-    <nav class="header-nav desktop-only">
-      <% const _d = usuario?.departamento; %>
-      <% if (_d === 'cocina' || _d === 'ayb') { %>
-      <% if (path !== 'eventos') { %><a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a><% } %>
-      <% if (path !== 'personal') { %><a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a><% } %>
-      <% if (path !== 'horarios') { %><a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a><% } %>
-      <% if (path !== 'recetas') { %><a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a><% } %>
-      <% if (path !== 'costos') { %><a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a><% } %>
-    <% } %>
-  </nav>
-  <div class="header-user">
-    <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
-    <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
-  </div>
-</header>>
+<%- include('partials/nav', { path: path }) %>>
   <main class="main-content">
     <div class="seccion-header">
       <div class="seccion-header-left">
@@ -81,3 +65,4 @@
 </div>
 </body>
 </html>
+

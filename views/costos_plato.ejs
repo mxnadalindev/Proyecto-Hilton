@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,20 +8,7 @@
 </head>
 <body>
 <div class="app-layout">
-  <header class="header">
-    <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
-    <nav class="header-nav">
-      <a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
-      <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
-      <a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a>
-      <a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
-      <a href="/costos"   class="nav-link activo"><i class="ti ti-coin"></i> Costos</a>
-    </nav>
-    <div class="header-user">
-      <span class="user-name"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
-      <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i> Salir</a>
-    </div>
-  </header>
+  <%- include('partials/nav', { path: path }) %>
 
   <main class="main-content">
 
@@ -165,3 +152,4 @@
 
 </body>
 </html>
+

@@ -8,14 +8,17 @@
 </head>
 <body>
 <div class="app-layout">
+  <% var path = 'personal'; %>
   <header class="header">
     <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
     <nav class="header-nav desktop-only">
-      <a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
-      <a href="/personal" class="nav-link activo"><i class="ti ti-users"></i> Personal</a>
-      <a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a>
-      <a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
-      <a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a>
+      <% const _d = usuario?.departamento; %>
+      <% if (_d === 'cocina' || _d === 'ayb') { %>
+        <% if (path !== 'eventos') { %><a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a><% } %>
+        <% if (path !== 'horarios') { %><a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a><% } %>
+        <% if (path !== 'recetas') { %><a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a><% } %>
+        <% if (path !== 'costos') { %><a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a><% } %>
+      <% } %>
     </nav>
     <div class="header-user">
       <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
@@ -33,7 +36,11 @@
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
       <i class="ti ti-check"></i> Contraseña reseteada correctamente.
     </div>
-    <% } else if (typeof msg !== 'undefined' && msg && msg !== 'password_reseteada' && msg !== 'turno_asignado') { %>
+    <% } else if (typeof msg !== 'undefined' && msg === 'empleado_editado') { %>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
+      <i class="ti ti-check"></i> Empleado actualizado correctamente.
+    </div>
+    <% } else if (typeof msg !== 'undefined' && msg && !['password_reseteada','turno_asignado','empleado_editado'].includes(msg)) { %>
     <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#dc2626;display:flex;align-items:center;gap:8px;">
       <i class="ti ti-alert-circle"></i> <%= decodeURIComponent(msg) %>
     </div>
@@ -56,27 +63,23 @@
 
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
       <label style="font-size:0.75rem;color:var(--gris-texto);display:flex;align-items:center;gap:6px;cursor:pointer;">
-        <input type="checkbox" id="mostrarInactivos" onchange="filtrarPersonal()"
-               style="accent-color:var(--azul);width:16px;height:16px;">
+        <input type="checkbox" id="mostrarInactivos" onchange="filtrarPersonal()" style="accent-color:var(--azul);width:16px;height:16px;">
         Mostrar empleados dados de baja
       </label>
       <span id="contadorActivos" style="font-size:0.72rem;color:var(--gris-texto);"></span>
     </div>
 
-    <div class="tabla-wrap">
+    <div class="tabla-wrap" style="overflow:visible;">
       <table class="tabla" style="table-layout:fixed;width:100%;">
         <colgroup>
-          <col style="width:22%">
-          <col style="width:14%">
-          <col style="width:10%">
-          <col style="width:46%">
-          <col style="width:8%">
+          <col style="width:20%"><col style="width:13%"><col style="width:10%"><col style="width:13%"><col style="width:36%"><col style="width:8%">
         </colgroup>
         <thead>
           <tr>
             <th>Nombre y apellido</th>
             <th>Puesto</th>
             <th>Rol</th>
+            <th>Sector</th>
             <th>Horario de entrada</th>
             <th></th>
           </tr>
@@ -84,9 +87,7 @@
         <tbody id="tbody-personal">
           <% if (personal.length > 0) { %>
             <% personal.forEach(p => { %>
-            <tr class="fila-empleado <%= p.activo ? 'fila-activo' : 'fila-inactivo' %>"
-                style="<%= p.activo ? '' : 'display:none;' %>">
-
+            <tr class="fila-empleado <%= p.activo ? 'fila-activo' : 'fila-inactivo' %>" style="<%= p.activo ? '' : 'display:none;' %>">
               <td>
                 <div style="display:flex;align-items:center;gap:8px;overflow:hidden;">
                   <div style="width:32px;height:32px;border-radius:50%;background:<%= p.activo ? 'var(--azul-claro)' : 'var(--gris-fondo)' %>;color:<%= p.activo ? 'var(--azul)' : 'var(--gris-texto)' %>;display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:600;flex-shrink:0;">
@@ -97,85 +98,68 @@
                   </span>
                 </div>
               </td>
-
               <td><span class="puesto-badge"><%= p.puesto || '—' %></span></td>
               <td><span class="rol-badge <%= p.rol === 'admin' ? 'rol-admin' : 'rol-empleado' %>"><%= p.rol %></span></td>
-
-              <%# ── Horario inline ── %>
+              <td>
+                <% if (p.departamento) { %>
+                  <span style="font-size:0.72rem;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:2px 8px;border-radius:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;">
+                    <%= p.departamento %>
+                  </span>
+                <% } else { %>
+                  <span style="font-size:0.72rem;color:var(--gris-texto);">—</span>
+                <% } %>
+              </td>
               <td>
                 <% if (p.activo) { %>
-                <form method="POST" action="/personal/asignar-turno"
-                      style="display:flex;align-items:center;gap:5px;">
+                <form method="POST" action="/personal/asignar-turno" style="display:flex;align-items:center;gap:5px;">
                   <input type="hidden" name="usuario_id" value="<%= p.id %>">
-                  <input type="date" name="fecha"
-                         value="<%= new Date().toISOString().split('T')[0] %>"
-                         style="padding:5px 6px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.73rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;width:120px;">
-                  <input type="time" name="hora_entrada" value="<%= (horarioMap[p.id] && horarioMap[p.id].hora) ? horarioMap[p.id].hora : '08:00' %>"
-                         style="padding:5px 6px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.73rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;width:82px;">
-                  <select name="seccion"
-                          style="padding:5px 6px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.73rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;flex:1;min-width:0;">
+                  <input type="date" name="fecha" value="<%= hoy %>" style="padding:5px 6px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.73rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;width:120px;">
+                  <input type="time" name="hora_entrada" value="<%= (horarioMap[p.id] && horarioMap[p.id].hora) ? horarioMap[p.id].hora : '08:00' %>" style="padding:5px 6px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.73rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;width:82px;">
+                  <select name="seccion" style="padding:5px 6px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.73rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;flex:1;min-width:0;">
                     <% const _secciones = ['Cocina Principal','Cocina Fría','Pastelería','Parrilla','Salón Principal','Salón Eventos','Bar','Otra']; %>
                     <% const _secActual = horarioMap[p.id]?.seccion || 'Cocina Principal'; %>
-                    <% _secciones.forEach(s => { %>
-                      <option value="<%= s %>" <%= s === _secActual ? 'selected' : '' %>><%= s %></option>
-                    <% }) %>
+                    <% _secciones.forEach(s => { %><option value="<%= s %>" <%= s === _secActual ? 'selected' : '' %>><%= s %></option><% }) %>
                   </select>
-                  <button type="submit" class="btn-asignar" title="Asignar">
-                    <i class="ti ti-check"></i>
-                  </button>
+                  <button type="submit" class="btn-asignar" title="Asignar"><i class="ti ti-check"></i></button>
                 </form>
                 <% } %>
               </td>
-
-              <%# ── Menú tres puntitos ── %>
               <td style="text-align:center;position:relative;">
                 <% if (esAdmin) { %>
                 <button class="btn-menu" onclick="toggleMenu(<%= p.id %>)" title="Opciones">
                   <i class="ti ti-dots-vertical"></i>
                 </button>
                 <div id="menu-<%= p.id %>" class="dropdown-menu" style="display:none;">
+                  <button onclick="abrirEditar(<%= p.id %>, '<%= p.nombre.replace(/'/g, '') %>', '<%= p.email || '' %>', '<%= p.legajo || '' %>', '<%= p.puesto || '' %>', '<%= p.rol || '' %>', '<%= p.departamento || '' %>')" class="dropdown-item">
+                    <i class="ti ti-pencil"></i> Editar
+                  </button>
                   <button onclick="abrirReset(<%= p.id %>, '<%= p.nombre.replace(/'/g, '') %>')" class="dropdown-item">
                     <i class="ti ti-key"></i> Contraseña
                   </button>
                   <% if (p.activo) { %>
-                  <form method="POST" action="/personal/<%= p.id %>/eliminar" style="margin:0;"
-                        onsubmit="return confirm('¿Dar de baja a <%= p.nombre %>?')">
-                    <button type="submit" class="dropdown-item dropdown-danger">
-                      <i class="ti ti-user-off"></i> Dar de baja
-                    </button>
+                  <form method="POST" action="/personal/<%= p.id %>/eliminar" style="margin:0;" onsubmit="return confirm('¿Dar de baja a <%= p.nombre %>?')">
+                    <button type="submit" class="dropdown-item dropdown-danger"><i class="ti ti-user-off"></i> Dar de baja</button>
                   </form>
                   <% } else { %>
                   <form method="POST" action="/personal/<%= p.id %>/activar" style="margin:0;">
-                    <button type="submit" class="dropdown-item dropdown-success">
-                      <i class="ti ti-user-check"></i> Reactivar
-                    </button>
+                    <button type="submit" class="dropdown-item dropdown-success"><i class="ti ti-user-check"></i> Reactivar</button>
                   </form>
                   <% } %>
                 </div>
                 <% } %>
               </td>
-
             </tr>
             <% }) %>
           <% } else { %>
-            <tr>
-              <td colspan="5" style="text-align:center;padding:48px;color:var(--gris-texto);font-style:italic;">
-                No hay personal registrado todavía.
-              </td>
-            </tr>
+            <tr><td colspan="6" style="text-align:center;padding:48px;color:var(--gris-texto);font-style:italic;">No hay personal registrado todavía.</td></tr>
           <% } %>
         </tbody>
       </table>
     </div>
 
-    <%
-      const hoy = new Date().toISOString().split('T')[0];
-    %>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--gris-borde);">
       <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
-      <a href="/horarios?fecha=<%= hoy %>" class="btn-primary">
-        <i class="ti ti-clock"></i> Ver horarios de hoy
-      </a>
+      <a href="/horarios?fecha=<%= hoy %>" class="btn-primary"><i class="ti ti-clock"></i> Ver horarios de hoy</a>
     </div>
   </main>
 
@@ -186,6 +170,56 @@
     <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i>Recetas</a>
     <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i>Costos</a>
   </nav>
+</div>
+
+<!-- Modal editar empleado -->
+<div id="modal-editar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Editar empleado</h2>
+      <button onclick="hideModal('modal-editar')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <form method="POST" action="/personal/editar">
+      <input type="hidden" name="id" id="edit-id">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="field" style="grid-column:1/-1;">
+          <label>Nombre y apellido</label>
+          <input type="text" name="nombre" id="edit-nombre" required>
+        </div>
+        <div class="field">
+          <label>Legajo</label>
+          <input type="text" name="legajo" id="edit-legajo" placeholder="Ej: 00123">
+        </div>
+        <div class="field">
+          <label>Email (opcional)</label>
+          <input type="email" name="email" id="edit-email" placeholder="nombre@hilton.com">
+        </div>
+        <div class="field">
+          <label>Puesto</label>
+          <select name="puesto" id="edit-puesto" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+            <% puestos.forEach(pt => { %><option value="<%= pt %>"><%= pt %></option><% }) %>
+          </select>
+        </div>
+        <div class="field">
+          <label>Rol</label>
+          <select name="rol" id="edit-rol" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+            <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>
+          </select>
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Sector de cocina</label>
+          <select name="sector" id="edit-sector" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+            <option value="">— Sin sector asignado —</option>
+            <% sectores.forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
+        <button type="button" onclick="hideModal('modal-editar')" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-device-floppy"></i> Guardar cambios</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- Modal nuevo empleado -->
@@ -199,36 +233,43 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="field" style="grid-column:1/-1;">
           <label>Nombre y apellido</label>
-          <input type="text" name="nombre" placeholder="Ej: Juan García" required tabindex="1" autofocus>
+          <input type="text" name="nombre" placeholder="Ej: Juan García" required autofocus>
         </div>
         <div class="field">
           <label>Legajo</label>
-          <input type="text" name="legajo" placeholder="Ej: 00123" tabindex="2">
+          <input type="text" name="legajo" placeholder="Ej: 00123">
         </div>
         <div class="field">
           <label>Puesto</label>
-          <select name="puesto" required tabindex="3" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+          <select name="puesto" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             <% puestos.forEach(pt => { %><option value="<%= pt %>"><%= pt %></option><% }) %>
           </select>
         </div>
         <div class="field" style="grid-column:1/-1;">
-          <label>Email corporativo</label>
-          <input type="email" name="email" placeholder="nombre@hilton.com" required tabindex="4">
+          <label>Email corporativo (opcional)</label>
+          <input type="email" name="email" placeholder="nombre@hilton.com">
         </div>
         <div class="field">
           <label>Rol en el sistema</label>
-          <select name="rol" tabindex="5" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+          <select name="rol" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>
           </select>
         </div>
         <div class="field">
+          <label>Sector de cocina</label>
+          <select name="sector" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+            <option value="">— Sin sector —</option>
+            <% sectores.forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
+          </select>
+        </div>
+        <div class="field" style="grid-column:1/-1;">
           <label>Contraseña inicial</label>
-          <input type="text" name="password" placeholder="Hilton2026!" value="Hilton2026!" tabindex="6">
+          <input type="text" name="password" placeholder="Hilton2026!" value="Hilton2026!">
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-nuevo')" class="btn-secondary" tabindex="8">Cancelar</button>
-        <button type="submit" class="btn-primary" tabindex="7"><i class="ti ti-user-plus"></i> Agregar empleado</button>
+        <button type="button" onclick="hideModal('modal-nuevo')" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-user-plus"></i> Agregar empleado</button>
       </div>
     </form>
   </div>
@@ -241,18 +282,13 @@
       <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Resetear contraseña</h2>
       <button onclick="hideModal('modal-reset')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
-    <p style="font-size:0.83rem;color:var(--gris-texto);margin-bottom:20px;">
-      Reseteando contraseña de <strong id="reset-nombre"></strong>.
-    </p>
+    <p style="font-size:0.83rem;color:var(--gris-texto);margin-bottom:20px;">Reseteando contraseña de <strong id="reset-nombre"></strong>.</p>
     <form id="form-reset" method="POST">
       <div class="field" style="margin-bottom:8px;">
         <label style="display:block;font-size:0.68rem;font-weight:500;margin-bottom:6px;">Nueva contraseña</label>
         <div style="position:relative;display:flex;align-items:center;">
-          <input type="password" name="password_nuevo" id="input-nuevo-pass"
-                 placeholder="Mín. 8 caracteres, 1 mayúscula, 1 número" minlength="8" required
-                 style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 44px 10px 12px;font-family:var(--font-sans);font-size:0.85rem;outline:none;">
-          <button type="button" onclick="toggleResetPass()"
-                  style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:var(--gris-texto);font-size:16px;">
+          <input type="password" name="password_nuevo" id="input-nuevo-pass" placeholder="Mín. 8 caracteres, 1 mayúscula, 1 número" minlength="8" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 44px 10px 12px;font-family:var(--font-sans);font-size:0.85rem;outline:none;">
+          <button type="button" onclick="toggleResetPass()" style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:var(--gris-texto);font-size:16px;">
             <i class="ti ti-eye" id="eyeReset"></i>
           </button>
         </div>
@@ -278,10 +314,8 @@
 .dropdown-menu{position:absolute;right:0;top:36px;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:100;min-width:150px;padding:4px;}
 .dropdown-item{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;padding:8px 12px;font-size:0.78rem;font-family:var(--font-sans);color:var(--negro);cursor:pointer;border-radius:6px;text-align:left;transition:background 0.15s;}
 .dropdown-item:hover{background:var(--gris-fondo);}
-.dropdown-danger{color:#dc2626;}
-.dropdown-danger:hover{background:#fef2f2;}
-.dropdown-success{color:#16a34a;}
-.dropdown-success:hover{background:#f0fdf4;}
+.dropdown-danger{color:#dc2626;}.dropdown-danger:hover{background:#fef2f2;}
+.dropdown-success{color:#16a34a;}.dropdown-success:hover{background:#f0fdf4;}
 .field label{display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;}
 .field input{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;transition:border-color 0.2s;}
 .field input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);background:var(--blanco);}
@@ -294,20 +328,29 @@ function showModal(id){
 }
 function hideModal(id){ document.getElementById(id).style.display='none'; }
 
-// Menú tres puntitos
 function toggleMenu(id) {
   const menu = document.getElementById('menu-' + id);
   const abierto = menu.style.display === 'block';
-  // Cerrar todos
   document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
   if (!abierto) menu.style.display = 'block';
 }
-// Cerrar al click fuera
 document.addEventListener('click', e => {
   if (!e.target.closest('.btn-menu') && !e.target.closest('.dropdown-menu')) {
     document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
   }
 });
+
+function abrirEditar(id, nombre, email, legajo, puesto, rol, sector) {
+  document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
+  document.getElementById('edit-id').value     = id;
+  document.getElementById('edit-nombre').value = nombre;
+  document.getElementById('edit-email').value  = email;
+  document.getElementById('edit-legajo').value = legajo;
+  document.getElementById('edit-puesto').value = puesto;
+  document.getElementById('edit-rol').value    = rol;
+  document.getElementById('edit-sector').value = sector;
+  showModal('modal-editar');
+}
 
 function abrirReset(id, nombre) {
   document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
@@ -334,14 +377,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const inactivos = document.querySelectorAll('.fila-inactivo').length;
   const el = document.getElementById('contadorActivos');
   if (el) el.textContent = activos + ' activo' + (activos!==1?'s':'') + (inactivos > 0 ? ' · ' + inactivos + ' dado'+(inactivos!==1?'s':'') + ' de baja' : '');
-});
-
-document.getElementById('form-nuevo').addEventListener('keydown', function(e) {
-  if (e.key !== 'Enter') return;
-  e.preventDefault();
-  const campos = [...this.querySelectorAll('input, select, button[type="submit"]')];
-  const idx = campos.indexOf(document.activeElement);
-  if (idx >= 0 && idx < campos.length - 1) campos[idx + 1].focus();
 });
 </script>
 </body>

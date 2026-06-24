@@ -6,40 +6,38 @@ const { loginRequerido } = require('./middleware');
 
 const PUESTOS = ['Chef','Subchef','Encargado de cocina','Cocinero','Ayudante de cocina','Pastelero','Panadero','Mozo','Sommelier','Limpieza','Administrativo'];
 const ROLES   = ['empleado','supervisor','admin'];
+const SECTORES = ['Supervisores','Comis de Recepcion','Panadería','Pastelería AM','Pastelería PM','Faro AM','Faro PM','Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D'];
 
 router.get('/', loginRequerido, async (req, res) => {
-  const personal = await db.all2('SELECT id,nombre,email,legajo,puesto,rol,activo,creado_en FROM usuarios ORDER BY nombre');
+  const personal = await db.all2('SELECT id,nombre,email,legajo,puesto,rol,activo,departamento,creado_en FROM usuarios ORDER BY nombre');
   const msg      = req.query.msg || null;
   const esAdmin  = req.session.usuario.rol === 'admin';
   const hoy      = new Date().toISOString().split('T')[0];
 
-  // Traer horarios de hoy para mostrar como valor por defecto en cada fila
   const horariosHoy = await db.all2(
-    'SELECT usuario_id, hora_inicio, seccion FROM horarios WHERE fecha=$1',
-    [hoy]
+    'SELECT usuario_id, hora_inicio, seccion FROM horarios WHERE fecha=$1', [hoy]
   );
-
-  // Convertir a mapa { usuario_id: { hora_inicio, seccion } }
   const horarioMap = {};
   horariosHoy.forEach(h => {
     horarioMap[h.usuario_id] = { hora: h.hora_inicio, seccion: h.seccion };
   });
 
-  res.render('personal', { personal, puestos: PUESTOS, roles: ROLES, msg, esAdmin, horarioMap, hoy });
+  res.render('personal', { personal, puestos: PUESTOS, roles: ROLES, sectores: SECTORES, msg, esAdmin, horarioMap, hoy });
 });
 
 router.post('/nuevo', loginRequerido, async (req, res) => {
   try {
     const nombre   = String(req.body.nombre   || '').trim();
-    const email    = String(req.body.email    || '').toLowerCase().trim();
+    const email    = req.body.email ? String(req.body.email).toLowerCase().trim() : null;
     const legajo   = req.body.legajo ? String(req.body.legajo).trim() : null;
     const puesto   = String(req.body.puesto   || 'Cocinero');
     const rol      = String(req.body.rol      || 'empleado');
+    const sector   = req.body.sector || null;
     const password = String(req.body.password || 'Hilton2026!');
     const hash     = bcrypt.hashSync(password, 10);
     await db.run2(
-      'INSERT INTO usuarios (nombre, email, legajo, puesto, rol, password) VALUES ($1, $2, $3, $4, $5, $6)',
-      [nombre, email, legajo, puesto, rol, hash]
+      'INSERT INTO usuarios (nombre, email, legajo, puesto, rol, password, departamento) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+      [nombre, email, legajo, puesto, rol, hash, sector]
     );
   } catch(e) {
     console.error('Error creando usuario:', e.message);
@@ -47,7 +45,23 @@ router.post('/nuevo', loginRequerido, async (req, res) => {
   res.redirect('/personal');
 });
 
-// ── IMPORTANTE: asignar-turno ANTES de /:id ──
+// ── Editar empleado ──────────────────────────────────
+router.post('/editar', loginRequerido, async (req, res) => {
+  try {
+    const { id, nombre, legajo, puesto, rol, sector } = req.body;
+    const email = req.body.email ? String(req.body.email).toLowerCase().trim() : null;
+    await db.run2(
+      'UPDATE usuarios SET nombre=$1, email=$2, legajo=$3, puesto=$4, rol=$5, departamento=$6 WHERE id=$7',
+      [String(nombre).trim(), email, legajo || null, puesto, rol, sector || null, parseInt(id)]
+    );
+    res.redirect('/personal?msg=empleado_editado');
+  } catch(e) {
+    console.error('Error editando usuario:', e.message);
+    res.redirect('/personal?msg=' + encodeURIComponent('Error al editar empleado.'));
+  }
+});
+
+// ── Asignar turno ─────────────────────────────────────
 router.post('/asignar-turno', loginRequerido, async (req, res) => {
   try {
     const { usuario_id, fecha, hora_entrada, seccion } = req.body;
