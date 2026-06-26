@@ -20,7 +20,9 @@ router.get('/', loginRequerido, async (req, res) => {
 });
 
 router.get('/nueva', loginRequerido, (req, res) => {
-  res.render('receta_nueva');
+  res.render('receta_nueva', {
+    path: req.path
+  });
 });
 
 router.post('/nueva', loginRequerido, upload.fields([
