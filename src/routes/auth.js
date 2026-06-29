@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../db/database');
+const { registrar } = require('./auditoria');
 
 const intentos = new Map();
 const MAX_INTENTOS = 5;
@@ -66,12 +67,10 @@ router.post('/login', async (req, res) => {
 
     if (user && password && bcrypt.compareSync(password, user.password)) {
       registrarIntento(email, true);
-      req.session.usuario = {
-        id: user.id, nombre: user.nombre, rol: user.rol,
-        email: user.email, departamento: user.departamento
-      };
+      req.session.usuario = { id: user.id, nombre: user.nombre, rol: user.rol, email: user.email, departamento: user.departamento };
+      await registrar(req, 'login', user.email);
       return res.redirect('/inicio');
-    }
+      };
 
     registrarIntento(email, false);
     const d = intentos.get(email);
@@ -85,7 +84,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.get('/logout', (req, res) => {
+router.get('/logout', async (req, res) => {
+  await registrar(req, 'logout', req.session.usuario?.email);
   req.session.destroy();
   res.redirect('/login');
 });
