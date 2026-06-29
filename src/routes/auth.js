@@ -3,7 +3,6 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../db/database');
 
-// ── Rate limiting ────────────────────────────────────
 const intentos = new Map();
 const MAX_INTENTOS = 5;
 const BLOQUEO_MS = 15 * 60 * 1000;
@@ -27,7 +26,6 @@ function registrarIntento(email, ok) {
   intentos.set(email, d);
 }
 
-// ── Helpers render ───────────────────────────────────
 function renderLogin(res, opts = {}) {
   res.render('login', {
     error:    opts.error    || null,
@@ -37,7 +35,6 @@ function renderLogin(res, opts = {}) {
   });
 }
 
-// ── Rutas ─────────────────────────────────────────────
 router.get('/', (req, res) => {
   res.redirect(req.session.usuario ? '/inicio' : '/login');
 });
@@ -69,8 +66,10 @@ router.post('/login', async (req, res) => {
 
     if (user && password && bcrypt.compareSync(password, user.password)) {
       registrarIntento(email, true);
-      // ── Se agrega departamento a la sesión para el filtro por depto ──
-      req.session.usuario = { id: user.id, nombre: user.nombre, rol: user.rol, email: user.email, departamento: user.departamento };
+      req.session.usuario = {
+        id: user.id, nombre: user.nombre, rol: user.rol,
+        email: user.email, departamento: user.departamento
+      };
       return res.redirect('/inicio');
     }
 
@@ -93,15 +92,15 @@ router.get('/logout', (req, res) => {
 
 router.get('/inicio', (req, res) => {
   if (!req.session.usuario) return res.redirect('/login');
-  res.render('inicio');
+  res.render('inicio', { usuario: req.session.usuario });
 });
 
-// ── Registro ─────────────────────────────────────────
 router.get('/registro', (req, res) => {
   if (req.session.usuario) return res.redirect('/inicio');
   renderLogin(res);
 });
 
+// Registro: departamento='sistema' para que NO aparezca en Personal
 router.post('/registro', async (req, res) => {
   const nombre    = (req.body.nombre    || '').trim();
   const email     = (req.body.email     || '').toLowerCase().trim();
@@ -123,9 +122,10 @@ router.post('/registro', async (req, res) => {
     if (existe) return renderLogin(res, { errorReg: 'Ese email ya está registrado.' });
 
     const hash = bcrypt.hashSync(password, 12);
+    // departamento='sistema' → no aparece en Personal (que filtra por sectores de cocina)
     await db.run2(
-      'INSERT INTO usuarios (nombre, email, password, rol) VALUES ($1, $2, $3, $4)',
-      [nombre, email, hash, 'empleado']
+     'INSERT INTO usuarios (nombre, email, password, rol, departamento) VALUES ($1, $2, $3, $4, $5)',
+      [nombre, email, hash, 'empleado', req.body.departamento || 'cocina'] 
     );
     renderLogin(res, { success: `Cuenta creada para ${nombre}. Ya podés iniciar sesión.` });
   } catch(e) {

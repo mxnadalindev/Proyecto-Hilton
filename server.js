@@ -36,7 +36,7 @@ app.use((req, res, next) => {
   res.locals.usuario = req.session.usuario || null;
   next();
 });
-
+app.use('/configuracion', require('./src/routes/configuracion'));
 app.use('/',         require('./src/routes/auth'));
 app.use('/eventos',  require('./src/routes/eventos'));
 app.use('/personal', require('./src/routes/personal'));

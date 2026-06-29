@@ -248,10 +248,24 @@
           <p class="pass-hint">Mínimo 8 caracteres, una mayúscula y un número.</p>
         </div>
         <div class="field">
+          <div class="field">
           <div class="field-label"><span>Repetir contraseña</span></div>
           <div class="input-wrap">
             <i class="ti ti-lock input-icon"></i>
             <input type="password" name="password2" placeholder="••••••••" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label"><span>Departamento</span></div>
+          <div style="position:relative;">
+            <i class="ti ti-building" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:17px;color:var(--slate-400);pointer-events:none;z-index:1;"></i>
+            <select name="departamento" required style="width:100%;height:46px;background:var(--slate-100);border:1.5px solid var(--slate-200);border-radius:10px;padding:0 44px;font-family:'Inter',sans-serif;font-size:0.88rem;color:var(--navy);outline:none;appearance:none;cursor:pointer;">
+              <option value="">Seleccioná tu área...</option>
+              <option value="cocina">Cocina</option>
+              <option value="ayb">Alimentos y Bebidas</option>
+              <option value="compras">Compras</option>
+              <option value="finanzas">Finanzas</option>
+            </select>
           </div>
         </div>
         <button type="submit" class="btn-submit" style="margin-top:4px;">

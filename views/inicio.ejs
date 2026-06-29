@@ -33,7 +33,6 @@
       <% } %>
     </nav>
     <div class="header-user">
-      <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
       <a href="/logout" class="btn-logout">
         <i class="ti ti-logout"></i>
         <span class="logout-text">Cerrar sesión</span>
@@ -48,6 +47,7 @@
 
       <%
         const depto = usuario?.departamento;
+        const esAdmin = usuario?.rol === 'admin';
         let modulos = [];
         if (depto === 'cocina' || depto === 'ayb') {
           modulos = [
@@ -57,14 +57,19 @@
             { href: '/recetas',  icon: 'ti-chef-hat',       nombre: 'Recetas',  desc: 'Recetario y videos' },
             { href: '/costos',   icon: 'ti-coin',           nombre: 'Costos',   desc: 'Insumos y precios' },
           ];
+          if (esAdmin) {
+            modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema' });
+          }
         } else if (depto === 'compras') {
           modulos = [
             { href: '/compras', icon: 'ti-shopping-cart', nombre: 'Compras', desc: 'Órdenes y proveedores' },
           ];
+          if (esAdmin) modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema' });
         } else if (depto === 'finanzas') {
           modulos = [
             { href: '/finanzas', icon: 'ti-report-money', nombre: 'Finanzas', desc: 'Reportes y presupuestos' },
           ];
+          if (esAdmin) modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema' });
         }
       %>
 
@@ -89,9 +94,10 @@
       <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
       <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
       <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span>Costos</span></a>
+      <% if (esAdmin) { %><a href="/configuracion" class="mobile-nav-link"><i class="ti ti-settings"></i><span>Config</span></a><% } %>
     <% } %>
     <% if (depto === 'compras') { %>
-      <a href="/compras"  class="mobile-nav-link"><i class="ti ti-shopping-cart"></i><span>Compras</span></a>
+      <a href="/compras" class="mobile-nav-link"><i class="ti ti-shopping-cart"></i><span>Compras</span></a>
     <% } %>
     <% if (depto === 'finanzas') { %>
       <a href="/finanzas" class="mobile-nav-link"><i class="ti ti-report-money"></i><span>Finanzas</span></a>

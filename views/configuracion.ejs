@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuración — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: 'configuracion' }) %>
+
+  <main class="main-content">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Portal interno</p>
+        <h1 class="seccion-titulo">Configuración</h1>
+      </div>
+      <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+    </div>
+
+    <% if (msg) { %>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
+      <i class="ti ti-check"></i>
+      <%= msg === 'rol_actualizado' ? 'Rol actualizado.' : msg === 'depto_actualizado' ? 'Departamento actualizado.' : msg === 'usuario_activado' ? 'Usuario activado.' : msg === 'usuario_desactivado' ? 'Usuario desactivado.' : msg === 'usuario_eliminado' ? 'Usuario eliminado.' : msg %>
+    </div>
+    <% } %>
+
+    <!-- Gestión de usuarios -->
+    <div class="form-card" style="margin-bottom:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin:0;display:flex;align-items:center;gap:7px;">
+          <i class="ti ti-users"></i> Gestión de usuarios
+        </p>
+        <div style="position:relative;max-width:280px;width:100%;">
+          <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
+          <input type="text" id="buscadorUsuarios" placeholder="Buscar usuario..." oninput="buscarUsuario()"
+                 style="width:100%;padding:8px 12px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);">
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="tabla" style="width:100%;">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Departamento</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Creado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-usuarios">
+            <% usuarios.forEach(u => { %>
+            <tr class="fila-usuario" style="border-bottom:1px solid var(--gris-borde);">
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:30px;height:30px;border-radius:50%;background:<%= u.activo ? 'var(--azul-claro)' : 'var(--gris-fondo)' %>;color:<%= u.activo ? 'var(--azul)' : 'var(--gris-texto)' %>;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;flex-shrink:0;">
+                    <%= (u.nombre||'?').charAt(0).toUpperCase() %>
+                  </div>
+                  <span style="font-size:0.82rem;font-weight:500;<%= u.activo ? '' : 'color:var(--gris-texto);' %>"><%= u.nombre %></span>
+                </div>
+              </td>
+              <td style="font-size:0.78rem;color:var(--gris-texto);"><%= u.email || '—' %></td>
+              <td>
+                <form method="POST" action="/configuracion/usuario/<%= u.id %>/departamento" style="margin:0;">
+                  <select name="departamento" onchange="this.form.submit()"
+                          style="padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.75rem;font-family:var(--font-sans);background:var(--gris-fondo);outline:none;cursor:pointer;">
+                    <% [...DEPTOS, ...SECTORES].forEach(d => { %>
+                    <option value="<%= d %>" <%= u.departamento === d ? 'selected' : '' %>><%= d %></option>
+                    <% }) %>
+                    <option value="" <%= !u.departamento ? 'selected' : '' %>>— Sin asignar —</option>
+                  </select>
+                </form>
+              </td>
+              <td>
+                <form method="POST" action="/configuracion/usuario/<%= u.id %>/rol" style="margin:0;">
+                  <select name="rol" onchange="this.form.submit()"
+                          style="padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.75rem;font-family:var(--font-sans);background:var(--gris-fondo);outline:none;cursor:pointer;">
+                    <option value="empleado" <%= u.rol === 'empleado' ? 'selected' : '' %>>Empleado</option>
+                    <option value="supervisor" <%= u.rol === 'supervisor' ? 'selected' : '' %>>Supervisor</option>
+                    <option value="admin" <%= u.rol === 'admin' ? 'selected' : '' %>>Admin</option>
+                  </select>
+                </form>
+              </td>
+              <td>
+                <% if (u.activo) { %>
+                <span style="font-size:0.68rem;font-weight:600;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:2px 8px;border-radius:20px;">Activo</span>
+                <% } else { %>
+                <span style="font-size:0.68rem;font-weight:600;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:2px 8px;border-radius:20px;">Inactivo</span>
+                <% } %>
+              </td>
+              <td style="font-size:0.72rem;color:var(--gris-texto);">
+                <%= u.creado_en ? u.creado_en.slice(0,10) : '—' %>
+              </td>
+              <td>
+                <div style="display:flex;gap:4px;justify-content:flex-end;">
+                  <% if (u.activo) { %>
+                  <form method="POST" action="/configuracion/usuario/<%= u.id %>/desactivar" style="margin:0;">
+                    <button type="submit" title="Desactivar" style="background:none;border:1px solid var(--gris-borde);border-radius:6px;padding:4px 8px;cursor:pointer;font-size:13px;color:var(--gris-texto);">
+                      <i class="ti ti-user-off"></i>
+                    </button>
+                  </form>
+                  <% } else { %>
+                  <form method="POST" action="/configuracion/usuario/<%= u.id %>/activar" style="margin:0;">
+                    <button type="submit" title="Activar" style="background:none;border:1px solid #bbf7d0;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:13px;color:#16a34a;">
+                      <i class="ti ti-user-check"></i>
+                    </button>
+                  </form>
+                  <% } %>
+                  <form method="POST" action="/configuracion/usuario/<%= u.id %>/eliminar" style="margin:0;"
+                        onsubmit="return confirm('¿Eliminar permanentemente a <%= u.nombre %>? Esta acción no se puede deshacer.')">
+                    <button type="submit" title="Eliminar" style="background:none;border:1px solid #fecaca;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:13px;color:#dc2626;">
+                      <i class="ti ti-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Próximamente -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;">
+      <% [
+        {icon:'ti-database', titulo:'Backup de BD', desc:'Crear y restaurar backups', soon:true},
+        {icon:'ti-history', titulo:'Auditoría', desc:'Registro de acciones', soon:true},
+        {icon:'ti-shield-lock', titulo:'Seguridad', desc:'Sesiones y accesos', soon:true},
+        {icon:'ti-mail', titulo:'Notificaciones', desc:'Correos y WhatsApp', soon:true},
+        {icon:'ti-file-import', titulo:'Importación', desc:'Importar recetas', soon:true},
+      ].forEach(c => { %>
+      <div style="background:#fff;border:1px solid var(--gris-borde);border-radius:12px;padding:20px;opacity:0.6;">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--gris-fondo);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--gris-texto);margin-bottom:12px;">
+          <i class="ti <%= c.icon %>"></i>
+        </div>
+        <p style="font-size:0.88rem;font-weight:600;color:var(--negro);margin:0 0 4px;"><%= c.titulo %></p>
+        <p style="font-size:0.75rem;color:var(--gris-texto);margin:0 0 8px;"><%= c.desc %></p>
+        <span style="font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--gris-fondo);color:var(--gris-texto);padding:2px 8px;border-radius:20px;">Próximamente</span>
+      </div>
+      <% }) %>
+    </div>
+
+    <div style="padding-top:16px;border-top:1px solid var(--gris-borde);">
+      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
+    </div>
+
+  </main>
+</div>
+
+<style>
+.form-card{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px;box-shadow:var(--sombra);}
+</style>
+
+<script>
+function buscarUsuario() {
+  const q = document.getElementById('buscadorUsuarios').value.toLowerCase();
+  document.querySelectorAll('.fila-usuario').forEach(f => {
+    f.style.display = f.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

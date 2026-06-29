@@ -6,10 +6,15 @@ const { loginRequerido } = require('./middleware');
 
 const PUESTOS = ['Chef','Subchef','Encargado de cocina','Cocinero','Ayudante de cocina','Pastelero','Panadero','Mozo','Sommelier','Limpieza','Administrativo'];
 const ROLES   = ['empleado','supervisor','admin'];
-const SECTORES = ['Supervisores','Comis de Recepcion','Panadería','Pastelería AM','Pastelería PM','Faro AM','Faro PM','Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D'];
+const SECTORES = ['Supervisores','Comis de Recepción','Panadería','Pastelería AM','Pastelería PM','Faro AM','Faro PM','Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D'];
 
 router.get('/', loginRequerido, async (req, res) => {
-  const personal = await db.all2('SELECT id,nombre,email,legajo,puesto,rol,activo,departamento,creado_en FROM usuarios ORDER BY nombre');
+  const personal = await db.all2(`
+    SELECT id,nombre,email,legajo,puesto,rol,activo,departamento,creado_en
+    FROM usuarios
+    WHERE departamento IS DISTINCT FROM 'sistema'
+    ORDER BY nombre
+  `);
   const msg      = req.query.msg || null;
   const esAdmin  = req.session.usuario.rol === 'admin';
   const hoy      = new Date().toISOString().split('T')[0];

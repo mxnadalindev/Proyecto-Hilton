@@ -61,7 +61,12 @@
       </div>
     </div>
 
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+      <div style="position:relative;flex:1;min-width:200px;max-width:320px;">
+        <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
+        <input type="text" id="buscadorPersonal" placeholder="Buscar por nombre..." oninput="buscarPersonal()"
+               style="width:100%;padding:8px 12px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);">
+      </div>
       <label style="font-size:0.75rem;color:var(--gris-texto);display:flex;align-items:center;gap:6px;cursor:pointer;">
         <input type="checkbox" id="mostrarInactivos" onchange="filtrarPersonal()" style="accent-color:var(--azul);width:16px;height:16px;">
         Mostrar empleados dados de baja
@@ -72,13 +77,12 @@
     <div class="tabla-wrap" style="overflow:visible;">
       <table class="tabla" style="table-layout:fixed;width:100%;">
         <colgroup>
-          <col style="width:20%"><col style="width:13%"><col style="width:10%"><col style="width:13%"><col style="width:36%"><col style="width:8%">
+          <col style="width:20%"><col style="width:13%"><col style="width:13%"><col style="width:13%"><col style="width:42%"><col style="width:8%">
         </colgroup>
         <thead>
           <tr>
             <th>Nombre y apellido</th>
             <th>Puesto</th>
-            <th>Rol</th>
             <th>Sector</th>
             <th>Horario de entrada</th>
             <th></th>
@@ -99,7 +103,6 @@
                 </div>
               </td>
               <td><span class="puesto-badge"><%= p.puesto || '—' %></span></td>
-              <td><span class="rol-badge <%= p.rol === 'admin' ? 'rol-admin' : 'rol-empleado' %>"><%= p.rol %></span></td>
               <td>
                 <% if (p.departamento) { %>
                   <span style="font-size:0.72rem;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:2px 8px;border-radius:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;">
@@ -151,7 +154,7 @@
             </tr>
             <% }) %>
           <% } else { %>
-            <tr><td colspan="6" style="text-align:center;padding:48px;color:var(--gris-texto);font-style:italic;">No hay personal registrado todavía.</td></tr>
+            <tr><td colspan="5" style="text-align:center;padding:48px;color:var(--gris-texto);font-style:italic;">No hay personal registrado todavía.</td></tr>
           <% } %>
         </tbody>
       </table>
@@ -365,6 +368,18 @@ function toggleResetPass() {
   const icon  = document.getElementById('eyeReset');
   input.type = input.type === 'text' ? 'password' : 'text';
   icon.className = input.type === 'text' ? 'ti ti-eye-off' : 'ti ti-eye';
+}
+
+function buscarPersonal() {
+  const q = document.getElementById('buscadorPersonal').value.toLowerCase();
+  document.querySelectorAll('.fila-empleado').forEach(f => {
+    const nombre = f.querySelector('td span[style*="font-weight"]') || f.querySelector('td span');
+    const texto = f.textContent.toLowerCase();
+    const mostrarInactivos = document.getElementById('mostrarInactivos').checked;
+    const esInactivo = f.classList.contains('fila-inactivo');
+    if (!mostrarInactivos && esInactivo) { f.style.display = 'none'; return; }
+    f.style.display = texto.includes(q) ? '' : 'none';
+  });
 }
 
 function filtrarPersonal() {
