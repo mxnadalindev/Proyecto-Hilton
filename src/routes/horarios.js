@@ -12,16 +12,14 @@ const SECTORES = [
 
 const ESTADOS = ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA'];
 
-// Obtener lunes de la semana de una fecha dada
 function getLunes(fechaStr) {
   const d = new Date(fechaStr + 'T00:00:00');
-  const day = d.getDay(); // 0=dom, 1=lun
+  const day = d.getDay();
   const diff = (day === 0) ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
   return d.toISOString().split('T')[0];
 }
 
-// Obtener los 7 días de la semana a partir del lunes
 function getDiasSemana(lunes) {
   const dias = [];
   const d = new Date(lunes + 'T00:00:00');
@@ -32,50 +30,51 @@ function getDiasSemana(lunes) {
   return dias;
 }
 
-// ── GET / ─────────────────────────────────────────────
-router.get('/', loginRequerido, async (req, res) => {
-  const hoy    = new Date().toISOString().split('T')[0];
-  const lunes  = getLunes(req.query.fecha || hoy);
-  const dias   = getDiasSemana(lunes);
+function sumarDias(fechaStr, n) {
+  const d = new Date(fechaStr + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().split('T')[0];
+}
 
-  // Traer todos los empleados activos con sector
+router.get('/', loginRequerido, async (req, res) => {
+  const hoy   = new Date().toISOString().split('T')[0];
+  const lunes = getLunes(req.query.fecha || hoy);
+  const dias  = getDiasSemana(lunes);
+
   const empleados = await db.all2(`
     SELECT id, nombre, puesto, departamento
     FROM usuarios
     WHERE activo = 1
     ORDER BY
       CASE departamento
-        WHEN 'Supervisores'      THEN 1
+        WHEN 'Supervisores'       THEN 1
         WHEN 'Comis de Recepción' THEN 2
-        WHEN 'Panadería'         THEN 3
-        WHEN 'Pastelería AM'     THEN 4
-        WHEN 'Pastelería PM'     THEN 5
-        WHEN 'Faro AM'           THEN 6
-        WHEN 'Faro PM'           THEN 7
-        WHEN 'Nocturno'          THEN 8
-        WHEN 'BQTs Fríos'        THEN 9
-        WHEN 'BQTs Calientes'    THEN 10
-        WHEN 'Farolito'          THEN 11
-        WHEN 'Cocina I+D'        THEN 12
+        WHEN 'Panadería'          THEN 3
+        WHEN 'Pastelería AM'      THEN 4
+        WHEN 'Pastelería PM'      THEN 5
+        WHEN 'Faro AM'            THEN 6
+        WHEN 'Faro PM'            THEN 7
+        WHEN 'Nocturno'           THEN 8
+        WHEN 'BQTs Fríos'         THEN 9
+        WHEN 'BQTs Calientes'     THEN 10
+        WHEN 'Farolito'           THEN 11
+        WHEN 'Cocina I+D'         THEN 12
         ELSE 99
       END, nombre
   `);
 
-  // Traer horarios de la semana
   const horariosRaw = await db.all2(`
     SELECT usuario_id, fecha::text, valor
     FROM horarios_semanales
     WHERE fecha >= $1 AND fecha <= $2
   `, [dias[0], dias[6]]);
 
-  // Convertir a mapa { usuario_id: { fecha: valor } }
   const horariosMap = {};
   horariosRaw.forEach(h => {
     if (!horariosMap[h.usuario_id]) horariosMap[h.usuario_id] = {};
     horariosMap[h.usuario_id][h.fecha] = h.valor;
   });
 
-  // Agrupar empleados por sector
   const porSector = {};
   empleados.forEach(e => {
     const sector = e.departamento || 'Sin sector';
@@ -83,7 +82,6 @@ router.get('/', loginRequerido, async (req, res) => {
     porSector[sector].push(e);
   });
 
-  // Alertas de cobertura — sectores sin nadie asignado en algún día
   const alertas = [];
   SECTORES.forEach(sector => {
     if (!porSector[sector]) return;
@@ -100,15 +98,17 @@ router.get('/', loginRequerido, async (req, res) => {
     });
   });
 
+  // FIX: semana anterior y siguiente correctas
+  const lunesAnterior   = getLunes(sumarDias(lunes, -7));
+  const lunesSiguiente  = getLunes(sumarDias(lunes, 7));
+
   res.render('horarios', {
     path: 'horarios', lunes, dias, porSector, horariosMap,
     SECTORES, ESTADOS, alertas,
-    semanaAnterior: getLunes(new Date(lunes + 'T00:00:00').setDate(new Date(lunes + 'T00:00:00').getDate() - 7) && new Date(new Date(lunes + 'T00:00:00').setDate(new Date(lunes + 'T00:00:00').getDate() - 7)).toISOString().split('T')[0]),
-    semanaSiguiente: getLunes(dias[7] || dias[6])
+    lunesAnterior, semanaSiguiente: lunesSiguiente
   });
 });
 
-// ── POST /celda — guardar celda individual ─────────────
 router.post('/celda', loginRequerido, async (req, res) => {
   const { usuario_id, fecha, valor } = req.body;
   try {
@@ -128,11 +128,10 @@ router.post('/celda', loginRequerido, async (req, res) => {
   }
 });
 
-// ── POST /copiar-semana — copiar semana anterior ───────
 router.post('/copiar-semana', loginRequerido, async (req, res) => {
   const { lunes_destino } = req.body;
   try {
-    const lunesOrigen = getLunes(new Date(new Date(lunes_destino + 'T00:00:00').setDate(new Date(lunes_destino + 'T00:00:00').getDate() - 7)).toISOString().split('T')[0]);
+    const lunesOrigen = getLunes(sumarDias(lunes_destino, -7));
     const diasOrigen  = getDiasSemana(lunesOrigen);
     const diasDestino = getDiasSemana(lunes_destino);
 
@@ -145,12 +144,11 @@ router.post('/copiar-semana', loginRequerido, async (req, res) => {
     for (const h of horariosOrigen) {
       const idx = diasOrigen.indexOf(h.fecha);
       if (idx === -1) continue;
-      const fechaDestino = diasDestino[idx];
       await db.run2(`
         INSERT INTO horarios_semanales (usuario_id, fecha, valor)
         VALUES ($1, $2, $3)
         ON CONFLICT (usuario_id, fecha) DO UPDATE SET valor = $3
-      `, [h.usuario_id, fechaDestino, h.valor]);
+      `, [h.usuario_id, diasDestino[idx], h.valor]);
     }
 
     res.redirect('/horarios?fecha=' + lunes_destino);
@@ -160,7 +158,6 @@ router.post('/copiar-semana', loginRequerido, async (req, res) => {
   }
 });
 
-// ── GET /excel — exportar semana ───────────────────────
 router.get('/excel', loginRequerido, async (req, res) => {
   const lunes = getLunes(req.query.fecha || new Date().toISOString().split('T')[0]);
   const dias  = getDiasSemana(lunes);
@@ -192,8 +189,7 @@ router.get('/excel', loginRequerido, async (req, res) => {
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('Horarios');
 
-  // Título
-  ws.mergeCells(`A1:J1`);
+  ws.mergeCells('A1:J1');
   const titulo = ws.getCell('A1');
   titulo.value = `HORARIOS — HILTON BUENOS AIRES — Semana del ${dias[0]} al ${dias[6]}`;
   titulo.font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
@@ -201,7 +197,6 @@ router.get('/excel', loginRequerido, async (req, res) => {
   titulo.alignment = { horizontal: 'center', vertical: 'middle' };
   ws.getRow(1).height = 28;
 
-  // Encabezado
   const encRow = ws.addRow(['NOMBRE', 'SECTOR', ...dias.map((d,i) => `${DIAS_NOMBRES[i]}\n${d.slice(5)}`)]);
   encRow.eachCell(c => {
     c.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
@@ -211,10 +206,9 @@ router.get('/excel', loginRequerido, async (req, res) => {
   });
   ws.getRow(2).height = 30;
 
-  // Colores por estado
   const colores = {
-    'OFF': 'FFFBBF24', 'VAC': 'FFEF4444', 'RECOFF': 'FF22C55E',
-    'FERIADO': 'FFEF4444', 'LICENCIA': 'FFEC4899', 'CUMPLE': 'FFA855F7', 'MUDANZA': 'FFFB923C'
+    OFF:'FFFBBF24', VAC:'FFEF4444', RECOFF:'FF22C55E',
+    FERIADO:'FFEF4444', LICENCIA:'FFEC4899', CUMPLE:'FFA855F7', MUDANZA:'FFFB923C'
   };
   const coloresSector = [
     'FFDBEAFE','FFECFDF5','FFFEFCE8','FFFFF7ED','FFFDF4FF',
@@ -228,7 +222,6 @@ router.get('/excel', loginRequerido, async (req, res) => {
     if (emp.departamento !== sectorActual) {
       sectorActual = emp.departamento;
       sectorIdx++;
-      // Fila de sector
       const sRow = ws.addRow([emp.departamento || 'Sin sector', '', ...Array(7).fill('')]);
       ws.mergeCells(`A${sRow.number}:J${sRow.number}`);
       sRow.getCell(1).font = { bold: true, size: 10, color: { argb: 'FF1E3A5F' } };
@@ -236,7 +229,6 @@ router.get('/excel', loginRequerido, async (req, res) => {
       sRow.getCell(1).alignment = { horizontal: 'center' };
       sRow.height = 18;
     }
-
     const fila = [emp.nombre, emp.departamento || ''];
     dias.forEach(d => fila.push(horariosMap[emp.id]?.[d] || ''));
     const row = ws.addRow(fila);
@@ -257,7 +249,6 @@ router.get('/excel', loginRequerido, async (req, res) => {
   });
 
   ws.columns = [{ width: 24 }, { width: 18 }, ...Array(7).fill({ width: 10 })];
-
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.setHeader('Content-Disposition', `attachment; filename=horarios_semana_${lunes}.xlsx`);
   await wb.xlsx.write(res);

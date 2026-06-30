@@ -18,21 +18,25 @@
         <h1 class="seccion-titulo">Horarios</h1>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
         <a href="/horarios/excel?fecha=<%= lunes %>" class="btn-excel">
           <i class="ti ti-file-spreadsheet"></i> Excel
         </a>
         <form method="POST" action="/horarios/copiar-semana" style="margin:0;">
           <input type="hidden" name="lunes_destino" value="<%= lunes %>">
-          <button type="submit" class="btn-secondary" onclick="return confirm('¿Copiar los horarios de la semana anterior a esta semana?')">
+          <button type="submit" class="btn-secondary" onclick="return confirm('¿Copiar horarios de la semana anterior?')">
             <i class="ti ti-copy"></i> Copiar semana anterior
           </button>
         </form>
+        <button onclick="abrirPanelGenerar()" class="btn-primary">
+          <i class="ti ti-wand"></i> Generar horario nuevo
+        </button>
       </div>
     </div>
 
     <%# Navegación semanal %>
     <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--gris-borde);border-radius:12px;padding:14px 20px;margin-bottom:20px;box-shadow:var(--sombra);">
-      <a href="/horarios?fecha=<%= semanaAnterior %>" class="btn-secondary" style="padding:6px 14px;">
+      <a href="/horarios?fecha=<%= lunesAnterior %>" class="btn-secondary" style="padding:6px 14px;">
         <i class="ti ti-chevron-left"></i> Semana anterior
       </a>
       <div style="text-align:center;">
@@ -46,21 +50,19 @@
       </a>
     </div>
 
-    <%# Alertas de cobertura %>
+    <%# Alertas %>
     <% if (alertas.length > 0) { %>
     <div style="background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:12px 16px;margin-bottom:20px;">
       <p style="font-size:0.75rem;font-weight:600;color:#854d0e;margin:0 0 6px;display:flex;align-items:center;gap:6px;">
         <i class="ti ti-alert-triangle"></i> Sectores sin cobertura
       </p>
       <div style="display:flex;flex-wrap:wrap;gap:6px;">
-        <% alertas.slice(0,10).forEach(a => { %>
+        <% alertas.slice(0,8).forEach(a => { %>
         <span style="font-size:0.72rem;background:#fef08a;color:#713f12;padding:2px 8px;border-radius:20px;border:1px solid #fde047;">
           <%= a.sector %> · <%= a.nombreDia %> <%= a.dia.slice(5) %>
         </span>
         <% }) %>
-        <% if (alertas.length > 10) { %>
-        <span style="font-size:0.72rem;color:#854d0e;">+<%= alertas.length - 10 %> más</span>
-        <% } %>
+        <% if (alertas.length > 8) { %><span style="font-size:0.72rem;color:#854d0e;">+<%= alertas.length-8 %> más</span><% } %>
       </div>
     </div>
     <% } %>
@@ -70,169 +72,118 @@
       <table id="tabla-horarios" style="width:100%;border-collapse:collapse;min-width:900px;">
         <thead>
           <tr style="background:#1e3a5f;">
-            <th style="padding:10px 14px;text-align:left;color:#fff;font-size:0.72rem;font-weight:600;letter-spacing:0.08em;width:200px;">EMPLEADO</th>
-            <% const DIAS_NOMBRES = ['LUN','MAR','MIÉ','JUE','VIE','SÁB','DOM']; %>
-            <% dias.forEach((d, i) => { %>
+            <th style="padding:10px 14px;text-align:left;color:#fff;font-size:0.72rem;font-weight:600;width:200px;">EMPLEADO</th>
+            <% const DN = ['LUN','MAR','MIÉ','JUE','VIE','SÁB','DOM']; %>
+            <% dias.forEach((d,i) => { %>
             <th style="padding:10px 8px;text-align:center;color:#fff;font-size:0.7rem;font-weight:600;min-width:90px;">
-              <%= DIAS_NOMBRES[i] %><br>
-              <span style="font-size:0.65rem;opacity:0.8;font-weight:400;"><%= d.slice(5).replace('-','/') %></span>
+              <%= DN[i] %><br><span style="font-size:0.65rem;opacity:0.8;font-weight:400;"><%= d.slice(5).replace('-','/') %></span>
             </th>
             <% }) %>
           </tr>
         </thead>
         <tbody>
           <%
-            const coloresSector = {
-              'Supervisores':'#dbeafe','Comis de Recepción':'#ecfdf5',
-              'Panadería':'#fefce8','Pastelería AM':'#fff7ed',
-              'Pastelería PM':'#fdf4ff','Faro AM':'#f0fdf4',
-              'Faro PM':'#eff6ff','Nocturno':'#1e293b',
-              'BQTs Fríos':'#fff7f0','BQTs Calientes':'#eef2ff',
-              'Farolito':'#f7fee7','Cocina I+D':'#fef9c3'
+            const CS = {
+              'Supervisores':'#dbeafe','Comis de Recepción':'#ecfdf5','Panadería':'#fefce8',
+              'Pastelería AM':'#fff7ed','Pastelería PM':'#fdf4ff','Faro AM':'#f0fdf4',
+              'Faro PM':'#eff6ff','Nocturno':'#1e293b','BQTs Fríos':'#fff7f0',
+              'BQTs Calientes':'#eef2ff','Farolito':'#f7fee7','Cocina I+D':'#fef9c3'
             };
-            const coloresTextoNocturno = { 'Nocturno': '#fff' };
           %>
-
           <% SECTORES.forEach(sector => { %>
             <% if (!porSector[sector]) return; %>
-
-            <%# Fila de sector %>
-            <tr style="background:<%= coloresSector[sector] || '#f8fafc' %>;">
-              <td colspan="8" style="padding:8px 14px;font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:<%= coloresTextoNocturno[sector] || '#1e3a5f' %>;">
+            <tr style="background:<%= CS[sector]||'#f8fafc' %>;">
+              <td colspan="8" style="padding:7px 14px;font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:<%= sector==='Nocturno'?'#fff':'#1e3a5f' %>;">
                 <%= sector %>
               </td>
             </tr>
-
             <% porSector[sector].forEach(emp => { %>
-            <tr class="fila-empleado" data-empleado="<%= emp.id %>" style="border-bottom:1px solid #f1f5f9;">
-              <td style="padding:6px 14px;font-size:0.78rem;font-weight:500;color:var(--negro);background:<%= coloresSector[sector] || '#fff' %>20;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;" title="<%= emp.nombre %>">
+            <tr style="border-bottom:1px solid #f1f5f9;">
+              <td style="padding:5px 14px;font-size:0.78rem;font-weight:500;color:var(--negro);background:<%= CS[sector]||'#fff' %>20;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;" title="<%= emp.nombre %>">
                 <%= emp.nombre %>
               </td>
               <% dias.forEach(dia => { %>
               <%
                 const val = horariosMap[emp.id]?.[dia] || '';
-                const esEstado = ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA'].includes(val.toUpperCase());
-                const bgColors = { OFF:'#fbbf24',VAC:'#ef4444',RECOFF:'#22c55e',FERIADO:'#ef4444',LICENCIA:'#ec4899',CUMPLE:'#a855f7',MUDANZA:'#fb923c' };
-                const bg = esEstado ? bgColors[val.toUpperCase()] : '';
+                const esE = ESTADOS.includes(val.toUpperCase());
+                const bg = {OFF:'#fbbf24',VAC:'#ef4444',RECOFF:'#22c55e',FERIADO:'#ef4444',LICENCIA:'#ec4899',CUMPLE:'#a855f7',MUDANZA:'#fb923c'}[val.toUpperCase()]||'';
               %>
-              <td style="padding:2px 4px;text-align:center;background:<%= bg ? bg+'22' : '' %>;">
-                <input
-                  type="text"
-                  class="celda-horario"
-                  data-uid="<%= emp.id %>"
-                  data-fecha="<%= dia %>"
-                  value="<%= val %>"
-                  maxlength="10"
-                  style="width:80px;text-align:center;border:1px solid transparent;border-radius:6px;padding:4px 4px;font-size:0.78rem;font-family:var(--font-sans);background:<%= bg ? bg+'33' : 'transparent' %>;color:<%= esEstado ? '#1e293b' : 'var(--negro)' %>;font-weight:<%= esEstado ? '700' : '500' %>;cursor:pointer;transition:all 0.15s;"
+              <td style="padding:2px 4px;text-align:center;background:<%= bg?bg+'22':'' %>;">
+                <input type="text" class="celda-horario"
+                  data-uid="<%= emp.id %>" data-fecha="<%= dia %>"
+                  value="<%= val %>" maxlength="10"
+                  style="width:80px;text-align:center;border:1px solid transparent;border-radius:6px;padding:4px;font-size:0.78rem;font-family:var(--font-sans);background:<%= bg?bg+'33':'transparent' %>;font-weight:<%= esE?'700':'500' %>;cursor:pointer;"
                   onfocus="this.style.border='1px solid var(--azul)';this.style.background='#fff';"
                   onblur="guardarCelda(this)"
-                  onkeydown="if(event.key==='Enter'||event.key==='Tab'){event.preventDefault();guardarCelda(this);moverFoco(this,event.key==='Tab'&&event.shiftKey?-1:1);}"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();guardarCelda(this);}if(event.key==='Tab'){event.preventDefault();guardarCelda(this);moverFoco(this,event.shiftKey?-1:1);}"
                 >
               </td>
               <% }) %>
             </tr>
             <% }) %>
           <% }) %>
-
-          <% if (!porSector || Object.keys(porSector).length === 0) { %>
-          <tr>
-            <td colspan="8" style="text-align:center;padding:40px;color:var(--gris-texto);font-style:italic;">
-              No hay empleados con sector asignado. Asigná sectores desde Personal.
-            </td>
-          </tr>
-          <% } %>
         </tbody>
       </table>
     </div>
 
     <%# Leyenda %>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center;">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center;">
       <span style="font-size:0.68rem;color:var(--gris-texto);font-weight:600;">ESTADOS:</span>
-      <% const leyenda = [{v:'OFF',c:'#fbbf24'},{v:'VAC',c:'#ef4444'},{v:'RECOFF',c:'#22c55e'},{v:'FERIADO',c:'#ef4444'},{v:'LICENCIA',c:'#ec4899'},{v:'CUMPLE',c:'#a855f7'},{v:'MUDANZA',c:'#fb923c'}]; %>
-      <% leyenda.forEach(l => { %>
-      <span style="font-size:0.68rem;font-weight:700;background:<%= l.c %>33;border:1px solid <%= l.c %>;color:#1e293b;padding:2px 8px;border-radius:20px;">
-        <%= l.v %>
-      </span>
+      <% [{v:'OFF',c:'#fbbf24'},{v:'VAC',c:'#ef4444'},{v:'RECOFF',c:'#22c55e'},{v:'FERIADO',c:'#ef4444'},{v:'LICENCIA',c:'#ec4899'},{v:'CUMPLE',c:'#a855f7'},{v:'MUDANZA',c:'#fb923c'}].forEach(l => { %>
+      <span style="font-size:0.68rem;font-weight:700;background:<%= l.c %>33;border:1px solid <%= l.c %>;color:#1e293b;padding:2px 8px;border-radius:20px;"><%= l.v %></span>
       <% }) %>
-      <span style="font-size:0.68rem;color:var(--gris-texto);margin-left:8px;">· Hora + letra de ubicación: 7C, 15B, 6D, etc.</span>
     </div>
 
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--gris-borde);">
       <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
     </div>
-
   </main>
-
   <%- include('partials/mobile-nav', { path: 'horarios' }) %>
 </div>
 
 <style>
 .btn-excel{display:inline-flex;align-items:center;gap:6px;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-sans);font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background 0.2s;}
 .btn-excel:hover{background:#15803d;}
-.celda-horario:hover{border:1px solid var(--gris-borde) !important;background:#f8fafc !important;}
+.celda-horario{transition:all 0.15s;}
+.celda-horario:hover{border:1px solid var(--gris-borde)!important;background:#f8fafc!important;}
 .celda-horario:focus{outline:none;}
-#tabla-horarios tbody tr:hover td{background:#f8fafc;}
 </style>
 
 <script>
-// Guardar celda via AJAX
+const bgEstados = {OFF:'#fbbf24',VAC:'#ef4444',RECOFF:'#22c55e',FERIADO:'#ef4444',LICENCIA:'#ec4899',CUMPLE:'#a855f7',MUDANZA:'#fb923c'};
+
 async function guardarCelda(input) {
   const uid   = input.dataset.uid;
   const fecha = input.dataset.fecha;
   const valor = input.value.trim().toUpperCase();
   input.value = valor;
-
-  // Aplicar color visual inmediato
-  aplicarColor(input, valor);
-
+  aplicarColorCelda(input, valor);
   try {
-    const resp = await fetch('/horarios/celda', {
+    await fetch('/horarios/celda', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ usuario_id: uid, fecha, valor })
     });
-    const data = await resp.json();
-    if (!data.ok) console.error('Error guardando:', data.error);
-  } catch(e) {
-    console.error('Error de red:', e);
-  }
+  } catch(e) { console.error(e); }
 }
 
-const bgColors = {
-  OFF:'#fbbf24',VAC:'#ef4444',RECOFF:'#22c55e',
-  FERIADO:'#ef4444',LICENCIA:'#ec4899',CUMPLE:'#a855f7',MUDANZA:'#fb923c'
-};
-
-function aplicarColor(input, valor) {
+function aplicarColorCelda(input, valor) {
   const td = input.parentElement;
-  const bg = bgColors[valor] || '';
-  if (bg) {
-    td.style.background = bg + '22';
-    input.style.background = bg + '33';
-    input.style.fontWeight = '700';
-  } else {
-    td.style.background = '';
-    input.style.background = 'transparent';
-    input.style.fontWeight = '500';
-  }
+  const bg = bgEstados[valor] || '';
+  td.style.background = bg ? bg+'22' : '';
+  input.style.background = bg ? bg+'33' : 'transparent';
+  input.style.fontWeight = bg ? '700' : '500';
 }
 
-// Mover foco entre celdas con Tab/Enter
 function moverFoco(input, dir) {
   const celdas = [...document.querySelectorAll('.celda-horario')];
-  const idx = celdas.indexOf(input);
-  const siguiente = celdas[idx + dir];
-  if (siguiente) { siguiente.focus(); siguiente.select(); }
+  const sig = celdas[celdas.indexOf(input) + dir];
+  if (sig) { sig.focus(); sig.select(); }
 }
 
-// Inicializar colores al cargar
 document.querySelectorAll('.celda-horario').forEach(input => {
-  aplicarColor(input, input.value.toUpperCase());
-  input.addEventListener('focus', function() {
-    this.select();
-    this.style.border = '1px solid var(--azul)';
-    this.style.background = '#fff';
-  });
+  aplicarColorCelda(input, input.value.toUpperCase());
+  input.addEventListener('focus', function() { this.select(); });
 });
 </script>
 </body>
