@@ -12,6 +12,9 @@ const SECTORES = [
 
 const ESTADOS = ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA'];
 
+// ── Helpers de fecha ────────────────────────────────────
+
+// Se mantienen por compatibilidad con enlaces viejos que todavía manden ?fecha=
 function getLunes(fechaStr) {
   const d = new Date(fechaStr + 'T00:00:00');
   const day = d.getDay();
@@ -36,10 +39,38 @@ function sumarDias(fechaStr, n) {
   return d.toISOString().split('T')[0];
 }
 
+// Nuevo: rango libre entre dos fechas (inclusive), cualquier cantidad de días
+function getDiasRango(inicioStr, finStr) {
+  const dias = [];
+  let d = new Date(inicioStr + 'T00:00:00');
+  const dFin = new Date(finStr + 'T00:00:00');
+  let cursor = d <= dFin ? d : dFin;
+  let limite = d <= dFin ? dFin : d;
+  while (cursor <= limite) {
+    dias.push(cursor.toISOString().split('T')[0]);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dias;
+}
+
+// Resuelve inicio/fin a partir de los distintos formatos de query que puede recibir
+// (?inicio=&fin=  |  ?fecha=  viejo, semana completa  |  nada, semana actual)
+function resolverRango(query) {
+  const hoy = new Date().toISOString().split('T')[0];
+  if (query.inicio) {
+    return { inicio: query.inicio, fin: query.fin || query.inicio };
+  }
+  if (query.fecha) {
+    const inicio = getLunes(query.fecha);
+    return { inicio, fin: sumarDias(inicio, 6) };
+  }
+  const inicio = getLunes(hoy);
+  return { inicio, fin: sumarDias(inicio, 6) };
+}
+
 router.get('/', loginRequerido, async (req, res) => {
-  const hoy   = new Date().toISOString().split('T')[0];
-  const lunes = getLunes(req.query.fecha || hoy);
-  const dias  = getDiasSemana(lunes);
+  const { inicio, fin } = resolverRango(req.query);
+  const dias = getDiasRango(inicio, fin);
 
   const empleados = await db.all2(`
     SELECT id, nombre, puesto, departamento
@@ -67,7 +98,7 @@ router.get('/', loginRequerido, async (req, res) => {
     SELECT usuario_id, fecha::text, valor
     FROM horarios_semanales
     WHERE fecha >= $1 AND fecha <= $2
-  `, [dias[0], dias[6]]);
+  `, [dias[0], dias[dias.length - 1]]);
 
   const horariosMap = {};
   horariosRaw.forEach(h => {
@@ -98,14 +129,20 @@ router.get('/', loginRequerido, async (req, res) => {
     });
   });
 
-  // FIX: semana anterior y siguiente correctas
-  const lunesAnterior   = getLunes(sumarDias(lunes, -7));
-  const lunesSiguiente  = getLunes(sumarDias(lunes, 7));
+  // Navegación: mueve todo el rango hacia atrás/adelante según su propia duración,
+  // así un rango de 3 días sigue siendo de 3 días al navegar, y una semana completa
+  // sigue siendo una semana completa.
+  const duracion = dias.length;
+  const rangoAnterior = { inicio: sumarDias(inicio, -duracion), fin: sumarDias(fin, -duracion) };
+  const rangoSiguiente = { inicio: sumarDias(inicio, duracion), fin: sumarDias(fin, duracion) };
 
   res.render('horarios', {
-    path: 'horarios', lunes, dias, porSector, horariosMap,
+    path: 'horarios',
+    inicio, fin, dias, porSector, horariosMap,
     SECTORES, ESTADOS, alertas,
-    lunesAnterior, semanaSiguiente: lunesSiguiente
+    rangoAnterior, rangoSiguiente,
+    // compatibilidad con la vista vieja, por si todavía queda alguna referencia a "lunes"
+    lunes: inicio
   });
 });
 
@@ -128,22 +165,30 @@ router.post('/celda', loginRequerido, async (req, res) => {
   }
 });
 
+// Copia el rango inmediatamente anterior (misma duración) al rango destino
 router.post('/copiar-semana', loginRequerido, async (req, res) => {
-  const { lunes_destino } = req.body;
+  const { inicio_destino, fin_destino, lunes_destino } = req.body;
+
+  // Compatibilidad: si viene el campo viejo "lunes_destino", tratamos como semana completa
+  const destInicio = inicio_destino || lunes_destino;
+  const destFin     = fin_destino || (lunes_destino ? sumarDias(lunes_destino, 6) : destInicio);
+
   try {
-    const lunesOrigen = getLunes(sumarDias(lunes_destino, -7));
-    const diasOrigen  = getDiasSemana(lunesOrigen);
-    const diasDestino = getDiasSemana(lunes_destino);
+    const diasDestino = getDiasRango(destInicio, destFin);
+    const duracion = diasDestino.length;
+    const origenInicio = sumarDias(destInicio, -duracion);
+    const origenFin     = sumarDias(destFin, -duracion);
+    const diasOrigen = getDiasRango(origenInicio, origenFin);
 
     const horariosOrigen = await db.all2(`
       SELECT usuario_id, fecha::text, valor
       FROM horarios_semanales
       WHERE fecha >= $1 AND fecha <= $2
-    `, [diasOrigen[0], diasOrigen[6]]);
+    `, [diasOrigen[0], diasOrigen[diasOrigen.length - 1]]);
 
     for (const h of horariosOrigen) {
       const idx = diasOrigen.indexOf(h.fecha);
-      if (idx === -1) continue;
+      if (idx === -1 || idx >= diasDestino.length) continue;
       await db.run2(`
         INSERT INTO horarios_semanales (usuario_id, fecha, valor)
         VALUES ($1, $2, $3)
@@ -151,17 +196,17 @@ router.post('/copiar-semana', loginRequerido, async (req, res) => {
       `, [h.usuario_id, diasDestino[idx], h.valor]);
     }
 
-    res.redirect('/horarios?fecha=' + lunes_destino);
+    res.redirect(`/horarios?inicio=${destInicio}&fin=${destFin}`);
   } catch(e) {
     console.error('Error copiando semana:', e.message);
-    res.redirect('/horarios?fecha=' + lunes_destino);
+    res.redirect(`/horarios?inicio=${destInicio}&fin=${destFin}`);
   }
 });
 
 router.get('/excel', loginRequerido, async (req, res) => {
-  const lunes = getLunes(req.query.fecha || new Date().toISOString().split('T')[0]);
-  const dias  = getDiasSemana(lunes);
-  const DIAS_NOMBRES = ['L','M','M','J','V','S','D'];
+  const { inicio, fin } = resolverRango(req.query);
+  const dias = getDiasRango(inicio, fin);
+  const NOMBRES_DIA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
   const empleados = await db.all2(`
     SELECT id, nombre, puesto, departamento FROM usuarios WHERE activo=1
@@ -178,7 +223,7 @@ router.get('/excel', loginRequerido, async (req, res) => {
   const horariosRaw = await db.all2(`
     SELECT usuario_id, fecha::text, valor FROM horarios_semanales
     WHERE fecha >= $1 AND fecha <= $2
-  `, [dias[0], dias[6]]);
+  `, [dias[0], dias[dias.length - 1]]);
 
   const horariosMap = {};
   horariosRaw.forEach(h => {
@@ -189,15 +234,19 @@ router.get('/excel', loginRequerido, async (req, res) => {
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('Horarios');
 
-  ws.mergeCells('A1:J1');
+  const ultimaCol = String.fromCharCode('A'.charCodeAt(0) + 1 + dias.length); // 2 cols fijas + N días
+  ws.mergeCells(`A1:${ultimaCol}1`);
   const titulo = ws.getCell('A1');
-  titulo.value = `HORARIOS — HILTON BUENOS AIRES — Semana del ${dias[0]} al ${dias[6]}`;
+  titulo.value = `HORARIOS — HILTON BUENOS AIRES — ${dias[0]} al ${dias[dias.length - 1]}`;
   titulo.font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
   titulo.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
   titulo.alignment = { horizontal: 'center', vertical: 'middle' };
   ws.getRow(1).height = 28;
 
-  const encRow = ws.addRow(['NOMBRE', 'SECTOR', ...dias.map((d,i) => `${DIAS_NOMBRES[i]}\n${d.slice(5)}`)]);
+  const encRow = ws.addRow(['NOMBRE', 'SECTOR', ...dias.map(d => {
+    const fecha = new Date(d + 'T00:00:00');
+    return `${NOMBRES_DIA[fecha.getDay()]}\n${d.slice(5)}`;
+  })]);
   encRow.eachCell(c => {
     c.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
     c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
@@ -222,8 +271,8 @@ router.get('/excel', loginRequerido, async (req, res) => {
     if (emp.departamento !== sectorActual) {
       sectorActual = emp.departamento;
       sectorIdx++;
-      const sRow = ws.addRow([emp.departamento || 'Sin sector', '', ...Array(7).fill('')]);
-      ws.mergeCells(`A${sRow.number}:J${sRow.number}`);
+      const sRow = ws.addRow([emp.departamento || 'Sin sector', '', ...Array(dias.length).fill('')]);
+      ws.mergeCells(`A${sRow.number}:${ultimaCol}${sRow.number}`);
       sRow.getCell(1).font = { bold: true, size: 10, color: { argb: 'FF1E3A5F' } };
       sRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: coloresSector[sectorIdx % coloresSector.length] } };
       sRow.getCell(1).alignment = { horizontal: 'center' };
@@ -248,11 +297,29 @@ router.get('/excel', loginRequerido, async (req, res) => {
     });
   });
 
-  ws.columns = [{ width: 24 }, { width: 18 }, ...Array(7).fill({ width: 10 })];
+  ws.columns = [{ width: 24 }, { width: 18 }, ...Array(dias.length).fill({ width: 10 })];
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', `attachment; filename=horarios_semana_${lunes}.xlsx`);
+  res.setHeader('Content-Disposition', `attachment; filename=horarios_${inicio}_a_${fin}.xlsx`);
   await wb.xlsx.write(res);
   res.end();
+});
+
+// ── POST /reiniciar-semana ────────────────────────────
+router.post('/reiniciar-semana', loginRequerido, async (req, res) => {
+  const { inicio, fin, lunes } = req.body;
+  const rangoInicio = inicio || lunes;
+  const rangoFin     = fin || (lunes ? sumarDias(lunes, 6) : rangoInicio);
+  try {
+    const dias = getDiasRango(rangoInicio, rangoFin);
+    await db.run2(
+      'DELETE FROM horarios_semanales WHERE fecha >= $1 AND fecha <= $2',
+      [dias[0], dias[dias.length - 1]]
+    );
+    res.redirect(`/horarios?inicio=${rangoInicio}&fin=${rangoFin}&msg=reiniciado`);
+  } catch(e) {
+    console.error('Error reiniciando semana:', e.message);
+    res.redirect(`/horarios?inicio=${rangoInicio}&fin=${rangoFin}`);
+  }
 });
 
 module.exports = router;

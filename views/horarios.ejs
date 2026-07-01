@@ -19,38 +19,51 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
-        <a href="/horarios/excel?fecha=<%= lunes %>" class="btn-excel">
+        <a href="/horarios/excel?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-excel">
           <i class="ti ti-file-spreadsheet"></i> Excel
         </a>
         <form method="POST" action="/horarios/copiar-semana" style="margin:0;">
-          <input type="hidden" name="lunes_destino" value="<%= lunes %>">
-          <button type="submit" class="btn-secondary" onclick="return confirm('¿Copiar horarios de la semana anterior?')">
-            <i class="ti ti-copy"></i> Copiar semana anterior
+          <input type="hidden" name="inicio_destino" value="<%= inicio %>">
+          <input type="hidden" name="fin_destino" value="<%= fin %>">
+          <button type="submit" class="btn-secondary" onclick="return confirm('¿Copiar los horarios del período anterior (misma duración) a este período?')">
+            <i class="ti ti-copy"></i> Copiar período anterior
           </button>
         </form>
-        <button onclick="abrirPanelGenerar()" class="btn-primary">
-          <i class="ti ti-wand"></i> Generar horario nuevo
-        </button>
+        <form method="POST" action="/horarios/reiniciar-semana" style="margin:0;">
+          <input type="hidden" name="inicio" value="<%= inicio %>">
+          <input type="hidden" name="fin" value="<%= fin %>">
+          <button type="submit" class="btn-secondary" style="color:#dc2626;border-color:#fecaca;"
+                  onclick="return confirm('¿Reiniciar todos los horarios de este período? Esta acción no se puede deshacer.')">
+            <i class="ti ti-trash"></i> Reiniciar período
+          </button>
+        </form>        
       </div>
     </div>
 
-    <%# Navegación semanal %>
+    <%# Navegación %>
     <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--gris-borde);border-radius:12px;padding:14px 20px;margin-bottom:20px;box-shadow:var(--sombra);">
-      <a href="/horarios?fecha=<%= lunesAnterior %>" class="btn-secondary" style="padding:6px 14px;">
-        <i class="ti ti-chevron-left"></i> Semana anterior
+      <a href="/horarios?inicio=<%= rangoAnterior.inicio %>&fin=<%= rangoAnterior.fin %>" class="btn-secondary" style="padding:6px 14px;">
+        <i class="ti ti-chevron-left"></i> Período anterior
       </a>
       <div style="text-align:center;">
-        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 2px;">Semana</p>
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 2px;">
+          Período <% if (dias.length !== 7) { %>(<%= dias.length %> día<%= dias.length !== 1 ? 's' : '' %>)<% } %>
+        </p>
         <p style="font-size:0.95rem;font-weight:600;color:var(--negro);margin:0;">
-          <%= new Date(dias[0]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long'}) %> — <%= new Date(dias[6]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}) %>
+          <%= new Date(dias[0]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long'}) %> — <%= new Date(dias[dias.length-1]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}) %>
         </p>
       </div>
-      <a href="/horarios?fecha=<%= semanaSiguiente %>" class="btn-secondary" style="padding:6px 14px;">
-        Semana siguiente <i class="ti ti-chevron-right"></i>
+      <a href="/horarios?inicio=<%= rangoSiguiente.inicio %>&fin=<%= rangoSiguiente.fin %>" class="btn-secondary" style="padding:6px 14px;">
+        Período siguiente <i class="ti ti-chevron-right"></i>
       </a>
     </div>
 
     <%# Alertas %>
+   <% if (typeof msg !== 'undefined' && msg === 'reiniciado') { %> 
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
+      <i class="ti ti-check"></i> Horarios del período reiniciados correctamente.
+    </div>
+    <% } %>
     <% if (alertas.length > 0) { %>
     <div style="background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:12px 16px;margin-bottom:20px;">
       <p style="font-size:0.75rem;font-weight:600;color:#854d0e;margin:0 0 6px;display:flex;align-items:center;gap:6px;">
@@ -67,16 +80,17 @@
     </div>
     <% } %>
 
-    <%# Grilla semanal %>
+    <%# Grilla %>
     <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--gris-borde);box-shadow:var(--sombra);">
-      <table id="tabla-horarios" style="width:100%;border-collapse:collapse;min-width:900px;">
+      <table id="tabla-horarios" style="width:100%;border-collapse:collapse;min-width:<%= 200 + dias.length * 90 %>px;">
         <thead>
           <tr style="background:#1e3a5f;">
             <th style="padding:10px 14px;text-align:left;color:#fff;font-size:0.72rem;font-weight:600;width:200px;">EMPLEADO</th>
-            <% const DN = ['LUN','MAR','MIÉ','JUE','VIE','SÁB','DOM']; %>
-            <% dias.forEach((d,i) => { %>
+            <% const NOMBRES_DIA = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB']; %>
+            <% dias.forEach((d) => { %>
+            <% const _fecha = new Date(d + 'T00:00:00'); %>
             <th style="padding:10px 8px;text-align:center;color:#fff;font-size:0.7rem;font-weight:600;min-width:90px;">
-              <%= DN[i] %><br><span style="font-size:0.65rem;opacity:0.8;font-weight:400;"><%= d.slice(5).replace('-','/') %></span>
+              <%= NOMBRES_DIA[_fecha.getDay()] %><br><span style="font-size:0.65rem;opacity:0.8;font-weight:400;"><%= d.slice(5).replace('-','/') %></span>
             </th>
             <% }) %>
           </tr>
@@ -93,7 +107,7 @@
           <% SECTORES.forEach(sector => { %>
             <% if (!porSector[sector]) return; %>
             <tr style="background:<%= CS[sector]||'#f8fafc' %>;">
-              <td colspan="8" style="padding:7px 14px;font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:<%= sector==='Nocturno'?'#fff':'#1e3a5f' %>;">
+              <td colspan="<%= 1 + dias.length %>" style="padding:7px 14px;font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:<%= sector==='Nocturno'?'#fff':'#1e3a5f' %>;">
                 <%= sector %>
               </td>
             </tr>

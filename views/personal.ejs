@@ -14,10 +14,10 @@
     <nav class="header-nav desktop-only">
       <% const _d = usuario?.departamento; %>
       <% if (_d === 'cocina' || _d === 'ayb') { %>
-        <% if (path !== 'eventos') { %><a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a><% } %>
+        <% if (path !== 'eventos') { %><a href="/eventos" class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a><% } %>
         <% if (path !== 'horarios') { %><a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a><% } %>
-        <% if (path !== 'recetas') { %><a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a><% } %>
-        <% if (path !== 'costos') { %><a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a><% } %>
+        <% if (path !== 'recetas') { %><a href="/recetas" class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a><% } %>
+        <% if (path !== 'costos') { %><a href="/costos" class="nav-link"><i class="ti ti-coin"></i> Costos</a><% } %>
       <% } %>
     </nav>
     <div class="header-user">
@@ -28,25 +28,13 @@
 
   <main class="main-content">
 
-    <% if (typeof msg !== 'undefined' && msg === 'turno_asignado') { %>
+    <% if (msg === 'empleado_editado') { %>
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
-      <i class="ti ti-check"></i> Turno asignado correctamente.
-    </div>
-    <% } else if (typeof msg !== 'undefined' && msg === 'password_reseteada') { %>
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
-      <i class="ti ti-check"></i> Contraseña reseteada correctamente.
-    </div>
-    <% } else if (typeof msg !== 'undefined' && msg === 'empleado_editado') { %>
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
-      <i class="ti ti-check"></i> Empleado actualizado correctamente.
-    </div>
-    <% } else if (typeof msg !== 'undefined' && msg && !['password_reseteada','turno_asignado','empleado_editado'].includes(msg)) { %>
-    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#dc2626;display:flex;align-items:center;gap:8px;">
-      <i class="ti ti-alert-circle"></i> <%= decodeURIComponent(msg) %>
+      <i class="ti ti-check"></i> Empleado actualizado.
     </div>
     <% } %>
 
-    <!-- Header con botones -->
+    <!-- Header -->
     <div class="seccion-header">
       <div class="seccion-header-left">
         <p class="seccion-label">Portal interno</p>
@@ -54,16 +42,45 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
-        <a href="/horarios?fecha=<%= hoy %>" class="btn-secondary"><i class="ti ti-clock"></i> Ir a horarios</a>
+        <a href="/horarios?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-secondary"><i class="ti ti-clock"></i> Ver en Horarios</a>
         <% if (esAdmin) { %>
-        <button onclick="showModal('modal-nuevo')" class="btn-primary">
-          <i class="ti ti-plus"></i> Nuevo empleado
-        </button>
+        <button onclick="showModal('modal-nuevo')" class="btn-primary"><i class="ti ti-plus"></i> Nuevo empleado</button>
         <% } %>
       </div>
     </div>
 
-    <!-- Buscador y filtros -->
+    <!-- Selector de rango con calendario -->
+    <div style="background:#fff;border:1px solid var(--gris-borde);border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:var(--sombra);display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
+
+      <!-- Calendario -->
+      <div id="cal-container" style="min-width:280px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <button onclick="calMes(-1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:16px;">&#8249;</button>
+          <span id="cal-titulo" style="font-size:0.9rem;font-weight:600;color:var(--negro);"></span>
+          <button onclick="calMes(1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:16px;">&#8250;</button>
+        </div>
+        <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;"></div>
+        <p style="font-size:0.65rem;color:var(--gris-texto);margin:10px 0 0;text-align:center;">Elegí el día de inicio y después el día de fin.</p>
+      </div>
+
+      <!-- Rango seleccionado -->
+      <div style="flex:1;">
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 8px;">Rango seleccionado</p>
+        <p id="semana-label" style="font-size:1.1rem;font-weight:600;color:var(--negro);margin:0 0 12px;"></p>
+        <div id="semana-dias" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
+        <a id="btn-ir-semana" href="/personal?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;">
+          <i class="ti ti-calendar-check"></i> Cargar este rango
+        </a>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <% const leyenda = [{v:'OFF',c:'#fbbf24'},{v:'VAC',c:'#ef4444'},{v:'RECOFF',c:'#22c55e'},{v:'FERIADO',c:'#dc2626'},{v:'LICENCIA',c:'#ec4899'},{v:'CUMPLE',c:'#a855f7'},{v:'MUDANZA',c:'#fb923c'},{v:'FRANCO',c:'#64748b'}]; %>
+          <% leyenda.forEach(l => { %>
+          <span style="font-size:0.65rem;font-weight:700;background:<%= l.c %>33;border:1px solid <%= l.c %>;color:#1e293b;padding:1px 7px;border-radius:20px;"><%= l.v %></span>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buscador -->
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
       <div style="position:relative;flex:1;min-width:200px;max-width:300px;">
         <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
@@ -72,129 +89,123 @@
       </div>
       <label style="font-size:0.75rem;color:var(--gris-texto);display:flex;align-items:center;gap:6px;cursor:pointer;">
         <input type="checkbox" id="mostrarInactivos" onchange="filtrarPersonal()" style="accent-color:var(--azul);width:16px;height:16px;">
-        Mostrar empleados dados de baja
+        Mostrar dados de baja
       </label>
       <span id="contadorActivos" style="font-size:0.72rem;color:var(--gris-texto);"></span>
     </div>
 
     <!-- Tabla -->
     <div class="tabla-wrap" style="overflow:visible;">
-      <table class="tabla" style="table-layout:fixed;width:100%;">
+      <table class="tabla" style="width:100%;table-layout:fixed;">
         <colgroup>
-          <col style="width:14%">
-          <col style="width:9%">
-          <col style="width:9%">
-          <col style="width:61%">
-          <col style="width:7%">
+          <col style="width:18%"><col style="width:10%"><col style="width:11%">
+          <col style="width:12%"><col style="width:12%"><col style="width:30%"><col style="width:7%">
         </colgroup>
         <thead>
           <tr>
-            <th>Nombre y apellido</th>
-            <th>Puesto</th>
-            <th>Sector</th>
-            <th>Horario de entrada</th>
+            <th>Nombre</th><th>Puesto</th><th>Sector</th>
+            <th>Hora entrada</th><th>Estado</th>
+            <th>Francos <span style="font-weight:400;font-size:0.62rem;">(máx. 2 días)</span></th>
             <th></th>
           </tr>
         </thead>
         <tbody id="tbody-personal">
           <% if (personal.length > 0) { %>
             <% personal.forEach(p => { %>
-            <tr class="fila-empleado <%= p.activo ? 'fila-activo' : 'fila-inactivo' %>" style="<%= p.activo ? '' : 'display:none;' %>">
+            <%
+              const horariosEmp = horarioSemanalMap[p.id] || {};
+              let horaActual = '';
+              let estadoActual = '';
+              const ESTADOS_LIST = ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA','FRANCO'];
+              const francosActuales = [];
+              dias.forEach(dia => {
+                const val = (horariosEmp[dia] || '').toUpperCase();
+                if (val === 'FRANCO') { francosActuales.push(dia); }
+                else if (ESTADOS_LIST.includes(val)) { if (!estadoActual) estadoActual = val; }
+                else if (val && !horaActual) { horaActual = horariosEmp[dia]; }
+              });
+              const bgEstados = {OFF:'#fbbf24',VAC:'#ef4444',RECOFF:'#22c55e',FERIADO:'#dc2626',LICENCIA:'#ec4899',CUMPLE:'#a855f7',MUDANZA:'#fb923c',FRANCO:'#64748b'};
+              const bgActual = estadoActual ? bgEstados[estadoActual] : '';
+              const NOMBRES_DIA_CORTO = {0:'D',1:'L',2:'M',3:'M',4:'J',5:'V',6:'S'};
+            %>
+            <tr class="fila-empleado <%= p.activo ? 'fila-activo' : 'fila-inactivo' %>"
+                style="<%= p.activo ? '' : 'display:none;' %><%= bgActual ? `background:${bgActual}11;` : '' %>">
 
-              <!-- Nombre -->
               <td>
                 <div style="display:flex;align-items:center;gap:8px;overflow:hidden;">
-                  <div style="width:32px;height:32px;border-radius:50%;background:<%= p.activo ? 'var(--azul-claro)' : 'var(--gris-fondo)' %>;color:<%= p.activo ? 'var(--azul)' : 'var(--gris-texto)' %>;display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:600;flex-shrink:0;">
+                  <div style="width:30px;height:30px;border-radius:50%;background:<%= p.activo?'var(--azul-claro)':'var(--gris-fondo)' %>;color:<%= p.activo?'var(--azul)':'var(--gris-texto)' %>;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;flex-shrink:0;">
                     <%= p.nombre.charAt(0).toUpperCase() %>
                   </div>
-                  <span style="font-size:0.83rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;<%= p.activo ? '' : 'color:var(--gris-texto);text-decoration:line-through;' %>">
-                    <%= p.nombre %>
-                  </span>
+                  <span style="font-size:0.8rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= p.nombre %></span>
                 </div>
               </td>
 
-              <!-- Puesto -->
-              <td><span class="puesto-badge"><%= p.puesto || '—' %></span></td>
+              <td><span class="puesto-badge"><%= p.puesto||'—' %></span></td>
 
-              <!-- Sector -->
               <td>
                 <% if (p.departamento) { %>
-                  <span style="font-size:0.7rem;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:2px 7px;border-radius:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;">
-                    <%= p.departamento %>
-                  </span>
-                <% } else { %>
-                  <span style="font-size:0.72rem;color:var(--gris-texto);">—</span>
+                <span style="font-size:0.67rem;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:2px 6px;border-radius:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;" title="<%= p.departamento %>">
+                  <%= p.departamento %>
+                </span>
+                <% } else { %><span style="font-size:0.72rem;color:var(--gris-texto);">—</span><% } %>
+              </td>
+
+              <td>
+                <% if (p.activo) { %>
+                <input type="text" id="hora-<%= p.id %>" value="<%= horaActual %>" placeholder="Ej: 7, 15"
+                       maxlength="6"
+                       style="width:100%;padding:5px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.8rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;text-align:center;">
                 <% } %>
               </td>
 
-              <!-- Horario semanal -->
               <td>
                 <% if (p.activo) { %>
-                <div style="display:flex;align-items:center;gap:4px;">
-                  <%
-                    const HORAS_AM = ['4','4.30','5','5.30','6','6.30','7','7.30','8','8.30','9','10','11','12','13'];
-                    const HORAS_PM = ['14','14.30','15','15.30','16','17','18','19','20','21','22'];
-                    const UBICS = ['','C','D','F','B','PF','PB','D8'];
-                    const ESTS  = ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA'];
-                    const valActual = horarioSemanalMap?.[p.id] || '';
-                  %>
-                  <!-- Turno AM/PM -->
-                  <select id="turno-<%= p.id %>" onchange="actualizarHorasEmp(<%= p.id %>)"
-                          style="padding:4px 5px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.7rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;width:58px;">
-                    <option value="AM">AM</option>
-                    <option value="PM">PM</option>
-                  </select>
-                  <!-- Hora -->
-                  <select id="hora-<%= p.id %>"
-                          style="padding:4px 5px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.7rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;width:62px;">
-                    <% HORAS_AM.forEach(h => { %><option value="<%= h %>"><%= h %></option><% }) %>
-                  </select>
-                  <!-- Sector -->
-                  <select id="ubic-<%= p.id %>"
-                          style="padding:4px 5px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.7rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;flex:1;min-width:0;">
-                    <option value="">Sin sector</option>
-                    <option value="Supervisores">Supervisores</option>
-                    <option value="Comis de Recepción">Comis de Recepción</option>
-                    <option value="Panadería">Panadería</option>
-                    <option value="Pastelería AM">Pastelería AM</option>
-                    <option value="Pastelería PM">Pastelería PM</option>
-                    <option value="Faro AM">Faro AM</option>
-                    <option value="Faro PM">Faro PM</option>
-                    <option value="Nocturno">Nocturno</option>
-                    <option value="BQTs Fríos">BQTs Fríos</option>
-                    <option value="BQTs Calientes">BQTs Calientes</option>
-                    <option value="Farolito">Farolito</option>
-                    <option value="Cocina I+D">Cocina I+D</option>
-                  </select>
-                  <!-- Estado especial -->
-                  <select id="estado-<%= p.id %>"
-                          style="padding:4px 5px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.7rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;width:80px;">
-                    <option value="">Horario</option>
-                    <% ESTS.forEach(e => { %><option value="<%= e %>"><%= e %></option><% }) %>
-                  </select>
-                  <!-- Botón aplicar -->
-                  <button onclick="asignarSemana(<%= p.id %>)" class="btn-asignar" title="Aplicar a toda la semana">
-                    <i class="ti ti-check"></i>
-                  </button>
-                  <!-- Valor actual -->
-                  <% if (valActual) { %>
-                  <span style="font-size:0.68rem;font-weight:600;color:var(--azul);white-space:nowrap;"><%= valActual %></span>
-                  <% } %>
+                <select id="estado-<%= p.id %>" onchange="actualizarColorFila(<%= p.id %>)"
+                        style="width:100%;padding:5px 6px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.73rem;font-family:var(--font-sans);background:<%= bgActual ? bgActual+'33' : 'var(--gris-fondo)' %>;color:var(--negro);outline:none;font-weight:<%= bgActual ? '700' : '400' %>;">
+                  <option value="">— Normal —</option>
+                  <% ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA'].forEach(e => { %>
+                  <option value="<%= e %>" <%= estadoActual === e ? 'selected' : '' %>
+                          style="background:<%= bgEstados[e] %>33;font-weight:700;"><%= e %></option>
+                  <% }) %>
+                </select>
+                <% } %>
+              </td>
+
+              <td>
+                <% if (p.activo) { %>
+                <div style="display:flex;gap:3px;flex-wrap:wrap;">
+                  <% dias.forEach((dia) => { %>
+                  <% const _dow = new Date(dia + 'T00:00:00').getDay(); %>
+                  <label style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;">
+                    <span style="font-size:0.58rem;color:var(--gris-texto);font-weight:600;"><%= NOMBRES_DIA_CORTO[_dow] %></span>
+                    <input type="checkbox"
+                           class="chk-franco-<%= p.id %>"
+                           value="<%= dia %>"
+                           <%= francosActuales.includes(dia) ? 'checked' : '' %>
+                           onchange="validarFrancos(<%= p.id %>)"
+                           style="accent-color:#64748b;width:14px;height:14px;">
+                  </label>
+                  <% }) %>
                 </div>
                 <% } %>
               </td>
 
-              <!-- Menú tres puntitos -->
-              <td style="text-align:center;position:relative;">
+              <td style="text-align:center;position:relative;vertical-align:middle;">
+                <% if (p.activo) { %>
+                <button onclick="guardarEmpleado(<%= p.id %>)"
+                        class="btn-asignar" title="Guardar rango" style="margin-bottom:4px;display:block;margin:0 auto 4px;">
+                  <i class="ti ti-check"></i>
+                </button>
+                <% } %>
                 <% if (esAdmin) { %>
                 <button class="btn-menu" onclick="toggleMenu(<%= p.id %>)" title="Opciones">
                   <i class="ti ti-dots-vertical"></i>
                 </button>
-                <div id="menu-<%= p.id %>" class="dropdown-menu" style="display:none;right:0;left:auto;">
-                  <button onclick="abrirEditar(<%= p.id %>, '<%= p.nombre.replace(/'/g, '') %>', '<%= p.email || '' %>', '<%= p.legajo || '' %>', '<%= p.puesto || '' %>', '<%= p.rol || '' %>', '<%= p.departamento || '' %>')" class="dropdown-item">
+                <div id="menu-<%= p.id %>" class="dropdown-menu" style="display:none;">
+                  <button onclick="abrirEditar(<%= p.id %>, '<%= p.nombre.replace(/'/g,'') %>', '<%= p.email||'' %>', '<%= p.legajo||'' %>', '<%= p.puesto||'' %>', '<%= p.rol||'' %>', '<%= p.departamento||'' %>')" class="dropdown-item">
                     <i class="ti ti-pencil"></i> Editar
                   </button>
-                  <button onclick="abrirReset(<%= p.id %>, '<%= p.nombre.replace(/'/g, '') %>')" class="dropdown-item">
+                  <button onclick="abrirReset(<%= p.id %>, '<%= p.nombre.replace(/'/g,'') %>')" class="dropdown-item">
                     <i class="ti ti-key"></i> Contraseña
                   </button>
                   <% if (p.activo) { %>
@@ -212,7 +223,7 @@
             </tr>
             <% }) %>
           <% } else { %>
-            <tr><td colspan="5" style="text-align:center;padding:48px;color:var(--gris-texto);font-style:italic;">No hay personal registrado todavía.</td></tr>
+          <tr><td colspan="7" style="text-align:center;padding:48px;color:var(--gris-texto);font-style:italic;">No hay personal registrado.</td></tr>
           <% } %>
         </tbody>
       </table>
@@ -224,11 +235,11 @@
   </main>
 
   <nav class="mobile-nav">
-    <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i>Eventos</a>
-    <a href="/personal" class="mobile-nav-link activo"><i class="ti ti-users"></i>Personal</a>
-    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i>Horarios</a>
-    <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i>Recetas</a>
-    <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i>Costos</a>
+    <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
+    <a href="/personal" class="mobile-nav-link activo"><i class="ti ti-users"></i><span>Personal</span></a>
+    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
+    <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
+    <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span>Costos</span></a>
   </nav>
 </div>
 
@@ -243,8 +254,8 @@
       <input type="hidden" name="id" id="edit-id">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="field" style="grid-column:1/-1;"><label>Nombre y apellido</label><input type="text" name="nombre" id="edit-nombre" required></div>
-        <div class="field"><label>Legajo</label><input type="text" name="legajo" id="edit-legajo" placeholder="Ej: 00123"></div>
-        <div class="field"><label>Email (opcional)</label><input type="email" name="email" id="edit-email" placeholder="nombre@hilton.com"></div>
+        <div class="field"><label>Legajo</label><input type="text" name="legajo" id="edit-legajo"></div>
+        <div class="field"><label>Email (opcional)</label><input type="email" name="email" id="edit-email"></div>
         <div class="field"><label>Puesto</label>
           <select name="puesto" id="edit-puesto" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             <% puestos.forEach(pt => { %><option value="<%= pt %>"><%= pt %></option><% }) %>
@@ -257,7 +268,7 @@
         </div>
         <div class="field" style="grid-column:1/-1;"><label>Sector de cocina</label>
           <select name="sector" id="edit-sector" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
-            <option value="">— Sin sector asignado —</option>
+            <option value="">— Sin sector —</option>
             <% sectores.forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
           </select>
         </div>
@@ -277,7 +288,7 @@
       <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Nuevo empleado</h2>
       <button onclick="hideModal('modal-nuevo')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
-    <form method="POST" action="/personal/nuevo" id="form-nuevo">
+    <form method="POST" action="/personal/nuevo">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="field" style="grid-column:1/-1;"><label>Nombre y apellido</label><input type="text" name="nombre" placeholder="Ej: Juan García" required autofocus></div>
         <div class="field"><label>Legajo</label><input type="text" name="legajo" placeholder="Ej: 00123"></div>
@@ -286,8 +297,8 @@
             <% puestos.forEach(pt => { %><option value="<%= pt %>"><%= pt %></option><% }) %>
           </select>
         </div>
-        <div class="field" style="grid-column:1/-1;"><label>Email corporativo (opcional)</label><input type="email" name="email" placeholder="nombre@hilton.com"></div>
-        <div class="field"><label>Rol en el sistema</label>
+        <div class="field" style="grid-column:1/-1;"><label>Email (opcional)</label><input type="email" name="email" placeholder="nombre@hilton.com"></div>
+        <div class="field"><label>Rol</label>
           <select name="rol" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>
           </select>
@@ -298,7 +309,7 @@
             <% sectores.forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
           </select>
         </div>
-        <div class="field" style="grid-column:1/-1;"><label>Contraseña inicial</label><input type="text" name="password" placeholder="Hilton2026!" value="Hilton2026!"></div>
+        <div class="field" style="grid-column:1/-1;"><label>Contraseña inicial</label><input type="text" name="password" value="Hilton2026!"></div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
         <button type="button" onclick="hideModal('modal-nuevo')" class="btn-secondary">Cancelar</button>
@@ -320,7 +331,7 @@
       <div class="field" style="margin-bottom:8px;">
         <label style="display:block;font-size:0.68rem;font-weight:500;margin-bottom:6px;">Nueva contraseña</label>
         <div style="position:relative;display:flex;align-items:center;">
-          <input type="password" name="password_nuevo" id="input-nuevo-pass" placeholder="Mín. 8 caracteres, 1 mayúscula, 1 número" minlength="8" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 44px 10px 12px;font-family:var(--font-sans);font-size:0.85rem;outline:none;">
+          <input type="password" name="password_nuevo" id="input-nuevo-pass" minlength="8" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 44px 10px 12px;font-family:var(--font-sans);font-size:0.85rem;outline:none;">
           <button type="button" onclick="toggleResetPass()" style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:var(--gris-texto);font-size:16px;"><i class="ti ti-eye" id="eyeReset"></i></button>
         </div>
       </div>
@@ -334,26 +345,193 @@
 </div>
 
 <style>
-.puesto-badge{font-size:0.7rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:3px 8px;border-radius:20px;white-space:nowrap;}
-.btn-asignar{background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;transition:background 0.2s;display:inline-flex;align-items:center;flex-shrink:0;}
+.puesto-badge{font-size:0.68rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:2px 7px;border-radius:20px;white-space:nowrap;}
+.btn-asignar{background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;transition:background 0.2s;display:inline-flex;align-items:center;}
 .btn-asignar:hover{background:#6d28d9;}
-.btn-menu{background:none;border:none;cursor:pointer;color:var(--gris-texto);font-size:18px;padding:4px;border-radius:6px;transition:all 0.15s;}
-.btn-menu:hover{background:var(--gris-fondo);color:var(--negro);}
+.btn-menu{background:none;border:none;cursor:pointer;color:var(--gris-texto);font-size:18px;padding:4px;border-radius:6px;}
+.btn-menu:hover{background:var(--gris-fondo);}
 .dropdown-menu{position:absolute;right:0;top:36px;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:200;min-width:150px;padding:4px;}
-.dropdown-item{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;padding:8px 12px;font-size:0.78rem;font-family:var(--font-sans);color:var(--negro);cursor:pointer;border-radius:6px;text-align:left;transition:background 0.15s;}
+.dropdown-item{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;padding:8px 12px;font-size:0.78rem;font-family:var(--font-sans);color:var(--negro);cursor:pointer;border-radius:6px;text-align:left;}
 .dropdown-item:hover{background:var(--gris-fondo);}
 .dropdown-danger{color:#dc2626;}.dropdown-danger:hover{background:#fef2f2;}
 .dropdown-success{color:#16a34a;}.dropdown-success:hover{background:#f0fdf4;}
 .field label{display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;}
-.field input{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;transition:border-color 0.2s;}
-.field input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);background:var(--blanco);}
+.field input{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;}
+.field input:focus{border-color:var(--azul);background:var(--blanco);}
+
+/* Calendario */
+.cal-dia{padding:6px 4px;border-radius:6px;cursor:pointer;font-size:0.8rem;color:var(--negro);transition:all 0.15s;border:1px solid transparent;}
+.cal-dia:hover{background:var(--azul-claro);color:var(--azul);}
+.cal-dia.hoy{font-weight:700;color:var(--azul);}
+.cal-dia.rango-sel{background:var(--azul);color:#fff;border-radius:0;}
+.cal-dia.rango-inicio{border-radius:6px 0 0 6px;}
+.cal-dia.rango-fin{border-radius:0 6px 6px 0;}
+.cal-dia.rango-inicio.rango-fin{border-radius:6px;}
+.cal-dia.rango-pendiente{background:var(--azul-claro);color:var(--azul);border:1.5px dashed var(--azul);border-radius:6px;font-weight:700;}
+.cal-dia.vacio{visibility:hidden;}
+.cal-nombre-dia{font-size:0.6rem;font-weight:600;color:var(--gris-texto);padding:4px 0;text-align:center;}
 </style>
 
 <script>
-function showModal(id){
-  document.getElementById(id).style.display='flex';
-  setTimeout(()=>{ const p=document.querySelector('#'+id+' input:not([type=hidden])'); if(p) p.focus(); },100);
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const bgEstados = {OFF:'#fbbf24',VAC:'#ef4444',RECOFF:'#22c55e',FERIADO:'#dc2626',LICENCIA:'#ec4899',CUMPLE:'#a855f7',MUDANZA:'#fb923c',FRANCO:'#64748b'};
+
+let calFecha = new Date('<%= inicio %>T00:00:00');
+// Rango seleccionado: mientras no se elija el día de fin, rangoFin queda en null.
+let rangoInicio = '<%= inicio %>';
+let rangoFin    = '<%= fin %>';
+
+function sumarDias(fechaStr, n) {
+  const d = new Date(fechaStr + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().split('T')[0];
 }
+
+function getDiasRango(inicioStr, finStr) {
+  const dias = [];
+  let d = new Date(inicioStr + 'T00:00:00');
+  const dFin = new Date(finStr + 'T00:00:00');
+  while (d <= dFin) {
+    dias.push(d.toISOString().split('T')[0]);
+    d.setDate(d.getDate() + 1);
+  }
+  return dias;
+}
+
+function renderCal() {
+  const anio = calFecha.getFullYear();
+  const mes  = calFecha.getMonth();
+  document.getElementById('cal-titulo').textContent = MESES[mes] + ' ' + anio;
+
+  const primerDia = new Date(anio, mes, 1).getDay();
+  const diasMes   = new Date(anio, mes + 1, 0).getDate();
+  const hoy = new Date().toISOString().split('T')[0];
+
+  let html = DIAS_SEMANA.map(d => `<div class="cal-nombre-dia">${d}</div>`).join('');
+  for (let i = 0; i < primerDia; i++) html += `<div class="cal-dia vacio"></div>`;
+
+  for (let d = 1; d <= diasMes; d++) {
+    const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const esInicio = fechaStr === rangoInicio;
+    const esFin    = !!rangoFin && fechaStr === rangoFin;
+    const enMedio  = !!rangoFin && fechaStr > rangoInicio && fechaStr < rangoFin;
+    const esHoy    = fechaStr === hoy;
+
+    let cls = 'cal-dia';
+    if (esInicio && !rangoFin) {
+      cls += ' rango-pendiente'; // ya elegiste el inicio, falta el fin
+    } else if (esInicio || esFin || enMedio) {
+      cls += ' rango-sel';
+      if (esInicio) cls += ' rango-inicio';
+      if (esFin)    cls += ' rango-fin';
+    } else if (esHoy) {
+      cls += ' hoy';
+    }
+
+    html += `<div class="${cls}" onclick="seleccionarDia('${fechaStr}')">${d}</div>`;
+  }
+
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+function seleccionarDia(fechaStr) {
+  if (!rangoInicio || rangoFin) {
+    // No había nada elegido, o ya había un rango completo: arrancamos uno nuevo
+    rangoInicio = fechaStr;
+    rangoFin = null;
+  } else {
+    // Ya había un inicio elegido, este click define el fin
+    if (fechaStr >= rangoInicio) {
+      rangoFin = fechaStr;
+    } else {
+      // Si clickean un día anterior al inicio, invertimos para que quede en orden
+      rangoFin = rangoInicio;
+      rangoInicio = fechaStr;
+    }
+  }
+  renderCal();
+  actualizarEtiquetaRango();
+}
+
+function calMes(dir) {
+  calFecha.setMonth(calFecha.getMonth() + dir);
+  renderCal();
+}
+
+function actualizarEtiquetaRango() {
+  const label = document.getElementById('semana-label');
+  const cont  = document.getElementById('semana-dias');
+  const btn   = document.getElementById('btn-ir-semana');
+  const d0 = new Date(rangoInicio + 'T00:00:00');
+
+  if (!rangoFin) {
+    label.textContent = d0.toLocaleDateString('es-AR',{day:'numeric',month:'long'}) + ' — elegí el día de fin';
+    cont.innerHTML = '';
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.5';
+    return;
+  }
+
+  const dFin = new Date(rangoFin + 'T00:00:00');
+  label.textContent = d0.toLocaleDateString('es-AR',{day:'numeric',month:'long'}) + ' — ' +
+    dFin.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+
+  const dias = getDiasRango(rangoInicio, rangoFin);
+  cont.innerHTML = dias.map(d => {
+    const fecha = new Date(d + 'T00:00:00');
+    const dn = DIAS_SEMANA[fecha.getDay()];
+    return `<span style="font-size:0.72rem;background:var(--azul-claro);color:var(--azul);padding:3px 8px;border-radius:6px;font-weight:600;">${dn} ${fecha.getDate()}</span>`;
+  }).join('');
+
+  btn.style.pointerEvents = '';
+  btn.style.opacity = '';
+  btn.href = '/personal?inicio=' + rangoInicio + '&fin=' + rangoFin;
+}
+
+// Inicializar calendario en el rango actual
+renderCal();
+actualizarEtiquetaRango();
+
+// ── Guardar empleado ──
+async function guardarEmpleado(uid) {
+  const hora    = document.getElementById('hora-' + uid)?.value?.trim() || '';
+  const estado  = document.getElementById('estado-' + uid)?.value || '';
+  const francos = [...document.querySelectorAll(`.chk-franco-${uid}:checked`)].map(c => c.value);
+
+  try {
+    const resp = await fetch('/personal/asignar-semana-completa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario_id: uid, inicio: rangoInicio, fin: rangoFin || rangoInicio, hora, estado, francos })
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      const btn = document.querySelector(`button[onclick="guardarEmpleado(${uid})"]`);
+      if (btn) { btn.style.background = '#16a34a'; setTimeout(() => btn.style.background = '', 1500); }
+      actualizarColorFila(uid);
+    } else {
+      alert('Error: ' + data.error);
+    }
+  } catch(e) { alert('Error de conexión'); }
+}
+
+function actualizarColorFila(uid) {
+  const estado = document.getElementById('estado-' + uid)?.value || '';
+  const sel    = document.getElementById('estado-' + uid);
+  const fila   = sel?.closest('tr');
+  const bg     = bgEstados[estado] || '';
+  if (fila) fila.style.background = bg ? bg + '11' : '';
+  if (sel)  { sel.style.background = bg ? bg + '33' : 'var(--gris-fondo)'; sel.style.fontWeight = bg ? '700' : '400'; }
+}
+
+function validarFrancos(uid) {
+  const checks = [...document.querySelectorAll(`.chk-franco-${uid}:checked`)];
+  if (checks.length > 2) { event.target.checked = false; alert('Máximo 2 días de franco por rango.'); }
+}
+
+// ── Modales ──
+function showModal(id){ document.getElementById(id).style.display='flex'; setTimeout(()=>{ const p=document.querySelector('#'+id+' input:not([type=hidden])'); if(p) p.focus(); },100); }
 function hideModal(id){ document.getElementById(id).style.display='none'; }
 
 function toggleMenu(id) {
@@ -363,9 +541,8 @@ function toggleMenu(id) {
   if (!abierto) menu.style.display = 'block';
 }
 document.addEventListener('click', e => {
-  if (!e.target.closest('.btn-menu') && !e.target.closest('.dropdown-menu')) {
+  if (!e.target.closest('.btn-menu') && !e.target.closest('.dropdown-menu'))
     document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
-  }
 });
 
 function abrirEditar(id, nombre, email, legajo, puesto, rol, sector) {
@@ -384,7 +561,6 @@ function abrirReset(id, nombre) {
   document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
   document.getElementById('reset-nombre').textContent = nombre;
   document.getElementById('form-reset').action = '/personal/' + id + '/reset-password';
-  document.getElementById('input-nuevo-pass').value = '';
   showModal('modal-reset');
 }
 
@@ -393,45 +569,6 @@ function toggleResetPass() {
   const icon  = document.getElementById('eyeReset');
   input.type = input.type === 'text' ? 'password' : 'text';
   icon.className = input.type === 'text' ? 'ti ti-eye-off' : 'ti ti-eye';
-}
-
-const horasAMEmp = ['4','4.30','5','5.30','6','6.30','7','7.30','8','8.30','9','10','11','12','13'];
-const horasPMEmp = ['14','14.30','15','15.30','16','17','18','19','20','21','22'];
-
-function actualizarHorasEmp(uid) {
-  const turno = document.getElementById('turno-' + uid).value;
-  const sel = document.getElementById('hora-' + uid);
-  const horas = turno === 'AM' ? horasAMEmp : horasPMEmp;
-  sel.innerHTML = horas.map(h => `<option value="${h}">${h}</option>`).join('');
-}
-
-async function asignarSemana(uid) {
-  const estado = document.getElementById('estado-' + uid).value;
-  const hora   = document.getElementById('hora-' + uid).value;
-  const sector = document.getElementById('ubic-' + uid).value;
-  // Si hay estado especial lo usa, sino combina hora + sector
-  const valor  = estado || (hora + (sector ? ' ' + sector : ''));
-
-  try {
-    const resp = await fetch('/personal/asignar-semana', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario_id: uid, valor })
-    });
-    const data = await resp.json();
-    if (data.ok) {
-      // Mostrar valor aplicado
-      const spans = document.querySelectorAll(`[data-uid-label="${uid}"]`);
-      spans.forEach(s => s.textContent = valor);
-      // Flash verde en la fila
-      const btn = document.querySelector(`button[onclick="asignarSemana(${uid})"]`);
-      if (btn) { btn.style.background = '#16a34a'; setTimeout(() => btn.style.background = '', 1000); }
-    } else {
-      alert('Error: ' + data.error);
-    }
-  } catch(e) {
-    alert('Error de conexión');
-  }
 }
 
 function buscarPersonal() {

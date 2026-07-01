@@ -7,8 +7,11 @@ const { loginRequerido } = require('./middleware');
 const PUESTOS = ['Chef','Subchef','Encargado de cocina','Cocinero','Ayudante de cocina','Pastelero','Panadero','Mozo','Sommelier','Limpieza','Administrativo'];
 const ROLES   = ['empleado','supervisor','admin'];
 const SECTORES = ['Supervisores','Comis de Recepción','Panadería','Pastelería AM','Pastelería PM','Faro AM','Faro PM','Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D'];
-const SECTORES_COCINA = SECTORES;
+const ESTADOS = ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA','FRANCO'];
 
+// ── Helpers de fecha ────────────────────────────────────
+
+// Se mantienen por compatibilidad con /asignar-semana (ruta vieja)
 function getLunes(fechaStr) {
   const d = new Date(fechaStr + 'T00:00:00');
   const day = d.getDay();
@@ -27,36 +30,135 @@ function getDiasSemana(lunes) {
   return dias;
 }
 
+function sumarDias(fechaStr, n) {
+  const d = new Date(fechaStr + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().split('T')[0];
+}
+
+// Nuevo: rango libre entre dos fechas (inclusive), cualquier cantidad de días
+function getDiasRango(inicioStr, finStr) {
+  const dias = [];
+  let d = new Date(inicioStr + 'T00:00:00');
+  const dFin = new Date(finStr + 'T00:00:00');
+  // Si por algún motivo vienen invertidas, las corregimos
+  let cursor = d <= dFin ? d : dFin;
+  let limite = d <= dFin ? dFin : d;
+  while (cursor <= limite) {
+    dias.push(cursor.toISOString().split('T')[0]);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dias;
+}
+
 // ── GET / ──────────────────────────────────────────────
 router.get('/', loginRequerido, async (req, res) => {
+  const hoy = new Date().toISOString().split('T')[0];
+
+  // Compatibilidad: si todavía llega ?semana=..., lo tratamos como el inicio
+  // de una semana completa (comportamiento viejo).
+  let inicio, fin;
+  if (req.query.inicio) {
+    inicio = req.query.inicio;
+    fin    = req.query.fin || inicio;
+  } else if (req.query.semana) {
+    inicio = getLunes(req.query.semana);
+    fin    = sumarDias(inicio, 6);
+  } else {
+    inicio = getLunes(hoy);
+    fin    = sumarDias(inicio, 6);
+  }
+
+  const dias = getDiasRango(inicio, fin);
+
   const personal = await db.all2(`
     SELECT id,nombre,email,legajo,puesto,rol,activo,departamento,creado_en
     FROM usuarios
     WHERE departamento = ANY($1)
-    ORDER BY nombre
-  `, [SECTORES_COCINA]);
+    ORDER BY departamento, nombre
+  `, [SECTORES]);
 
   const msg     = req.query.msg || null;
   const esAdmin = req.session.usuario.rol === 'admin';
-  const hoy     = new Date().toISOString().split('T')[0];
 
-  const horariosHoy = await db.all2(
-    'SELECT usuario_id, hora_inicio, seccion FROM horarios WHERE fecha=$1', [hoy]
-  );
-  const horarioMap = {};
-  horariosHoy.forEach(h => {
-    horarioMap[h.usuario_id] = { hora: h.hora_inicio, seccion: h.seccion };
+  // Horarios del rango seleccionado
+  const semanalRaw = await db.all2(`
+    SELECT usuario_id, fecha::text, valor
+    FROM horarios_semanales
+    WHERE fecha >= $1 AND fecha <= $2
+  `, [dias[0], dias[dias.length - 1]]);
+
+  const horarioSemanalMap = {};
+  semanalRaw.forEach(h => {
+    if (!horarioSemanalMap[h.usuario_id]) horarioSemanalMap[h.usuario_id] = {};
+    horarioSemanalMap[h.usuario_id][h.fecha] = h.valor;
   });
 
-  // Horario semanal actual
-  const lunes = getLunes(hoy);
-  const semanalRaw = await db.all2(
-    'SELECT usuario_id, valor FROM horarios_semanales WHERE fecha=$1', [lunes]
-  );
-  const horarioSemanalMap = {};
-  semanalRaw.forEach(h => { horarioSemanalMap[h.usuario_id] = h.valor; });
+  res.render('personal', {
+    personal, puestos: PUESTOS, roles: ROLES, sectores: SECTORES,
+    ESTADOS, msg, esAdmin, hoy, inicio, fin, dias, horarioSemanalMap,
+    // compatibilidad con campos viejos
+    horarioMap: {}
+  });
+});
 
-  res.render('personal', { personal, puestos: PUESTOS, roles: ROLES, sectores: SECTORES, msg, esAdmin, horarioMap, hoy, horarioSemanalMap });
+// ── POST /asignar-semana-completa ──────────────────────
+// Guarda hora para todo el rango elegido + francos individuales por día
+router.post('/asignar-semana-completa', loginRequerido, async (req, res) => {
+  const { usuario_id, inicio, fin, hora, estado, francos } = req.body;
+  try {
+    const dias = getDiasRango(inicio, fin || inicio);
+    const francosDias = Array.isArray(francos) ? francos : (francos ? [francos] : []);
+
+    for (const dia of dias) {
+      let valor;
+      if (francosDias.includes(dia)) {
+        valor = 'FRANCO';
+      } else if (estado && estado !== '') {
+        valor = estado.toUpperCase();
+      } else if (hora && hora !== '') {
+        valor = hora.trim();
+      } else {
+        // Si no hay valor, borrar
+        await db.run2('DELETE FROM horarios_semanales WHERE usuario_id=$1 AND fecha=$2',
+          [parseInt(usuario_id), dia]);
+        continue;
+      }
+      await db.run2(`
+        INSERT INTO horarios_semanales (usuario_id, fecha, valor)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (usuario_id, fecha) DO UPDATE SET valor = $3
+      `, [parseInt(usuario_id), dia, valor]);
+    }
+    res.json({ ok: true });
+  } catch(e) {
+    console.error('Error:', e.message);
+    res.json({ ok: false, error: e.message });
+  }
+});
+
+// ── POST /asignar-semana (compatibilidad) ──────────────
+router.post('/asignar-semana', loginRequerido, async (req, res) => {
+  const { usuario_id, valor } = req.body;
+  try {
+    const hoy   = new Date().toISOString().split('T')[0];
+    const lunes = getLunes(hoy);
+    const dias  = getDiasSemana(lunes);
+    for (const dia of dias) {
+      if (!valor || valor.trim() === '') {
+        await db.run2('DELETE FROM horarios_semanales WHERE usuario_id=$1 AND fecha=$2', [parseInt(usuario_id), dia]);
+      } else {
+        await db.run2(`
+          INSERT INTO horarios_semanales (usuario_id, fecha, valor)
+          VALUES ($1, $2, $3)
+          ON CONFLICT (usuario_id, fecha) DO UPDATE SET valor = $3
+        `, [parseInt(usuario_id), dia, valor.trim().toUpperCase()]);
+      }
+    }
+    res.json({ ok: true });
+  } catch(e) {
+    res.json({ ok: false, error: e.message });
+  }
 });
 
 // ── POST /nuevo ────────────────────────────────────────
@@ -93,66 +195,6 @@ router.post('/editar', loginRequerido, async (req, res) => {
   } catch(e) {
     console.error('Error editando usuario:', e.message);
     res.redirect('/personal?msg=' + encodeURIComponent('Error al editar empleado.'));
-  }
-});
-
-// ── POST /asignar-semana ───────────────────────────────
-router.post('/asignar-semana', loginRequerido, async (req, res) => {
-  const { usuario_id, valor } = req.body;
-  try {
-    const hoy   = new Date().toISOString().split('T')[0];
-    const lunes = getLunes(hoy);
-    const dias  = getDiasSemana(lunes);
-    for (const dia of dias) {
-      if (!valor || valor.trim() === '') {
-        await db.run2('DELETE FROM horarios_semanales WHERE usuario_id=$1 AND fecha=$2', [parseInt(usuario_id), dia]);
-      } else {
-        await db.run2(`
-          INSERT INTO horarios_semanales (usuario_id, fecha, valor)
-          VALUES ($1, $2, $3)
-          ON CONFLICT (usuario_id, fecha) DO UPDATE SET valor = $3
-        `, [parseInt(usuario_id), dia, valor.trim().toUpperCase()]);
-      }
-    }
-    res.json({ ok: true });
-  } catch(e) {
-    console.error('Error asignando semana:', e.message);
-    res.json({ ok: false, error: e.message });
-  }
-});
-
-// ── POST /asignar-turno ────────────────────────────────
-router.post('/asignar-turno', loginRequerido, async (req, res) => {
-  try {
-    const { usuario_id, fecha, hora_entrada, seccion } = req.body;
-    const hora = parseInt((hora_entrada || '08:00').split(':')[0]);
-    let turno, hora_inicio, hora_fin;
-    if (hora >= 6 && hora < 14) {
-      turno = 'manana'; hora_inicio = '06:00'; hora_fin = '14:00';
-    } else if (hora >= 14 && hora < 22) {
-      turno = 'tarde';  hora_inicio = '14:00'; hora_fin = '22:00';
-    } else {
-      turno = 'noche';  hora_inicio = '22:00'; hora_fin = '06:00';
-    }
-    const existe = await db.get2(
-      'SELECT id FROM horarios WHERE fecha=$1 AND usuario_id=$2 AND turno=$3',
-      [fecha, parseInt(usuario_id), turno]
-    );
-    if (existe) {
-      await db.run2(
-        'UPDATE horarios SET hora_inicio=$1, hora_fin=$2, seccion=$3 WHERE id=$4',
-        [hora_entrada, hora_fin, seccion || null, existe.id]
-      );
-    } else {
-      await db.run2(
-        'INSERT INTO horarios (fecha, turno, hora_inicio, hora_fin, usuario_id, seccion, estado) VALUES ($1,$2,$3,$4,$5,$6,$7)',
-        [fecha, turno, hora_entrada, hora_fin, parseInt(usuario_id), seccion || null, 'asignado']
-      );
-    }
-    res.redirect('/personal?msg=turno_asignado');
-  } catch(e) {
-    console.error('Error asignando turno:', e.message);
-    res.redirect('/personal?msg=' + encodeURIComponent('Error al asignar turno.'));
   }
 });
 

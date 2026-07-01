@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,7 @@
 <body>
 <div class="app-layout">
   <% var path = 'recetas'; %>
-<%- include('partials/nav', { path: path }) %>>
+<%- include('partials/nav', { path: path }) %>
   <main class="main-content">
     <div class="seccion-header">
       <div class="seccion-header-left">
@@ -31,6 +31,7 @@
     </form>
 
     <% if (recetas.length > 0) { %>
+    <p class="hint-mobile-swipe"><i class="ti ti-arrow-left-right"></i> Deslizá para ver más recetas</p>
     <div class="content-grid">
       <% recetas.forEach(r => { %>
       <a href="/recetas/<%= r.id %>" class="content-card fade-up" style="text-decoration:none;">
@@ -63,6 +64,43 @@
     </div>
   </main>
 </div>
+
+<style>
+/* Desktop: la grilla queda exactamente como estaba (heredada de style.css) */
+.hint-mobile-swipe{display:none;}
+
+/* Mobile: la misma lista de cards pasa a ser un carrusel con swipe */
+@media (max-width: 768px) {
+  .hint-mobile-swipe{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:0.7rem;
+    color:var(--gris-texto);
+    margin-bottom:12px;
+  }
+
+  .content-grid{
+    display:flex !important;
+    grid-template-columns:none !important;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    gap:14px;
+    padding-bottom:10px;
+    margin:0 -20px;
+    padding-left:20px;
+    padding-right:20px;
+  }
+  /* Oculta la scrollbar (Chrome/Safari y Firefox) */
+  .content-grid::-webkit-scrollbar{ display:none; }
+  .content-grid{ scrollbar-width:none; }
+
+  .content-grid .content-card{
+    flex:0 0 82%;
+    scroll-snap-align:center;
+  }
+}
+</style>
 </body>
 </html>
-

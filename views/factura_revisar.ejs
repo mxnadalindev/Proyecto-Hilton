@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revisar factura — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <header class="header">
+    <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
+  </header>
+
+  <main class="main-content">
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Costos</p>
+        <h1 class="seccion-titulo">Revisar factura</h1>
+      </div>
+      <a href="/costos" class="btn-secondary"><i class="ti ti-arrow-left"></i> Cancelar y volver</a>
+    </div>
+
+    <% if (comparacion.length === 0) { %>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;color:#dc2626;">
+        No hay ninguna factura pendiente de revisión. <a href="/costos">Volver a Costos</a>.
+      </div>
+    <% } else { %>
+
+      <p style="font-size:0.85rem;color:var(--gris-texto);margin-bottom:16px;">
+        Gemini detectó <%= comparacion.length %> ítem(s) en la factura. Tildá los que querés aplicar — solo se van a actualizar los insumos que ya existen en tu lista (los que no matchearon con ninguno quedan sin tildar y no se tocan).
+      </p>
+
+      <form method="POST" action="/costos/factura/aplicar">
+        <div class="tabla-wrap">
+          <table class="tabla" style="width:100%;">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Detectado en factura</th>
+                <th>Cant. / Unidad</th>
+                <th>Insumo en tu lista</th>
+                <th>Precio actual</th>
+                <th>Precio detectado</th>
+                <th>Diferencia</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% comparacion.forEach((item, i) => {
+                const tieneMatch = !!item.insumo_id;
+                const diferencia = tieneMatch ? (item.precio_detectado - item.precio_actual) : null;
+                const porcentaje = tieneMatch && item.precio_actual > 0 ? ((diferencia / item.precio_actual) * 100).toFixed(1) : null;
+              %>
+              <tr style="<%= tieneMatch ? '' : 'opacity:0.55;' %>">
+                <td style="text-align:center;">
+                  <% if (tieneMatch) { %>
+                  <input type="checkbox" name="aplicar" value="<%= i %>" <%= item.sube ? 'checked' : '' %>
+                         style="accent-color:var(--azul);width:16px;height:16px;">
+                  <% } else { %>
+                  <i class="ti ti-help-circle" title="No se encontró un insumo parecido en tu lista" style="color:var(--gris-texto);"></i>
+                  <% } %>
+                </td>
+                <td style="font-size:0.82rem;font-weight:500;"><%= item.nombre_detectado %></td>
+                <td style="font-size:0.8rem;color:var(--gris-texto);"><%= item.cantidad %> <%= item.unidad %></td>
+                <td style="font-size:0.82rem;">
+                  <% if (tieneMatch) { %>
+                    <%= item.insumo_nombre %>
+                  <% } else { %>
+                    <span style="color:var(--gris-texto);font-style:italic;">Sin coincidencia — revisar a mano</span>
+                  <% } %>
+                </td>
+                <td style="font-size:0.82rem;"><%= tieneMatch ? ('$' + Number(item.precio_actual).toLocaleString('es-AR')) : '—' %></td>
+                <td style="font-size:0.82rem;font-weight:600;">$<%= Number(item.precio_detectado).toLocaleString('es-AR') %></td>
+                <td style="font-size:0.8rem;">
+                  <% if (tieneMatch) { %>
+                    <span style="color:<%= diferencia > 0 ? '#dc2626' : (diferencia < 0 ? '#16a34a' : 'var(--gris-texto)') %>;font-weight:600;">
+                      <%= diferencia > 0 ? '+' : '' %><%= porcentaje %>%
+                    </span>
+                  <% } else { %>—<% } %>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:20px;display:flex;gap:12px;">
+          <button type="submit" class="btn-primary"><i class="ti ti-check"></i> Aplicar cambios tildados</button>
+          <a href="/costos" class="btn-secondary">Descartar todo</a>
+        </div>
+      </form>
+    <% } %>
+  </main>
+</div>
+</body>
+</html>

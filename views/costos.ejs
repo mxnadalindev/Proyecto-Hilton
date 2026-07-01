@@ -29,38 +29,50 @@
       </div>
     </div>
 
-    <% if (typeof msg !== 'undefined' && msg === 'foto_recibida') { %>
-    <div style="background:var(--azul-claro);border:1px solid var(--azul-borde);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:var(--azul);display:flex;align-items:center;gap:10px;">
-      <i class="ti ti-check" style="font-size:18px;"></i>
-      Foto recibida. La actualización automática estará disponible cuando se configure la API de Google Gemini.
-    </div>
-    <% } %>
-    <% if (typeof msg !== 'undefined' && msg === 'foto_error') { %>
-    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:#dc2626;display:flex;align-items:center;gap:10px;">
-      <i class="ti ti-alert-circle" style="font-size:18px;"></i>
-      Error al procesar la foto. Verificá que sea una imagen válida.
+    <% if (typeof msg !== 'undefined' && msg) {
+      const msgTexto = decodeURIComponent(msg);
+      const esError  = /error/i.test(msgTexto);
+    %>
+    <div style="background:<%= esError ? '#fef2f2' : 'var(--azul-claro)' %>;border:1px solid <%= esError ? '#fecaca' : 'var(--azul-borde)' %>;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:<%= esError ? '#dc2626' : 'var(--azul)' %>;display:flex;align-items:center;gap:10px;">
+      <i class="ti <%= esError ? 'ti-alert-circle' : 'ti-check' %>" style="font-size:18px;"></i>
+      <%= msgTexto %>
     </div>
     <% } %>
 
-    <div style="background:var(--blanco);border:1px dashed var(--azul-borde);border-radius:12px;padding:20px 24px;margin-bottom:28px;">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;">
-        <div>
-          <p style="font-size:0.82rem;font-weight:600;color:var(--azul);margin:0 0 6px;">
+    <!-- Bloque: actualización automática de precios por foto -->
+    <div class="factura-box <%= geminiConfigurado ? 'factura-box-activa' : 'factura-box-inactiva' %>">
+      <div class="factura-box-inner">
+        <div style="flex:1;min-width:220px;">
+          <p class="factura-titulo">
             <i class="ti ti-camera"></i> Actualización automática de precios por foto
+            <% if (geminiConfigurado) { %>
+              <span class="badge-activo"><i class="ti ti-circle-filled" style="font-size:7px;"></i> Activo</span>
+            <% } else { %>
+              <span class="badge-inactivo">No configurado</span>
+            <% } %>
           </p>
-          <p style="font-size:0.75rem;color:var(--gris-texto);margin:0 0 4px;">
-            Sacá una foto clara de la factura o lista de precios y subila. El sistema leerá los productos y precios automáticamente.
-          </p>
-          <p style="font-size:0.72rem;color:var(--azul);margin:0;">
-            <i class="ti ti-info-circle"></i> Requiere configurar la API Key de Google Gemini — contactar al administrador del sistema.
-          </p>
+          <% if (geminiConfigurado) { %>
+            <p class="factura-desc">
+              Sacá una foto clara de la factura o lista de precios del proveedor. El sistema lee los productos, compara contra tus precios actuales y te muestra los cambios antes de aplicarlos — nada se actualiza sin tu confirmación.
+            </p>
+          <% } else { %>
+            <p class="factura-desc">
+              Esta función todavía no está disponible — falta configurar la conexión con el servicio de lectura de facturas. Contactá al administrador del sistema.
+            </p>
+          <% } %>
         </div>
-        <form method="POST" action="/costos/factura" enctype="multipart/form-data"
-              style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <input type="file" name="factura" accept="image/*" required
-                 style="font-size:0.78rem;color:var(--gris-texto);">
-          <button type="submit" class="btn-primary" style="white-space:nowrap;">
-            <i class="ti ti-upload"></i> Subir factura
+
+        <form id="form-factura" method="POST" action="/costos/factura" enctype="multipart/form-data"
+              class="factura-form" onsubmit="return prepararEnvioFactura()">
+          <label class="input-archivo <%= !geminiConfigurado ? 'input-archivo-disabled' : '' %>">
+            <i class="ti ti-paperclip"></i>
+            <span id="nombre-archivo">Elegir imagen</span>
+            <input type="file" id="input-factura" name="factura" accept="image/*" required <%= !geminiConfigurado ? 'disabled' : '' %>
+                   onchange="marcarArchivoElegido(this)">
+          </label>
+          <button type="submit" id="btn-subir-factura" class="btn-primary" style="white-space:nowrap;" <%= !geminiConfigurado ? 'disabled' : '' %>>
+            <i class="ti ti-upload" id="icon-subir-factura"></i>
+            <span id="texto-subir-factura">Subir factura</span>
           </button>
         </form>
       </div>
@@ -93,13 +105,13 @@
                     <% if (ins.stock_actual && parseFloat(ins.stock_actual) > 0) { %>
                       <strong style="color:var(--negro);"><%= ins.stock_actual %></strong> <%= ins.unidad %>
                     <% } else { %>
-                      — <%= ins.unidad %>
+                      <span style="font-style:italic;">Sin stock cargado</span>
                     <% } %>
                   </td>
                   <td>
                     <form method="POST" action="/costos/insumo/<%= ins.id %>/precio" style="display:flex;gap:4px;align-items:center;">
                       <span style="font-size:0.78rem;color:var(--gris-texto);">$</span>
-                      <input type="number" name="precio_nuevo" value="<%= ins.precio_unitario %>" step="0.01" min="0"
+                      <input type="number" name="precio_nuevo" value="<%= ins.precio_unitario %>" placeholder="Ej: 4500" step="0.01" min="0"
                              style="width:80px;padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.82rem;outline:none;">
                       <button type="submit" class="btn-sm" style="padding:4px 8px;">✓</button>
                     </form>
@@ -291,6 +303,28 @@
 .field label{display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;}
 .field input,.field select{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;transition:border-color 0.2s;}
 .field input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);background:var(--blanco);}
+
+/* Bloque de factura */
+.factura-box{border-radius:14px;padding:22px 26px;margin-bottom:28px;transition:all 0.2s;}
+.factura-box-activa{background:var(--blanco);border:1px solid var(--azul-borde);box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.factura-box-inactiva{background:var(--gris-fondo);border:1px dashed var(--gris-borde);}
+.factura-box-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;}
+.factura-titulo{font-size:0.85rem;font-weight:600;color:var(--azul);margin:0 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.factura-box-inactiva .factura-titulo{color:var(--gris-texto);}
+.factura-desc{font-size:0.78rem;color:var(--gris-texto);margin:0;max-width:480px;line-height:1.5;}
+.badge-activo{font-size:0.62rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;padding:2px 8px 2px 6px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;}
+.badge-activo i{color:#16a34a;}
+.badge-inactivo{font-size:0.62rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--gris-texto);background:var(--gris-borde);padding:2px 8px;border-radius:20px;}
+.factura-form{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.input-archivo{display:flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--gris-borde);border-radius:8px;font-size:0.8rem;color:var(--gris-texto);cursor:pointer;background:var(--gris-fondo);transition:border-color 0.2s;max-width:220px;}
+.input-archivo:hover{border-color:var(--azul);}
+.input-archivo span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.input-archivo input[type=file]{display:none;}
+.input-archivo-disabled{opacity:0.5;cursor:not-allowed;}
+.input-archivo-disabled:hover{border-color:var(--gris-borde);}
+.input-archivo-ok{border-color:#16a34a;background:#f0fdf4;color:#16a34a;}
+@keyframes girar{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.girando{animation:girar 0.8s linear infinite;}
 </style>
 
 <script>
@@ -314,6 +348,37 @@ function prepararPlato() {
     sel.name  = '';
     otro.name = 'categoria';
   }
+}
+
+function marcarArchivoElegido(input) {
+  const label  = input.closest('.input-archivo');
+  const nombre = document.getElementById('nombre-archivo');
+  if (input.files && input.files[0]) {
+    nombre.textContent = input.files[0].name;
+    label.classList.add('input-archivo-ok');
+  } else {
+    nombre.textContent = 'Elegir imagen';
+    label.classList.remove('input-archivo-ok');
+  }
+}
+
+// Estado de carga al subir la factura — evita doble envío y avisa que Gemini está procesando
+function prepararEnvioFactura() {
+  const btn   = document.getElementById('btn-subir-factura');
+  const icon  = document.getElementById('icon-subir-factura');
+  const texto = document.getElementById('texto-subir-factura');
+  const input = document.getElementById('input-factura');
+
+  if (!input.files || input.files.length === 0) {
+    alert('Primero tenés que elegir una imagen — hacé click en "Elegir imagen" y seleccioná la foto de la factura.');
+    return false; // bloquea el envío, el input está oculto así que el navegador no lo valida solo
+  }
+
+  btn.disabled = true;
+  input.style.pointerEvents = 'none'; // bloquea visualmente sin sacarlo del envío (disabled excluiría el archivo del submit)
+  icon.className = 'ti ti-loader-2 girando';
+  texto.textContent = 'Analizando factura...';
+  return true;
 }
 </script>
 </body>
