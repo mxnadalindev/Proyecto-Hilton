@@ -29,6 +29,7 @@
             <i class="ti ti-copy"></i> Copiar período anterior
           </button>
         </form>
+        <% if (puedeReiniciar) { %>
         <form method="POST" action="/horarios/reiniciar-semana" style="margin:0;">
           <input type="hidden" name="inicio" value="<%= inicio %>">
           <input type="hidden" name="fin" value="<%= fin %>">
@@ -36,7 +37,8 @@
                   onclick="return confirm('¿Reiniciar todos los horarios de este período? Esta acción no se puede deshacer.')">
             <i class="ti ti-trash"></i> Reiniciar período
           </button>
-        </form>        
+        </form>
+        <% } %>
       </div>
     </div>
 
@@ -62,6 +64,10 @@
    <% if (typeof msg !== 'undefined' && msg === 'reiniciado') { %> 
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
       <i class="ti ti-check"></i> Horarios del período reiniciados correctamente.
+    </div>
+    <% } else if (typeof msg !== 'undefined' && msg) { %>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#dc2626;display:flex;align-items:center;gap:8px;">
+      <i class="ti ti-alert-circle"></i> <%= decodeURIComponent(msg) %>
     </div>
     <% } %>
     <% if (alertas.length > 0) { %>

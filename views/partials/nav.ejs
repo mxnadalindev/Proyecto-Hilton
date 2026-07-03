@@ -1,22 +1,39 @@
 <header class="header">
   <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
   <nav class="header-nav desktop-only">
-    <% const _d = usuario?.departamento; %>
-    <% if (_d === 'cocina' || _d === 'ayb') { %>
-      <% if (path !== 'eventos') { %><a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a><% } %>
-      <% if (path !== 'personal') { %><a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a><% } %>
-      <% if (path !== 'horarios') { %><a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a><% } %>
-      <% if (path !== 'recetas') { %><a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a><% } %>
-      <% if (path !== 'costos') { %><a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a><% } %>
-    <% } %>
-    <% if (_d === 'compras') { %>
-      <% if (path !== 'compras') { %><a href="/compras" class="nav-link"><i class="ti ti-shopping-cart"></i> Compras</a><% } %>
-    <% } %>
-    <% if (_d === 'finanzas') { %>
-      <% if (path !== 'finanzas') { %><a href="/finanzas" class="nav-link"><i class="ti ti-report-money"></i> Finanzas</a><% } %>
+    <% const _d = usuario?.departamento; const _r = usuario?.rol; %>
+    <% if (_d === 'cocina' || _d === 'ayb' || _r === 'admin') { %>
+      <a href="/eventos"  class="nav-link <%= (typeof path !== 'undefined' && path === 'eventos')  ? 'activo' : '' %>"><i class="ti ti-calendar-event"></i> Eventos</a>
+      <a href="/personal" class="nav-link <%= (typeof path !== 'undefined' && path === 'personal') ? 'activo' : '' %>"><i class="ti ti-users"></i> Personal</a>
+      <a href="/horarios" class="nav-link <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>"><i class="ti ti-clock"></i> Horarios</a>
+      <a href="/recetas"  class="nav-link <%= (typeof path !== 'undefined' && path === 'recetas')  ? 'activo' : '' %>"><i class="ti ti-chef-hat"></i> Recetas</a>
+      <a href="/costos"   class="nav-link <%= (typeof path !== 'undefined' && path === 'costos')   ? 'activo' : '' %>"><i class="ti ti-coin"></i> Costos</a>
     <% } %>
   </nav>
   <div class="header-user">
+    <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
+    <% if (usuario?.rol === 'admin') { %>
+    <a href="/configuracion" class="btn-config <%= (typeof path !== 'undefined' && path === 'configuracion') ? 'activo' : '' %>" title="Configuración">
+      <i class="ti ti-settings"></i>
+    </a>
+    <% } %>
     <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
   </div>
 </header>
+
+<style>
+.btn-config{
+  display:flex;align-items:center;justify-content:center;
+  width:34px;height:34px;
+  border:1px solid var(--gris-borde);
+  border-radius:8px;
+  color:var(--gris-texto);
+  background:var(--blanco);
+  text-decoration:none;
+  font-size:16px;
+  transition:all 0.2s;
+  flex-shrink:0;
+}
+.btn-config:hover{background:var(--azul-claro);color:var(--azul);border-color:var(--azul-borde);}
+.btn-config.activo{background:var(--azul-claro);color:var(--azul);border-color:var(--azul-borde);}
+</style>

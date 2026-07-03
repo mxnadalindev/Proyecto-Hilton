@@ -68,6 +68,12 @@ function resolverRango(query) {
   return { inicio, fin: sumarDias(inicio, 6) };
 }
 
+// Solo supervisores y admins pueden borrar horarios ya cargados
+function esSupervisorOAdmin(req) {
+  const rol = req.session?.usuario?.rol;
+  return rol === 'supervisor' || rol === 'admin';
+}
+
 router.get('/', loginRequerido, async (req, res) => {
   const { inicio, fin } = resolverRango(req.query);
   const dias = getDiasRango(inicio, fin);
@@ -141,6 +147,7 @@ router.get('/', loginRequerido, async (req, res) => {
     inicio, fin, dias, porSector, horariosMap,
     SECTORES, ESTADOS, alertas,
     rangoAnterior, rangoSiguiente,
+    puedeReiniciar: esSupervisorOAdmin(req),
     // compatibilidad con la vista vieja, por si todavía queda alguna referencia a "lunes"
     lunes: inicio
   });
@@ -305,7 +312,12 @@ router.get('/excel', loginRequerido, async (req, res) => {
 });
 
 // ── POST /reiniciar-semana ────────────────────────────
+// Solo supervisores y admins pueden borrar horarios ya cargados
 router.post('/reiniciar-semana', loginRequerido, async (req, res) => {
+  if (!esSupervisorOAdmin(req)) {
+    return res.redirect('/horarios?msg=' + encodeURIComponent('Solo un supervisor puede reiniciar horarios ya cargados.'));
+  }
+
   const { inicio, fin, lunes } = req.body;
   const rangoInicio = inicio || lunes;
   const rangoFin     = fin || (lunes ? sumarDias(lunes, 6) : rangoInicio);

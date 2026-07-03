@@ -98,14 +98,13 @@
     <div class="tabla-wrap" style="overflow:visible;">
       <table class="tabla" style="width:100%;table-layout:fixed;">
         <colgroup>
-          <col style="width:18%"><col style="width:10%"><col style="width:11%">
-          <col style="width:12%"><col style="width:12%"><col style="width:30%"><col style="width:7%">
+          <col style="width:18%"><col style="width:10%"><col style="width:12%">
+          <col style="width:52%"><col style="width:8%">
         </colgroup>
         <thead>
           <tr>
             <th>Nombre</th><th>Puesto</th><th>Sector</th>
-            <th>Hora entrada</th><th>Estado</th>
-            <th>Francos <span style="font-weight:400;font-size:0.62rem;">(máx. 2 días)</span></th>
+            <th>Estados por día <span style="font-weight:400;font-size:0.62rem;">(clickeá cada día para cambiarlo — máx. 2 francos)</span></th>
             <th></th>
           </tr>
         </thead>
@@ -152,38 +151,29 @@
 
               <td>
                 <% if (p.activo) { %>
-                <input type="text" id="hora-<%= p.id %>" value="<%= horaActual %>" placeholder="Ej: 7, 15"
-                       maxlength="6"
-                       style="width:100%;padding:5px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.8rem;font-family:var(--font-sans);background:var(--gris-fondo);color:var(--negro);outline:none;text-align:center;">
-                <% } %>
-              </td>
-
-              <td>
-                <% if (p.activo) { %>
-                <select id="estado-<%= p.id %>" onchange="actualizarColorFila(<%= p.id %>)"
-                        style="width:100%;padding:5px 6px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.73rem;font-family:var(--font-sans);background:<%= bgActual ? bgActual+'33' : 'var(--gris-fondo)' %>;color:var(--negro);outline:none;font-weight:<%= bgActual ? '700' : '400' %>;">
-                  <option value="">— Normal —</option>
-                  <% ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA'].forEach(e => { %>
-                  <option value="<%= e %>" <%= estadoActual === e ? 'selected' : '' %>
-                          style="background:<%= bgEstados[e] %>33;font-weight:700;"><%= e %></option>
-                  <% }) %>
-                </select>
-                <% } %>
-              </td>
-
-              <td>
-                <% if (p.activo) { %>
-                <div style="display:flex;gap:3px;flex-wrap:wrap;">
+                <div style="display:flex;gap:4px;flex-wrap:wrap;">
                   <% dias.forEach((dia) => { %>
-                  <% const _dow = new Date(dia + 'T00:00:00').getDay(); %>
-                  <label style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;">
-                    <span style="font-size:0.58rem;color:var(--gris-texto);font-weight:600;"><%= NOMBRES_DIA_CORTO[_dow] %></span>
-                    <input type="checkbox"
-                           class="chk-franco-<%= p.id %>"
-                           value="<%= dia %>"
-                           <%= francosActuales.includes(dia) ? 'checked' : '' %>
-                           onchange="validarFrancos(<%= p.id %>)"
-                           style="accent-color:#64748b;width:14px;height:14px;">
+                  <%
+                    const _dow = new Date(dia + 'T00:00:00').getDay();
+                    const _numDia = new Date(dia + 'T00:00:00').getDate();
+                    const _valDia = (horariosEmp[dia] || '').toUpperCase();
+                    const _esEstadoDia = ESTADOS_LIST.includes(_valDia);
+                    const _bgDia = _esEstadoDia ? bgEstados[_valDia] : '';
+                    const _horaDia = (!_esEstadoDia && horariosEmp[dia]) ? horariosEmp[dia] : '';
+                  %>
+                  <label style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                    <span style="font-size:0.56rem;color:var(--gris-texto);font-weight:600;white-space:nowrap;"><%= NOMBRES_DIA_CORTO[_dow] %> <%= _numDia %></span>
+                    <input type="text" class="hora-dia-<%= p.id %> hora-dia-input" data-fecha="<%= dia %>"
+                           value="<%= _horaDia %>" placeholder="Hs" maxlength="6" <%= _esEstadoDia ? 'disabled' : '' %>
+                           style="width:64px;padding:2px 4px;border:1px solid var(--gris-borde);border-radius:5px;font-size:0.6rem;font-family:var(--font-sans);outline:none;text-align:center;background:<%= _esEstadoDia ? '#f1f5f9' : 'var(--gris-fondo)' %>;color:var(--negro);">
+                    <select class="sel-estado-<%= p.id %> sel-dia-estado" data-fecha="<%= dia %>" onchange="onCambioEstadoDia(this, <%= p.id %>)"
+                            style="background-color:<%= _bgDia ? _bgDia+'33' : 'var(--gris-fondo)' %>;color:var(--negro);font-weight:<%= _bgDia ? '700' : '400' %>;">
+                      <option value="" style="background:#fff;color:#1e293b;">Normal</option>
+                      <% ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA','FRANCO'].forEach(e => { %>
+                      <option value="<%= e %>" <%= _valDia === e ? 'selected' : '' %>
+                              style="background:<%= bgEstados[e] %>33;color:#1e293b;font-weight:700;"><%= e %></option>
+                      <% }) %>
+                    </select>
                   </label>
                   <% }) %>
                 </div>
@@ -359,6 +349,30 @@
 .field input{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;}
 .field input:focus{border-color:var(--azul);background:var(--blanco);}
 
+/* Select de estado por día — flecha propia chica en vez de la nativa del navegador, para que no tape el texto */
+.sel-dia-estado{
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+  width:70px;
+  padding:3px 16px 3px 6px;
+  border:1px solid var(--gris-borde);
+  border-radius:5px;
+  font-size:0.6rem;
+  font-family:var(--font-sans);
+  outline:none;
+  text-align:left;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  overflow:hidden;
+  cursor:pointer;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%2394a3b8' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 5px center;
+  background-size:8px 5px;
+}
+.sel-dia-estado:focus{border-color:var(--azul);}
+
 /* Calendario */
 .cal-dia{padding:6px 4px;border-radius:6px;cursor:pointer;font-size:0.8rem;color:var(--negro);transition:all 0.15s;border:1px solid transparent;}
 .cal-dia:hover{background:var(--azul-claro);color:var(--azul);}
@@ -440,16 +454,26 @@ function seleccionarDia(fechaStr) {
     // No había nada elegido, o ya había un rango completo: arrancamos uno nuevo
     rangoInicio = fechaStr;
     rangoFin = null;
+  } else if (fechaStr === rangoInicio) {
+    // Click de nuevo sobre el mismo día que ya era el inicio: lo cancela
+    rangoInicio = null;
+    rangoFin = null;
   } else {
     // Ya había un inicio elegido, este click define el fin
     if (fechaStr >= rangoInicio) {
       rangoFin = fechaStr;
     } else {
-      // Si clickean un día anterior al inicio, invertimos para que quede en orden
       rangoFin = rangoInicio;
       rangoInicio = fechaStr;
     }
   }
+  renderCal();
+  actualizarEtiquetaRango();
+}
+
+function cancelarSeleccion() {
+  rangoInicio = null;
+  rangoFin = null;
   renderCal();
   actualizarEtiquetaRango();
 }
@@ -463,10 +487,20 @@ function actualizarEtiquetaRango() {
   const label = document.getElementById('semana-label');
   const cont  = document.getElementById('semana-dias');
   const btn   = document.getElementById('btn-ir-semana');
+
+  if (!rangoInicio) {
+    label.textContent = 'Elegí el día de inicio en el calendario';
+    cont.innerHTML = '';
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.5';
+    return;
+  }
+
   const d0 = new Date(rangoInicio + 'T00:00:00');
 
   if (!rangoFin) {
-    label.textContent = d0.toLocaleDateString('es-AR',{day:'numeric',month:'long'}) + ' — elegí el día de fin';
+    label.innerHTML = d0.toLocaleDateString('es-AR',{day:'numeric',month:'long'}) +
+      ' — elegí el día de fin <button type="button" onclick="cancelarSeleccion()" style="background:none;border:none;color:var(--gris-texto);text-decoration:underline;cursor:pointer;font-size:0.75rem;margin-left:6px;">(cambiar inicio)</button>';
     cont.innerHTML = '';
     btn.style.pointerEvents = 'none';
     btn.style.opacity = '0.5';
@@ -495,15 +529,26 @@ actualizarEtiquetaRango();
 
 // ── Guardar empleado ──
 async function guardarEmpleado(uid) {
-  const hora    = document.getElementById('hora-' + uid)?.value?.trim() || '';
-  const estado  = document.getElementById('estado-' + uid)?.value || '';
-  const francos = [...document.querySelectorAll(`.chk-franco-${uid}:checked`)].map(c => c.value);
+  const valores = {};
+
+  document.querySelectorAll(`.sel-estado-${uid}`).forEach(sel => {
+    const fecha = sel.dataset.fecha;
+    if (sel.value) {
+      // Día con estado especial: eso es lo que se guarda
+      valores[fecha] = sel.value;
+    } else {
+      // Día "Normal": se guarda la hora que haya en su campo puntual (si hay)
+      const inputHora = document.querySelector(`.hora-dia-${uid}[data-fecha="${fecha}"]`);
+      const h = inputHora?.value?.trim() || '';
+      if (h) valores[fecha] = h;
+    }
+  });
 
   try {
     const resp = await fetch('/personal/asignar-semana-completa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario_id: uid, inicio: rangoInicio, fin: rangoFin || rangoInicio, hora, estado, francos })
+      body: JSON.stringify({ usuario_id: uid, inicio: rangoInicio, fin: rangoFin || rangoInicio, valores })
     });
     const data = await resp.json();
     if (data.ok) {
@@ -516,18 +561,42 @@ async function guardarEmpleado(uid) {
   } catch(e) { alert('Error de conexión'); }
 }
 
+// Colorea el fondo de la fila según el primer estado (no-franco) encontrado entre los días
 function actualizarColorFila(uid) {
-  const estado = document.getElementById('estado-' + uid)?.value || '';
-  const sel    = document.getElementById('estado-' + uid);
-  const fila   = sel?.closest('tr');
-  const bg     = bgEstados[estado] || '';
+  const selects = [...document.querySelectorAll(`.sel-estado-${uid}`)];
+  const conEstado = selects.find(s => s.value && s.value !== 'FRANCO');
+  const bg = conEstado ? (bgEstados[conEstado.value] || '') : '';
+  const fila = selects[0]?.closest('tr');
   if (fila) fila.style.background = bg ? bg + '11' : '';
-  if (sel)  { sel.style.background = bg ? bg + '33' : 'var(--gris-fondo)'; sel.style.fontWeight = bg ? '700' : '400'; }
 }
 
-function validarFrancos(uid) {
-  const checks = [...document.querySelectorAll(`.chk-franco-${uid}:checked`)];
-  if (checks.length > 2) { event.target.checked = false; alert('Máximo 2 días de franco por rango.'); }
+// Se dispara al cambiar el estado de un día puntual
+function onCambioEstadoDia(sel, uid) {
+  if (sel.value === 'FRANCO') {
+    const totalFrancos = [...document.querySelectorAll(`.sel-estado-${uid}`)].filter(s => s.value === 'FRANCO').length;
+    if (totalFrancos > 2) {
+      alert('Máximo 2 días de franco por rango.');
+      sel.value = '';
+    }
+  }
+  const bg = bgEstados[sel.value] || '';
+  sel.style.backgroundColor = bg ? bg + '33' : 'var(--gris-fondo)';
+  sel.style.fontWeight = bg ? '700' : '400';
+
+  // Habilita/deshabilita el campo de hora de ese mismo día según si tiene estado especial o no
+  const inputHora = document.querySelector(`.hora-dia-${uid}[data-fecha="${sel.dataset.fecha}"]`);
+  if (inputHora) {
+    if (sel.value) {
+      inputHora.disabled = true;
+      inputHora.value = '';
+      inputHora.style.background = '#f1f5f9';
+    } else {
+      inputHora.disabled = false;
+      inputHora.style.background = 'var(--gris-fondo)';
+    }
+  }
+
+  actualizarColorFila(uid);
 }
 
 // ── Modales ──

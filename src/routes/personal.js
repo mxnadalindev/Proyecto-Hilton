@@ -103,27 +103,25 @@ router.get('/', loginRequerido, async (req, res) => {
 });
 
 // ── POST /asignar-semana-completa ──────────────────────
-// Guarda hora para todo el rango elegido + francos individuales por día
+// Guarda un valor por cada día del rango: puede ser una hora de entrada o un estado especial
 router.post('/asignar-semana-completa', loginRequerido, async (req, res) => {
-  const { usuario_id, inicio, fin, hora, estado, francos } = req.body;
+  const { usuario_id, inicio, fin, valores } = req.body;
   try {
     const dias = getDiasRango(inicio, fin || inicio);
-    const francosDias = Array.isArray(francos) ? francos : (francos ? [francos] : []);
+    const mapa = valores && typeof valores === 'object' ? valores : {};
 
     for (const dia of dias) {
-      let valor;
-      if (francosDias.includes(dia)) {
-        valor = 'FRANCO';
-      } else if (estado && estado !== '') {
-        valor = estado.toUpperCase();
-      } else if (hora && hora !== '') {
-        valor = hora.trim();
-      } else {
-        // Si no hay valor, borrar
+      const crudo = mapa[dia];
+      if (!crudo || String(crudo).trim() === '') {
+        // Sin valor para ese día: borrar lo que hubiera
         await db.run2('DELETE FROM horarios_semanales WHERE usuario_id=$1 AND fecha=$2',
           [parseInt(usuario_id), dia]);
         continue;
       }
+      const texto = String(crudo).trim();
+      // Si coincide con un estado conocido (VAC, OFF, etc.) lo normalizamos a mayúsculas;
+      // si es una hora u otro texto libre, lo dejamos tal cual lo escribió el usuario.
+      const valor = ESTADOS.includes(texto.toUpperCase()) ? texto.toUpperCase() : texto;
       await db.run2(`
         INSERT INTO horarios_semanales (usuario_id, fecha, valor)
         VALUES ($1, $2, $3)
