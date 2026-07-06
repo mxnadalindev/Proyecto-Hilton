@@ -5,6 +5,7 @@ const { loginRequerido } = require('./middleware');
 const multer = require('multer');
 const path = require('path');
 const { analizarFactura } = require('../services/gemini');
+const { parsearCsvInsumos, importarInsumos } = require('../services/importadorInsumos');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -12,22 +13,63 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits:{fileSize:10*1024*1024} });
 
+const storageCsv = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, 'insumos_'+Date.now()+path.extname(file.originalname))
+});
+const uploadCsv = multer({ storage: storageCsv, limits:{fileSize:30*1024*1024} }); // hasta 30MB, sobra para miles de filas de texto
+
 router.get('/', loginRequerido, async (req, res) => {
-  const insumos  = await db.all2("SELECT * FROM insumos ORDER BY categoria,nombre");
+  const buscar = (req.query.buscar || '').trim();
+  const letra  = (req.query.letra || '').trim().toUpperCase().slice(0, 1);
+  const LIMITE_SIN_BUSQUEDA = 200;
+
+  let insumos, totalInsumos;
+  if (buscar) {
+    insumos = await db.all2(
+      "SELECT * FROM insumos WHERE nombre ILIKE $1 OR codigo ILIKE $1 ORDER BY categoria, nombre LIMIT 500",
+      [`%${buscar}%`]
+    );
+    totalInsumos = insumos.length;
+  } else if (letra) {
+    insumos = await db.all2(
+      "SELECT * FROM insumos WHERE nombre ILIKE $1 ORDER BY nombre LIMIT 500",
+      [`${letra}%`]
+    );
+    totalInsumos = insumos.length;
+  } else {
+    const totalRow = await db.get2("SELECT COUNT(*)::int AS total FROM insumos");
+    totalInsumos = totalRow?.total || 0;
+    insumos = await db.all2(
+      "SELECT * FROM insumos ORDER BY categoria, nombre LIMIT $1",
+      [LIMITE_SIN_BUSQUEDA]
+    );
+  }
+
   const platos   = await db.all2("SELECT * FROM platos_costo ORDER BY nombre");
   const categorias = [...new Set(insumos.map(i=>i.categoria))];
   const msg = req.query.msg || null;
   const geminiConfigurado = !!process.env.GEMINI_API_KEY;
-  res.render('costos', { insumos, platos, categorias, msg, geminiConfigurado });
+  res.render('costos', {
+    insumos, platos, categorias, msg, geminiConfigurado,
+    buscar, letra, totalInsumos,
+    mostrandoLimitado: !buscar && totalInsumos > LIMITE_SIN_BUSQUEDA,
+    limiteSinBusqueda: LIMITE_SIN_BUSQUEDA
+  });
 });
 
 router.post('/insumo/nuevo', loginRequerido, async (req, res) => {
-  const { nombre, categoria, unidad, precio_unitario, stock_actual, proveedor } = req.body;
-  await db.run2(
-    "INSERT INTO insumos (nombre,categoria,unidad,precio_unitario,stock_actual,proveedor) VALUES ($1,$2,$3,$4,$5,$6)",
-    [nombre, categoria||'General', unidad||'kg', parseFloat(precio_unitario)||0, parseFloat(stock_actual)||0, proveedor||'']
-  );
-  res.redirect('/costos');
+  const { nombre, categoria, unidad, precio_unitario, stock_actual, proveedor, codigo } = req.body;
+  try {
+    await db.run2(
+      "INSERT INTO insumos (nombre,categoria,unidad,precio_unitario,stock_actual,proveedor,codigo) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+      [nombre, categoria||'General', unidad||'kg', parseFloat(precio_unitario)||0, parseFloat(stock_actual)||0, proveedor||'', codigo||null]
+    );
+    res.redirect('/costos');
+  } catch (e) {
+    console.error('Error creando insumo:', e.message);
+    res.redirect('/costos?msg=' + encodeURIComponent(e.message.includes('idx_insumos_codigo_unico') ? 'Ya existe un insumo con ese código.' : 'Error al crear el insumo.'));
+  }
 });
 
 router.post('/insumo/:id/precio', loginRequerido, async (req, res) => {
@@ -226,6 +268,40 @@ router.post('/factura/aplicar', loginRequerido, async (req, res) => {
     console.error('Error aplicando precios de factura:', e.message);
     res.redirect('/costos?msg=' + encodeURIComponent('Error aplicando los cambios: ' + e.message));
   }
+});
+
+// ── Importación masiva de insumos desde CSV del sistema de compras ────
+router.post('/insumos/importar', loginRequerido, uploadCsv.single('archivo_csv'), async (req, res) => {
+  if (!req.file) return res.redirect('/costos?msg=' + encodeURIComponent('No se recibió ningún archivo.'));
+
+  const categoria = (req.body.categoria || '').trim();
+  if (!categoria) return res.redirect('/costos?msg=' + encodeURIComponent('Falta indicar la categoría para este archivo.'));
+
+  try {
+    const productos = parsearCsvInsumos(req.file.path);
+
+    if (productos.length === 0) {
+      return res.redirect('/costos?msg=' + encodeURIComponent('El archivo no tiene ningún producto válido (sin código).'));
+    }
+
+    const resumen = await importarInsumos(productos, categoria);
+
+    // Recalculamos en cascada los platos que usan los insumos cuyo precio cambió
+    for (const cambio of resumen.cambiosDePrecios) {
+      await recalcularPlatos(cambio.insumo_id);
+    }
+
+    req.session.importacionResumen = { ...resumen, categoria, totalProcesados: productos.length };
+    res.redirect('/costos/insumos/importar/resultado');
+  } catch (e) {
+    console.error('Error importando insumos:', e.message);
+    res.redirect('/costos?msg=' + encodeURIComponent('Error importando el archivo: ' + e.message));
+  }
+});
+
+router.get('/insumos/importar/resultado', loginRequerido, async (req, res) => {
+  const resumen = req.session.importacionResumen || null;
+  res.render('importar_resultado', { resumen });
 });
 
 async function recalcularCostoPlato(plato_id) {

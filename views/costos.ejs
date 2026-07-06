@@ -39,42 +39,57 @@
     </div>
     <% } %>
 
-    <!-- Bloque: actualización automática de precios por foto -->
-    <div class="factura-box <%= geminiConfigurado ? 'factura-box-activa' : 'factura-box-inactiva' %>">
-      <div class="factura-box-inner">
-        <div style="flex:1;min-width:220px;">
-          <p class="factura-titulo">
-            <i class="ti ti-camera"></i> Actualización automática de precios por foto
+    <!-- Bloque unificado: actualización de precios (foto de factura + import CSV), en una sola fila -->
+    <div class="factura-box factura-box-activa">
+      <p class="factura-titulo-general"><i class="ti ti-refresh"></i> Actualización de precios</p>
+
+      <div class="factura-fila">
+        <!-- Opción A: foto de factura -->
+        <div class="factura-col">
+          <p class="factura-titulo-mini">
+            <i class="ti ti-camera"></i> Foto de factura
             <% if (geminiConfigurado) { %>
               <span class="badge-activo"><i class="ti ti-circle-filled" style="font-size:7px;"></i> Activo</span>
             <% } else { %>
-              <span class="badge-inactivo">No configurado</span>
+              <span class="badge-inactivo">No config.</span>
             <% } %>
           </p>
-          <% if (geminiConfigurado) { %>
-            <p class="factura-desc">
-              Sacá una foto clara de la factura o lista de precios del proveedor. El sistema lee los productos, compara contra tus precios actuales y te muestra los cambios antes de aplicarlos — nada se actualiza sin tu confirmación.
-            </p>
-          <% } else { %>
-            <p class="factura-desc">
-              Esta función todavía no está disponible — falta configurar la conexión con el servicio de lectura de facturas. Contactá al administrador del sistema.
-            </p>
-          <% } %>
+          <form id="form-factura" method="POST" action="/costos/factura" enctype="multipart/form-data"
+                class="factura-form" onsubmit="return prepararEnvioFactura()">
+            <label class="input-archivo <%= !geminiConfigurado ? 'input-archivo-disabled' : '' %>">
+              <i class="ti ti-paperclip"></i>
+              <span id="nombre-archivo">Elegir imagen</span>
+              <input type="file" id="input-factura" name="factura" accept="image/*" required <%= !geminiConfigurado ? 'disabled' : '' %>
+                     onchange="marcarArchivoElegido(this)">
+            </label>
+            <button type="submit" id="btn-subir-factura" class="btn-primary" style="white-space:nowrap;" <%= !geminiConfigurado ? 'disabled' : '' %>>
+              <i class="ti ti-upload" id="icon-subir-factura"></i>
+              <span id="texto-subir-factura">Subir</span>
+            </button>
+          </form>
         </div>
 
-        <form id="form-factura" method="POST" action="/costos/factura" enctype="multipart/form-data"
-              class="factura-form" onsubmit="return prepararEnvioFactura()">
-          <label class="input-archivo <%= !geminiConfigurado ? 'input-archivo-disabled' : '' %>">
-            <i class="ti ti-paperclip"></i>
-            <span id="nombre-archivo">Elegir imagen</span>
-            <input type="file" id="input-factura" name="factura" accept="image/*" required <%= !geminiConfigurado ? 'disabled' : '' %>
-                   onchange="marcarArchivoElegido(this)">
-          </label>
-          <button type="submit" id="btn-subir-factura" class="btn-primary" style="white-space:nowrap;" <%= !geminiConfigurado ? 'disabled' : '' %>>
-            <i class="ti ti-upload" id="icon-subir-factura"></i>
-            <span id="texto-subir-factura">Subir factura</span>
-          </button>
-        </form>
+        <div class="factura-divisor-v"></div>
+
+        <!-- Opción B: importar catálogo CSV -->
+        <div class="factura-col">
+          <p class="factura-titulo-mini"><i class="ti ti-file-import"></i> Catálogo (CSV)</p>
+          <form id="form-importar-csv" method="POST" action="/costos/insumos/importar" enctype="multipart/form-data"
+                class="factura-form" onsubmit="return prepararEnvioCsv()">
+            <input type="text" name="categoria" id="input-categoria-csv" placeholder="Categoría" required
+                   style="padding:9px 10px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.8rem;outline:none;background:var(--gris-fondo);width:100px;">
+            <label class="input-archivo">
+              <i class="ti ti-paperclip"></i>
+              <span id="nombre-archivo-csv">Elegir CSV</span>
+              <input type="file" id="input-csv" name="archivo_csv" accept=".csv" required
+                     onchange="marcarArchivoCsvElegido(this)">
+            </label>
+            <button type="submit" id="btn-importar-csv" class="btn-primary" style="white-space:nowrap;">
+              <i class="ti ti-upload" id="icon-importar-csv"></i>
+              <span id="texto-importar-csv">Importar</span>
+            </button>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -84,10 +99,44 @@
         <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--azul);margin-bottom:14px;">
           <i class="ti ti-package"></i> Insumos / ingredientes
         </p>
+
+        <form method="GET" action="/costos" style="margin-bottom:12px;">
+          <div style="position:relative;">
+            <i class="ti ti-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
+            <input type="text" name="buscar" value="<%= buscar %>" placeholder="Buscar insumo por nombre o código..."
+                   style="width:100%;padding:9px 12px 9px 36px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);">
+            <% if (buscar) { %>
+            <a href="/costos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:16px;">
+              <i class="ti ti-x"></i>
+            </a>
+            <% } %>
+          </div>
+        </form>
+
+        <% if (buscar) { %>
+          <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;">
+            <%= totalInsumos %> resultado<%= totalInsumos !== 1 ? 's' : '' %> para "<%= buscar %>"
+          </p>
+        <% } else if (mostrandoLimitado) { %>
+          <p style="font-size:0.72rem;color:#92400e;background:#fef3c7;border:1px solid #fde68a;padding:6px 10px;border-radius:8px;margin-bottom:10px;">
+            <i class="ti ti-info-circle"></i> Mostrando los primeros <%= limiteSinBusqueda %> de <%= totalInsumos %> insumos. Usá el buscador o las letras para encontrar uno específico.
+          </p>
+        <% } %>
+
+        <% if (!buscar) { %>
+        <div class="solapas-letras">
+          <a href="/costos" class="solapa-letra <%= !letra ? 'activa' : '' %>">Todos</a>
+          <% 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => { %>
+          <a href="/costos?letra=<%= l %>" class="solapa-letra <%= letra === l ? 'activa' : '' %>"><%= l %></a>
+          <% }) %>
+        </div>
+        <% } %>
+
         <div class="tabla-wrap">
           <table class="tabla">
             <thead>
               <tr>
+                <th>Código</th>
                 <th>Insumo</th>
                 <th>Categoría</th>
                 <th>Cantidad / Unidad</th>
@@ -99,7 +148,13 @@
               <% if (insumos.length > 0) { %>
                 <% insumos.forEach(ins => { %>
                 <tr>
-                  <td style="font-weight:500;"><%= ins.nombre %></td>
+                  <td style="font-size:0.72rem;color:var(--gris-texto);font-family:monospace;"><%= ins.codigo || '—' %></td>
+                  <td style="font-weight:500;">
+                    <%= ins.nombre %>
+                    <% if (!ins.precio_unitario || parseFloat(ins.precio_unitario) === 0) { %>
+                      <span style="display:inline-block;margin-left:6px;font-size:0.6rem;font-weight:700;background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:20px;">SIN PRECIO</span>
+                    <% } %>
+                  </td>
                   <td><span class="puesto-badge"><%= ins.categoria %></span></td>
                   <td style="color:var(--gris-texto);font-size:0.82rem;">
                     <% if (ins.stock_actual && parseFloat(ins.stock_actual) > 0) { %>
@@ -131,8 +186,14 @@
                 </tr>
                 <% }) %>
               <% } else { %>
-                <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
-                  Sin insumos. Agregá el primero.
+                <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
+                  <% if (buscar) { %>
+                    No se encontraron insumos para "<%= buscar %>".
+                  <% } else if (letra) { %>
+                    No hay insumos que empiecen con "<%= letra %>".
+                  <% } else { %>
+                    Sin insumos. Agregá el primero.
+                  <% } %>
                 </td></tr>
               <% } %>
             </tbody>
@@ -213,6 +274,10 @@
           <input type="text" name="nombre" placeholder="Ej: Harina 000" required>
         </div>
         <div class="field">
+          <label>Código interno (opcional)</label>
+          <input type="text" name="codigo" placeholder="Ej: 100001">
+        </div>
+        <div class="field">
           <label>Categoría</label>
           <input type="text" name="categoria" placeholder="Ej: Lácteos, Carnes">
         </div>
@@ -226,6 +291,7 @@
             <option value="unidad">unidad</option>
             <option value="docena">docena</option>
             <option value="caja">caja</option>
+            <option value="botella">botella</option>
           </select>
         </div>
         <div class="field">
@@ -305,7 +371,20 @@
 .field input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);background:var(--blanco);}
 
 /* Bloque de factura */
-.factura-box{border-radius:14px;padding:22px 26px;margin-bottom:28px;transition:all 0.2s;}
+.factura-box{border-radius:14px;padding:20px 26px;margin-bottom:28px;transition:all 0.2s;}
+.factura-titulo-general{font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 14px;display:flex;align-items:center;gap:6px;}
+.factura-fila{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.factura-col{flex:1;min-width:280px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.factura-titulo-mini{font-size:0.8rem;font-weight:600;color:var(--azul);margin:0;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.factura-divisor-v{width:1px;align-self:stretch;background:var(--gris-borde);min-height:40px;}
+@media (max-width:900px){.factura-divisor-v{display:none;}}
+
+.solapas-letras{display:flex;gap:4px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;-webkit-overflow-scrolling:touch;}
+.solapas-letras::-webkit-scrollbar{height:4px;}
+.solapas-letras::-webkit-scrollbar-thumb{background:var(--azul-borde);border-radius:3px;}
+.solapa-letra{flex-shrink:0;display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;border-radius:6px;background:var(--gris-fondo);border:1px solid var(--gris-borde);color:var(--gris-texto);font-size:0.72rem;font-weight:600;text-decoration:none;transition:all 0.15s;}
+.solapa-letra:hover{background:var(--azul-claro);color:var(--azul);border-color:var(--azul-borde);}
+.solapa-letra.activa{background:var(--azul);color:#fff;border-color:var(--azul);}
 .factura-box-activa{background:var(--blanco);border:1px solid var(--azul-borde);box-shadow:0 1px 3px rgba(0,0,0,0.04);}
 .factura-box-inactiva{background:var(--gris-fondo);border:1px dashed var(--gris-borde);}
 .factura-box-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;}
@@ -378,6 +457,42 @@ function prepararEnvioFactura() {
   input.style.pointerEvents = 'none'; // bloquea visualmente sin sacarlo del envío (disabled excluiría el archivo del submit)
   icon.className = 'ti ti-loader-2 girando';
   texto.textContent = 'Analizando factura...';
+  return true;
+}
+
+function marcarArchivoCsvElegido(input) {
+  const label  = input.closest('.input-archivo');
+  const nombre = document.getElementById('nombre-archivo-csv');
+  if (input.files && input.files[0]) {
+    nombre.textContent = input.files[0].name;
+    label.classList.add('input-archivo-ok');
+  } else {
+    nombre.textContent = 'Elegir archivo CSV';
+    label.classList.remove('input-archivo-ok');
+  }
+}
+
+// Estado de carga al importar el CSV — con miles de filas puede tardar unos segundos
+function prepararEnvioCsv() {
+  const btn      = document.getElementById('btn-importar-csv');
+  const icon     = document.getElementById('icon-importar-csv');
+  const texto    = document.getElementById('texto-importar-csv');
+  const input    = document.getElementById('input-csv');
+  const catInput = document.getElementById('input-categoria-csv');
+
+  if (!catInput.value.trim()) {
+    alert('Escribí a qué categoría pertenece este archivo (ej: Frescos, Secos, Congelados).');
+    return false;
+  }
+  if (!input.files || input.files.length === 0) {
+    alert('Primero tenés que elegir el archivo CSV.');
+    return false;
+  }
+
+  btn.disabled = true;
+  input.style.pointerEvents = 'none';
+  icon.className = 'ti ti-loader-2 girando';
+  texto.textContent = 'Importando...';
   return true;
 }
 </script>
