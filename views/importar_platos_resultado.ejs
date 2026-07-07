@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Importación de platos — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: 'costos' }) %>
+
+  <main class="main-content">
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Costos</p>
+        <h1 class="seccion-titulo">Resultado de la importación de platos</h1>
+      </div>
+      <a href="/costos" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver a Costos</a>
+    </div>
+
+    <% if (!resumen) { %>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;color:#dc2626;">
+        No hay ninguna importación reciente para mostrar. <a href="/costos">Volver a Costos</a>.
+      </div>
+    <% } else { %>
+
+      <p style="font-size:0.85rem;color:var(--gris-texto);margin-bottom:20px;">
+        Categoría: <strong style="color:var(--negro);"><%= resumen.categoria %></strong> ·
+        <%= resumen.totalPlatos %> platos procesados del archivo.
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px;">
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:#16a34a;margin:0;"><%= resumen.platosNuevos %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#166534;margin:4px 0 0;">Platos nuevos</p>
+        </div>
+        <div style="background:var(--azul-claro);border:1px solid var(--azul-borde);border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:var(--azul);margin:0;"><%= resumen.platosActualizados %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--azul);margin:4px 0 0;">Platos actualizados</p>
+        </div>
+        <% const totalFaltantes = resumen.detallePlatos.reduce((s,p)=>s+p.ingredientesFaltantes.length,0); %>
+        <div style="background:<%= totalFaltantes > 0 ? '#fef3c7' : 'var(--gris-fondo)' %>;border:1px solid <%= totalFaltantes > 0 ? '#fde68a' : 'var(--gris-borde)' %>;border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:<%= totalFaltantes > 0 ? '#92400e' : 'var(--gris-texto)' %>;margin:0;"><%= totalFaltantes %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:<%= totalFaltantes > 0 ? '#92400e' : 'var(--gris-texto)' %>;margin:4px 0 0;">Ingredientes sin insumo</p>
+        </div>
+      </div>
+
+      <p style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--azul);margin-bottom:10px;">
+        Detalle por plato
+      </p>
+      <div class="tabla-wrap">
+        <table class="tabla" style="width:100%;">
+          <thead>
+            <tr>
+              <th>Plato</th>
+              <th></th>
+              <th>Ingredientes OK</th>
+              <th>Sin insumo</th>
+              <th>Costo total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% resumen.detallePlatos.forEach(p => { %>
+            <tr>
+              <td style="font-weight:500;"><%= p.nombre %></td>
+              <td>
+                <% if (p.esNuevo) { %>
+                  <span style="font-size:0.62rem;font-weight:700;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:2px 8px;border-radius:20px;">NUEVO</span>
+                <% } else { %>
+                  <span style="font-size:0.62rem;font-weight:700;background:var(--azul-claro);color:var(--azul);padding:2px 8px;border-radius:20px;">ACTUALIZADO</span>
+                <% } %>
+              </td>
+              <td style="font-size:0.82rem;color:#16a34a;font-weight:600;"><%= p.ingredientesOk %></td>
+              <td style="font-size:0.82rem;">
+                <% if (p.ingredientesFaltantes.length > 0) { %>
+                  <span style="color:#dc2626;font-weight:600;" title="Códigos: <%= p.ingredientesFaltantes.join(', ') %>">
+                    <%= p.ingredientesFaltantes.length %> <i class="ti ti-alert-circle"></i>
+                  </span>
+                <% } else { %>
+                  <span style="color:var(--gris-texto);">—</span>
+                <% } %>
+              </td>
+              <td style="font-size:0.82rem;font-weight:600;">$<%= Number(p.costoTotal).toLocaleString('es-AR', {maximumFractionDigits:2}) %></td>
+              <td></td>
+            </tr>
+            <% if (p.ingredientesFaltantes.length > 0) { %>
+            <tr>
+              <td colspan="6" style="background:#fef2f2;font-size:0.72rem;color:#991b1b;padding:8px 14px;">
+                <i class="ti ti-info-circle"></i> Códigos sin insumo cargado: <%= p.ingredientesFaltantes.join(', ') %> — cargá esos insumos y volvé a importar este plato para completarlo.
+              </td>
+            </tr>
+            <% } %>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+    <% } %>
+  </main>
+</div>
+</body>
+</html>

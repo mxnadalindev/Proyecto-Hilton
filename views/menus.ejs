@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menús — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: path }) %>
+  <main class="main-content">
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label"><a href="/eventos" style="color:var(--gris-texto);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;"><i class="ti ti-arrow-left"></i> Eventos</a></p>
+        <h1 class="seccion-titulo">Menús</h1>
+      </div>
+      <a href="/eventos/menus/nuevo" class="btn-primary"><i class="ti ti-plus"></i> Nuevo menú</a>
+    </div>
+
+    <p style="font-size:0.82rem;color:var(--gris-texto);margin-bottom:20px;">
+      Un menú agrupa varios platos ya costeados en Costos, para poder sumarlos de una sola vez a un evento.
+    </p>
+
+    <% if (menus.length > 0) { %>
+    <div class="menus-grid">
+      <% menus.forEach(m => {
+        const costoTotal = m.platos.reduce((s,p) => s + (parseFloat(p.costo_total)/(p.porciones_base||1)) * (p.cantidad_porciones||p.porciones_base||1), 0);
+      %>
+      <a href="/eventos/menus/<%= m.id %>" class="menu-card">
+        <p class="menu-card-nombre"><%= m.nombre %></p>
+        <% if (m.descripcion) { %><p class="menu-card-desc"><%= m.descripcion %></p><% } %>
+        <div class="menu-card-footer">
+          <span><%= m.platos.length %> plato<%= m.platos.length !== 1 ? 's' : '' %></span>
+          <span style="color:var(--azul);font-weight:600;">$<%= costoTotal.toFixed(2) %></span>
+        </div>
+      </a>
+      <% }) %>
+    </div>
+    <% } else { %>
+    <div class="empty-state">
+      <i class="ti ti-list-details" style="font-size:2.5rem;color:var(--gris-borde);margin-bottom:16px;display:block;"></i>
+      <p>No hay menús creados todavía.</p>
+      <a href="/eventos/menus/nuevo" class="btn-primary" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> Crear el primero</a>
+    </div>
+    <% } %>
+  </main>
+</div>
+
+<style>
+.menus-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+.menu-card{display:block;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:20px;text-decoration:none;box-shadow:var(--sombra);transition:border-color 0.2s;}
+.menu-card:hover{border-color:var(--azul-borde);}
+.menu-card-nombre{font-size:0.95rem;font-weight:600;color:var(--negro);margin:0 0 6px;}
+.menu-card-desc{font-size:0.75rem;color:var(--gris-texto);margin:0 0 14px;line-height:1.4;}
+.menu-card-footer{display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;color:var(--gris-texto);padding-top:12px;border-top:1px solid var(--gris-borde);}
+</style>
+</body>
+</html>

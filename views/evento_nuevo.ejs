@@ -83,6 +83,26 @@
     <div class="form-card">
       <p class="form-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Platos del menú</p>
 
+      <% if (platosConCosto.length > 0) { %>
+      <div class="field" style="margin-bottom:12px;">
+        <label>Elegir plato ya cargado en Costos</label>
+        <select id="plato-select" onchange="elegirPlatoCargado()">
+          <option value="">— Seleccionar —</option>
+          <% platosConCosto.forEach(p => { %>
+          <option value="<%= p.id %>"
+                  data-nombre="<%= p.nombre %>"
+                  data-porciones="<%= p.porciones || 1 %>"
+                  data-costo="<%= (parseFloat(p.costo_total) / (p.porciones || 1)).toFixed(2) %>">
+            <%= p.nombre %> ($<%= (parseFloat(p.costo_total) / (p.porciones || 1)).toFixed(2) %>/porción)
+          </option>
+          <% }) %>
+        </select>
+        <p style="font-size:0.68rem;color:var(--gris-texto);margin-top:6px;">
+          Al elegir uno, completa los campos de abajo — podés ajustar porciones o costo antes de agregarlo. También podés cargar un plato suelto escribiendo el nombre a mano.
+        </p>
+      </div>
+      <% } %>
+
       <div class="add-row">
         <input type="text" id="plato-nombre" placeholder="Nombre del plato">
         <input type="number" id="plato-porciones" placeholder="Porciones" min="1" value="1">
@@ -226,6 +246,16 @@ let platos = [];
 let vajilla = [];
 
 // ── Platos ──────────────────────────────────────────
+function elegirPlatoCargado() {
+  const sel = document.getElementById('plato-select');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) return;
+  document.getElementById('plato-nombre').value = opt.dataset.nombre;
+  document.getElementById('plato-porciones').value = opt.dataset.porciones;
+  document.getElementById('plato-costo').value = opt.dataset.costo;
+  document.getElementById('plato-costo').focus();
+}
+
 function agregarPlato() {
   const nombre = document.getElementById('plato-nombre').value.trim();
   const porciones = parseInt(document.getElementById('plato-porciones').value) || 1;
@@ -236,6 +266,8 @@ function agregarPlato() {
   document.getElementById('plato-nombre').value = '';
   document.getElementById('plato-porciones').value = '1';
   document.getElementById('plato-costo').value = '';
+  const sel = document.getElementById('plato-select');
+  if (sel) sel.value = '';
   renderPlatos();
   actualizarCosto();
 }

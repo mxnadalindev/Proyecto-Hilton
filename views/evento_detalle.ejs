@@ -42,7 +42,7 @@
       </div>
       <div class="info-row"><span class="info-label">Hs. producción</span><span class="info-val"><%= evento.horas_produccion || 0 %> hs</span></div>
       <div class="info-row"><span class="info-label">Personal</span><span class="info-val"><%= evento.cantidad_personal %> personas</span></div>
-      <div class="info-row"><span class="info-label">Costo total</span><span class="info-val costo-grande">${{ parseFloat(evento.costo_total).toFixed(2) }}</span></div>
+      <div class="info-row"><span class="info-label">Costo total</span><span class="info-val costo-grande">$<%= parseFloat(evento.costo_total).toFixed(2) %></span></div>
       <% if (evento.descripcion) { %>
       <div class="info-row"><span class="info-label">Notas</span><span class="info-val"><%= evento.descripcion %></span></div>
       <% } %>
@@ -53,23 +53,68 @@
   <!-- Platos -->
   <div class="detalle-card">
     <p class="detalle-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Platos del menú</p>
+
+    <% if (menus.length > 0) { %>
+    <form method="POST" action="/eventos/<%= evento.id %>/menu" class="add-plato-row">
+      <select name="menu_id" required>
+        <option value="">— Cargar un menú completo —</option>
+        <% menus.forEach(m => { %>
+        <option value="<%= m.id %>"><%= m.nombre %> (<%= m.platos.length %> plato<%= m.platos.length !== 1 ? 's' : '' %>)</option>
+        <% }) %>
+      </select>
+      <button type="submit" class="btn-add" title="Agregar todos los platos del menú"><i class="ti ti-playlist-add" aria-hidden="true"></i></button>
+    </form>
+    <% } %>
+
+    <% if (platosConCosto.length > 0) { %>
+    <form method="POST" id="form-plato-cargado" action="/eventos/<%= evento.id %>/plato" class="add-plato-row">
+      <select id="plato-select-detalle" onchange="elegirPlatoCargadoDetalle()">
+        <option value="">— Elegir plato de Costos —</option>
+        <% platosConCosto.forEach(p => { %>
+        <option value="<%= p.nombre %>"
+                data-porciones="<%= p.porciones || 1 %>"
+                data-costo="<%= (parseFloat(p.costo_total) / (p.porciones || 1)).toFixed(2) %>">
+          <%= p.nombre %> ($<%= (parseFloat(p.costo_total) / (p.porciones || 1)).toFixed(2) %>/porción)
+        </option>
+        <% }) %>
+      </select>
+      <input type="hidden" name="plato_nombre" id="dp-nombre">
+      <input type="number" name="cantidad_porciones" id="dp-porciones" placeholder="Porciones" min="1" value="1">
+      <input type="number" name="costo_porcion" id="dp-costo" placeholder="Costo/porc. $" min="0" step="0.01">
+      <button type="submit" class="btn-add" title="Agregar al evento"><i class="ti ti-plus" aria-hidden="true"></i></button>
+    </form>
+    <% } %>
+
+    <form method="POST" action="/eventos/<%= evento.id %>/plato" class="add-plato-row">
+      <input type="text" name="plato_nombre" placeholder="O escribir un plato suelto" required style="flex:2;">
+      <input type="number" name="cantidad_porciones" placeholder="Porciones" min="1" value="1">
+      <input type="number" name="costo_porcion" placeholder="Costo/porc. $" min="0" step="0.01">
+      <button type="submit" class="btn-add" title="Agregar al evento"><i class="ti ti-plus" aria-hidden="true"></i></button>
+    </form>
+
     <% if (platos.length > 0) { %>
       <table class="tabla-interna">
-        <thead><tr><th>Plato</th><th>Porciones</th><th>Costo/porc.</th><th>Subtotal</th></tr></thead>
+        <thead><tr><th>Plato</th><th>Porciones</th><th>Costo/porc.</th><th>Subtotal</th><th></th></tr></thead>
         <tbody>
           <% platos.forEach(p => { %>
           <tr>
             <td><%= p.plato_nombre %></td>
-            <td>{{ p.cantidad_porciones }}</td>
-            <td>${{ parseFloat(p.costo_porcion).toFixed(2) }}</td>
-            <td style="font-weight:600;color:var(--azul)">${{ parseFloat(p.subtotal).toFixed(2) }}</td>
+            <td><%= p.cantidad_porciones %></td>
+            <td>$<%= parseFloat(p.costo_porcion).toFixed(2) %></td>
+            <td style="font-weight:600;color:var(--azul)">$<%= parseFloat(p.subtotal).toFixed(2) %></td>
+            <td>
+              <form method="POST" action="/eventos/<%= evento.id %>/plato/<%= p.id %>/eliminar" style="margin:0;"
+                    onsubmit="return confirm('¿Quitar este plato del evento?')">
+                <button type="submit" class="btn-remove" title="Quitar"><i class="ti ti-x" aria-hidden="true"></i></button>
+              </form>
+            </td>
           </tr>
           <% }) %>
         </tbody>
       </table>
       <div class="total-row">
         <span>Total platos:</span>
-        <strong>${{ parseFloat(evento.costo_total).toFixed(2) }}</strong>
+        <strong>$<%= parseFloat(evento.costo_total).toFixed(2) %></strong>
       </div>
     <% } else { %>
       <p class="list-empty">Sin platos registrados.</p>
@@ -143,6 +188,14 @@
 .vajilla-nombre { font-size: 0.85rem; color: var(--negro); font-weight: 500; }
 .vajilla-cant { font-size: 0.78rem; color: var(--gris-texto); }
 .list-empty { font-size: 0.78rem; color: var(--gris-texto); font-style: italic; padding: 8px 0; }
+.add-plato-row { display: flex; gap: 6px; margin-bottom: 10px; align-items: center; }
+.add-plato-row select, .add-plato-row input { background: var(--gris-fondo); border: 1px solid var(--gris-borde); border-radius: 8px; padding: 8px 10px; font-family: var(--font-sans); font-size: 0.8rem; color: var(--negro); outline: none; }
+.add-plato-row select { flex: 2; }
+.add-plato-row input[type="number"] { flex: 1; min-width: 70px; }
+.add-plato-row .btn-add { width: 34px; height: 34px; background: var(--azul); border: none; border-radius: 8px; color: #fff; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.add-plato-row .btn-add:hover { background: var(--azul-hover); }
+.btn-remove { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 15px; padding: 2px; }
+.btn-remove:hover { color: #991b1b; }
 .back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; }
 .back-link:hover { color: var(--azul); }
 .btn-danger { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all var(--tr); }
@@ -150,6 +203,17 @@
 @media (max-width: 900px) { .detalle-grid { grid-template-columns: 1fr; } }
 </style>
 
+
+<script>
+function elegirPlatoCargadoDetalle() {
+  const sel = document.getElementById('plato-select-detalle');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) return;
+  document.getElementById('dp-nombre').value = opt.value;
+  document.getElementById('dp-porciones').value = opt.dataset.porciones;
+  document.getElementById('dp-costo').value = opt.dataset.costo;
+}
+</script>
 
   </main>
 </div>

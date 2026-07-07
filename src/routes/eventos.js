@@ -73,8 +73,45 @@ router.get('/:id', loginRequerido, async (req, res) => {
   const platos   = await db.all2("SELECT * FROM evento_platos WHERE evento_id=$1",  [req.params.id]);
   const personal = await db.all2(`SELECT u.nombre,u.rol FROM evento_personal ep JOIN usuarios u ON ep.usuario_id=u.id WHERE ep.evento_id=$1`, [req.params.id]);
   const vajilla  = await db.all2("SELECT * FROM evento_vajilla WHERE evento_id=$1", [req.params.id]);
-  res.render('evento_detalle', { evento, platos, personal, vajilla, path: 'eventos' });
+  const platosConCosto = await db.all2("SELECT id,nombre,costo_total,porciones FROM platos_costo WHERE costo_total>0 ORDER BY nombre");
+  res.render('evento_detalle', { evento, platos, personal, vajilla, platosConCosto, path: 'eventos' });
 });
+
+// Agrega un plato al menú de un evento ya creado (elegido de Costos o cargado a mano)
+router.post('/:id/plato', loginRequerido, async (req, res) => {
+  try {
+    const { plato_nombre, cantidad_porciones, costo_porcion } = req.body;
+    const porciones = parseInt(cantidad_porciones) || 1;
+    const costo = parseFloat(costo_porcion) || 0;
+    const subtotal = porciones * costo;
+
+    await db.run2(
+      "INSERT INTO evento_platos (evento_id,plato_nombre,cantidad_porciones,costo_porcion,subtotal) VALUES ($1,$2,$3,$4,$5)",
+      [req.params.id, plato_nombre, porciones, costo, subtotal]
+    );
+    await recalcularCostoEvento(req.params.id);
+  } catch (e) {
+    console.error('Error agregando plato al evento:', e.message);
+  }
+  res.redirect('/eventos/' + req.params.id);
+});
+
+// Quita un plato del menú de un evento ya creado
+router.post('/:evento_id/plato/:id/eliminar', loginRequerido, async (req, res) => {
+  try {
+    await db.run2("DELETE FROM evento_platos WHERE id=$1", [req.params.id]);
+    await recalcularCostoEvento(req.params.evento_id);
+  } catch (e) {
+    console.error('Error quitando plato del evento:', e.message);
+  }
+  res.redirect('/eventos/' + req.params.evento_id);
+});
+
+async function recalcularCostoEvento(evento_id) {
+  const items = await db.all2("SELECT subtotal FROM evento_platos WHERE evento_id=$1", [evento_id]);
+  const total = items.reduce((s, i) => s + (parseFloat(i.subtotal) || 0), 0);
+  await db.run2("UPDATE eventos SET costo_total=$1 WHERE id=$2", [total, evento_id]);
+}
 
 router.post('/:id/eliminar', loginRequerido, async (req, res) => {
   const id = req.params.id;

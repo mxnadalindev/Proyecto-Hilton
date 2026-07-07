@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= menu.nombre %> — Menús</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: path }) %>
+  <main class="main-content">
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label"><a href="/eventos/menus" style="color:var(--gris-texto);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;"><i class="ti ti-arrow-left"></i> Menús</a></p>
+        <h1 class="seccion-titulo"><%= menu.nombre %></h1>
+        <% if (menu.descripcion) { %><p style="font-size:0.82rem;color:var(--gris-texto);margin:4px 0 0;"><%= menu.descripcion %></p><% } %>
+      </div>
+      <form method="POST" action="/eventos/menus/<%= menu.id %>/eliminar" onsubmit="return confirm('¿Eliminar este menú? Los platos no se borran, solo se desvinculan.')">
+        <button type="submit" class="btn-danger"><i class="ti ti-trash"></i> Eliminar menú</button>
+      </form>
+    </div>
+
+    <div class="form-card" style="margin-bottom:20px;">
+      <p class="form-card-title"><i class="ti ti-plus"></i> Agregar plato al menú</p>
+      <form method="POST" action="/eventos/menus/<%= menu.id %>/plato" style="display:flex;gap:8px;">
+        <select name="plato_id" required style="flex:1;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
+          <option value="">Seleccionar plato...</option>
+          <% todosPlatos.forEach(p => { %>
+          <option value="<%= p.id %>"><%= p.nombre %> ($<%= (parseFloat(p.costo_total)/(p.porciones||1)).toFixed(2) %>/porc.)</option>
+          <% }) %>
+        </select>
+        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> Agregar</button>
+      </form>
+    </div>
+
+    <div class="form-card">
+      <p class="form-card-title"><i class="ti ti-tools-kitchen-2"></i> Platos de este menú (<%= platosDelMenu.length %>)</p>
+      <% if (platosDelMenu.length > 0) { %>
+      <table class="tabla-interna">
+        <thead><tr><th>Plato</th><th>Costo/porc.</th><th></th></tr></thead>
+        <tbody>
+          <% platosDelMenu.forEach(p => { %>
+          <tr>
+            <td><%= p.nombre %></td>
+            <td style="color:var(--azul);font-weight:600;">$<%= (parseFloat(p.costo_total)/(p.porciones_base||1)).toFixed(2) %></td>
+            <td>
+              <form method="POST" action="/eventos/menus/<%= menu.id %>/plato/<%= p.menu_plato_id %>/eliminar" style="margin:0;">
+                <button type="submit" class="btn-remove" title="Quitar del menú"><i class="ti ti-x"></i></button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% } else { %>
+      <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;">Sin platos todavía. Agregá el primero arriba.</p>
+      <% } %>
+    </div>
+  </main>
+</div>
+
+<style>
+.form-card{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px;box-shadow:var(--sombra);}
+.form-card-title{font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin-bottom:16px;display:flex;align-items:center;gap:7px;}
+.tabla-interna{width:100%;border-collapse:collapse;font-size:0.82rem;}
+.tabla-interna th{font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);padding:8px 0;border-bottom:1px solid var(--gris-borde);text-align:left;}
+.tabla-interna td{padding:10px 0;border-bottom:1px solid var(--gris-borde);color:var(--negro);}
+.tabla-interna tr:last-child td{border-bottom:none;}
+.btn-remove{background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:2px;}
+.btn-remove:hover{color:#991b1b;}
+.btn-danger{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-family:var(--font-sans);font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.btn-danger:hover{background:#dc2626;color:#fff;}
+</style>
+</body>
+</html>

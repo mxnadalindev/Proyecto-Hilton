@@ -6,6 +6,7 @@ const multer = require('multer');
 const path = require('path');
 const { analizarFactura } = require('../services/gemini');
 const { parsearCsvInsumos, importarInsumos } = require('../services/importadorInsumos');
+const { parsearCsvPlatos, importarPlatos } = require('../services/importadorPlatos');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -46,13 +47,27 @@ router.get('/', loginRequerido, async (req, res) => {
     );
   }
 
-  const platos   = await db.all2("SELECT * FROM platos_costo ORDER BY nombre");
+  const buscarPlato = (req.query.buscarPlato || '').trim();
+  const letraPlato  = (req.query.letraPlato || '').trim().toUpperCase().slice(0, 1);
+  let platos, totalPlatos;
+  if (buscarPlato) {
+    platos = await db.all2("SELECT * FROM platos_costo WHERE nombre ILIKE $1 ORDER BY nombre LIMIT 300", [`%${buscarPlato}%`]);
+    totalPlatos = platos.length;
+  } else if (letraPlato) {
+    platos = await db.all2("SELECT * FROM platos_costo WHERE nombre ILIKE $1 ORDER BY nombre LIMIT 300", [`${letraPlato}%`]);
+    totalPlatos = platos.length;
+  } else {
+    const totalPlatosRow = await db.get2("SELECT COUNT(*)::int AS total FROM platos_costo");
+    totalPlatos = totalPlatosRow?.total || 0;
+    platos = await db.all2("SELECT * FROM platos_costo ORDER BY nombre LIMIT 300");
+  }
   const categorias = [...new Set(insumos.map(i=>i.categoria))];
   const msg = req.query.msg || null;
   const geminiConfigurado = !!process.env.GEMINI_API_KEY;
   res.render('costos', {
     insumos, platos, categorias, msg, geminiConfigurado,
     buscar, letra, totalInsumos,
+    buscarPlato, totalPlatos, letraPlato,
     mostrandoLimitado: !buscar && totalInsumos > LIMITE_SIN_BUSQUEDA,
     limiteSinBusqueda: LIMITE_SIN_BUSQUEDA
   });
@@ -131,6 +146,25 @@ router.post('/plato/:id/insumo', loginRequerido, async (req, res) => {
 router.post('/plato/:plato_id/insumo/:id/eliminar', loginRequerido, async (req, res) => {
   await db.run2("DELETE FROM plato_insumos WHERE id=$1", [req.params.id]);
   await recalcularCostoPlato(req.params.plato_id);
+  res.redirect('/costos/plato/'+req.params.plato_id);
+});
+
+router.post('/plato/:plato_id/insumo/:id/cantidad', loginRequerido, async (req, res) => {
+  const nuevaCantidad = parseFloat(req.body.cantidad);
+  try {
+    const item = await db.get2("SELECT * FROM plato_insumos WHERE id=$1", [req.params.id]);
+    if (item && !isNaN(nuevaCantidad) && nuevaCantidad >= 0) {
+      const insumo = await db.get2("SELECT * FROM insumos WHERE id=$1", [item.insumo_id]);
+      const costo_parcial = nuevaCantidad * (parseFloat(insumo?.precio_unitario) || 0);
+      await db.run2(
+        "UPDATE plato_insumos SET cantidad=$1, costo_parcial=$2 WHERE id=$3",
+        [nuevaCantidad, costo_parcial, req.params.id]
+      );
+      await recalcularCostoPlato(req.params.plato_id);
+    }
+  } catch (e) {
+    console.error('Error actualizando cantidad:', e.message);
+  }
   res.redirect('/costos/plato/'+req.params.plato_id);
 });
 
@@ -302,6 +336,34 @@ router.post('/insumos/importar', loginRequerido, uploadCsv.single('archivo_csv')
 router.get('/insumos/importar/resultado', loginRequerido, async (req, res) => {
   const resumen = req.session.importacionResumen || null;
   res.render('importar_resultado', { resumen });
+});
+
+// ── Importación masiva de platos con sus insumos (CSV de costeo tipo "un bloque por plato") ──
+router.post('/platos/importar', loginRequerido, uploadCsv.single('archivo_platos'), async (req, res) => {
+  if (!req.file) return res.redirect('/costos?msg=' + encodeURIComponent('No se recibió ningún archivo.'));
+
+  const categoria = (req.body.categoria_platos || '').trim();
+  if (!categoria) return res.redirect('/costos?msg=' + encodeURIComponent('Falta indicar la categoría para estos platos.'));
+
+  try {
+    const platos = parsearCsvPlatos(req.file.path);
+
+    if (platos.length === 0) {
+      return res.redirect('/costos?msg=' + encodeURIComponent('No se encontró ningún plato con ingredientes en el archivo.'));
+    }
+
+    const resumen = await importarPlatos(platos, categoria);
+    req.session.importacionPlatosResumen = { ...resumen, categoria, totalPlatos: platos.length };
+    res.redirect('/costos/platos/importar/resultado');
+  } catch (e) {
+    console.error('Error importando platos:', e.message);
+    res.redirect('/costos?msg=' + encodeURIComponent('Error importando los platos: ' + e.message));
+  }
+});
+
+router.get('/platos/importar/resultado', loginRequerido, async (req, res) => {
+  const resumen = req.session.importacionPlatosResumen || null;
+  res.render('importar_platos_resultado', { resumen });
 });
 
 async function recalcularCostoPlato(plato_id) {

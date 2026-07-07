@@ -8,7 +8,7 @@
 </head>
 <body>
 <div class="app-layout">
-  <%- include('partials/nav', { path: path }) %>
+  <%- include('partials/nav', { path: 'costos' }) %>
 
   <main class="main-content">
 
@@ -110,7 +110,14 @@
             <% ingredientes.forEach(ing => { %>
             <tr>
               <td style="font-weight:500;"><%= ing.insumo_nombre %></td>
-              <td><%= ing.cantidad %> <%= ing.unidad %></td>
+              <td>
+                <form method="POST" action="/costos/plato/<%= plato.id %>/insumo/<%= ing.id %>/cantidad" style="display:flex;gap:4px;align-items:center;margin:0;">
+                  <input type="number" name="cantidad" value="<%= ing.cantidad %>" step="0.01" min="0"
+                         style="width:75px;padding:4px 6px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.8rem;font-family:var(--font-sans);outline:none;text-align:center;">
+                  <span style="font-size:0.75rem;color:var(--gris-texto);"><%= ing.unidad %></span>
+                  <button type="submit" class="btn-sm" style="padding:3px 7px;" title="Guardar cantidad">✓</button>
+                </form>
+              </td>
               <td style="color:var(--gris-texto);">$<%= parseFloat(ing.precio_unitario).toFixed(2) %></td>
               <td style="font-weight:600;color:var(--azul);">$<%= parseFloat(ing.costo_parcial).toFixed(2) %></td>
               <td>

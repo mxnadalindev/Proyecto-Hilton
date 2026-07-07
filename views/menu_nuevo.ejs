@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevo menú — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: path }) %>
+  <main class="main-content">
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label"><a href="/eventos/menus" style="color:var(--gris-texto);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;"><i class="ti ti-arrow-left"></i> Menús</a></p>
+        <h1 class="seccion-titulo">Nuevo menú</h1>
+      </div>
+    </div>
+
+    <form method="POST" action="/eventos/menus/nuevo">
+      <div class="form-card" style="margin-bottom:20px;">
+        <div class="field" style="margin-bottom:14px;">
+          <label>Nombre del menú</label>
+          <input type="text" name="nombre" placeholder="Ej: Menú Buffet Ejecutivo" required>
+        </div>
+        <div class="field">
+          <label>Descripción (opcional)</label>
+          <input type="text" name="descripcion" placeholder="Ej: Almuerzo corporativo, hasta 50 personas">
+        </div>
+      </div>
+
+      <div class="form-card">
+        <p class="form-card-title"><i class="ti ti-tools-kitchen-2"></i> Elegí los platos que lo componen</p>
+
+        <% if (platosConCosto.length > 0) { %>
+        <input type="text" id="buscador-platos" placeholder="Buscar plato..." class="buscador-platos"
+               oninput="filtrarPlatos(this.value)">
+        <div class="platos-grid" id="platos-grid">
+          <% platosConCosto.forEach(p => { %>
+          <label class="plato-item" data-nombre="<%= p.nombre.toLowerCase() %>">
+            <input type="checkbox" name="platos" value="<%= p.id %>">
+            <span class="plato-nombre"><%= p.nombre %></span>
+            <span class="plato-costo">$<%= (parseFloat(p.costo_total)/(p.porciones||1)).toFixed(2) %>/porc.</span>
+          </label>
+          <% }) %>
+        </div>
+        <% } else { %>
+        <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;">No hay platos costeados en Costos todavía — cargalos ahí primero.</p>
+        <% } %>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
+        <a href="/eventos/menus" class="btn-secondary">Cancelar</a>
+        <button type="submit" class="btn-primary"><i class="ti ti-device-floppy"></i> Crear menú</button>
+      </div>
+    </form>
+  </main>
+</div>
+
+<style>
+.form-card{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px;box-shadow:var(--sombra);}
+.form-card-title{font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin-bottom:16px;display:flex;align-items:center;gap:7px;}
+.field label{display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;}
+.field input{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;}
+.field input:focus{border-color:var(--azul);background:var(--blanco);}
+.buscador-platos{width:100%;padding:9px 12px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);margin-bottom:14px;}
+.platos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px;max-height:420px;overflow-y:auto;}
+.plato-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background 0.15s;}
+.plato-item:hover{background:var(--azul-claro);}
+.plato-item input{width:16px;height:16px;accent-color:var(--azul);flex-shrink:0;}
+.plato-nombre{flex:1;font-size:0.8rem;color:var(--negro);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.plato-costo{font-size:0.7rem;color:var(--gris-texto);flex-shrink:0;}
+</style>
+
+<script>
+function filtrarPlatos(texto) {
+  const q = texto.toLowerCase();
+  document.querySelectorAll('.plato-item').forEach(el => {
+    el.style.display = el.dataset.nombre.includes(q) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
