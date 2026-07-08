@@ -1,39 +1,93 @@
 <header class="header">
   <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
-  <nav class="header-nav desktop-only">
+
+  <nav class="nav-pill desktop-only">
     <% const _d = usuario?.departamento; const _r = usuario?.rol; %>
     <% if (_d === 'cocina' || _d === 'ayb' || _r === 'admin') { %>
-      <a href="/eventos"  class="nav-link <%= (typeof path !== 'undefined' && path === 'eventos')  ? 'activo' : '' %>"><i class="ti ti-calendar-event"></i> Eventos</a>
-      <a href="/personal" class="nav-link <%= (typeof path !== 'undefined' && path === 'personal') ? 'activo' : '' %>"><i class="ti ti-users"></i> Personal</a>
-      <a href="/horarios" class="nav-link <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>"><i class="ti ti-clock"></i> Horarios</a>
-      <a href="/recetas"  class="nav-link <%= (typeof path !== 'undefined' && path === 'recetas')  ? 'activo' : '' %>"><i class="ti ti-chef-hat"></i> Recetas</a>
-      <a href="/costos"   class="nav-link <%= (typeof path !== 'undefined' && path === 'costos')   ? 'activo' : '' %>"><i class="ti ti-coin"></i> Costos</a>
+      <a href="/eventos" class="nav-item <%= (typeof path !== 'undefined' && path === 'eventos') ? 'activo' : '' %>">
+        <i class="ti ti-calendar-event" aria-hidden="true"></i><span class="nav-label">Eventos</span>
+      </a>
+      <a href="/personal" class="nav-item <%= (typeof path !== 'undefined' && path === 'personal') ? 'activo' : '' %>">
+        <i class="ti ti-users" aria-hidden="true"></i><span class="nav-label">Personal</span>
+      </a>
+      <a href="/horarios" class="nav-item <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>">
+        <i class="ti ti-clock" aria-hidden="true"></i><span class="nav-label">Horarios</span>
+      </a>
+      <a href="/recetas" class="nav-item <%= (typeof path !== 'undefined' && path === 'recetas') ? 'activo' : '' %>">
+        <i class="ti ti-chef-hat" aria-hidden="true"></i><span class="nav-label">Recetas</span>
+      </a>
+      <a href="/costos" class="nav-item <%= (typeof path !== 'undefined' && path === 'costos') ? 'activo' : '' %>">
+        <i class="ti ti-coin" aria-hidden="true"></i><span class="nav-label">Costos</span>
+      </a>
     <% } %>
+    <% if (usuario?.rol === 'admin') { %>
+      <a href="/configuracion" class="nav-item <%= (typeof path !== 'undefined' && path === 'configuracion') ? 'activo' : '' %>">
+        <i class="ti ti-settings" aria-hidden="true"></i><span class="nav-label">Configuración</span>
+      </a>
+    <% } %>
+    <a href="/logout" class="nav-item nav-item-salir">
+      <i class="ti ti-logout" aria-hidden="true"></i><span class="nav-label">Salir</span>
+    </a>
   </nav>
+
   <div class="header-user">
     <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
-    <% if (usuario?.rol === 'admin') { %>
-    <a href="/configuracion" class="btn-config <%= (typeof path !== 'undefined' && path === 'configuracion') ? 'activo' : '' %>" title="Configuración">
-      <i class="ti ti-settings"></i>
-    </a>
-    <% } %>
-    <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i><span class="logout-text"> Cerrar sesión</span></a>
+    <a href="/logout" class="btn-logout mobile-only-flex"><i class="ti ti-logout"></i></a>
   </div>
 </header>
 
 <style>
-.btn-config{
-  display:flex;align-items:center;justify-content:center;
-  width:34px;height:34px;
-  border:1px solid var(--gris-borde);
-  border-radius:8px;
-  color:var(--gris-texto);
-  background:var(--blanco);
-  text-decoration:none;
-  font-size:16px;
-  transition:all 0.2s;
-  flex-shrink:0;
+/* ── Barra de navegación tipo "pill" navy, íconos que se expanden con label ── */
+.nav-pill{
+  display:flex; align-items:center; gap:5px;
+  background:#0f172a;
+  border-radius:999px;
+  padding:5px;
+  box-shadow:0 10px 30px rgba(15,23,42,0.28);
 }
-.btn-config:hover{background:var(--azul-claro);color:var(--azul);border-color:var(--azul-borde);}
-.btn-config.activo{background:var(--azul-claro);color:var(--azul);border-color:var(--azul-borde);}
+.nav-item{
+  display:flex; align-items:center; gap:0.65rem;
+  width:40px; height:40px;
+  padding:0 0 0 11px;
+  overflow:hidden;
+  border-radius:999px;
+  color:rgba(255,255,255,0.68);
+  text-decoration:none;
+  flex-shrink:0;
+  transition:
+    width .45s cubic-bezier(.22,1,.36,1),
+    background .3s ease,
+    box-shadow .3s ease,
+    color .3s ease;
+}
+.nav-item i{ font-size:16px; flex-shrink:0; }
+.nav-item:hover,
+.nav-item.activo{
+  width:148px;
+  background:rgba(59,130,246,0.22);
+  box-shadow:0 0 22px rgba(59,130,246,0.4);
+  color:#fff;
+}
+.nav-item-salir:hover{
+  background:rgba(220,38,38,0.22);
+  box-shadow:0 0 22px rgba(220,38,38,0.35);
+}
+.nav-label{
+  opacity:0; max-width:0; white-space:nowrap;
+  transform:translateX(-8px);
+  font-size:0.74rem; font-weight:500; letter-spacing:0.02em;
+  transition:
+    opacity .25s ease,
+    max-width .45s ease,
+    transform .35s ease;
+}
+.nav-item:hover .nav-label,
+.nav-item.activo .nav-label{
+  opacity:1; max-width:110px; transform:translateX(0);
+}
+
+.mobile-only-flex{ display:none; }
+@media (max-width:768px){
+  .mobile-only-flex{ display:flex; }
+}
 </style>

@@ -68,6 +68,7 @@ router.post('/login', async (req, res) => {
     if (user && password && bcrypt.compareSync(password, user.password)) {
       registrarIntento(email, true);
       req.session.usuario = { id: user.id, nombre: user.nombre, rol: user.rol, email: user.email, departamento: user.departamento };
+      req.session.mostrarBienvenida = true;
       await registrar(req, 'login', user.email);
       return res.redirect('/inicio');
       };
@@ -92,7 +93,9 @@ router.get('/logout', async (req, res) => {
 
 router.get('/inicio', (req, res) => {
   if (!req.session.usuario) return res.redirect('/login');
-  res.render('inicio', { usuario: req.session.usuario });
+  const mostrarBienvenida = !!req.session.mostrarBienvenida;
+  delete req.session.mostrarBienvenida;
+  res.render('inicio', { usuario: req.session.usuario, mostrarBienvenida });
 });
 
 router.get('/registro', (req, res) => {

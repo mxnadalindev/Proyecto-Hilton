@@ -14,31 +14,7 @@
 <body>
 <div class="app-layout">
 
-  <header class="header">
-    <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
-    <nav class="header-nav desktop-only">
-      <% const _d = usuario?.departamento; %>
-      <% if (_d === 'cocina' || _d === 'ayb') { %>
-        <a href="/eventos"  class="nav-link"><i class="ti ti-calendar-event"></i> Eventos</a>
-        <a href="/personal" class="nav-link"><i class="ti ti-users"></i> Personal</a>
-        <a href="/horarios" class="nav-link"><i class="ti ti-clock"></i> Horarios</a>
-        <a href="/recetas"  class="nav-link"><i class="ti ti-chef-hat"></i> Recetas</a>
-        <a href="/costos"   class="nav-link"><i class="ti ti-coin"></i> Costos</a>
-      <% } %>
-      <% if (_d === 'compras') { %>
-        <a href="/compras"  class="nav-link"><i class="ti ti-shopping-cart"></i> Compras</a>
-      <% } %>
-      <% if (_d === 'finanzas') { %>
-        <a href="/finanzas" class="nav-link"><i class="ti ti-report-money"></i> Finanzas</a>
-      <% } %>
-    </nav>
-    <div class="header-user">
-      <a href="/logout" class="btn-logout">
-        <i class="ti ti-logout"></i>
-        <span class="logout-text">Cerrar sesión</span>
-      </a>
-    </div>
-  </header>
+  <%- include('partials/nav', { path: 'inicio' }) %>
 
   <main class="main-content">
     <div class="inicio-hero">
@@ -51,38 +27,70 @@
         let modulos = [];
         if (depto === 'cocina' || depto === 'ayb') {
           modulos = [
-            { href: '/eventos',  icon: 'ti-calendar-event', nombre: 'Eventos',  desc: 'Gestión y presupuestos' },
-            { href: '/personal', icon: 'ti-users',          nombre: 'Personal', desc: 'Equipo interno' },
-            { href: '/horarios', icon: 'ti-clock',          nombre: 'Horarios', desc: 'Turnos automáticos' },
-            { href: '/recetas',  icon: 'ti-chef-hat',       nombre: 'Recetas',  desc: 'Recetario y videos' },
-            { href: '/costos',   icon: 'ti-coin',           nombre: 'Costos',   desc: 'Insumos y precios' },
+            { href: '/eventos',  icon: 'ti-calendar-event', nombre: 'Eventos',  desc: 'Gestión y presupuestos',
+              detalle: 'Planificá banquetes y eventos del hotel: armá el menú con platos ya costeados (o menús completos), asigná personal y vajilla, y calculá el costo total y las horas de producción antes de confirmar.' },
+            { href: '/personal', icon: 'ti-users',          nombre: 'Personal', desc: 'Equipo interno',
+              detalle: 'Gestioná el equipo de cocina: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
+            { href: '/horarios', icon: 'ti-clock',          nombre: 'Horarios', desc: 'Turnos automáticos',
+              detalle: 'Visualizá la grilla completa de turnos de todos los sectores, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
+            { href: '/recetas',  icon: 'ti-chef-hat',       nombre: 'Recetas',  desc: 'Recetario y videos',
+              detalle: 'Recetario digital del hotel, con ingredientes, pasos de preparación, imágenes y video — buscá por nombre o categoría desde cualquier dispositivo, en la cocina o desde tu casa.' },
+            { href: '/costos',   icon: 'ti-coin',           nombre: 'Costos',   desc: 'Insumos y precios',
+              detalle: 'Cargá insumos y sus precios, costeá platos automáticamente, y actualizá precios subiendo una foto de factura o el catálogo del proveedor — con historial completo de cada cambio.' },
           ];
           if (esAdmin) {
-            modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema' });
+            modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema',
+              detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
           }
         } else if (depto === 'compras') {
           modulos = [
-            { href: '/compras', icon: 'ti-shopping-cart', nombre: 'Compras', desc: 'Órdenes y proveedores' },
+            { href: '/compras', icon: 'ti-shopping-cart', nombre: 'Compras', desc: 'Órdenes y proveedores',
+              detalle: 'Gestión de órdenes de compra y proveedores del hotel.' },
           ];
-          if (esAdmin) modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema' });
+          if (esAdmin) modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema',
+            detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
         } else if (depto === 'finanzas') {
           modulos = [
-            { href: '/finanzas', icon: 'ti-report-money', nombre: 'Finanzas', desc: 'Reportes y presupuestos' },
+            { href: '/finanzas', icon: 'ti-report-money', nombre: 'Finanzas', desc: 'Reportes y presupuestos',
+              detalle: 'Reportes financieros y seguimiento de presupuestos del hotel.' },
           ];
-          if (esAdmin) modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema' });
+          if (esAdmin) modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema',
+            detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
         }
       %>
 
-      <div class="inicio-grid inicio-grid-<%= modulos.length %>">
-        <% modulos.forEach((m, i) => { %>
-          <a href="<%= m.href %>" class="inicio-card fade-up">
-            <div class="card-icon"><i class="ti <%= m.icon %>"></i></div>
-            <span class="card-num"><%= String(i + 1).padStart(2, '0') %></span>
-            <span class="card-nombre"><%= m.nombre %></span>
-            <span class="card-desc"><%= m.desc %></span>
+      <% if (modulos.length > 0) { %>
+      <div class="carousel-stage" id="carouselStage">
+        <div class="stage-glow"></div>
+
+        <div class="stage-content">
+          <div class="stage-icon" id="slideIcon"><i class="ti <%= modulos[0].icon %>" aria-hidden="true"></i></div>
+          <p class="stage-eyebrow">Portal interno · Módulo</p>
+          <h2 class="stage-nombre" id="slideNombre"><%= modulos[0].nombre %></h2>
+          <p class="stage-detalle" id="slideDetalle"><%= modulos[0].detalle %></p>
+          <a href="<%= modulos[0].href %>" class="stage-btn" id="slideBtn">
+            Entrar <i class="ti ti-arrow-right" aria-hidden="true"></i>
           </a>
+        </div>
+
+        <% modulos.forEach((m, i) => { %>
+        <div class="carousel-item <%= i === 0 ? 'activa' : '' %>" data-index="<%= i %>" onclick="seleccionarModulo(<%= i %>)">
+          <div class="item-icon"><i class="ti <%= m.icon %>"></i></div>
+          <span class="item-nombre"><%= m.nombre %></span>
+        </div>
         <% }) %>
+
+        <div class="stage-controls">
+          <button class="carousel-arrow" onclick="pasoModulo(-1)" aria-label="Anterior"><i class="ti ti-chevron-left"></i></button>
+          <div class="carousel-dots" id="carouselDots">
+            <% modulos.forEach((m, i) => { %>
+            <span class="dot <%= i === 0 ? 'activa' : '' %>" data-index="<%= i %>" onclick="seleccionarModulo(<%= i %>)"></span>
+            <% }) %>
+          </div>
+          <button class="carousel-arrow" onclick="pasoModulo(1)" aria-label="Siguiente"><i class="ti ti-chevron-right"></i></button>
+        </div>
       </div>
+      <% } %>
 
     </div>
   </main>
@@ -105,5 +113,156 @@
   </nav>
 
 </div>
+
+<% if (mostrarBienvenida) { %>
+<script src="/js/particulas.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    mostrarParticulasBienvenida('BIENVENIDOS AL PORTAL HILTON');
+  });
+</script>
+<% } %>
+
+<style>
+/* ── Carrusel de módulos, navy — posiciones reales calculadas por JS ── */
+.carousel-stage {
+  position: relative;
+  height: 420px;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 24px 0 20px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+  box-shadow: 0 24px 60px rgba(15,23,42,0.35);
+}
+.stage-glow {
+  position: absolute; top: -160px; right: -60px;
+  width: 380px; height: 380px;
+  background: radial-gradient(circle, rgba(201,168,76,0.14) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.stage-content {
+  position: absolute; top: 0; left: 0; height: 100%; width: 52%;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 44px 40px; color: #fff; z-index: 2;
+}
+.stage-icon {
+  width: 56px; height: 56px; border-radius: 14px;
+  background: rgba(59,130,246,0.18); border: 1px solid rgba(59,130,246,0.35);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; color: #60a5fa; margin-bottom: 20px; transition: opacity 0.3s ease;
+}
+.stage-eyebrow { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #93c5fd; margin-bottom: 8px; }
+.stage-nombre { font-family: var(--font-serif); font-size: 2rem; font-weight: 400; margin-bottom: 14px; transition: opacity 0.3s ease; }
+.stage-detalle { font-size: 0.87rem; line-height: 1.7; color: rgba(255,255,255,0.75); max-width: 400px; margin-bottom: 24px; transition: opacity 0.3s ease; }
+.stage-btn {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
+  background: transparent; border: 1.5px solid #c9a84c; color: #e8d9ae;
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 12px 24px; border-radius: 9px; text-decoration: none; transition: background 0.2s, color 0.2s;
+}
+.stage-btn:hover { background: #c9a84c; color: #0f172a; }
+
+/* Tarjetas apiladas — mismos valores que el ejemplo: 220x320, translateY(-50%), radius 20, sombra con reflejo */
+.carousel-item {
+  position: absolute;
+  top: 50%; right: 40px;
+  width: 210px; height: 300px;
+  transform: translateY(-50%);
+  border-radius: 20px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  padding: 18px 14px; text-align: center;
+  transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: 1; overflow: hidden;
+}
+.carousel-item.activa { opacity: 0; pointer-events: none; transform: translateY(-50%) scale(0.9); }
+.item-icon { width: 42px; height: 42px; border-radius: 11px; background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; font-size: 19px; color: #fff; margin-bottom: 10px; }
+.item-nombre { font-size: 0.76rem; font-weight: 600; color: #fff; }
+
+/* Flechas y puntos */
+.stage-controls { position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; align-items: center; justify-content: center; gap: 16px; z-index: 3; }
+.carousel-arrow {
+  width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: background 0.2s;
+}
+.carousel-arrow:hover { background: rgba(255,255,255,0.2); }
+.carousel-dots { display: flex; gap: 7px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.25); cursor: pointer; transition: background 0.2s, transform 0.2s; }
+.dot.activa { background: #c9a84c; transform: scale(1.3); }
+
+@media (max-width: 820px) {
+  .carousel-stage { height: auto; min-height: 520px; }
+  .stage-content { position: static; width: 100%; padding: 32px 24px 200px; }
+  .carousel-item { width: 130px; height: 180px; }
+}
+</style>
+
+<script>
+const MODULOS = <%- JSON.stringify(modulos) %>;
+let moduloActual = 0;
+
+function actualizarPosiciones() {
+  const total = MODULOS.length;
+  MODULOS.forEach((m, i) => {
+    const el = document.querySelector(`.carousel-item[data-index="${i}"]`);
+    if (!el) return;
+    let offset = i - moduloActual;
+    if (offset < 0) offset += total;
+
+    if (offset === 0) {
+      el.classList.add('activa');
+      el.style.zIndex = 1;
+    } else {
+      el.classList.remove('activa');
+      const paso = 150;
+      el.style.right = (40 + (offset - 1) * paso) + 'px';
+      el.style.zIndex = String(10 - offset);
+      const visible = offset <= 3;
+      el.style.opacity = visible ? String(1 - (offset - 1) * 0.18) : '0';
+      el.style.pointerEvents = visible ? 'auto' : 'none';
+      el.style.transform = `translateY(-50%) scale(${1 - (offset - 1) * 0.06})`;
+    }
+  });
+}
+
+function seleccionarModulo(i) {
+  const m = MODULOS[i];
+  if (!m) return;
+  moduloActual = i;
+
+  document.querySelectorAll('.dot').forEach(d => d.classList.remove('activa'));
+  document.querySelector(`.dot[data-index="${i}"]`).classList.add('activa');
+
+  const icon    = document.getElementById('slideIcon');
+  const nombre  = document.getElementById('slideNombre');
+  const detalle = document.getElementById('slideDetalle');
+  const btn     = document.getElementById('slideBtn');
+
+  [icon, nombre, detalle].forEach(el => el.style.opacity = '0');
+  setTimeout(() => {
+    icon.innerHTML = `<i class="ti ${m.icon}"></i>`;
+    nombre.textContent  = m.nombre;
+    detalle.textContent = m.detalle;
+    btn.href = m.href;
+    [icon, nombre, detalle].forEach(el => el.style.opacity = '1');
+  }, 200);
+
+  actualizarPosiciones();
+}
+
+function pasoModulo(dir) {
+  let i = moduloActual + dir;
+  if (i < 0) i = MODULOS.length - 1;
+  if (i >= MODULOS.length) i = 0;
+  seleccionarModulo(i);
+}
+
+actualizarPosiciones();
+</script>
 </body>
 </html>

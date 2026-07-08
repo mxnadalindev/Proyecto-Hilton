@@ -1,24 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
 
 :root {
-  --blanco:      #ffffff;
-  --gris-fondo:  #f4f6f9;
-  --gris-borde:  #e2e8f0;
-  --gris-texto:  #64748b;
-  --negro:       #1a202c;
-  --azul:        #2563eb;
-  --azul-hover:  #1d4ed8;
-  --azul-claro:  #eff6ff;
-  --azul-borde:  #bfdbfe;
-  --dorado:      #b8860b;
-  --rojo:        #dc2626;
-  --rojo-claro:  #fef2f2;
-  --rojo-borde:  #fecaca;
+  --blanco:      #1c2942;
+  --gris-fondo:  #0f172a;
+  --gris-borde:  #33415c;
+  --gris-texto:  #94a3b8;
+  --negro:       #f1f5f9;
+  --azul:        #3b82f6;
+  --azul-hover:  #60a5fa;
+  --azul-claro:  rgba(59,130,246,0.16);
+  --azul-borde:  rgba(59,130,246,0.4);
+  --dorado:      #d4af6a;
+  --rojo:        #f87171;
+  --rojo-claro:  rgba(248,113,113,0.12);
+  --rojo-borde:  rgba(248,113,113,0.4);
   --font-serif:  'Cormorant Garamond', Georgia, serif;
   --font-sans:   'Montserrat', sans-serif;
   --tr:          0.25s ease;
-  --sombra:      0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --sombra-md:   0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+  --sombra:      0 1px 3px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.25);
+  --sombra-md:   0 4px 10px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3);
 
   /* Altura del header y nav para cálculos de padding */
   --header-h:    60px;
@@ -29,6 +29,10 @@
 html { font-size: 16px; scroll-behavior: smooth; }
 body {
   background: var(--gris-fondo);
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(59,130,246,0.10) 0%, transparent 45%),
+    radial-gradient(circle at 90% 85%, rgba(201,168,76,0.06) 0%, transparent 45%);
+  background-attachment: fixed;
   color: var(--negro);
   font-family: var(--font-sans);
   font-weight: 400;

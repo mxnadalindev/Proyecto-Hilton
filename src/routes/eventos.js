@@ -3,6 +3,23 @@ const router = express.Router();
 const db = require('../db/database');
 const { loginRequerido } = require('./middleware');
 
+// Trae todos los menús con sus platos ya cargados (para los selectores de "menú completo")
+async function getMenusConPlatos() {
+  const menus = await db.all2("SELECT * FROM menus ORDER BY nombre");
+  const resultado = [];
+  for (const m of menus) {
+    const platosDelMenu = await db.all2(`
+      SELECT mp.id as menu_plato_id, mp.cantidad_porciones,
+             p.id as plato_id, p.nombre, p.costo_total, p.porciones as porciones_base
+      FROM menu_platos mp JOIN platos_costo p ON mp.plato_id = p.id
+      WHERE mp.menu_id = $1
+      ORDER BY p.nombre
+    `, [m.id]);
+    resultado.push({ ...m, platos: platosDelMenu });
+  }
+  return resultado;
+}
+
 router.get('/', loginRequerido, async (req, res) => {
   const eventos = await db.all2(`
     SELECT e.*, u.nombre as creador FROM eventos e
@@ -16,7 +33,8 @@ router.get('/nuevo', loginRequerido, async (req, res) => {
   const personal       = await db.all2("SELECT id,nombre,rol FROM usuarios WHERE activo=1 ORDER BY nombre");
   const recetas        = await db.all2("SELECT id,nombre FROM recetas ORDER BY nombre");
   const platosConCosto = await db.all2("SELECT id,nombre,costo_total,porciones FROM platos_costo WHERE costo_total>0 ORDER BY nombre");
-  res.render('evento_nuevo', { personal, recetas, platosConCosto, path: 'eventos' });
+  const menus           = await getMenusConPlatos();
+  res.render('evento_nuevo', { personal, recetas, platosConCosto, menus, path: 'eventos' });
 });
 
 router.post('/nuevo', loginRequerido, async (req, res) => {
@@ -67,6 +85,84 @@ router.post('/nuevo', loginRequerido, async (req, res) => {
   }
 });
 
+// ── Menús (grupos de platos reutilizables) ─────────────
+// IMPORTANTE: estas rutas van antes de "/:id" para que Express no confunda "/menus" con un id de evento.
+
+router.get('/menus', loginRequerido, async (req, res) => {
+  const menus = await getMenusConPlatos();
+  res.render('menus', { menus, path: 'eventos' });
+});
+
+router.get('/menus/nuevo', loginRequerido, async (req, res) => {
+  const platosConCosto = await db.all2("SELECT id,nombre,costo_total,porciones FROM platos_costo WHERE costo_total>0 ORDER BY nombre");
+  res.render('menu_nuevo', { platosConCosto, path: 'eventos' });
+});
+
+router.post('/menus/nuevo', loginRequerido, async (req, res) => {
+  try {
+    const { nombre, descripcion } = req.body;
+    let platoIds = req.body.platos || [];
+    if (!Array.isArray(platoIds)) platoIds = [platoIds];
+
+    const menu = await db.get2(
+      "INSERT INTO menus (nombre, descripcion) VALUES ($1,$2) RETURNING id",
+      [nombre, descripcion || null]
+    );
+    for (const pid of platoIds) {
+      await db.run2("INSERT INTO menu_platos (menu_id, plato_id) VALUES ($1,$2)", [menu.id, parseInt(pid)]);
+    }
+    res.redirect('/eventos/menus/' + menu.id);
+  } catch (e) {
+    console.error('Error creando menú:', e.message);
+    res.redirect('/eventos/menus');
+  }
+});
+
+router.get('/menus/:id', loginRequerido, async (req, res) => {
+  const menu = await db.get2("SELECT * FROM menus WHERE id=$1", [req.params.id]);
+  if (!menu) return res.redirect('/eventos/menus');
+  const platosDelMenu = await db.all2(`
+    SELECT mp.id as menu_plato_id, mp.cantidad_porciones,
+           p.id as plato_id, p.nombre, p.costo_total, p.porciones as porciones_base
+    FROM menu_platos mp JOIN platos_costo p ON mp.plato_id = p.id
+    WHERE mp.menu_id = $1
+    ORDER BY p.nombre
+  `, [req.params.id]);
+  const todosPlatos = await db.all2("SELECT id,nombre,costo_total,porciones FROM platos_costo WHERE costo_total>0 ORDER BY nombre");
+  res.render('menu_detalle', { menu, platosDelMenu, todosPlatos, path: 'eventos' });
+});
+
+router.post('/menus/:id/plato', loginRequerido, async (req, res) => {
+  try {
+    const { plato_id } = req.body;
+    if (plato_id) {
+      const yaExiste = await db.get2(
+        "SELECT id FROM menu_platos WHERE menu_id=$1 AND plato_id=$2",
+        [req.params.id, plato_id]
+      );
+      if (!yaExiste) {
+        await db.run2("INSERT INTO menu_platos (menu_id, plato_id) VALUES ($1,$2)", [req.params.id, parseInt(plato_id)]);
+      }
+    }
+  } catch (e) {
+    console.error('Error agregando plato al menú:', e.message);
+  }
+  res.redirect('/eventos/menus/' + req.params.id);
+});
+
+router.post('/menus/:menu_id/plato/:id/eliminar', loginRequerido, async (req, res) => {
+  await db.run2("DELETE FROM menu_platos WHERE id=$1", [req.params.id]);
+  res.redirect('/eventos/menus/' + req.params.menu_id);
+});
+
+router.post('/menus/:id/eliminar', loginRequerido, async (req, res) => {
+  await db.run2("DELETE FROM menu_platos WHERE menu_id=$1", [req.params.id]);
+  await db.run2("DELETE FROM menus WHERE id=$1", [req.params.id]);
+  res.redirect('/eventos/menus');
+});
+
+// ── Detalle de un evento ────────────────────────────────
+
 router.get('/:id', loginRequerido, async (req, res) => {
   const evento  = await db.get2(`SELECT e.*,u.nombre as creador FROM eventos e LEFT JOIN usuarios u ON e.creado_por=u.id WHERE e.id=$1`, [req.params.id]);
   if (!evento) return res.redirect('/eventos');
@@ -74,7 +170,8 @@ router.get('/:id', loginRequerido, async (req, res) => {
   const personal = await db.all2(`SELECT u.nombre,u.rol FROM evento_personal ep JOIN usuarios u ON ep.usuario_id=u.id WHERE ep.evento_id=$1`, [req.params.id]);
   const vajilla  = await db.all2("SELECT * FROM evento_vajilla WHERE evento_id=$1", [req.params.id]);
   const platosConCosto = await db.all2("SELECT id,nombre,costo_total,porciones FROM platos_costo WHERE costo_total>0 ORDER BY nombre");
-  res.render('evento_detalle', { evento, platos, personal, vajilla, platosConCosto, path: 'eventos' });
+  const menus           = await getMenusConPlatos();
+  res.render('evento_detalle', { evento, platos, personal, vajilla, platosConCosto, menus, path: 'eventos' });
 });
 
 // Agrega un plato al menú de un evento ya creado (elegido de Costos o cargado a mano)
@@ -92,6 +189,33 @@ router.post('/:id/plato', loginRequerido, async (req, res) => {
     await recalcularCostoEvento(req.params.id);
   } catch (e) {
     console.error('Error agregando plato al evento:', e.message);
+  }
+  res.redirect('/eventos/' + req.params.id);
+});
+
+// Agrega TODOS los platos de un menú de una sola vez a un evento ya creado
+router.post('/:id/menu', loginRequerido, async (req, res) => {
+  try {
+    const { menu_id } = req.body;
+    const platosDelMenu = await db.all2(`
+      SELECT p.nombre, p.costo_total, p.porciones, mp.cantidad_porciones
+      FROM menu_platos mp JOIN platos_costo p ON mp.plato_id = p.id
+      WHERE mp.menu_id = $1
+    `, [menu_id]);
+
+    for (const p of platosDelMenu) {
+      const porcionesBase = p.porciones || 1;
+      const porciones = p.cantidad_porciones || porcionesBase;
+      const costoPorcion = parseFloat(p.costo_total) / porcionesBase;
+      const subtotal = porciones * costoPorcion;
+      await db.run2(
+        "INSERT INTO evento_platos (evento_id,plato_nombre,cantidad_porciones,costo_porcion,subtotal) VALUES ($1,$2,$3,$4,$5)",
+        [req.params.id, p.nombre, porciones, costoPorcion, subtotal]
+      );
+    }
+    await recalcularCostoEvento(req.params.id);
+  } catch (e) {
+    console.error('Error agregando menú al evento:', e.message);
   }
   res.redirect('/eventos/' + req.params.id);
 });

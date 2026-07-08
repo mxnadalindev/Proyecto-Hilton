@@ -83,9 +83,24 @@
     <div class="form-card">
       <p class="form-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Platos del menú</p>
 
+      <% if (menus.length > 0) { %>
+      <div class="field" style="margin-bottom:12px;">
+        <label>Cargar un menú completo</label>
+        <select id="menu-select" onchange="cargarMenuCompleto()">
+          <option value="">— Seleccionar un menú —</option>
+          <% menus.forEach(m => { %>
+          <option value="<%= m.id %>"><%= m.nombre %> (<%= m.platos.length %> plato<%= m.platos.length !== 1 ? 's' : '' %>)</option>
+          <% }) %>
+        </select>
+        <p style="font-size:0.68rem;color:var(--gris-texto);margin-top:6px;">
+          Agrega de una todos los platos que ya tiene asignados ese menú.
+        </p>
+      </div>
+      <% } %>
+
       <% if (platosConCosto.length > 0) { %>
       <div class="field" style="margin-bottom:12px;">
-        <label>Elegir plato ya cargado en Costos</label>
+        <label>O elegir un plato suelto ya cargado en Costos</label>
         <select id="plato-select" onchange="elegirPlatoCargado()">
           <option value="">— Seleccionar —</option>
           <% platosConCosto.forEach(p => { %>
@@ -244,6 +259,32 @@
 // ── Estado ──────────────────────────────────────────
 let platos = [];
 let vajilla = [];
+
+// Datos de los menús (nombre, porciones y costo de cada plato que los compone),
+// para poder agregarlos todos de una sin ir al servidor.
+const MENUS = <%- JSON.stringify(menus.map(m => ({
+  id: m.id,
+  platos: m.platos.map(p => ({
+    nombre: p.nombre,
+    porciones: p.cantidad_porciones || p.porciones_base || 1,
+    costo: p.porciones_base ? (parseFloat(p.costo_total) / p.porciones_base) : 0
+  }))
+}))) %>;
+
+function cargarMenuCompleto() {
+  const sel = document.getElementById('menu-select');
+  const menuId = parseInt(sel.value);
+  if (!menuId) return;
+  const menu = MENUS.find(m => m.id === menuId);
+  if (!menu) return;
+  menu.platos.forEach(p => {
+    const subtotal = p.porciones * p.costo;
+    platos.push({ nombre: p.nombre, porciones: p.porciones, costo: p.costo, subtotal });
+  });
+  sel.value = '';
+  renderPlatos();
+  actualizarCosto();
+}
 
 // ── Platos ──────────────────────────────────────────
 function elegirPlatoCargado() {

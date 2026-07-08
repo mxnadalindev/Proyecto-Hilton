@@ -130,18 +130,19 @@
           <i class="ti ti-package"></i> Insumos / ingredientes
         </p>
 
-        <form method="GET" action="/costos" style="margin-bottom:12px;">
-          <div style="position:relative;">
-            <i class="ti ti-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
+        <div class="search-orbe <%= buscar ? 'despierto' : '' %>" id="orbeInsumo" onclick="despertarBuscador(this)">
+          <div class="search-orbe-ring"></div>
+          <form method="GET" action="/costos" class="search-orbe-form">
+            <i class="ti ti-search search-orbe-icon" aria-hidden="true"></i>
             <input type="text" name="buscar" value="<%= buscar %>" placeholder="Buscar insumo por nombre o código..."
-                   style="width:100%;padding:9px 12px 9px 36px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);">
+                   class="search-orbe-input"
+                   onfocus="this.closest('.search-orbe').classList.add('despierto')"
+                   onblur="cerrarBuscadorSiVacio(this)">
             <% if (buscar) { %>
-            <a href="/costos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:16px;">
-              <i class="ti ti-x"></i>
-            </a>
+            <a href="/costos" title="Limpiar búsqueda" class="search-orbe-clear" onclick="event.stopPropagation()"><i class="ti ti-x"></i></a>
             <% } %>
-          </div>
-        </form>
+          </form>
+        </div>
 
         <% if (buscar) { %>
           <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;">
@@ -226,18 +227,19 @@
           <i class="ti ti-tools-kitchen-2"></i> Costeo de platos
         </p>
 
-        <form method="GET" action="/costos" style="margin-bottom:12px;">
-          <div style="position:relative;">
-            <i class="ti ti-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
+        <div class="search-orbe <%= buscarPlato ? 'despierto' : '' %>" id="orbePlato" onclick="despertarBuscador(this)">
+          <div class="search-orbe-ring"></div>
+          <form method="GET" action="/costos" class="search-orbe-form">
+            <i class="ti ti-search search-orbe-icon" aria-hidden="true"></i>
             <input type="text" name="buscarPlato" value="<%= buscarPlato %>" placeholder="Buscar plato por nombre..."
-                   style="width:100%;padding:9px 12px 9px 36px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);">
+                   class="search-orbe-input"
+                   onfocus="this.closest('.search-orbe').classList.add('despierto')"
+                   onblur="cerrarBuscadorSiVacio(this)">
             <% if (buscarPlato) { %>
-            <a href="/costos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:16px;">
-              <i class="ti ti-x"></i>
-            </a>
+            <a href="/costos" title="Limpiar búsqueda" class="search-orbe-clear" onclick="event.stopPropagation()"><i class="ti ti-x"></i></a>
             <% } %>
-          </div>
-        </form>
+          </form>
+        </div>
 
         <% if (buscarPlato) { %>
           <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;">
@@ -418,6 +420,50 @@
 </div>
 
 <style>
+/* ── Buscador "orbe" navy: círculo chico que se despierta y expande, con anillo de brillo ── */
+.search-orbe{
+  position:relative;
+  width:40px; height:40px;
+  border-radius:999px;
+  cursor:pointer;
+  margin-bottom:12px;
+  transition: width .58s cubic-bezier(.22,1,.36,1);
+}
+.search-orbe.despierto{ width:100%; }
+
+.search-orbe-ring{
+  position:absolute; inset:-2px; border-radius:999px;
+  background:conic-gradient(from 0deg, #1d4ed8, #60a5fa, #93c5fd, #1d4ed8);
+  opacity:0; z-index:0;
+  animation: orbeSpin 4s linear infinite;
+  transition: opacity .35s ease;
+}
+.search-orbe.despierto .search-orbe-ring{ opacity:1; box-shadow:0 0 28px rgba(59,130,246,0.35); }
+@keyframes orbeSpin{ from{ transform:rotate(0deg);} to{ transform:rotate(360deg);} }
+
+.search-orbe-form{
+  position:relative; z-index:1;
+  display:flex; align-items:center; gap:8px;
+  width:100%; height:40px;
+  background:#0f172a; border-radius:999px;
+  padding:0 12px; margin:2px 0 0 0;
+  box-sizing:border-box;
+  overflow:hidden;
+}
+.search-orbe-icon{ color:#93c5fd; font-size:15px; flex-shrink:0; }
+.search-orbe-input{
+  flex:1; min-width:0;
+  background:transparent; border:none; outline:none;
+  color:#fff; font-family:var(--font-sans); font-size:0.82rem;
+  opacity:0; transition:opacity .3s ease .15s;
+}
+.search-orbe.despierto .search-orbe-input{ opacity:1; }
+.search-orbe-input::placeholder{ color:rgba(255,255,255,0.4); }
+.search-orbe-clear{ color:rgba(255,255,255,0.5); flex-shrink:0; display:flex; opacity:0; transition:opacity .2s ease .2s; }
+.search-orbe.despierto .search-orbe-clear{ opacity:1; }
+</style>
+
+<style>
 .main-content-ancho{max-width:1600px;}
 .puesto-badge{font-size:0.68rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:2px 8px;border-radius:20px;}
 .field{margin-bottom:0;}
@@ -469,6 +515,20 @@
 </style>
 
 <script>
+function despertarBuscador(el) {
+  if (el.classList.contains('despierto')) return;
+  el.classList.add('despierto');
+  const input = el.querySelector('.search-orbe-input');
+  setTimeout(() => input.focus(), 150);
+}
+
+function cerrarBuscadorSiVacio(input) {
+  if (!input.value.trim()) {
+    setTimeout(() => {
+      input.closest('.search-orbe').classList.remove('despierto');
+    }, 150);
+  }
+}
 function showModal(id){
   document.getElementById(id).style.display='flex';
   setTimeout(()=>{const f=document.querySelector('#'+id+' input:not([type=hidden])');if(f)f.focus();},100);
