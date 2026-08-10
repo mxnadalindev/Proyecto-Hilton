@@ -1,24 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
 
 :root {
-  --blanco:      #1c2942;
-  --gris-fondo:  #0f172a;
-  --gris-borde:  #33415c;
-  --gris-texto:  #94a3b8;
-  --negro:       #f1f5f9;
-  --azul:        #3b82f6;
-  --azul-hover:  #60a5fa;
-  --azul-claro:  rgba(59,130,246,0.16);
-  --azul-borde:  rgba(59,130,246,0.4);
-  --dorado:      #d4af6a;
-  --rojo:        #f87171;
-  --rojo-claro:  rgba(248,113,113,0.12);
-  --rojo-borde:  rgba(248,113,113,0.4);
+  --blanco:      #ffffff;
+  --gris-fondo:  #f0e9e6;
+  --gris-borde:  #e0d9d5;
+  --gris-texto:  #5c6068;
+  --negro:       #000000;
+  --azul:        #06937e;
+  --azul-hover:  #057a68;
+  --azul-claro:  rgba(6,147,126,0.10);
+  --azul-borde:  rgba(6,147,126,0.35);
+  --dorado:      #6bb030;
+  --navy:        #002f61;
+  --teal:        #007293;
+  --rojo:        #dc2626;
+  --rojo-claro:  #fef2f2;
+  --rojo-borde:  #fecaca;
   --font-serif:  'Cormorant Garamond', Georgia, serif;
   --font-sans:   'Montserrat', sans-serif;
   --tr:          0.25s ease;
-  --sombra:      0 1px 3px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.25);
-  --sombra-md:   0 4px 10px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3);
+  --sombra:      0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --sombra-md:   0 4px 10px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
 
   /* Altura del header y nav para cálculos de padding */
   --header-h:    60px;
@@ -29,21 +31,19 @@
 html { font-size: 16px; scroll-behavior: smooth; }
 body {
   background: var(--gris-fondo);
-  background-image:
-    radial-gradient(circle at 12% 8%, rgba(59,130,246,0.10) 0%, transparent 45%),
-    radial-gradient(circle at 90% 85%, rgba(201,168,76,0.06) 0%, transparent 45%);
-  background-attachment: fixed;
   color: var(--negro);
   font-family: var(--font-sans);
   font-weight: 400;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--gris-fondo); }
+::-webkit-scrollbar-thumb { background: var(--azul-borde); border-radius: 3px; }
 
-/* Red de seguridad: cualquier input/select/textarea que en algún formulario
-   se haya quedado sin "color:" explícito, igual va a leerse bien sobre el
-   fondo navy — sin esto, el navegador usa negro por defecto y el texto que
-   escribís queda invisible. */
+/* Red de seguridad: cualquier input/select/textarea sin "color:" explícito
+   igual se lee bien — sin esto, el navegador podría usar un color por
+   defecto poco legible según el fondo. */
 input, select, textarea {
   color: var(--negro);
 }
@@ -51,9 +51,6 @@ input::placeholder, textarea::placeholder {
   color: var(--gris-texto);
   opacity: 1;
 }
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: var(--gris-fondo); }
-::-webkit-scrollbar-thumb { background: var(--azul-borde); border-radius: 3px; }
 
 /* ══════════════════════════════
    EFECTO MONEDA
@@ -707,4 +704,69 @@ input::placeholder, textarea::placeholder {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
+}
+
+/* ══════════════════════════════════════════════════════════
+   BREAKPOINTS ESPECÍFICOS
+   Mobile-S 320 / Mobile-M 375 / Mobile-L 425 / Tablet 768 /
+   Laptop 1024 / Laptop-L 1440
+   Mobile-first: cada bloque agrega desde ese ancho hacia arriba.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Base mobile (320px en adelante): todo lo más chico y apilado ── */
+@media (max-width: 767px) {
+  html { font-size: 15px; }
+  .main-content { padding-left: 14px; padding-right: 14px; }
+  .precios-grid,
+  .precios-grid-3 { grid-template-columns: 1fr !important; }
+  .platos-grid { grid-template-columns: 1fr !important; }
+  .menus-grid { grid-template-columns: 1fr !important; }
+  .carousel-stage { height: auto !important; }
+}
+
+/* ── Mobile-S (320–374px): el más angosto, todo a una sola columna ── */
+@media (max-width: 374px) {
+  html { font-size: 13.5px; }
+  .main-content { padding-left: 10px; padding-right: 10px; }
+  .inicio-grid,
+  .inicio-grid-5 { grid-template-columns: 1fr !important; }
+  .seccion-titulo { font-size: 1.3rem !important; }
+  .card-nombre { font-size: 1rem !important; }
+  .btn-primary, .btn-secondary { padding: 10px 12px !important; font-size: 0.66rem !important; }
+  .tabla th, .tabla td { padding: 8px 8px !important; font-size: 0.72rem !important; }
+}
+
+/* ── Mobile-M (375–424px) ── */
+@media (min-width: 375px) and (max-width: 424px) {
+  html { font-size: 14.5px; }
+}
+
+/* ── Mobile-L (425–767px): un poco más de aire, 2 columnas donde entra ── */
+@media (min-width: 425px) and (max-width: 767px) {
+  html { font-size: 15px; }
+  .inicio-grid,
+  .inicio-grid-5 { grid-template-columns: 1fr 1fr !important; }
+}
+
+/* ── Tablet (768–1023px): intermedio, ni mobile apilado ni desktop completo ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .main-content { max-width: 100% !important; padding: 32px 28px; }
+  .inicio-grid { grid-template-columns: repeat(3, 1fr) !important; max-width: 100% !important; }
+  .inicio-grid-5 { grid-template-columns: repeat(3, 1fr) !important; max-width: 100% !important; }
+  .precios-grid-3 { grid-template-columns: 1fr 1fr !important; }
+  .content-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important; }
+  .carousel-stage .stage-content { width: 58% !important; }
+  /* En tablet la tabla ancha (ej. Horarios) sigue con scroll horizontal propio */
+  .tabla-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* ── Laptop (1024–1439px): desktop estándar ── */
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .main-content { max-width: 1100px; }
+}
+
+/* ── Laptop-L (1440px en adelante): más ancho, más aire ── */
+@media (min-width: 1440px) {
+  .main-content { max-width: 1320px; }
+  .precios-grid-3 { gap: 22px; }
 }

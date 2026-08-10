@@ -15,16 +15,14 @@
     :root {
       --navy: #0f172a; --navy-800: #1e293b; --navy-700: #334155; --navy-600: #475569;
       --slate-400: #94a3b8; --slate-200: #e2e8f0; --slate-100: #f1f5f9; --white: #ffffff;
-      --accent: #3b82f6; --accent-h: #2563eb; --accent-l: #dbeafe;
-      --gold: #c9a84c; --error: #ef4444; --error-l: #fef2f2; --success: #22c55e;
+      --accent: #06937e; --accent-h: #057a68; --accent-l: #d9f0ec;
+      --gold: #6bb030; --error: #ef4444; --error-l: #fef2f2; --success: #22c55e;
       --tr: 0.2s ease; --tr-slide: 0.7s cubic-bezier(.77,0,.18,1);
     }
     html, body { height: 100%; }
     body {
       font-family: 'Inter', system-ui, sans-serif; font-size: 15px; color: var(--navy);
-      min-height: 100vh; background: var(--navy);
-      background-image: radial-gradient(circle at 15% 10%, rgba(59,130,246,0.18) 0%, transparent 45%),
-                         radial-gradient(circle at 85% 90%, rgba(201,168,76,0.12) 0%, transparent 45%);
+      min-height: 100vh; background: #ffffff;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 32px 16px;
     }
@@ -100,7 +98,7 @@
     .auth-overlay {
       position: absolute; top: 0; height: 100%; width: 46%;
       left: 54%;
-      background: linear-gradient(135deg, var(--navy) 0%, var(--accent-h) 100%);
+      background: linear-gradient(135deg, #054338 0%, var(--accent-h) 100%);
       clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%);
       transition: left var(--tr-slide), clip-path var(--tr-slide);
       z-index: 5; color: #fff; overflow: hidden;

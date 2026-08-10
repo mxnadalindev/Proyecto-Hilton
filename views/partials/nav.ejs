@@ -37,13 +37,14 @@
 </header>
 
 <style>
-/* ── Barra de navegación tipo "pill" navy, íconos que se expanden con label ── */
+/* ── Barra de navegación tipo "pill", navy sobre fondo claro, resaltado verde ── */
 .nav-pill{
   display:flex; align-items:center; gap:5px;
-  background:#0f172a;
+  background:var(--blanco);
+  border:1px solid var(--gris-borde);
   border-radius:999px;
   padding:5px;
-  box-shadow:0 10px 30px rgba(15,23,42,0.28);
+  box-shadow:var(--sombra);
 }
 .nav-item{
   display:flex; align-items:center; gap:0.65rem;
@@ -51,7 +52,7 @@
   padding:0 0 0 11px;
   overflow:hidden;
   border-radius:999px;
-  color:rgba(255,255,255,0.68);
+  color:var(--navy);
   text-decoration:none;
   flex-shrink:0;
   transition:
@@ -64,13 +65,13 @@
 .nav-item:hover,
 .nav-item.activo{
   width:148px;
-  background:rgba(59,130,246,0.22);
-  box-shadow:0 0 22px rgba(59,130,246,0.4);
+  background:var(--azul);
+  box-shadow:0 0 16px rgba(6,147,126,0.5);
   color:#fff;
 }
 .nav-item-salir:hover{
-  background:rgba(220,38,38,0.22);
-  box-shadow:0 0 22px rgba(220,38,38,0.35);
+  background:rgba(220,38,38,0.85);
+  box-shadow:0 0 16px rgba(220,38,38,0.4);
 }
 .nav-label{
   opacity:0; max-width:0; white-space:nowrap;
