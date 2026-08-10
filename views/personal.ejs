@@ -35,7 +35,7 @@
     </div>
 
     <!-- Selector de rango con calendario -->
-    <div style="background:#fff;border:1px solid var(--gris-borde);border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:var(--sombra);display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
+    <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:var(--sombra);display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
 
       <!-- Calendario -->
       <div id="cal-container" style="min-width:280px;">
@@ -59,7 +59,7 @@
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <% const leyenda = [{v:'OFF',c:'#fbbf24'},{v:'VAC',c:'#ef4444'},{v:'RECOFF',c:'#22c55e'},{v:'FERIADO',c:'#dc2626'},{v:'LICENCIA',c:'#ec4899'},{v:'CUMPLE',c:'#a855f7'},{v:'MUDANZA',c:'#fb923c'},{v:'FRANCO',c:'#64748b'}]; %>
           <% leyenda.forEach(l => { %>
-          <span style="font-size:0.65rem;font-weight:700;background:<%= l.c %>33;border:1px solid <%= l.c %>;color:#1e293b;padding:1px 7px;border-radius:20px;"><%= l.v %></span>
+          <span style="font-size:0.65rem;font-weight:700;background:<%= l.c %>40;border:1px solid <%= l.c %>;color:#fff;padding:3px 11px;border-radius:20px;"><%= l.v %></span>
           <% }) %>
         </div>
       </div>
@@ -70,7 +70,7 @@
       <div style="position:relative;flex:1;min-width:200px;max-width:300px;">
         <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
         <input type="text" id="buscadorPersonal" placeholder="Buscar por nombre..." oninput="buscarPersonal()"
-               style="width:100%;padding:8px 12px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);">
+               style="width:100%;padding:8px 12px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
       </div>
       <label style="font-size:0.75rem;color:var(--gris-texto);display:flex;align-items:center;gap:6px;cursor:pointer;">
         <input type="checkbox" id="mostrarInactivos" onchange="filtrarPersonal()" style="accent-color:var(--azul);width:16px;height:16px;">
@@ -152,11 +152,11 @@
                            value="<%= _horaDia %>" placeholder="Hs" maxlength="6" <%= _esEstadoDia ? 'disabled' : '' %>
                            style="width:64px;padding:2px 4px;border:1px solid var(--gris-borde);border-radius:5px;font-size:0.6rem;font-family:var(--font-sans);outline:none;text-align:center;background:<%= _esEstadoDia ? '#f1f5f9' : 'var(--gris-fondo)' %>;color:var(--negro);">
                     <select class="sel-estado-<%= p.id %> sel-dia-estado" data-fecha="<%= dia %>" onchange="onCambioEstadoDia(this, <%= p.id %>)"
-                            style="background-color:<%= _bgDia ? _bgDia+'33' : 'var(--gris-fondo)' %>;color:var(--negro);font-weight:<%= _bgDia ? '700' : '400' %>;">
-                      <option value="" style="background:#fff;color:#1e293b;">Normal</option>
+                            style="background-color:<%= _bgDia ? _bgDia+'40' : 'var(--gris-fondo)' %>;border:1px solid <%= _bgDia ? _bgDia : 'var(--gris-borde)' %>;color:<%= _bgDia ? '#fff' : 'var(--negro)' %>;font-weight:<%= _bgDia ? '700' : '400' %>;">
+                      <option value="" style="background:var(--blanco);color:var(--negro);">Normal</option>
                       <% ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA','FRANCO'].forEach(e => { %>
                       <option value="<%= e %>" <%= _valDia === e ? 'selected' : '' %>
-                              style="background:<%= bgEstados[e] %>33;color:#1e293b;font-weight:700;"><%= e %></option>
+                              style="background:<%= bgEstados[e] %>40;color:#fff;font-weight:700;"><%= e %></option>
                       <% }) %>
                     </select>
                   </label>
@@ -306,7 +306,7 @@
       <div class="field" style="margin-bottom:8px;">
         <label style="display:block;font-size:0.68rem;font-weight:500;margin-bottom:6px;">Nueva contraseña</label>
         <div style="position:relative;display:flex;align-items:center;">
-          <input type="password" name="password_nuevo" id="input-nuevo-pass" minlength="8" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 44px 10px 12px;font-family:var(--font-sans);font-size:0.85rem;outline:none;">
+          <input type="password" name="password_nuevo" id="input-nuevo-pass" minlength="8" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 44px 10px 12px;font-family:var(--font-sans);font-size:0.85rem;outline:none;color:var(--negro);">
           <button type="button" onclick="toggleResetPass()" style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:var(--gris-texto);font-size:16px;"><i class="ti ti-eye" id="eyeReset"></i></button>
         </div>
       </div>
@@ -565,7 +565,9 @@ function onCambioEstadoDia(sel, uid) {
     }
   }
   const bg = bgEstados[sel.value] || '';
-  sel.style.backgroundColor = bg ? bg + '33' : 'var(--gris-fondo)';
+  sel.style.backgroundColor = bg ? bg + '40' : 'var(--gris-fondo)';
+  sel.style.borderColor = bg ? bg : 'var(--gris-borde)';
+  sel.style.color = bg ? '#fff' : 'var(--negro)';
   sel.style.fontWeight = bg ? '700' : '400';
 
   // Habilita/deshabilita el campo de hora de ese mismo día según si tiene estado especial o no

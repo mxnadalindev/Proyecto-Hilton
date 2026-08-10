@@ -43,7 +43,7 @@
     </div>
 
     <%# Navegación %>
-    <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--gris-borde);border-radius:12px;padding:14px 20px;margin-bottom:20px;box-shadow:var(--sombra);">
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:14px 20px;margin-bottom:20px;box-shadow:var(--sombra);">
       <a href="/horarios?inicio=<%= rangoAnterior.inicio %>&fin=<%= rangoAnterior.fin %>" class="btn-secondary" style="padding:6px 14px;">
         <i class="ti ti-chevron-left"></i> Período anterior
       </a>
@@ -128,11 +128,11 @@
                 const esE = ESTADOS.includes(val.toUpperCase());
                 const bg = {OFF:'#fbbf24',VAC:'#ef4444',RECOFF:'#22c55e',FERIADO:'#ef4444',LICENCIA:'#ec4899',CUMPLE:'#a855f7',MUDANZA:'#fb923c'}[val.toUpperCase()]||'';
               %>
-              <td style="padding:2px 4px;text-align:center;background:<%= bg?bg+'22':'' %>;">
+              <td style="padding:2px 4px;text-align:center;">
                 <input type="text" class="celda-horario"
                   data-uid="<%= emp.id %>" data-fecha="<%= dia %>"
                   value="<%= val %>" maxlength="10"
-                  style="width:80px;text-align:center;border:1px solid transparent;border-radius:6px;padding:4px;font-size:0.78rem;font-family:var(--font-sans);background:<%= bg?bg+'33':'transparent' %>;font-weight:<%= esE?'700':'500' %>;cursor:pointer;"
+                  style="width:80px;text-align:center;border:1px solid <%= bg||'transparent' %>;border-radius:6px;padding:4px;font-size:0.78rem;font-family:var(--font-sans);background:<%= bg?bg+'40':'transparent' %>;color:<%= bg?'#fff':'var(--negro)' %>;font-weight:<%= esE?'700':'500' %>;cursor:pointer;"
                   onfocus="this.style.border='1px solid var(--azul)';this.style.background='#fff';"
                   onblur="guardarCelda(this)"
                   onkeydown="if(event.key==='Enter'){event.preventDefault();guardarCelda(this);}if(event.key==='Tab'){event.preventDefault();guardarCelda(this);moverFoco(this,event.shiftKey?-1:1);}"
@@ -150,7 +150,7 @@
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center;">
       <span style="font-size:0.68rem;color:var(--gris-texto);font-weight:600;">ESTADOS:</span>
       <% [{v:'OFF',c:'#fbbf24'},{v:'VAC',c:'#ef4444'},{v:'RECOFF',c:'#22c55e'},{v:'FERIADO',c:'#ef4444'},{v:'LICENCIA',c:'#ec4899'},{v:'CUMPLE',c:'#a855f7'},{v:'MUDANZA',c:'#fb923c'}].forEach(l => { %>
-      <span style="font-size:0.68rem;font-weight:700;background:<%= l.c %>33;border:1px solid <%= l.c %>;color:#1e293b;padding:2px 8px;border-radius:20px;"><%= l.v %></span>
+      <span style="font-size:0.68rem;font-weight:700;background:<%= l.c %>40;border:1px solid <%= l.c %>;color:#fff;padding:3px 11px;border-radius:20px;"><%= l.v %></span>
       <% }) %>
     </div>
 
@@ -190,8 +190,10 @@ async function guardarCelda(input) {
 function aplicarColorCelda(input, valor) {
   const td = input.parentElement;
   const bg = bgEstados[valor] || '';
-  td.style.background = bg ? bg+'22' : '';
-  input.style.background = bg ? bg+'33' : 'transparent';
+  td.style.background = '';
+  input.style.background = bg ? bg + '40' : 'transparent';
+  input.style.borderColor = bg ? bg : 'transparent';
+  input.style.color = bg ? '#fff' : 'var(--negro)';
   input.style.fontWeight = bg ? '700' : '500';
 }
 

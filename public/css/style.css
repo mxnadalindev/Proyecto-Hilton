@@ -39,6 +39,18 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Red de seguridad: cualquier input/select/textarea que en algún formulario
+   se haya quedado sin "color:" explícito, igual va a leerse bien sobre el
+   fondo navy — sin esto, el navegador usa negro por defecto y el texto que
+   escribís queda invisible. */
+input, select, textarea {
+  color: var(--negro);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--gris-texto);
+  opacity: 1;
+}
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--gris-fondo); }
 ::-webkit-scrollbar-thumb { background: var(--azul-borde); border-radius: 3px; }
