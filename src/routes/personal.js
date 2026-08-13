@@ -72,11 +72,22 @@ router.get('/', loginRequerido, async (req, res) => {
   const dias = getDiasRango(inicio, fin);
 
   const personal = await db.all2(`
-    SELECT id,nombre,email,legajo,puesto,rol,activo,departamento,creado_en
+    SELECT id,nombre,email,legajo,puesto,rol,activo,departamento,creado_en,recoff_adeudado
     FROM usuarios
     WHERE departamento = ANY($1)
     ORDER BY departamento, nombre
   `, [SECTORES]);
+
+  // Cuántos RECOFF tiene puestos cada uno en TODA la grilla (no solo el rango visible)
+  const usadosRaw = await db.all2(`
+    SELECT usuario_id, COUNT(*)::int AS usados
+    FROM horarios_semanales WHERE UPPER(valor)='RECOFF' GROUP BY usuario_id
+  `);
+  const recoffUsadosMap = {};
+  usadosRaw.forEach(r => { recoffUsadosMap[r.usuario_id] = r.usados; });
+  personal.forEach(p => {
+    p.recoff_pendiente_real = (p.recoff_adeudado || 0) - (recoffUsadosMap[p.id] || 0);
+  });
 
   const msg     = req.query.msg || null;
   const esAdmin = req.session.usuario.rol === 'admin';
@@ -128,12 +139,47 @@ router.post('/asignar-semana-completa', loginRequerido, async (req, res) => {
         ON CONFLICT (usuario_id, fecha) DO UPDATE SET valor = $3
       `, [parseInt(usuario_id), dia, valor]);
     }
-    res.json({ ok: true });
+    res.json({ ok: true, recoff_pendiente: await calcularRecoffPendiente(usuario_id) });
   } catch(e) {
     console.error('Error:', e.message);
     res.json({ ok: false, error: e.message });
   }
 });
+
+// Suma o resta días al saldo ADEUDADO de un empleado (carga manual)
+router.post('/:id/recoff-ajustar', loginRequerido, async (req, res) => {
+  try {
+    const delta = parseInt(req.body.delta) || 0;
+    const usuario_id = req.params.id;
+
+    // El botón +/- cambia directamente el número que se VE (el pendiente),
+    // sin importar cuántos RECOFF ya tenga puestos en la grilla.
+    const usados = await db.get2(
+      "SELECT COUNT(*)::int AS c FROM horarios_semanales WHERE usuario_id=$1 AND UPPER(valor)='RECOFF'",
+      [usuario_id]
+    );
+    const filaActual = await db.get2('SELECT recoff_adeudado FROM usuarios WHERE id=$1', [usuario_id]);
+    const pendienteActual = (filaActual?.recoff_adeudado || 0) - (usados?.c || 0);
+    const pendienteNuevo = Math.max(pendienteActual + delta, 0);
+    const nuevoAdeudado = pendienteNuevo + (usados?.c || 0);
+
+    await db.run2('UPDATE usuarios SET recoff_adeudado = $1 WHERE id=$2', [nuevoAdeudado, usuario_id]);
+    res.json({ ok: true, recoff_pendiente: pendienteNuevo });
+  } catch (e) {
+    res.json({ ok: false, error: e.message });
+  }
+});
+
+// Pendiente real = días adeudados (cargados a mano) - RECOFF que ya tiene puestos en la grilla.
+// Se recalcula siempre en vivo, así no importa en qué orden se haya cargado cada cosa.
+async function calcularRecoffPendiente(usuario_id) {
+  const fila = await db.get2('SELECT recoff_adeudado FROM usuarios WHERE id=$1', [usuario_id]);
+  const usados = await db.get2(
+    "SELECT COUNT(*)::int AS c FROM horarios_semanales WHERE usuario_id=$1 AND UPPER(valor)='RECOFF'",
+    [usuario_id]
+  );
+  return (fila?.recoff_adeudado || 0) - (usados?.c || 0);
+}
 
 // ── POST /asignar-semana (compatibilidad) ──────────────
 router.post('/asignar-semana', loginRequerido, async (req, res) => {

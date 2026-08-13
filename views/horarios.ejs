@@ -12,6 +12,31 @@
 
   <main class="main-content">
 
+    <%
+      // Arma el texto del mensaje de WhatsApp con el resumen de la grilla del período
+      const NOMBRES_DIA_WSP = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+      let msgHorarios = `*Horarios — ${inicio} al ${fin}*\n\n`;
+      SECTORES.forEach(sector => {
+        if (!porSector[sector]) return;
+        msgHorarios += `*${sector}*\n`;
+        porSector[sector].forEach(emp => {
+          const partes = [];
+          dias.forEach(dia => {
+            const val = (horariosMap[emp.id]?.[dia] || '').trim();
+            if (!val) return;
+            const fechaObj = new Date(dia + 'T00:00:00');
+            partes.push(`${NOMBRES_DIA_WSP[fechaObj.getDay()]} ${dia.slice(8,10)}: ${val}`);
+          });
+          if (partes.length > 0) {
+            msgHorarios += `${emp.nombre} — ${partes.join(' | ')}\n`;
+          } else {
+            msgHorarios += `${emp.nombre} — sin datos\n`;
+          }
+        });
+        msgHorarios += `\n`;
+      });
+    %>
+
     <div class="seccion-header">
       <div class="seccion-header-left">
         <p class="seccion-label">Portal interno</p>
@@ -19,6 +44,9 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+        <a href="https://wa.me/?text=<%= encodeURIComponent(msgHorarios) %>" target="_blank" class="btn-whatsapp">
+          <i class="ti ti-brand-whatsapp"></i> Enviar
+        </a>
         <a href="/horarios/excel?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-excel">
           <i class="ti ti-file-spreadsheet"></i> Excel
         </a>
@@ -88,10 +116,11 @@
 
     <%# Grilla %>
     <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--gris-borde);box-shadow:var(--sombra);">
-      <table id="tabla-horarios" style="width:100%;border-collapse:collapse;min-width:<%= 200 + dias.length * 90 %>px;">
+      <table id="tabla-horarios" style="width:100%;border-collapse:collapse;min-width:<%= 270 + dias.length * 90 %>px;">
         <thead>
           <tr style="background:#1e3a5f;">
             <th style="padding:10px 14px;text-align:left;color:#fff;font-size:0.72rem;font-weight:600;width:200px;">EMPLEADO</th>
+            <th style="padding:10px 10px;text-align:center;color:#fff;font-size:0.7rem;font-weight:600;width:70px;" title="Francos compensatorios adeudados">RECOFF</th>
             <% const NOMBRES_DIA = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB']; %>
             <% dias.forEach((d) => { %>
             <% const _fecha = new Date(d + 'T00:00:00'); %>
@@ -113,7 +142,7 @@
           <% SECTORES.forEach(sector => { %>
             <% if (!porSector[sector]) return; %>
             <tr style="background:<%= CS[sector]||'#f8fafc' %>;">
-              <td colspan="<%= 1 + dias.length %>" style="padding:7px 14px;font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:<%= sector==='Nocturno'?'#fff':'#1e3a5f' %>;">
+              <td colspan="<%= 2 + dias.length %>" style="padding:7px 14px;font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:<%= sector==='Nocturno'?'#fff':'#1e3a5f' %>;">
                 <%= sector %>
               </td>
             </tr>
@@ -121,6 +150,9 @@
             <tr style="border-bottom:1px solid #f1f5f9;">
               <td style="padding:5px 14px;font-size:0.78rem;font-weight:500;color:var(--negro);background:<%= CS[sector]||'#fff' %>20;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;" title="<%= emp.nombre %>">
                 <%= emp.nombre %>
+              </td>
+              <td style="padding:5px 8px;text-align:center;background:<%= CS[sector]||'#fff' %>20;">
+                <span class="recoff-solo-lectura" id="recoff-h-<%= emp.id %>" title="Días de RECOFF pendientes"><%= emp.recoff_pendiente || 0 %></span>
               </td>
               <% dias.forEach(dia => { %>
               <%
@@ -133,8 +165,8 @@
                   data-uid="<%= emp.id %>" data-fecha="<%= dia %>"
                   value="<%= val %>" maxlength="10"
                   style="width:80px;text-align:center;border:1px solid <%= bg||'transparent' %>;border-radius:6px;padding:4px;font-size:0.78rem;font-family:var(--font-sans);background:<%= bg?bg+'40':'transparent' %>;color:<%= bg?'#fff':'var(--negro)' %>;font-weight:<%= esE?'700':'500' %>;cursor:pointer;"
-                  onfocus="this.style.border='1px solid var(--azul)';this.style.background='#fff';"
-                  onblur="guardarCelda(this)"
+                  onfocus="this.style.boxShadow='0 0 0 2px rgba(59,130,246,0.5)';"
+                  onblur="this.style.boxShadow='';guardarCelda(this)"
                   onkeydown="if(event.key==='Enter'){event.preventDefault();guardarCelda(this);}if(event.key==='Tab'){event.preventDefault();guardarCelda(this);moverFoco(this,event.shiftKey?-1:1);}"
                 >
               </td>
@@ -164,9 +196,12 @@
 <style>
 .btn-excel{display:inline-flex;align-items:center;gap:6px;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-sans);font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background 0.2s;}
 .btn-excel:hover{background:#15803d;}
+.btn-whatsapp{display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-sans);font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background 0.2s;}
+.btn-whatsapp:hover{background:#1ea952;}
 .celda-horario{transition:all 0.15s;}
-.celda-horario:hover{border:1px solid var(--gris-borde)!important;background:#f8fafc!important;}
+.celda-horario:hover{box-shadow:0 0 0 1px var(--azul) inset;}
 .celda-horario:focus{outline:none;}
+.recoff-solo-lectura{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;padding:0 8px;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:20px;font-size:0.75rem;font-weight:700;color:var(--negro);}
 </style>
 
 <script>
@@ -179,11 +214,16 @@ async function guardarCelda(input) {
   input.value = valor;
   aplicarColorCelda(input, valor);
   try {
-    await fetch('/horarios/celda', {
+    const resp = await fetch('/horarios/celda', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ usuario_id: uid, fecha, valor })
     });
+    const data = await resp.json();
+    if (data.ok && data.recoff_pendiente !== undefined) {
+      const span = document.getElementById('recoff-h-' + uid);
+      if (span) span.textContent = data.recoff_pendiente;
+    }
   } catch(e) { console.error(e); }
 }
 

@@ -1,26 +1,26 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nueva Receta — Hilton</title>
+  <title><%= receta ? 'Editar receta' : 'Nueva receta' %> — Hilton</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 </head>
 <body>
 <div class="app-layout">
 
-  <%- include('partials/nav', { path: path }) %>
+  <%- include('partials/nav', { path: 'recetas' }) %>
 
   <main class="main-content">
 
     <div class="seccion-header">
       <div class="seccion-header-left">
         <p class="seccion-label"><a href="/recetas" class="back-link"><i class="ti ti-arrow-left"></i> Recetas</a></p>
-        <h1 class="seccion-titulo">Nueva receta</h1>
+        <h1 class="seccion-titulo"><%= receta ? 'Editar receta' : 'Nueva receta' %></h1>
       </div>
     </div>
 
-    <form method="POST" action="/recetas/nueva" enctype="multipart/form-data">
+    <form method="POST" action="<%= receta ? '/recetas/'+receta.id+'/editar' : '/recetas/nueva' %>" enctype="multipart/form-data">
       <div class="form-grid">
 
         <!-- Columna izquierda -->
@@ -29,32 +29,49 @@
             <p class="form-card-title"><i class="ti ti-info-circle"></i> Información general</p>
             <div class="field">
               <label>Nombre de la receta</label>
-              <input type="text" name="nombre" placeholder="Ej: Risotto de hongos" required>
+              <input type="text" name="nombre" placeholder="Ej: Risotto de hongos" value="<%= receta?.nombre || '' %>" required>
             </div>
             <div class="field">
               <label>Categoría</label>
-              <input type="text" name="categoria" placeholder="Ej: Entrada, Principal, Postre">
+              <select name="categoria" id="sel-categoria" onchange="toggleOtro('categoria')">
+                <option value="">Seleccionar...</option>
+                <% categorias.forEach(c => { %>
+                  <option value="<%= c %>" <%= receta?.categoria === c ? 'selected' : '' %>><%= c %></option>
+                <% }) %>
+                <option value="otro" <%= (receta?.categoria && !categorias.includes(receta.categoria)) ? 'selected' : '' %>>Otra (escribir)</option>
+              </select>
+              <input type="text" name="categoria_otro" id="otro-categoria" placeholder="Escribir categoría..."
+                     value="<%= (receta?.categoria && !categorias.includes(receta.categoria)) ? receta.categoria : '' %>"
+                     style="display:<%= (receta?.categoria && !categorias.includes(receta.categoria)) ? 'block' : 'none' %>;margin-top:8px;">
             </div>
             <div class="field">
               <label>Área</label>
-              <input type="text" name="area" placeholder="Ej: Cocina caliente">
+              <select name="area" id="sel-area" onchange="toggleOtro('area')">
+                <option value="">Seleccionar...</option>
+                <% areas.forEach(a => { %>
+                  <option value="<%= a %>" <%= receta?.area === a ? 'selected' : '' %>><%= a %></option>
+                <% }) %>
+                <option value="otro" <%= (receta?.area && !areas.includes(receta.area)) ? 'selected' : '' %>>Otra (escribir)</option>
+              </select>
+              <input type="text" name="area_otro" id="otro-area" placeholder="Escribir área..."
+                     value="<%= (receta?.area && !areas.includes(receta.area)) ? receta.area : '' %>"
+                     style="display:<%= (receta?.area && !areas.includes(receta.area)) ? 'block' : 'none' %>;margin-top:8px;">
             </div>
             <div class="field">
-              <label>Imagen del plato</label>
+              <label>Imagen del plato <% if (receta?.imagen) { %>(dejar vacío para conservar la actual)<% } %></label>
               <input type="file" name="imagen" accept="image/*" style="padding:8px 0;">
+              <% if (receta?.imagen) { %>
+                <img src="/uploads/<%= receta.imagen %>" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-top:8px;">
+              <% } %>
             </div>
           </div>
 
           <div class="form-card">
-            <p class="form-card-title"><i class="ti ti-video"></i> Video de preparación</p>
-            <div class="field">
-              <label>Subir video desde la PC</label>
-              <input type="file" name="video" accept="video/*" style="padding:8px 0;">
-            </div>
-            <div class="field">
-              <label>O pegá un link de YouTube / Google Drive</label>
-              <input type="text" name="video_url" placeholder="https://...">
-            </div>
+            <p class="form-card-title"><i class="ti ti-video"></i> Videos</p>
+            <div id="videos-body"></div>
+            <button type="button" class="btn-secondary" onclick="agregarFilaVideo()" style="margin-top:8px;">
+              <i class="ti ti-plus"></i> Agregar video
+            </button>
           </div>
         </div>
 
@@ -62,19 +79,23 @@
         <div class="form-col">
           <div class="form-card">
             <p class="form-card-title"><i class="ti ti-list"></i> Ingredientes</p>
-            <div class="field">
-              <label>Un ingrediente por línea con cantidad</label>
-              <textarea name="ingredientes" rows="7"
-                placeholder="200g harina&#10;3 huevos&#10;100ml leche&#10;50g manteca&#10;..."></textarea>
-            </div>
+            <table class="tabla-ingredientes">
+              <thead>
+                <tr><th>Ingrediente</th><th>Cantidad</th><th>Precio unitario</th><th></th></tr>
+              </thead>
+              <tbody id="ingredientes-body"></tbody>
+            </table>
+            <button type="button" class="btn-secondary" onclick="agregarFilaIngrediente()" style="margin-top:10px;">
+              <i class="ti ti-plus"></i> Agregar ingrediente
+            </button>
           </div>
 
           <div class="form-card">
-            <p class="form-card-title"><i class="ti ti-list-numbers"></i> Pasos de preparación</p>
+            <p class="form-card-title"><i class="ti ti-list-numbers"></i> Procedimiento</p>
             <div class="field">
               <label>Describí cada paso</label>
-              <textarea name="pasos" rows="7"
-                placeholder="Paso 1: Mezclar la harina con los huevos.&#10;Paso 2: Agregar la leche de a poco.&#10;..."></textarea>
+              <textarea name="procedimiento" rows="9"
+                placeholder="Paso 1: Mezclar la harina con los huevos.&#10;Paso 2: Agregar la leche de a poco.&#10;..."><%= receta?.procedimiento || '' %></textarea>
             </div>
           </div>
         </div>
@@ -102,6 +123,7 @@
 .field label { display: block; font-size: 0.68rem; font-weight: 500; color: var(--negro); margin-bottom: 6px; letter-spacing: 0.05em; }
 .field input[type="text"],
 .field input[type="number"],
+.field select,
 .field textarea {
   width: 100%; background: var(--gris-fondo); border: 1px solid var(--gris-borde);
   border-radius: 8px; padding: 10px 12px; font-family: var(--font-sans);
@@ -109,17 +131,100 @@
   transition: border-color var(--tr), box-shadow var(--tr);
   resize: vertical;
 }
-.field input:focus, .field textarea:focus {
+.field input:focus, .field select:focus, .field textarea:focus {
   border-color: var(--azul);
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  box-shadow: 0 0 0 3px var(--azul-claro);
   background: var(--blanco);
 }
 .form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--gris-borde); }
 .back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; }
 .back-link:hover { color: var(--azul); }
 @media (max-width: 900px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* Tabla de ingredientes */
+.tabla-ingredientes { width: 100%; border-collapse: collapse; }
+.tabla-ingredientes th { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gris-texto); text-align: left; padding: 0 6px 8px; }
+.tabla-ingredientes td { padding: 4px 6px 4px 0; vertical-align: middle; }
+.tabla-ingredientes input { width: 100%; background: var(--gris-fondo); border: 1px solid var(--gris-borde); border-radius: 7px; padding: 7px 9px; font-family: var(--font-sans); font-size: 0.8rem; color: var(--negro); outline: none; }
+.tabla-ingredientes input:focus { border-color: var(--azul); background: var(--blanco); }
+.btn-fila-quitar { background: var(--rojo-claro); border: none; color: var(--rojo); width: 28px; height: 28px; border-radius: 7px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.btn-fila-quitar:hover { background: var(--rojo); color: #fff; }
+
+/* Filas de video */
+.fila-video { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--gris-fondo); border: 1px solid var(--gris-borde); border-radius: 9px; padding: 10px; margin-bottom: 8px; }
+.fila-video select, .fila-video input[type="text"] { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 7px; padding: 7px 9px; font-family: var(--font-sans); font-size: 0.78rem; color: var(--negro); outline: none; }
+.fila-video input[type="file"] { font-size: 0.75rem; max-width: 180px; }
 </style>
 
+<script>
+function toggleOtro(campo) {
+  const sel = document.getElementById('sel-' + campo);
+  const otro = document.getElementById('otro-' + campo);
+  otro.style.display = sel.value === 'otro' ? 'block' : 'none';
+  if (sel.value === 'otro') otro.focus();
+}
+
+// ── Ingredientes ──
+let contadorIng = 0;
+function agregarFilaIngrediente(datos) {
+  const idx = contadorIng++;
+  const tbody = document.getElementById('ingredientes-body');
+  const tr = document.createElement('tr');
+  tr.id = 'fila-ing-' + idx;
+  tr.innerHTML = `
+    <td><input type="text" name="ing_nombre_${idx}" placeholder="Ej: Harina 000" value="${datos?.nombre || ''}"></td>
+    <td><input type="text" name="ing_cantidad_${idx}" placeholder="Ej: 500g" value="${datos?.cantidad || ''}" style="max-width:110px;"></td>
+    <td><input type="number" name="ing_precio_${idx}" placeholder="0.00" step="0.01" min="0" value="${datos?.precio_unitario || ''}" style="max-width:110px;"></td>
+    <td><button type="button" class="btn-fila-quitar" onclick="document.getElementById('fila-ing-${idx}').remove()"><i class="ti ti-x"></i></button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+// ── Videos ──
+let contadorVideo = 0;
+function agregarFilaVideo(datos) {
+  const idx = contadorVideo++;
+  const cont = document.getElementById('videos-body');
+  const div = document.createElement('div');
+  div.className = 'fila-video';
+  div.id = 'fila-video-' + idx;
+  const clasificacionSel = datos?.clasificacion || 'Preparación';
+  const esUrl = !datos || datos.origen === 'url';
+  div.innerHTML = `
+    <select name="video_clasificacion_${idx}">
+      <option value="Preparación" ${clasificacionSel === 'Preparación' ? 'selected' : ''}>Preparación</option>
+      <option value="Montaje" ${clasificacionSel === 'Montaje' ? 'selected' : ''}>Montaje</option>
+      <option value="Otros" ${clasificacionSel === 'Otros' ? 'selected' : ''}>Otros</option>
+    </select>
+    <select name="video_tipo_${idx}" onchange="toggleTipoVideo(${idx}, this.value)">
+      <option value="url" ${esUrl ? 'selected' : ''}>Link (YouTube/Drive)</option>
+      <option value="archivo" ${!esUrl ? 'selected' : ''}>Archivo</option>
+    </select>
+    <input type="text" name="video_url_${idx}" placeholder="https://..." value="${esUrl && datos ? datos.valor : ''}" style="display:${esUrl ? 'block' : 'none'};flex:1;min-width:160px;" id="video-url-${idx}">
+    <input type="file" name="video_archivo_${idx}" accept="video/*" style="display:${!esUrl ? 'block' : 'none'};" id="video-archivo-${idx}">
+    <button type="button" class="btn-fila-quitar" onclick="document.getElementById('fila-video-${idx}').remove()"><i class="ti ti-x"></i></button>
+  `;
+  cont.appendChild(div);
+}
+
+function toggleTipoVideo(idx, tipo) {
+  document.getElementById('video-url-' + idx).style.display = tipo === 'url' ? 'block' : 'none';
+  document.getElementById('video-archivo-' + idx).style.display = tipo === 'archivo' ? 'block' : 'none';
+}
+
+// Precarga de datos si es edición
+const INGREDIENTES_PREVIOS = <%- JSON.stringify(ingredientesJson || []) %>;
+const VIDEOS_PREVIOS = <%- JSON.stringify(videos || []) %>;
+
+if (INGREDIENTES_PREVIOS.length > 0) {
+  INGREDIENTES_PREVIOS.forEach(ing => agregarFilaIngrediente(ing));
+} else {
+  agregarFilaIngrediente();
+}
+
+if (VIDEOS_PREVIOS.length > 0) {
+  VIDEOS_PREVIOS.forEach(v => agregarFilaVideo(v));
+}
+</script>
 </body>
 </html>
-

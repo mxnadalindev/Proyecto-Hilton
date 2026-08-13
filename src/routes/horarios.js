@@ -156,6 +156,8 @@ router.get('/', loginRequerido, async (req, res) => {
 router.post('/celda', loginRequerido, async (req, res) => {
   const { usuario_id, fecha, valor } = req.body;
   try {
+    const valorNuevo = (valor || '').trim().toUpperCase();
+
     if (!valor || valor.trim() === '') {
       await db.run2('DELETE FROM horarios_semanales WHERE usuario_id=$1 AND fecha=$2', [parseInt(usuario_id), fecha]);
     } else {
@@ -163,9 +165,18 @@ router.post('/celda', loginRequerido, async (req, res) => {
         INSERT INTO horarios_semanales (usuario_id, fecha, valor)
         VALUES ($1, $2, $3)
         ON CONFLICT (usuario_id, fecha) DO UPDATE SET valor = $3
-      `, [parseInt(usuario_id), fecha, valor.trim().toUpperCase()]);
+      `, [parseInt(usuario_id), fecha, valorNuevo]);
     }
-    res.json({ ok: true });
+
+    // Pendiente real = adeudado (cargado a mano en Personal) - RECOFF que ya tiene puestos en toda la grilla
+    const filaAdeudado = await db.get2('SELECT recoff_adeudado FROM usuarios WHERE id=$1', [usuario_id]);
+    const usados = await db.get2(
+      "SELECT COUNT(*)::int AS c FROM horarios_semanales WHERE usuario_id=$1 AND UPPER(valor)='RECOFF'",
+      [usuario_id]
+    );
+    const pendiente = (filaAdeudado?.recoff_adeudado || 0) - (usados?.c || 0);
+
+    res.json({ ok: true, recoff_pendiente: pendiente });
   } catch(e) {
     console.error('Error guardando celda:', e.message);
     res.json({ ok: false, error: e.message });
@@ -216,7 +227,7 @@ router.get('/excel', loginRequerido, async (req, res) => {
   const NOMBRES_DIA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
   const empleados = await db.all2(`
-    SELECT id, nombre, puesto, departamento FROM usuarios WHERE activo=1
+    SELECT id, nombre, puesto, departamento, recoff_adeudado FROM usuarios WHERE activo=1
     ORDER BY CASE departamento
       WHEN 'Supervisores' THEN 1 WHEN 'Comis de Recepción' THEN 2
       WHEN 'Panadería' THEN 3 WHEN 'Pastelería AM' THEN 4
@@ -226,6 +237,17 @@ router.get('/excel', loginRequerido, async (req, res) => {
       WHEN 'Farolito' THEN 11 WHEN 'Cocina I+D' THEN 12
       ELSE 99 END, nombre
   `);
+
+  // Cuántos RECOFF tiene puestos cada uno en TODA la grilla (no solo el rango visible)
+  const usadosRaw = await db.all2(`
+    SELECT usuario_id, COUNT(*)::int AS usados
+    FROM horarios_semanales WHERE UPPER(valor)='RECOFF' GROUP BY usuario_id
+  `);
+  const recoffUsadosMap = {};
+  usadosRaw.forEach(r => { recoffUsadosMap[r.usuario_id] = r.usados; });
+  empleados.forEach(e => {
+    e.recoff_pendiente = (e.recoff_adeudado || 0) - (recoffUsadosMap[e.id] || 0);
+  });
 
   const horariosRaw = await db.all2(`
     SELECT usuario_id, fecha::text, valor FROM horarios_semanales

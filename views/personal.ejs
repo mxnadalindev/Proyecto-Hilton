@@ -83,12 +83,13 @@
     <div class="tabla-wrap" style="overflow:visible;">
       <table class="tabla" style="width:100%;table-layout:fixed;">
         <colgroup>
-          <col style="width:18%"><col style="width:10%"><col style="width:12%">
-          <col style="width:52%"><col style="width:8%">
+          <col style="width:17%"><col style="width:9%"><col style="width:11%">
+          <col style="width:8%"><col style="width:47%"><col style="width:8%">
         </colgroup>
         <thead>
           <tr>
             <th>Nombre</th><th>Puesto</th><th>Sector</th>
+            <th title="Francos compensatorios adeudados">RECOFF</th>
             <th>Estados por día <span style="font-weight:400;font-size:0.62rem;">(clickeá cada día para cambiarlo — máx. 2 francos)</span></th>
             <th></th>
           </tr>
@@ -132,6 +133,14 @@
                   <%= p.departamento %>
                 </span>
                 <% } else { %><span style="font-size:0.72rem;color:var(--gris-texto);">—</span><% } %>
+              </td>
+
+              <td style="text-align:center;">
+                <div class="recoff-control" data-uid="<%= p.id %>">
+                  <button type="button" onclick="ajustarRecoff(<%= p.id %>, -1)" title="Restar un día">−</button>
+                  <span class="recoff-numero" id="recoff-<%= p.id %>"><%= p.recoff_pendiente_real ?? 0 %></span>
+                  <button type="button" onclick="ajustarRecoff(<%= p.id %>, 1)" title="Sumar un día adeudado">+</button>
+                </div>
               </td>
 
               <td>
@@ -320,6 +329,10 @@
 </div>
 
 <style>
+.recoff-control{display:inline-flex;align-items:center;gap:6px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:20px;padding:2px 4px;}
+.recoff-control button{width:20px;height:20px;border-radius:50%;border:none;background:var(--blanco);color:var(--gris-texto);cursor:pointer;font-size:0.85rem;line-height:1;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;}
+.recoff-control button:hover{background:var(--azul);color:#fff;}
+.recoff-numero{font-size:0.78rem;font-weight:700;color:var(--negro);min-width:16px;text-align:center;}
 .puesto-badge{font-size:0.68rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:2px 7px;border-radius:20px;white-space:nowrap;}
 .btn-asignar{background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;transition:background 0.2s;display:inline-flex;align-items:center;}
 .btn-asignar:hover{background:#6d28d9;}
@@ -372,6 +385,20 @@
 </style>
 
 <script>
+function ajustarRecoff(uid, delta) {
+  fetch(`/personal/${uid}/recoff-ajustar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `delta=${delta}`,
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        document.getElementById('recoff-' + uid).textContent = data.recoff_pendiente;
+      }
+    });
+}
+
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const bgEstados = {OFF:'#fbbf24',VAC:'#ef4444',RECOFF:'#22c55e',FERIADO:'#dc2626',LICENCIA:'#ec4899',CUMPLE:'#a855f7',MUDANZA:'#fb923c',FRANCO:'#64748b'};
@@ -540,6 +567,8 @@ async function guardarEmpleado(uid) {
       const btn = document.querySelector(`button[onclick="guardarEmpleado(${uid})"]`);
       if (btn) { btn.style.background = '#16a34a'; setTimeout(() => btn.style.background = '', 1500); }
       actualizarColorFila(uid);
+      const recoffSpan = document.getElementById('recoff-' + uid);
+      if (recoffSpan && data.recoff_pendiente !== undefined) recoffSpan.textContent = data.recoff_pendiente;
     } else {
       alert('Error: ' + data.error);
     }

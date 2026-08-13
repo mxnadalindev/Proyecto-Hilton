@@ -8,22 +8,23 @@
 </head>
 <body>
 <div class="app-layout">
-  <% var path = 'recetas'; %>
-<%- include('partials/nav', { path: path }) %>
+  <%- include('partials/nav', { path: 'recetas' }) %>
   <main class="main-content">
     <div class="seccion-header">
       <div class="seccion-header-left">
         <p class="seccion-label">Portal interno</p>
         <h1 class="seccion-titulo">Recetas</h1>
       </div>
+      <% if (puedeEditar) { %>
       <a href="/recetas/nueva" class="btn-primary"><i class="ti ti-plus"></i> Nueva receta</a>
+      <% } %>
     </div>
 
     <!-- Búsqueda -->
     <form method="GET" action="/recetas" style="margin-bottom:24px;">
       <div style="display:flex;gap:10px;max-width:400px;">
         <input type="text" name="q" value="<%= busqueda %>" placeholder="Buscar receta..."
-               style="flex:1;padding:10px 14px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.85rem;outline:none;background:var(--blanco);">
+               style="flex:1;padding:10px 14px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.85rem;outline:none;background:var(--blanco);color:var(--negro);">
         <button type="submit" class="btn-primary" style="padding:10px 16px;">
           <i class="ti ti-search"></i>
         </button>
@@ -31,76 +32,171 @@
     </form>
 
     <% if (recetas.length > 0) { %>
-    <p class="hint-mobile-swipe"><i class="ti ti-arrow-left-right"></i> Deslizá para ver más recetas</p>
-    <div class="content-grid">
-      <% recetas.forEach(r => { %>
-      <a href="/recetas/<%= r.id %>" class="content-card fade-up" style="text-decoration:none;">
-        <% if (r.imagen) { %>
-          <img src="/uploads/<%= r.imagen %>" alt="<%= r.nombre %>"
-               style="width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:14px;">
+    <div class="deck-recetas" id="deckRecetas">
+      <% recetas.forEach((r, i) => { %>
+      <div class="card-receta <%= i === 0 ? 'is-hero' : '' %>" data-index="<%= i %>" onclick="clickCardReceta(<%= i %>)"
+           <% if (r.imagen) { %>style="background-image:url('/uploads/<%= r.imagen %>');"<% } %>>
+        <% if (!r.imagen) { %>
+        <div class="card-receta-fallback"><i class="ti ti-tools-kitchen-2"></i></div>
         <% } %>
-        <p class="content-card-label"><%= r.categoria || 'Cocina' %></p>
-        <h2 class="content-card-titulo"><%= r.nombre %></h2>
-        <% if (r.ingredientes) { %>
-          <p class="content-card-texto"><%= r.ingredientes.substring(0,100) %><%= r.ingredientes.length > 100 ? '…' : '' %></p>
+        <% if (r.tiene_video) { %>
+        <div class="card-receta-play"><i class="ti ti-player-play-filled"></i></div>
         <% } %>
-        <% if (r.video_url) { %>
-          <p style="margin-top:10px;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--azul);">
-            <i class="ti ti-player-play"></i> Ver video
-          </p>
-        <% } %>
-      </a>
+        <div class="card-receta-scrim"></div>
+        <span class="card-receta-nombre"><%= r.nombre %></span>
+      </div>
       <% }) %>
+    </div>
+
+    <div class="deck-controls">
+      <button class="carousel-arrow" onclick="pasoReceta(-1)" aria-label="Anterior"><i class="ti ti-chevron-left"></i></button>
+      <div class="carousel-dots" id="recetaDots">
+        <% recetas.forEach((r, i) => { %>
+        <span class="dot <%= i === 0 ? 'activa' : '' %>" data-index="<%= i %>" onclick="seleccionarReceta(<%= i %>)"></span>
+        <% }) %>
+      </div>
+      <button class="carousel-arrow" onclick="pasoReceta(1)" aria-label="Siguiente"><i class="ti ti-chevron-right"></i></button>
+    </div>
+
+    <div class="receta-info-sel">
+      <p class="stage-eyebrow" id="recetaCategoriaSel"><%= recetas[0].categoria || 'Cocina' %></p>
+      <h2 class="stage-nombre" id="recetaNombreSel"><%= recetas[0].nombre %></h2>
+      <a href="/recetas/<%= recetas[0].id %>" class="stage-btn" id="recetaVerBtn">
+        Ver receta <i class="ti ti-arrow-right" aria-hidden="true"></i>
+      </a>
     </div>
     <% } else { %>
     <div class="empty-state">
       <i class="ti ti-chef-hat" style="font-size:2.5rem;color:var(--gris-borde);margin-bottom:16px;display:block;"></i>
       <p>No hay recetas todavía.</p>
+      <% if (puedeEditar) { %>
       <a href="/recetas/nueva" class="btn-primary" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> Crear la primera receta</a>
+      <% } %>
     </div>
     <% } %>
-    <div style="display:flex;justify-content:flex-start;align-items:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--gris-borde);">
+
+    <div style="display:flex;justify-content:flex-start;align-items:center;margin-top:32px;padding-top:20px;border-top:1px solid var(--gris-borde);">
       <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
     </div>
   </main>
 </div>
 
 <style>
-/* Desktop: la grilla queda exactamente como estaba (heredada de style.css) */
-.hint-mobile-swipe{display:none;}
+/* ── Carrusel 3D de recetas — mismo mecanismo que el Home, con foto real de cada plato ── */
+.deck-recetas {
+  position: relative;
+  height: 340px;
+  perspective: 1400px;
+  margin: 12px 0 20px;
+}
+.card-receta {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 190px; height: 260px;
+  margin-left: -95px; margin-top: -130px;
+  border-radius: 16px;
+  cursor: pointer;
+  background-color: var(--gris-borde);
+  background-size: cover;
+  background-position: center;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.22,1,0.36,1), box-shadow 0.5s ease, opacity 0.5s ease;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0,0,0,0.18);
+}
+.card-receta.is-hero { box-shadow: 0 30px 60px rgba(0,47,97,0.25); }
+.card-receta-fallback { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:40px; color:var(--gris-texto); background:var(--gris-fondo); }
+.card-receta-play { position:absolute; top:12px; right:12px; width:30px; height:30px; border-radius:50%; background:rgba(0,0,0,0.5); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; z-index:2; }
+.card-receta-scrim { position:absolute; left:0; right:0; bottom:0; height:50%; background:linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%); pointer-events:none; }
+.card-receta-nombre { position:absolute; left:14px; right:14px; bottom:14px; font-family:var(--font-serif); font-size:1.1rem; color:#fff; font-weight:500; z-index:1; text-shadow:0 2px 8px rgba(0,0,0,0.4); }
 
-/* Mobile: la misma lista de cards pasa a ser un carrusel con swipe */
-@media (max-width: 768px) {
-  .hint-mobile-swipe{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-size:0.7rem;
-    color:var(--gris-texto);
-    margin-bottom:12px;
-  }
+.deck-controls { display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:24px; }
+.carousel-arrow { width:32px; height:32px; border-radius:50%; background:var(--gris-fondo); border:1px solid var(--gris-borde); color:var(--gris-texto); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px; transition:background 0.2s, color 0.2s; }
+.carousel-arrow:hover { background:var(--azul-claro); color:var(--azul); }
+.carousel-dots { display:flex; gap:7px; max-width:260px; overflow-x:auto; }
+.dot { width:7px; height:7px; border-radius:50%; background:var(--gris-borde); cursor:pointer; flex-shrink:0; transition:background 0.2s, transform 0.2s; }
+.dot.activa { background:var(--azul); transform:scale(1.3); }
 
-  .content-grid{
-    display:flex !important;
-    grid-template-columns:none !important;
-    overflow-x:auto;
-    scroll-snap-type:x mandatory;
-    -webkit-overflow-scrolling:touch;
-    gap:14px;
-    padding-bottom:10px;
-    margin:0 -20px;
-    padding-left:20px;
-    padding-right:20px;
-  }
-  /* Oculta la scrollbar (Chrome/Safari y Firefox) */
-  .content-grid::-webkit-scrollbar{ display:none; }
-  .content-grid{ scrollbar-width:none; }
+.receta-info-sel { text-align:center; max-width:520px; margin:0 auto 20px; }
+.stage-eyebrow { font-size:0.65rem; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:var(--azul); margin-bottom:8px; }
+.stage-nombre { font-family:var(--font-serif); font-size:1.6rem; font-weight:400; margin-bottom:14px; color:var(--negro); transition:opacity 0.3s ease; }
+.stage-btn { display:inline-flex; align-items:center; gap:8px; background:var(--azul); border:none; color:#fff; font-size:0.7rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; padding:11px 24px; border-radius:9px; text-decoration:none; transition:background 0.2s, transform 0.2s; }
+.stage-btn:hover { background:var(--azul-hover); transform:translateY(-1px); }
 
-  .content-grid .content-card{
-    flex:0 0 82%;
-    scroll-snap-align:center;
-  }
+@media (max-width:600px) {
+  .deck-recetas { height:280px; }
+  .card-receta { width:150px; height:210px; margin-left:-75px; margin-top:-105px; }
 }
 </style>
+
+<script>
+const RECETAS = <%- JSON.stringify(recetas.map(r => ({ id: r.id, nombre: r.nombre, categoria: r.categoria }))) %>;
+let recetaActual = 0;
+
+function actualizarPosicionesRecetas() {
+  const total = RECETAS.length;
+  RECETAS.forEach((r, i) => {
+    const el = document.querySelector(`.card-receta[data-index="${i}"]`);
+    if (!el) return;
+    let offset = i - recetaActual;
+    if (offset > total / 2) offset -= total;
+    if (offset < -total / 2) offset += total;
+    const abs = Math.abs(offset);
+    el.classList.toggle('is-hero', offset === 0);
+
+    const MAX_VISIBLES = 3, SPACING = 130, DEPTH = 220, ANGLE = 32;
+    if (abs > MAX_VISIBLES) {
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+      el.style.zIndex = 0;
+      return;
+    }
+    el.style.transform = `translateX(${offset * SPACING}px) translateZ(${-DEPTH * abs}px) rotateY(${offset * -ANGLE}deg) scale(${offset === 0 ? 1 : 0.86})`;
+    el.style.opacity = '1';
+    el.style.pointerEvents = 'auto';
+    el.style.zIndex = String(100 - abs);
+  });
+}
+
+function seleccionarReceta(i) {
+  const r = RECETAS[i];
+  if (!r) return;
+  recetaActual = i;
+
+  document.querySelectorAll('#recetaDots .dot').forEach(d => d.classList.remove('activa'));
+  document.querySelector(`#recetaDots .dot[data-index="${i}"]`).classList.add('activa');
+
+  const nombre = document.getElementById('recetaNombreSel');
+  const categoria = document.getElementById('recetaCategoriaSel');
+  const btn = document.getElementById('recetaVerBtn');
+
+  [nombre, categoria].forEach(el => el.style.opacity = '0');
+  setTimeout(() => {
+    nombre.textContent = r.nombre;
+    categoria.textContent = r.categoria || 'Cocina';
+    btn.href = '/recetas/' + r.id;
+    [nombre, categoria].forEach(el => el.style.opacity = '1');
+  }, 150);
+
+  actualizarPosicionesRecetas();
+}
+
+function pasoReceta(dir) {
+  let i = recetaActual + dir;
+  if (i < 0) i = RECETAS.length - 1;
+  if (i >= RECETAS.length) i = 0;
+  seleccionarReceta(i);
+}
+
+function clickCardReceta(i) {
+  if (i === recetaActual) {
+    window.location.href = '/recetas/' + RECETAS[i].id;
+  } else {
+    seleccionarReceta(i);
+  }
+}
+
+actualizarPosicionesRecetas();
+</script>
 </body>
 </html>

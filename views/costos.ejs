@@ -39,271 +39,84 @@
     </div>
     <% } %>
 
-    <!-- Actualización e importación de datos (factura, catálogo de insumos, platos) -->
-    <div class="precios-seccion">
-      <p class="precios-titulo"><i class="ti ti-refresh"></i> Actualización e importación de datos</p>
-
-      <div class="precios-grid precios-grid-3">
-        <!-- Opción A: foto de factura -->
-        <div class="precio-card <%= !geminiConfigurado ? 'precio-card-apagada' : '' %>">
-          <div class="precio-card-icono"><i class="ti ti-camera"></i></div>
-          <div class="precio-card-cuerpo">
-            <p class="precio-card-titulo">
-              Foto de factura
-              <% if (geminiConfigurado) { %>
-                <span class="badge-activo"><i class="ti ti-circle-filled" style="font-size:7px;"></i> Activo</span>
-              <% } else { %>
-                <span class="badge-inactivo">No configurado</span>
-              <% } %>
-            </p>
-            <p class="precio-card-desc">
-              <% if (geminiConfigurado) { %>Sacale una foto a la factura y comparamos los precios automáticamente.<% } else { %>Falta configurar la conexión con el servicio de lectura de facturas.<% } %>
-            </p>
-            <form id="form-factura" method="POST" action="/costos/factura" enctype="multipart/form-data"
-                  class="precio-card-form" onsubmit="return prepararEnvioFactura()">
-              <label class="input-archivo <%= !geminiConfigurado ? 'input-archivo-disabled' : '' %>">
-                <i class="ti ti-paperclip"></i>
-                <span id="nombre-archivo">Elegir imagen</span>
-                <input type="file" id="input-factura" name="factura" accept="image/*" required <%= !geminiConfigurado ? 'disabled' : '' %>
-                       onchange="marcarArchivoElegido(this)">
-              </label>
-              <button type="submit" id="btn-subir-factura" class="btn-primary" <%= !geminiConfigurado ? 'disabled' : '' %>>
-                <i class="ti ti-upload" id="icon-subir-factura"></i>
-                <span id="texto-subir-factura">Subir</span>
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <!-- Opción B: importar catálogo CSV de insumos -->
-        <div class="precio-card">
-          <div class="precio-card-icono precio-card-icono-csv"><i class="ti ti-file-import"></i></div>
-          <div class="precio-card-cuerpo">
-            <p class="precio-card-titulo">Catálogo de insumos (CSV)</p>
-            <p class="precio-card-desc">Subí el archivo del sistema de compras, una categoría por vez.</p>
-            <form id="form-importar-csv" method="POST" action="/costos/insumos/importar" enctype="multipart/form-data"
-                  class="precio-card-form" onsubmit="return prepararEnvioCsv()">
-              <input type="text" name="categoria" id="input-categoria-csv" placeholder="Categoría (ej: Frescos)" required class="precio-card-input-categoria">
-              <label class="input-archivo">
-                <i class="ti ti-paperclip"></i>
-                <span id="nombre-archivo-csv">Elegir CSV</span>
-                <input type="file" id="input-csv" name="archivo_csv" accept=".csv" required
-                       onchange="marcarArchivoCsvElegido(this)">
-              </label>
-              <button type="submit" id="btn-importar-csv" class="btn-primary">
-                <i class="ti ti-upload" id="icon-importar-csv"></i>
-                <span id="texto-importar-csv">Importar</span>
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <!-- Opción C: importar platos con sus insumos -->
-        <div class="precio-card">
-          <div class="precio-card-icono precio-card-icono-csv"><i class="ti ti-file-spreadsheet"></i></div>
-          <div class="precio-card-cuerpo">
-            <p class="precio-card-titulo">Costeo de platos (Excel/CSV)</p>
-            <p class="precio-card-desc">Planilla de costeo — un bloque por plato. Si ya existe (mismo nombre), se actualizan sus ingredientes.</p>
-            <form id="form-importar-platos" method="POST" action="/costos/platos/importar" enctype="multipart/form-data"
-                  class="precio-card-form" onsubmit="return prepararEnvioPlatos()">
-              <input type="text" name="categoria_platos" id="input-categoria-platos" placeholder="Categoría (ej: Pastelería)" required class="precio-card-input-categoria">
-              <label class="input-archivo">
-                <i class="ti ti-paperclip"></i>
-                <span id="nombre-archivo-platos">Elegir archivo</span>
-                <input type="file" id="input-platos" name="archivo_platos" accept=".csv" required
-                       onchange="marcarArchivoPlatosElegido(this)">
-              </label>
-              <button type="submit" id="btn-importar-platos" class="btn-primary">
-                <i class="ti ti-upload" id="icon-importar-platos"></i>
-                <span id="texto-importar-platos">Importar</span>
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
       <!-- INSUMOS -->
       <div>
-        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--azul);margin-bottom:14px;">
-          <i class="ti ti-package"></i> Insumos / ingredientes
-        </p>
-
-        <div class="search-orbe <%= buscar ? 'despierto' : '' %>" id="orbeInsumo" onclick="despertarBuscador(this)">
-          <div class="search-orbe-ring"></div>
-          <form method="GET" action="/costos" class="search-orbe-form">
-            <i class="ti ti-search search-orbe-icon" aria-hidden="true"></i>
-            <input type="text" name="buscar" value="<%= buscar %>" placeholder="Buscar insumo por nombre o código..."
-                   class="search-orbe-input"
-                   onfocus="this.closest('.search-orbe').classList.add('despierto')"
-                   onblur="cerrarBuscadorSiVacio(this)">
-            <% if (buscar) { %>
-            <a href="/costos" title="Limpiar búsqueda" class="search-orbe-clear" onclick="event.stopPropagation()"><i class="ti ti-x"></i></a>
+        <!-- Actualización de precios: un solo selector, detecta foto vs. catálogo solo -->
+        <div class="tarjeta-unificada">
+          <div class="tarjeta-unificada-icono"><i class="ti ti-refresh"></i></div>
+          <p class="tarjeta-unificada-titulo">
+            Actualización de precios
+            <% if (geminiConfigurado) { %>
+              <span class="badge-activo"><i class="ti ti-circle-filled" style="font-size:7px;"></i> Activo</span>
+            <% } else { %>
+              <span class="badge-inactivo">Foto no configurada</span>
             <% } %>
-          </form>
-        </div>
-
-        <% if (buscar) { %>
-          <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;">
-            <%= totalInsumos %> resultado<%= totalInsumos !== 1 ? 's' : '' %> para "<%= buscar %>"
           </p>
-        <% } %>
+          <p class="tarjeta-unificada-desc">Elegí una foto de factura o el catálogo del proveedor — el sistema detecta solo cuál es.</p>
 
-        <% if (!buscar) { %>
-        <div class="solapas-letras">
-          <a href="/costos" class="solapa-letra <%= !letra ? 'activa' : '' %>">Todos</a>
-          <% 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => { %>
-          <a href="/costos?letra=<%= l %>" class="solapa-letra <%= letra === l ? 'activa' : '' %>"><%= l %></a>
-          <% }) %>
+          <div class="tarjeta-unificada-opciones">
+            <form id="form-actualizacion" method="POST" enctype="multipart/form-data"
+                  class="opcion-precio opcion-precio-sola" onsubmit="return prepararEnvioUnificado()">
+              <input type="text" id="input-categoria-unificada" placeholder="Categoría (si es catálogo)" class="precio-card-input-categoria" style="display:none;">
+              <label class="input-archivo" id="label-archivo-unificado">
+                <i class="ti ti-paperclip"></i>
+                <span id="nombre-archivo-unificado">Elegir archivo</span>
+                <input type="file" id="input-unificado" required onchange="detectarTipoArchivo(this)">
+              </label>
+              <button type="submit" id="btn-actualizar-unificado" class="btn-primary">
+                <i class="ti ti-upload" id="icon-actualizar-unificado"></i>
+                <span id="texto-actualizar-unificado">Actualizar</span>
+              </button>
+            </form>
+          </div>
         </div>
-        <% } %>
 
-        <div class="tabla-wrap">
-          <table class="tabla" style="table-layout:fixed;">
-            <colgroup>
-              <col style="width:16%"><col style="width:44%"><col style="width:32%"><col style="width:8%">
-            </colgroup>
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Insumo</th>
-                <th>Precio unitario</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <% if (insumos.length > 0) { %>
-                <% insumos.forEach(ins => { %>
-                <tr>
-                  <td style="font-size:0.72rem;color:var(--gris-texto);font-family:monospace;"><%= ins.codigo || '—' %></td>
-                  <td style="font-weight:500;">
-                    <%= ins.nombre %>
-                    <% if (!ins.precio_unitario || parseFloat(ins.precio_unitario) === 0) { %>
-                      <span style="display:inline-block;margin-left:6px;font-size:0.6rem;font-weight:700;background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:20px;">SIN PRECIO</span>
-                    <% } %>
-                  </td>
-                  <td>
-                    <form method="POST" action="/costos/insumo/<%= ins.id %>/precio" style="display:flex;gap:4px;align-items:center;">
-                      <span style="font-size:0.78rem;color:var(--gris-texto);">$</span>
-                      <input type="number" name="precio_nuevo" value="<%= ins.precio_unitario %>" placeholder="Ej: 4500" step="0.01" min="0"
-                             style="width:80px;padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.82rem;outline:none;">
-                      <button type="submit" class="btn-sm" style="padding:4px 8px;">✓</button>
-                    </form>
-                  </td>
-                  <td>
-                    <form method="POST" action="/costos/insumo/<%= ins.id %>/eliminar"
-                          onsubmit="return confirm('¿Eliminar este insumo?')" style="margin:0;">
-                      <button type="submit"
-                              style="background:var(--azul-claro);border:none;color:var(--azul);cursor:pointer;font-size:15px;padding:5px 8px;border-radius:6px;transition:all 0.2s;"
-                              title="Eliminar"
-                              onmouseover="this.style.background='#dc2626';this.style.color='#fff';"
-                              onmouseout="this.style.background='var(--azul-claro)';this.style.color='var(--azul)';">
-                        <i class="ti ti-trash"></i>
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-                <% }) %>
-              <% } else { %>
-                <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
-                  <% if (buscar) { %>
-                    No se encontraron insumos para "<%= buscar %>".
-                  <% } else if (letra) { %>
-                    No hay insumos que empiecen con "<%= letra %>".
-                  <% } else { %>
-                    Sin insumos. Agregá el primero.
-                  <% } %>
-                </td></tr>
-              <% } %>
-            </tbody>
-          </table>
+        <!-- Resumen de Insumos, la lista completa vive en el modal -->
+        <div class="tarjeta-resumen-lista">
+          <div class="tarjeta-unificada-icono"><i class="ti ti-package"></i></div>
+          <p class="tarjeta-unificada-titulo">Insumos / Ingredientes</p>
+          <p class="tarjeta-resumen-numero"><%= totalInsumos %></p>
+          <p class="tarjeta-unificada-desc">insumo<%= totalInsumos !== 1 ? 's' : '' %> cargado<%= totalInsumos !== 1 ? 's' : '' %></p>
+          <button type="button" class="btn-primary" onclick="showModal('modal-lista-insumos')">
+            <i class="ti ti-list"></i> Ver insumos
+          </button>
         </div>
       </div>
 
       <!-- PLATOS -->
-      <div id="platos">
-        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--azul);margin-bottom:14px;">
-          <i class="ti ti-tools-kitchen-2"></i> Costeo de platos
-        </p>
+      <div>
+        <!-- Importar costeo de platos, centrado -->
+        <div class="tarjeta-unificada">
+          <div class="tarjeta-unificada-icono tarjeta-unificada-icono-csv"><i class="ti ti-file-spreadsheet"></i></div>
+          <p class="tarjeta-unificada-titulo">Costeo de platos (Excel/CSV)</p>
+          <p class="tarjeta-unificada-desc">Planilla de costeo — un bloque por plato. Si ya existe (mismo nombre), se actualizan sus ingredientes.</p>
 
-        <div class="search-orbe <%= buscarPlato ? 'despierto' : '' %>" id="orbePlato" onclick="despertarBuscador(this)">
-          <div class="search-orbe-ring"></div>
-          <form method="GET" action="/costos" class="search-orbe-form">
-            <i class="ti ti-search search-orbe-icon" aria-hidden="true"></i>
-            <input type="text" name="buscarPlato" value="<%= buscarPlato %>" placeholder="Buscar plato por nombre..."
-                   class="search-orbe-input"
-                   onfocus="this.closest('.search-orbe').classList.add('despierto')"
-                   onblur="cerrarBuscadorSiVacio(this)">
-            <% if (buscarPlato) { %>
-            <a href="/costos" title="Limpiar búsqueda" class="search-orbe-clear" onclick="event.stopPropagation()"><i class="ti ti-x"></i></a>
-            <% } %>
+          <form id="form-importar-platos" method="POST" action="/costos/platos/importar" enctype="multipart/form-data"
+                class="opcion-precio opcion-precio-sola" onsubmit="return prepararEnvioPlatos()">
+            <input type="text" name="categoria_platos" id="input-categoria-platos" placeholder="Categoría (ej: Pastelería)" required class="precio-card-input-categoria">
+            <label class="input-archivo">
+              <i class="ti ti-paperclip"></i>
+              <span id="nombre-archivo-platos">Elegir archivo</span>
+              <input type="file" id="input-platos" name="archivo_platos" required
+                     onchange="marcarArchivoPlatosElegido(this)">
+            </label>
+            <button type="submit" id="btn-importar-platos" class="btn-primary">
+              <i class="ti ti-upload" id="icon-importar-platos"></i>
+              <span id="texto-importar-platos">Importar</span>
+            </button>
           </form>
         </div>
 
-        <% if (buscarPlato) { %>
-          <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;">
-            <%= totalPlatos %> resultado<%= totalPlatos !== 1 ? 's' : '' %> para "<%= buscarPlato %>"
-          </p>
-        <% } %>
-
-        <% if (!buscarPlato) { %>
-        <div class="solapas-letras">
-          <a href="/costos" class="solapa-letra <%= !letraPlato ? 'activa' : '' %>">Todos</a>
-          <% 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => { %>
-          <a href="/costos?letraPlato=<%= l %>#platos" class="solapa-letra <%= letraPlato === l ? 'activa' : '' %>"><%= l %></a>
-          <% }) %>
-        </div>
-        <% } %>
-
-        <div class="tabla-wrap">
-          <table class="tabla">
-            <thead>
-              <tr>
-                <th>Plato</th>
-                <th>Costo</th>
-                <th>Margen</th>
-                <th>Precio venta</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <% if (platos.length > 0) { %>
-                <% platos.forEach(p => { %>
-                <tr>
-                  <td style="font-weight:500;">
-                    <a href="/costos/plato/<%= p.id %>" style="color:var(--negro);text-decoration:none;">
-                      <%= p.nombre %>
-                    </a>
-                    <% if (p.categoria) { %>
-                      <span style="display:block;font-size:0.65rem;color:var(--gris-texto);"><%= p.categoria %></span>
-                    <% } %>
-                  </td>
-                  <td style="color:var(--azul);font-weight:600;">$<%= parseFloat(p.costo_total).toFixed(2) %></td>
-                  <td>
-                    <span style="font-size:0.72rem;background:var(--azul-claro);color:var(--azul);padding:2px 8px;border-radius:20px;font-weight:500;">
-                      <%= p.margen_ganancia %>%
-                    </span>
-                  </td>
-                  <td style="font-weight:600;color:#16a34a;">
-                    $<%= (parseFloat(p.costo_total) * (1 + parseFloat(p.margen_ganancia)/100)).toFixed(2) %>
-                  </td>
-                  <td><a href="/costos/plato/<%= p.id %>" class="btn-sm">Ver</a></td>
-                </tr>
-                <% }) %>
-              <% } else { %>
-                <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
-                  <% if (buscarPlato) { %>
-                    No se encontraron platos para "<%= buscarPlato %>".
-                  <% } else if (letraPlato) { %>
-                    No hay platos que empiecen con "<%= letraPlato %>".
-                  <% } else { %>
-                    Sin platos. Agregá el primero.
-                  <% } %>
-                </td></tr>
-              <% } %>
-            </tbody>
-          </table>
+        <!-- Resumen de Platos, la lista completa vive en el modal -->
+        <div class="tarjeta-resumen-lista">
+          <div class="tarjeta-unificada-icono tarjeta-unificada-icono-csv"><i class="ti ti-tools-kitchen-2"></i></div>
+          <p class="tarjeta-unificada-titulo">Costeo de platos</p>
+          <p class="tarjeta-resumen-numero"><%= totalPlatos %></p>
+          <p class="tarjeta-unificada-desc">plato<%= totalPlatos !== 1 ? 's' : '' %> costeado<%= totalPlatos !== 1 ? 's' : '' %></p>
+          <button type="button" class="btn-primary" onclick="showModal('modal-lista-platos')">
+            <i class="ti ti-list"></i> Ver platos
+          </button>
         </div>
       </div>
     </div>
@@ -314,6 +127,193 @@
   </main>
 
   <%- include('partials/mobile-nav', { path: 'costos' }) %>
+</div>
+
+<!-- Modal: lista completa de Insumos -->
+<div id="modal-lista-insumos" class="modal-lista" style="display:none;" onclick="if(event.target===this)hideModal('modal-lista-insumos')">
+  <div class="modal-lista-caja">
+    <div class="modal-lista-header">
+      <p class="modal-lista-titulo"><i class="ti ti-package"></i> Insumos / Ingredientes</p>
+      <button onclick="hideModal('modal-lista-insumos')" class="modal-lista-cerrar"><i class="ti ti-x"></i></button>
+    </div>
+
+    <div class="modal-lista-body">
+      <div style="position:relative;margin-bottom:12px;">
+        <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
+        <form method="GET" action="/costos">
+          <input type="text" name="buscar" value="<%= buscar %>" placeholder="Buscar insumo por nombre o código..."
+                 style="width:100%;padding:8px 32px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
+          <% if (buscar) { %>
+          <a href="/costos#modal-lista-insumos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
+          <% } %>
+        </form>
+      </div>
+
+      <% if (buscar) { %>
+        <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;">
+          <%= totalInsumos %> resultado<%= totalInsumos !== 1 ? 's' : '' %> para "<%= buscar %>"
+        </p>
+      <% } %>
+
+      <% if (!buscar) { %>
+      <div class="solapas-letras">
+        <a href="/costos" class="solapa-letra <%= !letra ? 'activa' : '' %>">Todos</a>
+        <% 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => { %>
+        <a href="/costos?letra=<%= l %>" class="solapa-letra <%= letra === l ? 'activa' : '' %>"><%= l %></a>
+        <% }) %>
+      </div>
+      <% } %>
+
+      <div class="tabla-wrap">
+        <table class="tabla" style="table-layout:fixed;">
+          <colgroup>
+            <col style="width:16%"><col style="width:44%"><col style="width:32%"><col style="width:8%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Insumo</th>
+              <th>Precio unitario</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (insumos.length > 0) { %>
+              <% insumos.forEach(ins => { %>
+              <tr>
+                <td style="font-size:0.72rem;color:var(--gris-texto);font-family:monospace;"><%= ins.codigo || '—' %></td>
+                <td style="font-weight:500;">
+                  <%= ins.nombre %>
+                  <% if (!ins.precio_unitario || parseFloat(ins.precio_unitario) === 0) { %>
+                    <span style="display:inline-block;margin-left:6px;font-size:0.6rem;font-weight:700;background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:20px;">SIN PRECIO</span>
+                  <% } %>
+                </td>
+                <td>
+                  <form method="POST" action="/costos/insumo/<%= ins.id %>/precio" style="display:flex;gap:4px;align-items:center;">
+                    <span style="font-size:0.78rem;color:var(--gris-texto);">$</span>
+                    <input type="number" name="precio_nuevo" value="<%= ins.precio_unitario %>" placeholder="Ej: 4500" step="0.01" min="0"
+                           style="width:80px;padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.82rem;outline:none;">
+                    <button type="submit" class="btn-sm" style="padding:4px 8px;">✓</button>
+                  </form>
+                </td>
+                <td>
+                  <form method="POST" action="/costos/insumo/<%= ins.id %>/eliminar"
+                        onsubmit="return confirm('¿Eliminar este insumo?')" style="margin:0;">
+                    <button type="submit"
+                            style="background:var(--azul-claro);border:none;color:var(--azul);cursor:pointer;font-size:15px;padding:5px 8px;border-radius:6px;transition:all 0.2s;"
+                            title="Eliminar"
+                            onmouseover="this.style.background='#dc2626';this.style.color='#fff';"
+                            onmouseout="this.style.background='var(--azul-claro)';this.style.color='var(--azul)';">
+                      <i class="ti ti-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              <% }) %>
+            <% } else { %>
+              <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
+                <% if (buscar) { %>
+                  No se encontraron insumos para "<%= buscar %>".
+                <% } else if (letra) { %>
+                  No hay insumos que empiecen con "<%= letra %>".
+                <% } else { %>
+                  Sin insumos. Agregá el primero.
+                <% } %>
+              </td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: lista completa de Platos -->
+<div id="modal-lista-platos" class="modal-lista" style="display:none;" onclick="if(event.target===this)hideModal('modal-lista-platos')">
+  <div class="modal-lista-caja">
+    <div class="modal-lista-header">
+      <p class="modal-lista-titulo"><i class="ti ti-tools-kitchen-2"></i> Costeo de platos</p>
+      <button onclick="hideModal('modal-lista-platos')" class="modal-lista-cerrar"><i class="ti ti-x"></i></button>
+    </div>
+
+    <div class="modal-lista-body">
+      <div style="position:relative;margin-bottom:12px;">
+        <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
+        <form method="GET" action="/costos">
+          <input type="text" name="buscarPlato" value="<%= buscarPlato %>" placeholder="Buscar plato por nombre..."
+                 style="width:100%;padding:8px 32px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
+          <% if (buscarPlato) { %>
+          <a href="/costos#modal-lista-platos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
+          <% } %>
+        </form>
+      </div>
+
+      <% if (buscarPlato) { %>
+        <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;">
+          <%= totalPlatos %> resultado<%= totalPlatos !== 1 ? 's' : '' %> para "<%= buscarPlato %>"
+        </p>
+      <% } %>
+
+      <% if (!buscarPlato) { %>
+      <div class="solapas-letras">
+        <a href="/costos" class="solapa-letra <%= !letraPlato ? 'activa' : '' %>">Todos</a>
+        <% 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => { %>
+        <a href="/costos?letraPlato=<%= l %>" class="solapa-letra <%= letraPlato === l ? 'activa' : '' %>"><%= l %></a>
+        <% }) %>
+      </div>
+      <% } %>
+
+      <div class="tabla-wrap">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Plato</th>
+              <th>Costo</th>
+              <th>Margen</th>
+              <th>Precio venta</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (platos.length > 0) { %>
+              <% platos.forEach(p => { %>
+              <tr>
+                <td style="font-weight:500;">
+                  <a href="/costos/plato/<%= p.id %>" style="color:var(--negro);text-decoration:none;">
+                    <%= p.nombre %>
+                  </a>
+                  <% if (p.categoria) { %>
+                    <span style="display:block;font-size:0.65rem;color:var(--gris-texto);"><%= p.categoria %></span>
+                  <% } %>
+                </td>
+                <td style="color:var(--azul);font-weight:600;">$<%= parseFloat(p.costo_total).toFixed(2) %></td>
+                <td>
+                  <span style="font-size:0.72rem;background:var(--azul-claro);color:var(--azul);padding:2px 8px;border-radius:20px;font-weight:500;">
+                    <%= p.margen_ganancia %>%
+                  </span>
+                </td>
+                <td style="font-weight:600;color:#16a34a;">
+                  $<%= (parseFloat(p.costo_total) * (1 + parseFloat(p.margen_ganancia)/100)).toFixed(2) %>
+                </td>
+                <td><a href="/costos/plato/<%= p.id %>" class="btn-sm">Ver</a></td>
+              </tr>
+              <% }) %>
+            <% } else { %>
+              <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
+                <% if (buscarPlato) { %>
+                  No se encontraron platos para "<%= buscarPlato %>".
+                <% } else if (letraPlato) { %>
+                  No hay platos que empiecen con "<%= letraPlato %>".
+                <% } else { %>
+                  Sin platos. Agregá el primero.
+                <% } %>
+              </td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Modal nuevo insumo -->
@@ -420,50 +420,6 @@
 </div>
 
 <style>
-/* ── Buscador "orbe" navy: círculo chico que se despierta y expande, con anillo de brillo ── */
-.search-orbe{
-  position:relative;
-  width:40px; height:40px;
-  border-radius:999px;
-  cursor:pointer;
-  margin-bottom:12px;
-  transition: width .58s cubic-bezier(.22,1,.36,1);
-}
-.search-orbe.despierto{ width:100%; }
-
-.search-orbe-ring{
-  position:absolute; inset:-2px; border-radius:999px;
-  background:conic-gradient(from 0deg, #1d4ed8, #60a5fa, #93c5fd, #1d4ed8);
-  opacity:0; z-index:0;
-  animation: orbeSpin 4s linear infinite;
-  transition: opacity .35s ease;
-}
-.search-orbe.despierto .search-orbe-ring{ opacity:1; box-shadow:0 0 28px rgba(59,130,246,0.35); }
-@keyframes orbeSpin{ from{ transform:rotate(0deg);} to{ transform:rotate(360deg);} }
-
-.search-orbe-form{
-  position:relative; z-index:1;
-  display:flex; align-items:center; gap:8px;
-  width:100%; height:40px;
-  background:#0f172a; border-radius:999px;
-  padding:0 12px; margin:2px 0 0 0;
-  box-sizing:border-box;
-  overflow:hidden;
-}
-.search-orbe-icon{ color:#93c5fd; font-size:15px; flex-shrink:0; }
-.search-orbe-input{
-  flex:1; min-width:0;
-  background:transparent; border:none; outline:none;
-  color:#fff; font-family:var(--font-sans); font-size:0.82rem;
-  opacity:0; transition:opacity .3s ease .15s;
-}
-.search-orbe.despierto .search-orbe-input{ opacity:1; }
-.search-orbe-input::placeholder{ color:rgba(255,255,255,0.4); }
-.search-orbe-clear{ color:rgba(255,255,255,0.5); flex-shrink:0; display:flex; opacity:0; transition:opacity .2s ease .2s; }
-.search-orbe.despierto .search-orbe-clear{ opacity:1; }
-</style>
-
-<style>
 .main-content-ancho{max-width:1600px;}
 .puesto-badge{font-size:0.68rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:2px 8px;border-radius:20px;}
 .field{margin-bottom:0;}
@@ -471,26 +427,41 @@
 .field input,.field select{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;transition:border-color 0.2s;}
 .field input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);background:var(--blanco);}
 
-/* Actualización de precios */
-.precios-seccion{margin-bottom:32px;}
-.precios-titulo{font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 12px;display:flex;align-items:center;gap:6px;}
-.precios-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-@media (max-width:820px){.precios-grid{grid-template-columns:1fr;}}
-.precios-grid-3{grid-template-columns:repeat(3,1fr);}
-@media (max-width:1100px){.precios-grid-3{grid-template-columns:1fr 1fr;}}
-@media (max-width:700px){.precios-grid-3{grid-template-columns:1fr;}}
-.precio-card{display:flex;gap:16px;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:20px;box-shadow:var(--sombra);transition:border-color 0.2s;}
-.precio-card:hover{border-color:var(--azul-borde);}
-.precio-card-apagada{background:var(--gris-fondo);}
-.precio-card-icono{flex-shrink:0;width:44px;height:44px;border-radius:10px;background:var(--azul-claro);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:20px;}
-.precio-card-icono-csv{background:#f0fdf4;color:#16a34a;}
-.precio-card-cuerpo{flex:1;min-width:0;}
-.precio-card-titulo{font-size:0.9rem;font-weight:600;color:var(--negro);margin:0 0 4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.precio-card-desc{font-size:0.76rem;color:var(--gris-texto);margin:0 0 14px;line-height:1.5;}
-.precio-card-form{display:flex;flex-wrap:wrap;gap:8px;}
-.precio-card-input-categoria{flex:1;min-width:110px;padding:9px 10px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.8rem;outline:none;background:var(--gris-fondo);}
-.precio-card-form .input-archivo{flex:1;min-width:120px;max-width:none;}
-.precio-card-form .btn-primary{flex-shrink:0;}
+/* Tarjeta unificada de importación, centrada, arriba de cada columna */
+.tarjeta-unificada{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:22px;box-shadow:var(--sombra);text-align:center;margin-bottom:22px;}
+.tarjeta-unificada-icono{width:44px;height:44px;border-radius:10px;background:var(--azul-claro);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px;}
+.tarjeta-unificada-icono-csv{background:#f0fdf4;color:#16a34a;}
+.tarjeta-unificada-titulo{font-size:0.9rem;font-weight:600;color:var(--negro);margin:0 0 4px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
+.tarjeta-unificada-desc{font-size:0.76rem;color:var(--gris-texto);margin:0 0 16px;line-height:1.5;}
+.tarjeta-unificada-opciones{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;}
+.opcion-precio-sola{flex-shrink:0;}
+.opcion-precio{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.opcion-precio-sola{flex-direction:row;flex-wrap:wrap;justify-content:center;}
+.opcion-precio-label{font-size:0.72rem;font-weight:600;color:var(--gris-texto);display:flex;align-items:center;gap:5px;}
+.opcion-divisor{width:1px;align-self:stretch;background:var(--gris-borde);min-height:60px;}
+
+/* Tarjeta resumen (reemplaza a la tabla siempre visible) */
+.tarjeta-resumen-lista{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:26px 22px;box-shadow:var(--sombra);text-align:center;}
+.tarjeta-resumen-numero{font-family:var(--font-serif);font-size:2.4rem;font-weight:400;color:var(--negro);margin:4px 0 0;line-height:1;}
+.tarjeta-resumen-lista .tarjeta-unificada-desc{margin-bottom:18px;}
+.tarjeta-resumen-lista .btn-primary{width:100%;justify-content:center;}
+
+/* Modal de lista completa: overlay a pantalla completa, la caja centrada y grande */
+.modal-lista{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;}
+.modal-lista-caja{background:var(--blanco);border-radius:16px;width:100%;max-width:800px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
+.modal-lista-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--gris-borde);flex-shrink:0;}
+.modal-lista-titulo{font-size:0.95rem;font-weight:600;color:var(--negro);display:flex;align-items:center;gap:8px;margin:0;}
+.modal-lista-cerrar{background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);padding:4px;}
+.modal-lista-cerrar:hover{color:var(--negro);}
+.modal-lista-body{padding:18px 22px;overflow-y:auto;}
+
+/* En celular, el modal ocupa toda la pantalla */
+@media (max-width:700px){
+  .modal-lista{padding:0;}
+  .modal-lista-caja{max-width:100%;max-height:100vh;height:100vh;border-radius:0;}
+}
+@media (max-width:600px){.opcion-divisor{display:none;}}
+.precio-card-input-categoria{padding:9px 10px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.8rem;outline:none;background:var(--gris-fondo);color:var(--negro);}
 .precio-card-input-categoria:focus{border-color:var(--azul);background:var(--blanco);}
 
 /* Solapas alfabéticas — discretas, tipo índice de agenda */
@@ -515,25 +486,19 @@
 </style>
 
 <script>
-function despertarBuscador(el) {
-  if (el.classList.contains('despierto')) return;
-  el.classList.add('despierto');
-  const input = el.querySelector('.search-orbe-input');
-  setTimeout(() => input.focus(), 150);
-}
-
-function cerrarBuscadorSiVacio(input) {
-  if (!input.value.trim()) {
-    setTimeout(() => {
-      input.closest('.search-orbe').classList.remove('despierto');
-    }, 150);
-  }
-}
 function showModal(id){
   document.getElementById(id).style.display='flex';
   setTimeout(()=>{const f=document.querySelector('#'+id+' input:not([type=hidden])');if(f)f.focus();},100);
 }
 function hideModal(id){ document.getElementById(id).style.display='none'; }
+
+// Si venimos de buscar o filtrar por letra, reabrir el modal correspondiente
+<% if (buscar || letra) { %>
+showModal('modal-lista-insumos');
+<% } %>
+<% if (buscarPlato || letraPlato) { %>
+showModal('modal-lista-platos');
+<% } %>
 
 function toggleOtroPlato() {
   const sel  = document.getElementById('sel-cat-plato');
@@ -551,70 +516,78 @@ function prepararPlato() {
   }
 }
 
-function marcarArchivoElegido(input) {
-  const label  = input.closest('.input-archivo');
-  const nombre = document.getElementById('nombre-archivo');
-  if (input.files && input.files[0]) {
-    nombre.textContent = input.files[0].name;
-    label.classList.add('input-archivo-ok');
-  } else {
-    nombre.textContent = 'Elegir imagen';
+const geminiConfigurado = <%= geminiConfigurado ? 'true' : 'false' %>;
+
+function esImagen(nombreArchivo) {
+  return /\.(jpe?g|png|gif|webp|heic|bmp)$/i.test(nombreArchivo);
+}
+
+// Al elegir el archivo, muestra u oculta el campo Categoría según sea foto o catálogo
+function detectarTipoArchivo(input) {
+  const label       = input.closest('.input-archivo');
+  const nombreSpan  = document.getElementById('nombre-archivo-unificado');
+  const catInput    = document.getElementById('input-categoria-unificada');
+  const textoBoton  = document.getElementById('texto-actualizar-unificado');
+
+  if (!input.files || !input.files[0]) {
+    nombreSpan.textContent = 'Elegir archivo';
     label.classList.remove('input-archivo-ok');
-  }
-}
-
-// Estado de carga al subir la factura — evita doble envío y avisa que Gemini está procesando
-function prepararEnvioFactura() {
-  const btn   = document.getElementById('btn-subir-factura');
-  const icon  = document.getElementById('icon-subir-factura');
-  const texto = document.getElementById('texto-subir-factura');
-  const input = document.getElementById('input-factura');
-
-  if (!input.files || input.files.length === 0) {
-    alert('Primero tenés que elegir una imagen — hacé click en "Elegir imagen" y seleccioná la foto de la factura.');
-    return false; // bloquea el envío, el input está oculto así que el navegador no lo valida solo
+    return;
   }
 
-  btn.disabled = true;
-  input.style.pointerEvents = 'none'; // bloquea visualmente sin sacarlo del envío (disabled excluiría el archivo del submit)
-  icon.className = 'ti ti-loader-2 girando';
-  texto.textContent = 'Analizando factura...';
-  return true;
-}
+  const archivo = input.files[0];
+  nombreSpan.textContent = archivo.name;
+  label.classList.add('input-archivo-ok');
 
-function marcarArchivoCsvElegido(input) {
-  const label  = input.closest('.input-archivo');
-  const nombre = document.getElementById('nombre-archivo-csv');
-  if (input.files && input.files[0]) {
-    nombre.textContent = input.files[0].name;
-    label.classList.add('input-archivo-ok');
+  if (esImagen(archivo.name)) {
+    catInput.style.display = 'none';
+    catInput.required = false;
+    textoBoton.textContent = 'Subir';
   } else {
-    nombre.textContent = 'Elegir archivo CSV';
-    label.classList.remove('input-archivo-ok');
+    catInput.style.display = '';
+    catInput.required = true;
+    textoBoton.textContent = 'Importar';
   }
 }
 
-// Estado de carga al importar el CSV — con miles de filas puede tardar unos segundos
-function prepararEnvioCsv() {
-  const btn      = document.getElementById('btn-importar-csv');
-  const icon     = document.getElementById('icon-importar-csv');
-  const texto    = document.getElementById('texto-importar-csv');
-  const input    = document.getElementById('input-csv');
-  const catInput = document.getElementById('input-categoria-csv');
+// Al enviar, arma la acción y el nombre del campo según haya detectado foto o catálogo
+function prepararEnvioUnificado() {
+  const form     = document.getElementById('form-actualizacion');
+  const input    = document.getElementById('input-unificado');
+  const catInput = document.getElementById('input-categoria-unificada');
+  const btn      = document.getElementById('btn-actualizar-unificado');
+  const icon     = document.getElementById('icon-actualizar-unificado');
+  const texto    = document.getElementById('texto-actualizar-unificado');
 
-  if (!catInput.value.trim()) {
-    alert('Escribí a qué categoría pertenece este archivo (ej: Frescos, Secos, Congelados).');
+  if (!input.files || !input.files[0]) {
+    alert('Primero tenés que elegir un archivo — una foto de factura o el catálogo del proveedor.');
     return false;
   }
-  if (!input.files || input.files.length === 0) {
-    alert('Primero tenés que elegir el archivo CSV.');
-    return false;
+  const archivo = input.files[0];
+
+  if (esImagen(archivo.name)) {
+    if (!geminiConfigurado) {
+      alert('La lectura de fotos de factura todavía no está configurada. Usá el catálogo en su lugar.');
+      return false;
+    }
+    form.action = '/costos/factura';
+    input.name = 'factura';
+    catInput.name = '';
+    texto.textContent = 'Analizando factura...';
+  } else {
+    if (!catInput.value.trim()) {
+      alert('Escribí a qué categoría pertenece este catálogo (ej: Frescos, Secos, Congelados).');
+      return false;
+    }
+    form.action = '/costos/insumos/importar';
+    input.name = 'archivo_csv';
+    catInput.name = 'categoria';
+    texto.textContent = 'Importando...';
   }
 
   btn.disabled = true;
   input.style.pointerEvents = 'none';
   icon.className = 'ti ti-loader-2 girando';
-  texto.textContent = 'Importando...';
   return true;
 }
 

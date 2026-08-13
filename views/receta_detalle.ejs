@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,94 +13,94 @@
 
   <main class="main-content">
 
+    <%
+      const ingredientes = receta.ingredientes_json || [];
+      let msgWhatsapp = `*${receta.nombre}*\n\n`;
+      if (ingredientes.length) {
+        msgWhatsapp += `_Ingredientes:_\n`;
+        ingredientes.forEach(ing => {
+          let linea = `• ${ing.nombre}`;
+          if (ing.cantidad) linea += ` — ${ing.cantidad}`;
+          if (ing.precio_unitario) linea += ` ($${Number(ing.precio_unitario).toFixed(2)})`;
+          msgWhatsapp += linea + `\n`;
+        });
+        msgWhatsapp += `\n`;
+      }
+      if (receta.procedimiento) {
+        msgWhatsapp += `_Procedimiento:_\n${receta.procedimiento}`;
+      }
+      const videosPorGrupo = { 'Preparación': [], 'Montaje': [], 'Otros': [] };
+      (videos || []).forEach(v => {
+        const g = videosPorGrupo[v.clasificacion] ? v.clasificacion : 'Otros';
+        videosPorGrupo[g].push(v);
+      });
+    %>
+
     <div class="seccion-header">
       <div class="seccion-header-left">
         <p class="seccion-label"><a href="/recetas" class="back-link"><i class="ti ti-arrow-left"></i> Recetas</a></p>
         <h1 class="seccion-titulo"><%= receta.nombre %></h1>
       </div>
-      <form method="POST" action="/recetas/<%= receta.id %>/eliminar"
-            onsubmit="return confirm('¿Eliminar esta receta?')">
-        <button type="submit" class="btn-danger">
-          <i class="ti ti-trash"></i> Eliminar
-        </button>
-      </form>
-    </div>
-
-    <div class="detalle-grid">
-
-      <!-- Imagen -->
-      <% if (receta.imagen) { %>
-      <div class="detalle-card" style="grid-column: 1 / -1; padding: 0; overflow: hidden;">
-        <img src="/uploads/<%= receta.imagen %>" alt="<%= receta.nombre %>"
-             style="width:100%; max-height:340px; object-fit:cover; border-radius:12px;">
-      </div>
-      <% } %>
-
-      <!-- Info general -->
-      <div class="detalle-card">
-        <p class="detalle-card-title"><i class="ti ti-info-circle"></i> Información general</p>
-        <div class="info-rows">
-          <div class="info-row">
-            <span class="info-label">Categoría</span>
-            <span class="info-val"><%= receta.categoria || '—' %></span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Área</span>
-            <span class="info-val"><%= receta.area || '—' %></span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Cargada el</span>
-            <span class="info-val"><%= receta.creado_en ? new Date(receta.creado_en).toISOString().substring(0,10) : '—' %></span>
-          </div>
-        </div>
-
-        <!-- Video -->
-        <% if (receta.video_url) { %>
-        <div style="margin-top:20px;">
-          <p class="detalle-card-title"><i class="ti ti-video"></i> Video de preparación</p>
-          <% if (receta.video_url.includes('youtube') || receta.video_url.includes('youtu.be')) { %>
-            <% const ytId = receta.video_url.includes('youtu.be') ? receta.video_url.split('/').pop() : receta.video_url.split('v=')[1]?.split('&')[0]; %>
-            <iframe width="100%" height="200"
-              src="https://www.youtube.com/embed/<%= ytId %>"
-              frameborder="0" allowfullscreen style="border-radius:8px;"></iframe>
-          <% } else if (receta.video_url.startsWith('http')) { %>
-            <a href="<%= receta.video_url %>" target="_blank" class="btn-primary" style="display:inline-flex;margin-top:8px;">
-              <i class="ti ti-external-link"></i> Ver video
-            </a>
-          <% } else { %>
-            <video controls style="width:100%;border-radius:8px;margin-top:8px;">
-              <source src="/uploads/<%= receta.video_url %>">
-            </video>
-          <% } %>
-        </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="https://wa.me/?text=<%= encodeURIComponent(msgWhatsapp) %>" target="_blank" class="btn-whatsapp">
+          <i class="ti ti-brand-whatsapp"></i> Compartir
+        </a>
+        <% if (puedeEditar) { %>
+          <a href="/recetas/<%= receta.id %>/editar" class="btn-secondary">
+            <i class="ti ti-pencil"></i> Editar
+          </a>
+          <form method="POST" action="/recetas/<%= receta.id %>/eliminar"
+                onsubmit="return confirm('¿Eliminar esta receta?')">
+            <button type="submit" class="btn-danger">
+              <i class="ti ti-trash"></i> Eliminar
+            </button>
+          </form>
         <% } %>
       </div>
+    </div>
 
-      <!-- Ingredientes -->
+    <!-- Foto arriba, ancho completo -->
+    <% if (receta.imagen) { %>
+    <div class="receta-foto">
+      <img src="/uploads/<%= receta.imagen %>" alt="<%= receta.nombre %>">
+    </div>
+    <% } %>
+
+    <!-- Medio: ingredientes izquierda, procedimiento derecha -->
+    <div class="receta-medio">
       <div class="detalle-card">
         <p class="detalle-card-title"><i class="ti ti-list"></i> Ingredientes</p>
-        <% if (receta.ingredientes) { %>
-          <div style="font-size:0.85rem;color:var(--negro);line-height:2;">
-            <% receta.ingredientes.split('\n').forEach(ing => { %>
-              <% if (ing.trim()) { %>
-                <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--gris-borde);">
-                  <i class="ti ti-circle-filled" style="font-size:6px;color:var(--azul);flex-shrink:0;"></i>
-                  <%= ing.trim() %>
-                </div>
-              <% } %>
-            <% }) %>
-          </div>
+        <% if (ingredientes.length > 0) { %>
+          <table class="tabla-ingredientes-ver">
+            <thead><tr><th>Ingrediente</th><th>Cantidad</th><th>Precio unit.</th></tr></thead>
+            <tbody>
+              <% ingredientes.forEach(ing => { %>
+              <tr>
+                <td><%= ing.nombre %></td>
+                <td><%= ing.cantidad || '—' %></td>
+                <td><%= ing.precio_unitario ? '$' + Number(ing.precio_unitario).toFixed(2) : '—' %></td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
         <% } else { %>
           <p class="list-empty">Sin ingredientes cargados.</p>
         <% } %>
+
+        <div style="margin-top:14px;">
+          <p class="detalle-card-title"><i class="ti ti-info-circle"></i> Información</p>
+          <div class="info-rows">
+            <div class="info-row"><span class="info-label">Categoría</span><span class="info-val"><%= receta.categoria || '—' %></span></div>
+            <div class="info-row"><span class="info-label">Área</span><span class="info-val"><%= receta.area || '—' %></span></div>
+          </div>
+        </div>
       </div>
 
-      <!-- Pasos -->
-      <div class="detalle-card" style="grid-column: 1 / -1;">
-        <p class="detalle-card-title"><i class="ti ti-list-numbers"></i> Pasos de preparación</p>
-        <% if (receta.pasos) { %>
+      <div class="detalle-card">
+        <p class="detalle-card-title"><i class="ti ti-list-numbers"></i> Procedimiento</p>
+        <% if (receta.procedimiento) { %>
           <div style="display:flex;flex-direction:column;gap:12px;">
-            <% receta.pasos.split('\n').forEach((paso, i) => { %>
+            <% receta.procedimiento.split('\n').forEach((paso, i) => { %>
               <% if (paso.trim()) { %>
                 <div style="display:flex;gap:14px;align-items:flex-start;">
                   <div style="width:28px;height:28px;border-radius:50%;background:var(--azul);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;flex-shrink:0;">
@@ -112,17 +112,45 @@
             <% }) %>
           </div>
         <% } else { %>
-          <p class="list-empty">Sin pasos cargados.</p>
+          <p class="list-empty">Sin procedimiento cargado.</p>
         <% } %>
       </div>
-
     </div>
+
+    <!-- Videos abajo, ancho completo -->
+    <% if ((videos || []).length > 0) { %>
+    <div class="detalle-card" style="margin-top:20px;">
+      <p class="detalle-card-title"><i class="ti ti-video"></i> Videos</p>
+      <% ['Preparación','Montaje','Otros'].forEach(grupo => { %>
+        <% if (videosPorGrupo[grupo].length > 0) { %>
+        <div style="margin-bottom:18px;">
+          <p style="font-size:0.72rem;font-weight:600;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;"><%= grupo %></p>
+          <div class="videos-grid">
+            <% videosPorGrupo[grupo].forEach(v => { %>
+              <% if (v.origen === 'url' && (v.valor.includes('youtube') || v.valor.includes('youtu.be'))) { %>
+                <% const ytId = v.valor.includes('youtu.be') ? v.valor.split('/').pop() : v.valor.split('v=')[1]?.split('&')[0]; %>
+                <iframe width="100%" height="200" src="https://www.youtube.com/embed/<%= ytId %>" frameborder="0" allowfullscreen style="border-radius:8px;"></iframe>
+              <% } else if (v.origen === 'url') { %>
+                <a href="<%= v.valor %>" target="_blank" class="btn-primary" style="display:inline-flex;">
+                  <i class="ti ti-external-link"></i> Ver video
+                </a>
+              <% } else { %>
+                <video controls style="width:100%;border-radius:8px;">
+                  <source src="/uploads/<%= v.valor %>">
+                </video>
+              <% } %>
+            <% }) %>
+          </div>
+        </div>
+        <% } %>
+      <% }) %>
+    </div>
+    <% } %>
 
   </main>
 </div>
 
 <style>
-.detalle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .detalle-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
 .detalle-card-title { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
 .info-rows { display: flex; flex-direction: column; }
@@ -133,11 +161,24 @@
 .list-empty { font-size: 0.78rem; color: var(--gris-texto); font-style: italic; padding: 8px 0; }
 .back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; }
 .back-link:hover { color: var(--azul); }
-.btn-danger { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all var(--tr); }
-.btn-danger:hover { background: #dc2626; color: #fff; }
-@media (max-width: 900px) { .detalle-grid { grid-template-columns: 1fr; } }
+.btn-danger { background: var(--rojo-claro); border: 1px solid var(--rojo-borde); color: var(--rojo); font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all var(--tr); }
+.btn-danger:hover { background: var(--rojo); color: #fff; }
+.btn-whatsapp { background: #25D366; border: none; color: #fff; font-family: var(--font-sans); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 9px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: none; transition: background var(--tr); }
+.btn-whatsapp:hover { background: #1ea952; }
+
+/* Layout pedido: foto arriba ancho completo, medio en 2 columnas, videos abajo ancho completo */
+.receta-foto { margin-bottom: 20px; border-radius: 12px; overflow: hidden; box-shadow: var(--sombra); }
+.receta-foto img { width: 100%; max-height: 380px; object-fit: cover; display: block; }
+.receta-medio { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .receta-medio { grid-template-columns: 1fr; } }
+
+.tabla-ingredientes-ver { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+.tabla-ingredientes-ver th { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gris-texto); text-align: left; padding: 0 6px 8px; border-bottom: 1px solid var(--gris-borde); }
+.tabla-ingredientes-ver td { padding: 8px 6px; font-size: 0.83rem; color: var(--negro); border-bottom: 1px solid var(--gris-borde); }
+.tabla-ingredientes-ver tr:last-child td { border-bottom: none; }
+
+.videos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 </style>
 
 </body>
 </html>
-

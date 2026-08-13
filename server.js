@@ -14,7 +14,9 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.urlencoded({ extended: true, limit: '2gb' }));
 app.use(express.json({ limit: '2gb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '60s', // ayuda a que no se re-pida todo en cada página, sin arriesgar quedarse con CSS viejo por mucho tiempo mientras seguimos cambiando cosas
+}));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(session({
@@ -69,4 +71,18 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`  Red local:  http://${ip}:${PORT}  ← usar en celulares`);
   });
   console.log('\n  Compartí el link de "Red local" con los celulares\n');
+
+  // Abre el navegador automáticamente en esta PC (no en los celulares, obvio)
+  const urlLocal = `http://localhost:${PORT}`;
+  const comandoPorSO = {
+    win32: `start "" "${urlLocal}"`,
+    darwin: `open "${urlLocal}"`,
+    linux: `xdg-open "${urlLocal}"`,
+  }[process.platform];
+
+  if (comandoPorSO) {
+    require('child_process').exec(comandoPorSO, (err) => {
+      if (err) console.log('  (No se pudo abrir el navegador solo — abrilo a mano en la URL de arriba)');
+    });
+  }
 });
