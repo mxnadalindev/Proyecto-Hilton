@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personal — Hilton</title>
+  <title>Miembro de equipo — Hilton</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 </head>
@@ -23,7 +23,7 @@
     <div class="seccion-header">
       <div class="seccion-header-left">
         <p class="seccion-label">Portal interno</p>
-        <h1 class="seccion-titulo">Personal</h1>
+        <h1 class="seccion-titulo">Miembro de equipo</h1>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
@@ -57,9 +57,9 @@
           <i class="ti ti-calendar-check"></i> Cargar este rango
         </a>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <% const leyenda = [{v:'OFF',c:'#fbbf24'},{v:'VAC',c:'#ef4444'},{v:'RECOFF',c:'#22c55e'},{v:'FERIADO',c:'#dc2626'},{v:'LICENCIA',c:'#ec4899'},{v:'CUMPLE',c:'#a855f7'},{v:'MUDANZA',c:'#fb923c'},{v:'FRANCO',c:'#64748b'}]; %>
+          <% const leyenda = [{v:'OFF',c:'#fbbf24'},{v:'VAC',c:'#dc2626'},{v:'RECOFF',c:'#22c55e'},{v:'LIBRE',c:'#dc2626'},{v:'ART',c:'#dc2626'},{v:'LICENCIA',c:'#dc2626'},{v:'CUMPLE',c:'#dc2626'},{v:'MUDANZA',c:'#dc2626'},{v:'FRANCO',c:'#64748b'}]; %>
           <% leyenda.forEach(l => { %>
-          <span style="font-size:0.65rem;font-weight:700;background:<%= l.c %>40;border:1px solid <%= l.c %>;color:#fff;padding:3px 11px;border-radius:20px;"><%= l.v %></span>
+          <span style="font-size:0.65rem;font-weight:700;background:<%= l.c %>;border:1px solid <%= l.c %>;color:#fff;padding:3px 11px;border-radius:20px;"><%= l.v %></span>
           <% }) %>
         </div>
       </div>
@@ -80,8 +80,8 @@
     </div>
 
     <!-- Tabla -->
-    <div class="tabla-wrap" style="overflow:visible;">
-      <table class="tabla" style="width:100%;table-layout:fixed;">
+    <div class="tabla-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+      <table class="tabla" style="width:100%;min-width:1150px;table-layout:fixed;">
         <colgroup>
           <col style="width:17%"><col style="width:9%"><col style="width:11%">
           <col style="width:8%"><col style="width:47%"><col style="width:8%">
@@ -99,6 +99,7 @@
             <% personal.forEach(p => { %>
             <%
               const horariosEmp = horarioSemanalMap[p.id] || {};
+              const sectoresEmp = sectorDiaMap[p.id] || {};
               let horaActual = '';
               let estadoActual = '';
               const ESTADOS_LIST = ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA','FRANCO'];
@@ -109,7 +110,7 @@
                 else if (ESTADOS_LIST.includes(val)) { if (!estadoActual) estadoActual = val; }
                 else if (val && !horaActual) { horaActual = horariosEmp[dia]; }
               });
-              const bgEstados = {OFF:'#fbbf24',VAC:'#ef4444',RECOFF:'#22c55e',FERIADO:'#dc2626',LICENCIA:'#ec4899',CUMPLE:'#a855f7',MUDANZA:'#fb923c',FRANCO:'#64748b'};
+              const bgEstados = {OFF:'#fbbf24',VAC:'#dc2626',RECOFF:'#22c55e',LIBRE:'#dc2626',FERIADO:'#dc2626',ART:'#dc2626',LICENCIA:'#dc2626',CUMPLE:'#dc2626',MUDANZA:'#dc2626',FRANCO:'#64748b'};
               const bgActual = estadoActual ? bgEstados[estadoActual] : '';
               const NOMBRES_DIA_CORTO = {0:'D',1:'L',2:'M',3:'M',4:'J',5:'V',6:'S'};
             %>
@@ -161,11 +162,19 @@
                            value="<%= _horaDia %>" placeholder="Hs" maxlength="6" <%= _esEstadoDia ? 'disabled' : '' %>
                            style="width:64px;padding:2px 4px;border:1px solid var(--gris-borde);border-radius:5px;font-size:0.6rem;font-family:var(--font-sans);outline:none;text-align:center;background:<%= _esEstadoDia ? '#f1f5f9' : 'var(--gris-fondo)' %>;color:var(--negro);">
                     <select class="sel-estado-<%= p.id %> sel-dia-estado" data-fecha="<%= dia %>" onchange="onCambioEstadoDia(this, <%= p.id %>)"
-                            style="background-color:<%= _bgDia ? _bgDia+'40' : 'var(--gris-fondo)' %>;border:1px solid <%= _bgDia ? _bgDia : 'var(--gris-borde)' %>;color:<%= _bgDia ? '#fff' : 'var(--negro)' %>;font-weight:<%= _bgDia ? '700' : '400' %>;">
+                            style="background-color:<%= _bgDia ? _bgDia : 'var(--gris-fondo)' %>;border:1px solid <%= _bgDia ? _bgDia : 'var(--gris-borde)' %>;color:<%= _bgDia ? '#fff' : 'var(--negro)' %>;font-weight:<%= _bgDia ? '700' : '400' %>;">
                       <option value="" style="background:var(--blanco);color:var(--negro);">Normal</option>
-                      <% ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA','FRANCO'].forEach(e => { %>
+                      <% ['OFF','VAC','RECOFF','LIBRE','ART','LICENCIA','CUMPLE','MUDANZA','FRANCO'].forEach(e => { %>
                       <option value="<%= e %>" <%= _valDia === e ? 'selected' : '' %>
-                              style="background:<%= bgEstados[e] %>40;color:#fff;font-weight:700;"><%= e %></option>
+                              style="background:<%= bgEstados[e] %>;color:#fff;font-weight:700;"><%= e %></option>
+                      <% }) %>
+                    </select>
+                    <select class="sel-sector-<%= p.id %> sel-sector-dia" data-fecha="<%= dia %>" onchange="onCambioSectorDia(this)"
+                            title="Cambiar de sector solo este día, sin tocar su sector general"
+                            style="width:64px;font-size:0.56rem;padding:1px 2px;border:1px solid var(--gris-borde);border-radius:5px;background:<%= sectoresEmp[dia] ? 'var(--azul-claro)' : 'var(--gris-fondo)' %>;color:<%= sectoresEmp[dia] ? 'var(--azul)' : 'var(--gris-texto)' %>;font-weight:<%= sectoresEmp[dia] ? '700' : '400' %>;">
+                      <option value="">— sector —</option>
+                      <% sectores.forEach(s => { %>
+                      <option value="<%= s %>" <%= sectoresEmp[dia] === s ? 'selected' : '' %>><%= s %></option>
                       <% }) %>
                     </select>
                   </label>
@@ -220,7 +229,7 @@
 
   <nav class="mobile-nav">
     <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
-    <a href="/personal" class="mobile-nav-link activo"><i class="ti ti-users"></i><span>Personal</span></a>
+    <a href="/personal" class="mobile-nav-link activo"><i class="ti ti-users"></i><span>Miembro de equipo</span></a>
     <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
     <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
     <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span>Costos</span></a>
@@ -401,7 +410,7 @@ function ajustarRecoff(uid, delta) {
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-const bgEstados = {OFF:'#fbbf24',VAC:'#ef4444',RECOFF:'#22c55e',FERIADO:'#dc2626',LICENCIA:'#ec4899',CUMPLE:'#a855f7',MUDANZA:'#fb923c',FRANCO:'#64748b'};
+const bgEstados = {OFF:'#fbbf24',VAC:'#dc2626',RECOFF:'#22c55e',LIBRE:'#dc2626',FERIADO:'#dc2626',ART:'#dc2626',LICENCIA:'#dc2626',CUMPLE:'#dc2626',MUDANZA:'#dc2626',FRANCO:'#64748b'};
 
 let calFecha = new Date('<%= inicio %>T00:00:00');
 // Rango seleccionado: mientras no se elija el día de fin, rangoFin queda en null.
@@ -540,8 +549,21 @@ renderCal();
 actualizarEtiquetaRango();
 
 // ── Guardar empleado ──
+function onCambioSectorDia(sel) {
+  if (sel.value) {
+    sel.style.background = 'var(--azul-claro)';
+    sel.style.color = 'var(--azul)';
+    sel.style.fontWeight = '700';
+  } else {
+    sel.style.background = 'var(--gris-fondo)';
+    sel.style.color = 'var(--gris-texto)';
+    sel.style.fontWeight = '400';
+  }
+}
+
 async function guardarEmpleado(uid) {
   const valores = {};
+  const sectoresDia = {};
 
   document.querySelectorAll(`.sel-estado-${uid}`).forEach(sel => {
     const fecha = sel.dataset.fecha;
@@ -556,11 +578,15 @@ async function guardarEmpleado(uid) {
     }
   });
 
+  document.querySelectorAll(`.sel-sector-${uid}`).forEach(sel => {
+    if (sel.value) sectoresDia[sel.dataset.fecha] = sel.value;
+  });
+
   try {
     const resp = await fetch('/personal/asignar-semana-completa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario_id: uid, inicio: rangoInicio, fin: rangoFin || rangoInicio, valores })
+      body: JSON.stringify({ usuario_id: uid, inicio: rangoInicio, fin: rangoFin || rangoInicio, valores, sectoresDia })
     });
     const data = await resp.json();
     if (data.ok) {
@@ -594,7 +620,7 @@ function onCambioEstadoDia(sel, uid) {
     }
   }
   const bg = bgEstados[sel.value] || '';
-  sel.style.backgroundColor = bg ? bg + '40' : 'var(--gris-fondo)';
+  sel.style.backgroundColor = bg ? bg : 'var(--gris-fondo)';
   sel.style.borderColor = bg ? bg : 'var(--gris-borde)';
   sel.style.color = bg ? '#fff' : 'var(--negro)';
   sel.style.fontWeight = bg ? '700' : '400';

@@ -35,8 +35,8 @@
     <div class="deck-recetas" id="deckRecetas">
       <% recetas.forEach((r, i) => { %>
       <div class="card-receta <%= i === 0 ? 'is-hero' : '' %>" data-index="<%= i %>" onclick="clickCardReceta(<%= i %>)"
-           <% if (r.imagen) { %>style="background-image:url('/uploads/<%= r.imagen %>');"<% } %>>
-        <% if (!r.imagen) { %>
+           <% if (r.imagen_portada) { %>style="background-image:url('/uploads/<%= r.imagen_portada %>');"<% } %>>
+        <% if (!r.imagen_portada) { %>
         <div class="card-receta-fallback"><i class="ti ti-tools-kitchen-2"></i></div>
         <% } %>
         <% if (r.tiene_video) { %>

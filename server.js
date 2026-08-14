@@ -19,6 +19,14 @@ app.use(express.static(path.join(__dirname, 'public'), {
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Las páginas del portal (Personal, Horarios, etc.) nunca se guardan en caché del navegador —
+// siempre se piden frescas al servidor, así los cambios (como el RECOFF) se ven de una,
+// sin que el usuario tenga que recargar fuerte a mano.
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  next();
+});
+
 app.use(session({
   secret: 'hilton_ba_futurelab_2026',
   resave: false,

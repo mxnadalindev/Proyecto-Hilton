@@ -13,28 +13,12 @@
   <main class="main-content">
 
     <%
-      // Arma el texto del mensaje de WhatsApp con el resumen de la grilla del período
-      const NOMBRES_DIA_WSP = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-      let msgHorarios = `*Horarios — ${inicio} al ${fin}*\n\n`;
-      SECTORES.forEach(sector => {
-        if (!porSector[sector]) return;
-        msgHorarios += `*${sector}*\n`;
-        porSector[sector].forEach(emp => {
-          const partes = [];
-          dias.forEach(dia => {
-            const val = (horariosMap[emp.id]?.[dia] || '').trim();
-            if (!val) return;
-            const fechaObj = new Date(dia + 'T00:00:00');
-            partes.push(`${NOMBRES_DIA_WSP[fechaObj.getDay()]} ${dia.slice(8,10)}: ${val}`);
-          });
-          if (partes.length > 0) {
-            msgHorarios += `${emp.nombre} — ${partes.join(' | ')}\n`;
-          } else {
-            msgHorarios += `${emp.nombre} — sin datos\n`;
-          }
-        });
-        msgHorarios += `\n`;
-      });
+      // Mensaje prolijo para WhatsApp, con las fechas del período en formato D/M.
+      function _fechaCorta(iso) {
+        const d = new Date(iso + 'T00:00:00');
+        return `${d.getDate()}/${d.getMonth() + 1}`;
+      }
+      const msgHorarios = `Hola! Te envío la planilla de horarios correspondiente a la semana del ${_fechaCorta(inicio)} al ${_fechaCorta(fin)}.`;
     %>
 
     <div class="seccion-header">
@@ -44,9 +28,11 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
-        <a href="https://wa.me/?text=<%= encodeURIComponent(msgHorarios) %>" target="_blank" class="btn-whatsapp">
-          <i class="ti ti-brand-whatsapp"></i> Enviar
-        </a>
+
+        <button type="button" class="btn-whatsapp" id="btn-enviar-whatsapp" onclick="enviarExcelPorWhatsapp()">
+          <i class="ti ti-brand-whatsapp" id="icon-whatsapp"></i> <span id="texto-whatsapp">Enviar</span>
+        </button>
+
         <a href="/horarios/excel?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-excel">
           <i class="ti ti-file-spreadsheet"></i> Excel
         </a>
@@ -116,7 +102,7 @@
 
     <%# Grilla %>
     <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--gris-borde);box-shadow:var(--sombra);">
-      <table id="tabla-horarios" style="width:100%;border-collapse:collapse;min-width:<%= 270 + dias.length * 90 %>px;">
+      <table id="tabla-horarios" style="width:100%;border-collapse:collapse;min-width:<%= 270 + dias.length * 120 %>px;">
         <thead>
           <tr style="background:#1e3a5f;">
             <th style="padding:10px 14px;text-align:left;color:#fff;font-size:0.72rem;font-weight:600;width:200px;">EMPLEADO</th>
@@ -133,10 +119,10 @@
         <tbody>
           <%
             const CS = {
-              'Supervisores':'#dbeafe','Comis de Recepción':'#ecfdf5','Panadería':'#fefce8',
-              'Pastelería AM':'#fff7ed','Pastelería PM':'#fdf4ff','Faro AM':'#f0fdf4',
-              'Faro PM':'#eff6ff','Nocturno':'#1e293b','BQTs Fríos':'#fff7f0',
-              'BQTs Calientes':'#eef2ff','Farolito':'#f7fee7','Cocina I+D':'#fef9c3'
+              'Supervisores':'#93c5fd','Comis de Recepción':'#6ee7b7','Panadería':'#fde047',
+              'Pastelería AM':'#fdba74','Pastelería PM':'#d8b4fe','Faro AM':'#86efac',
+              'Faro PM':'#7dd3fc','Nocturno':'#1e293b','BQTs Fríos':'#5eead4',
+              'BQTs Calientes':'#fda4af','Farolito':'#bef264','Cocina I+D':'#fcd34d'
             };
           %>
           <% SECTORES.forEach(sector => { %>
@@ -158,17 +144,25 @@
               <%
                 const val = horariosMap[emp.id]?.[dia] || '';
                 const esE = ESTADOS.includes(val.toUpperCase());
-                const bg = {OFF:'#fbbf24',VAC:'#ef4444',RECOFF:'#22c55e',FERIADO:'#ef4444',LICENCIA:'#ec4899',CUMPLE:'#a855f7',MUDANZA:'#fb923c'}[val.toUpperCase()]||'';
+                const bg = {OFF:'#fbbf24',VAC:'#dc2626',RECOFF:'#22c55e',LIBRE:'#dc2626',FERIADO:'#dc2626',ART:'#dc2626',LICENCIA:'#dc2626',CUMPLE:'#dc2626',MUDANZA:'#dc2626'}[val.toUpperCase()]||'';
+                const sectorDelDia = sectorDiaMap[emp.id]?.[dia] || '';
               %>
               <td style="padding:2px 4px;text-align:center;">
-                <input type="text" class="celda-horario"
-                  data-uid="<%= emp.id %>" data-fecha="<%= dia %>"
-                  value="<%= val %>" maxlength="10"
-                  style="width:80px;text-align:center;border:1px solid <%= bg||'transparent' %>;border-radius:6px;padding:4px;font-size:0.78rem;font-family:var(--font-sans);background:<%= bg?bg+'40':'transparent' %>;color:<%= bg?'#fff':'var(--negro)' %>;font-weight:<%= esE?'700':'500' %>;cursor:pointer;"
-                  onfocus="this.style.boxShadow='0 0 0 2px rgba(59,130,246,0.5)';"
-                  onblur="this.style.boxShadow='';guardarCelda(this)"
-                  onkeydown="if(event.key==='Enter'){event.preventDefault();guardarCelda(this);}if(event.key==='Tab'){event.preventDefault();guardarCelda(this);moverFoco(this,event.shiftKey?-1:1);}"
-                >
+                <div style="display:flex;align-items:center;justify-content:center;gap:3px;">
+                  <input type="text" class="celda-horario"
+                    data-uid="<%= emp.id %>" data-fecha="<%= dia %>"
+                    value="<%= val %>" maxlength="10"
+                    style="width:<%= sectorDelDia ? '58px' : '80px' %>;text-align:center;border:1px solid <%= bg||'transparent' %>;border-radius:6px;padding:4px;font-size:0.78rem;font-family:var(--font-sans);background:<%= bg||'transparent' %>;color:<%= bg?'#fff':'var(--negro)' %>;font-weight:<%= esE?'700':'500' %>;cursor:pointer;"
+                    onfocus="this.style.boxShadow='0 0 0 2px rgba(59,130,246,0.5)';"
+                    onblur="this.style.boxShadow='';guardarCelda(this)"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();guardarCelda(this);}if(event.key==='Tab'){event.preventDefault();guardarCelda(this);moverFoco(this,event.shiftKey?-1:1);}"
+                  >
+                  <% if (sectorDelDia) { %>
+                  <span title="Cubre en <%= sectorDelDia %> este día" style="font-size:0.58rem;font-weight:700;background:var(--azul);color:#fff;border-radius:4px;padding:2px 4px;white-space:nowrap;line-height:1.2;">
+                    <%= sectorDelDia.length > 10 ? sectorDelDia.substring(0,9)+'…' : sectorDelDia %>
+                  </span>
+                  <% } %>
+                </div>
               </td>
               <% }) %>
             </tr>
@@ -198,6 +192,7 @@
 .btn-excel:hover{background:#15803d;}
 .btn-whatsapp{display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-sans);font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background 0.2s;}
 .btn-whatsapp:hover{background:#1ea952;}
+.btn-whatsapp:disabled{opacity:0.6;cursor:wait;}
 .celda-horario{transition:all 0.15s;}
 .celda-horario:hover{box-shadow:0 0 0 1px var(--azul) inset;}
 .celda-horario:focus{outline:none;}
@@ -205,7 +200,7 @@
 </style>
 
 <script>
-const bgEstados = {OFF:'#fbbf24',VAC:'#ef4444',RECOFF:'#22c55e',FERIADO:'#ef4444',LICENCIA:'#ec4899',CUMPLE:'#a855f7',MUDANZA:'#fb923c'};
+const bgEstados = {OFF:'#fbbf24',VAC:'#dc2626',RECOFF:'#22c55e',LIBRE:'#dc2626',FERIADO:'#dc2626',ART:'#dc2626',LICENCIA:'#dc2626',CUMPLE:'#dc2626',MUDANZA:'#dc2626'};
 
 async function guardarCelda(input) {
   const uid   = input.dataset.uid;
@@ -231,7 +226,7 @@ function aplicarColorCelda(input, valor) {
   const td = input.parentElement;
   const bg = bgEstados[valor] || '';
   td.style.background = '';
-  input.style.background = bg ? bg + '40' : 'transparent';
+  input.style.background = bg ? bg : 'transparent';
   input.style.borderColor = bg ? bg : 'transparent';
   input.style.color = bg ? '#fff' : 'var(--negro)';
   input.style.fontWeight = bg ? '700' : '500';
@@ -247,6 +242,32 @@ document.querySelectorAll('.celda-horario').forEach(input => {
   aplicarColorCelda(input, input.value.toUpperCase());
   input.addEventListener('focus', function() { this.select(); });
 });
+
+// ── Enviar por WhatsApp en formato Excel ──
+// IMPORTANTE: esta función es 100% síncrona a propósito. Los navegadores de
+// escritorio bloquean window.open() como si fuera un pop-up si pasó por algún
+// "await" antes (por ejemplo, esperar una descarga) — el clic del usuario deja
+// de "contar" como gesto real. Por eso acá no esperamos nada: se descarga el
+// Excel y se abre WhatsApp en el mismo instante del clic.
+function enviarExcelPorWhatsapp() {
+  const inicio = <%- JSON.stringify(inicio) %>;
+  const fin = <%- JSON.stringify(fin) %>;
+  const nombreArchivo = `horarios_${inicio}_a_${fin}.xlsx`;
+  const mensaje = <%- JSON.stringify(msgHorarios) %>;
+  const urlExcel = `/horarios/excel?inicio=${encodeURIComponent(inicio)}&fin=${encodeURIComponent(fin)}`;
+
+  // 1) Descarga el Excel (link sintético, no necesita esperar nada)
+  const a = document.createElement('a');
+  a.href = urlExcel;
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  // 2) Abre WhatsApp con el mensaje — en el mismo instante del clic, sin awaits antes
+  window.open('https://wa.me/?text=' + encodeURIComponent(mensaje), '_blank');
+}
 </script>
+<style>@keyframes girar{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}</style>
 </body>
 </html>

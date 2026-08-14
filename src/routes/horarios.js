@@ -10,7 +10,7 @@ const SECTORES = [
   'Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D'
 ];
 
-const ESTADOS = ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA'];
+const ESTADOS = ['OFF','VAC','RECOFF','LIBRE','ART','LICENCIA','CUMPLE','MUDANZA'];
 
 // ── Helpers de fecha ────────────────────────────────────
 
@@ -79,7 +79,7 @@ router.get('/', loginRequerido, async (req, res) => {
   const dias = getDiasRango(inicio, fin);
 
   const empleados = await db.all2(`
-    SELECT id, nombre, puesto, departamento
+    SELECT id, nombre, puesto, departamento, recoff_adeudado
     FROM usuarios
     WHERE activo = 1
     ORDER BY
@@ -100,16 +100,32 @@ router.get('/', loginRequerido, async (req, res) => {
       END, nombre
   `);
 
+  // Cuántos RECOFF tiene puestos cada uno en TODA la grilla (no solo el rango visible)
+  const usadosRaw = await db.all2(`
+    SELECT usuario_id, COUNT(*)::int AS usados
+    FROM horarios_semanales WHERE UPPER(valor)='RECOFF' GROUP BY usuario_id
+  `);
+  const recoffUsadosMap = {};
+  usadosRaw.forEach(r => { recoffUsadosMap[r.usuario_id] = r.usados; });
+  empleados.forEach(e => {
+    e.recoff_pendiente = (e.recoff_adeudado || 0) - (recoffUsadosMap[e.id] || 0);
+  });
+
   const horariosRaw = await db.all2(`
-    SELECT usuario_id, fecha::text, valor
+    SELECT usuario_id, fecha::text, valor, sector_dia
     FROM horarios_semanales
     WHERE fecha >= $1 AND fecha <= $2
   `, [dias[0], dias[dias.length - 1]]);
 
   const horariosMap = {};
+  const sectorDiaMap = {};
   horariosRaw.forEach(h => {
     if (!horariosMap[h.usuario_id]) horariosMap[h.usuario_id] = {};
     horariosMap[h.usuario_id][h.fecha] = h.valor;
+    if (h.sector_dia) {
+      if (!sectorDiaMap[h.usuario_id]) sectorDiaMap[h.usuario_id] = {};
+      sectorDiaMap[h.usuario_id][h.fecha] = h.sector_dia;
+    }
   });
 
   const porSector = {};
@@ -144,7 +160,7 @@ router.get('/', loginRequerido, async (req, res) => {
 
   res.render('horarios', {
     path: 'horarios',
-    inicio, fin, dias, porSector, horariosMap,
+    inicio, fin, dias, porSector, horariosMap, sectorDiaMap,
     SECTORES, ESTADOS, alertas,
     rangoAnterior, rangoSiguiente,
     puedeReiniciar: esSupervisorOAdmin(req),
@@ -227,7 +243,7 @@ router.get('/excel', loginRequerido, async (req, res) => {
   const NOMBRES_DIA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
   const empleados = await db.all2(`
-    SELECT id, nombre, puesto, departamento, recoff_adeudado FROM usuarios WHERE activo=1
+    SELECT id, nombre, puesto, departamento FROM usuarios WHERE activo=1
     ORDER BY CASE departamento
       WHEN 'Supervisores' THEN 1 WHEN 'Comis de Recepción' THEN 2
       WHEN 'Panadería' THEN 3 WHEN 'Pastelería AM' THEN 4
@@ -237,17 +253,6 @@ router.get('/excel', loginRequerido, async (req, res) => {
       WHEN 'Farolito' THEN 11 WHEN 'Cocina I+D' THEN 12
       ELSE 99 END, nombre
   `);
-
-  // Cuántos RECOFF tiene puestos cada uno en TODA la grilla (no solo el rango visible)
-  const usadosRaw = await db.all2(`
-    SELECT usuario_id, COUNT(*)::int AS usados
-    FROM horarios_semanales WHERE UPPER(valor)='RECOFF' GROUP BY usuario_id
-  `);
-  const recoffUsadosMap = {};
-  usadosRaw.forEach(r => { recoffUsadosMap[r.usuario_id] = r.usados; });
-  empleados.forEach(e => {
-    e.recoff_pendiente = (e.recoff_adeudado || 0) - (recoffUsadosMap[e.id] || 0);
-  });
 
   const horariosRaw = await db.all2(`
     SELECT usuario_id, fecha::text, valor FROM horarios_semanales
@@ -285,8 +290,9 @@ router.get('/excel', loginRequerido, async (req, res) => {
   ws.getRow(2).height = 30;
 
   const colores = {
-    OFF:'FFFBBF24', VAC:'FFEF4444', RECOFF:'FF22C55E',
-    FERIADO:'FFEF4444', LICENCIA:'FFEC4899', CUMPLE:'FFA855F7', MUDANZA:'FFFB923C'
+    OFF:'FFFBBF24', VAC:'FFDC2626', RECOFF:'FF22C55E',
+    LIBRE:'FFDC2626', FERIADO:'FFDC2626', ART:'FFDC2626',
+    LICENCIA:'FFDC2626', CUMPLE:'FFDC2626', MUDANZA:'FFDC2626'
   };
   const coloresSector = [
     'FFDBEAFE','FFECFDF5','FFFEFCE8','FFFFF7ED','FFFDF4FF',

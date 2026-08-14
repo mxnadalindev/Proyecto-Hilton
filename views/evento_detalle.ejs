@@ -41,7 +41,7 @@
         </span>
       </div>
       <div class="info-row"><span class="info-label">Hs. producción</span><span class="info-val"><%= evento.horas_produccion || 0 %> hs</span></div>
-      <div class="info-row"><span class="info-label">Personal</span><span class="info-val"><%= evento.cantidad_personal %> personas</span></div>
+      <div class="info-row"><span class="info-label">Miembros de equipo</span><span class="info-val"><%= evento.cantidad_personal %> personas</span></div>
       <div class="info-row"><span class="info-label">Costo total</span><span class="info-val costo-grande">$<%= parseFloat(evento.costo_total).toFixed(2) %></span></div>
       <% if (evento.descripcion) { %>
       <div class="info-row"><span class="info-label">Notas</span><span class="info-val"><%= evento.descripcion %></span></div>

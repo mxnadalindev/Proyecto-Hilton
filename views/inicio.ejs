@@ -29,7 +29,7 @@
           modulos = [
             { href: '/eventos',  icon: 'ti-calendar-event', nombre: 'Eventos',  desc: 'Gestión y presupuestos', g1:'#002f61', g2:'#007293',
               detalle: 'Planificá banquetes y eventos del hotel: armá el menú con platos ya costeados (o menús completos), asigná personal y vajilla, y calculá el costo total y las horas de producción antes de confirmar.' },
-            { href: '/personal', icon: 'ti-users',          nombre: 'Personal', desc: 'Equipo interno', g1:'#007293', g2:'#06937e',
+            { href: '/personal', icon: 'ti-users',          nombre: 'Miembro de equipo', desc: 'Equipo interno', g1:'#007293', g2:'#06937e',
               detalle: 'Gestioná el equipo de cocina: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
             { href: '/horarios', icon: 'ti-clock',          nombre: 'Horarios', desc: 'Turnos automáticos', g1:'#06937e', g2:'#6bb030',
               detalle: 'Visualizá la grilla completa de turnos de todos los sectores, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
@@ -75,7 +75,7 @@
                 <circle cx="140" cy="112" r="3" fill="rgba(255,255,255,0.35)"/>
                 <circle cx="58" cy="155" r="3" fill="rgba(255,255,255,0.3)"/>
               </svg>`;
-            case 'Personal':
+            case 'Miembro de equipo':
               return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="55" cy="110" r="19" fill="rgba(255,255,255,0.5)"/>
                 <path d="M27 168 q28-36 56 0 z" fill="rgba(255,255,255,0.5)"/>
@@ -185,7 +185,7 @@
   <nav class="mobile-nav">
     <% if (depto === 'cocina' || depto === 'ayb') { %>
       <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
-      <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i><span>Personal</span></a>
+      <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i><span>Miembro de equipo</span></a>
       <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
       <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
       <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span>Costos</span></a>

@@ -7,7 +7,7 @@ const { loginRequerido } = require('./middleware');
 const PUESTOS = ['Chef','Subchef','Encargado de cocina','Cocinero','Ayudante de cocina','Pastelero','Panadero','Mozo','Sommelier','Limpieza','Administrativo'];
 const ROLES   = ['empleado','supervisor','admin'];
 const SECTORES = ['Supervisores','Comis de Recepción','Panadería','Pastelería AM','Pastelería PM','Faro AM','Faro PM','Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D'];
-const ESTADOS = ['OFF','VAC','RECOFF','FERIADO','LICENCIA','CUMPLE','MUDANZA','FRANCO'];
+const ESTADOS = ['OFF','VAC','RECOFF','LIBRE','ART','LICENCIA','CUMPLE','MUDANZA','FRANCO'];
 
 // ── Helpers de fecha ────────────────────────────────────
 
@@ -94,20 +94,25 @@ router.get('/', loginRequerido, async (req, res) => {
 
   // Horarios del rango seleccionado
   const semanalRaw = await db.all2(`
-    SELECT usuario_id, fecha::text, valor
+    SELECT usuario_id, fecha::text, valor, sector_dia
     FROM horarios_semanales
     WHERE fecha >= $1 AND fecha <= $2
   `, [dias[0], dias[dias.length - 1]]);
 
   const horarioSemanalMap = {};
+  const sectorDiaMap = {};
   semanalRaw.forEach(h => {
     if (!horarioSemanalMap[h.usuario_id]) horarioSemanalMap[h.usuario_id] = {};
     horarioSemanalMap[h.usuario_id][h.fecha] = h.valor;
+    if (h.sector_dia) {
+      if (!sectorDiaMap[h.usuario_id]) sectorDiaMap[h.usuario_id] = {};
+      sectorDiaMap[h.usuario_id][h.fecha] = h.sector_dia;
+    }
   });
 
   res.render('personal', {
     personal, puestos: PUESTOS, roles: ROLES, sectores: SECTORES,
-    ESTADOS, msg, esAdmin, hoy, inicio, fin, dias, horarioSemanalMap,
+    ESTADOS, msg, esAdmin, hoy, inicio, fin, dias, horarioSemanalMap, sectorDiaMap,
     // compatibilidad con campos viejos
     horarioMap: {}
   });
@@ -116,10 +121,11 @@ router.get('/', loginRequerido, async (req, res) => {
 // ── POST /asignar-semana-completa ──────────────────────
 // Guarda un valor por cada día del rango: puede ser una hora de entrada o un estado especial
 router.post('/asignar-semana-completa', loginRequerido, async (req, res) => {
-  const { usuario_id, inicio, fin, valores } = req.body;
+  const { usuario_id, inicio, fin, valores, sectoresDia } = req.body;
   try {
     const dias = getDiasRango(inicio, fin || inicio);
     const mapa = valores && typeof valores === 'object' ? valores : {};
+    const mapaSectores = sectoresDia && typeof sectoresDia === 'object' ? sectoresDia : {};
 
     for (const dia of dias) {
       const crudo = mapa[dia];
@@ -133,11 +139,12 @@ router.post('/asignar-semana-completa', loginRequerido, async (req, res) => {
       // Si coincide con un estado conocido (VAC, OFF, etc.) lo normalizamos a mayúsculas;
       // si es una hora u otro texto libre, lo dejamos tal cual lo escribió el usuario.
       const valor = ESTADOS.includes(texto.toUpperCase()) ? texto.toUpperCase() : texto;
+      const sectorDia = (mapaSectores[dia] || '').trim() || null;
       await db.run2(`
-        INSERT INTO horarios_semanales (usuario_id, fecha, valor)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (usuario_id, fecha) DO UPDATE SET valor = $3
-      `, [parseInt(usuario_id), dia, valor]);
+        INSERT INTO horarios_semanales (usuario_id, fecha, valor, sector_dia)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (usuario_id, fecha) DO UPDATE SET valor = $3, sector_dia = $4
+      `, [parseInt(usuario_id), dia, valor, sectorDia]);
     }
     res.json({ ok: true, recoff_pendiente: await calcularRecoffPendiente(usuario_id) });
   } catch(e) {
