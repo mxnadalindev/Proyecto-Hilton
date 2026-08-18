@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,7 +47,33 @@
           <p style="font-size:1.8rem;font-weight:700;color:#92400e;margin:0;"><%= resumen.sinPrecio %></p>
           <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#92400e;margin:4px 0 0;">Sin precio</p>
         </div>
+        <% if (resumen.negativosRechazados > 0) { %>
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:#dc2626;margin:0;"><%= resumen.negativosRechazados %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#dc2626;margin:4px 0 0;">Precio negativo (ignoradas)</p>
+        </div>
+        <% } %>
+        <% if (resumen.menoresIgnorados > 0) { %>
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:#c2410c;margin:0;"><%= resumen.menoresIgnorados %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#c2410c;margin:4px 0 0;">Precio menor (se mantuvo el actual)</p>
+        </div>
+        <% } %>
       </div>
+
+      <% if (resumen.menoresIgnorados > 0) { %>
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:0.8rem;color:#c2410c;display:flex;align-items:center;gap:8px;">
+        <i class="ti ti-shield-check"></i>
+        <%= resumen.menoresIgnorados %> insumo<%= resumen.menoresIgnorados !== 1 ? 's' : '' %> del archivo tenía<%= resumen.menoresIgnorados !== 1 ? 'n' : '' %> un precio más bajo que el actual — se mantuvo el precio más alto (el costeo de los platos nunca baja solo). Si alguno es una baja real de precio, corregilo a mano en la lista de insumos con la opción "Forzar".
+      </div>
+      <% } %>
+
+      <% if (resumen.negativosRechazados > 0) { %>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.8rem;color:#dc2626;display:flex;align-items:center;gap:8px;">
+        <i class="ti ti-alert-circle"></i>
+        <%= resumen.negativosRechazados %> fila<%= resumen.negativosRechazados !== 1 ? 's' : '' %> del archivo tenía<%= resumen.negativosRechazados !== 1 ? 'n' : '' %> precio negativo (probablemente una nota de crédito o bonificación mezclada en el archivo) — no se cargaron ni actualizaron esos insumos.
+      </div>
+      <% } %>
 
       <% if (resumen.cambiosDePrecios.length > 0) { %>
       <p style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--azul);margin-bottom:10px;">

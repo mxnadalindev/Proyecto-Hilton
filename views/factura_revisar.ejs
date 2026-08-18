@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -74,6 +74,9 @@
                     <span style="color:<%= diferencia > 0 ? '#dc2626' : (diferencia < 0 ? '#16a34a' : 'var(--gris-texto)') %>;font-weight:600;">
                       <%= diferencia > 0 ? '+' : '' %><%= porcentaje %>%
                     </span>
+                    <% if (diferencia < 0) { %>
+                      <span style="display:block;font-size:0.62rem;color:var(--gris-texto);font-style:italic;">No se aplica: es menor al actual</span>
+                    <% } %>
                   <% } else { %>—<% } %>
                 </td>
               </tr>

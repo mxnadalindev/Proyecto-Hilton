@@ -92,6 +92,9 @@ router.get('/', loginRequerido, async (req, res) => {
   const msg     = req.query.msg || null;
   const esAdmin = req.session.usuario.rol === 'admin';
 
+  // Feriados: solo un marcador visual en el calendario, no toca horarios de nadie.
+  const feriados = await db.all2('SELECT fecha::text, nombre FROM feriados ORDER BY fecha');
+
   // Horarios del rango seleccionado
   const semanalRaw = await db.all2(`
     SELECT usuario_id, fecha::text, valor, sector_dia
@@ -113,9 +116,40 @@ router.get('/', loginRequerido, async (req, res) => {
   res.render('personal', {
     personal, puestos: PUESTOS, roles: ROLES, sectores: SECTORES,
     ESTADOS, msg, esAdmin, hoy, inicio, fin, dias, horarioSemanalMap, sectorDiaMap,
+    feriados,
     // compatibilidad con campos viejos
     horarioMap: {}
   });
+});
+
+// ── Feriados: marcador visual en el calendario, vía AJAX ──
+// Solo pinta el día en el calendario — no toca los horarios de ningún empleado.
+router.post('/feriados', loginRequerido, async (req, res) => {
+  const { fecha, nombre } = req.body;
+  try {
+    if (!fecha || !nombre || !nombre.trim()) {
+      return res.json({ ok: false, error: 'Falta la fecha o el nombre del feriado.' });
+    }
+    await db.run2(
+      `INSERT INTO feriados (fecha, nombre) VALUES ($1,$2)
+       ON CONFLICT (fecha) DO UPDATE SET nombre=$2`,
+      [fecha, nombre.trim()]
+    );
+    res.json({ ok: true, fecha, nombre: nombre.trim() });
+  } catch (e) {
+    console.error('Error guardando feriado:', e.message);
+    res.json({ ok: false, error: e.message });
+  }
+});
+
+router.post('/feriados/:fecha/eliminar', loginRequerido, async (req, res) => {
+  try {
+    await db.run2('DELETE FROM feriados WHERE fecha=$1', [req.params.fecha]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Error eliminando feriado:', e.message);
+    res.json({ ok: false, error: e.message });
+  }
 });
 
 // ── POST /asignar-semana-completa ──────────────────────

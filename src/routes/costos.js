@@ -4,6 +4,7 @@ const db = require('../db/database');
 const { loginRequerido } = require('./middleware');
 const multer = require('multer');
 const path = require('path');
+const ExcelJS = require('exceljs');
 const { analizarFactura } = require('../services/gemini');
 const { parsearCsvInsumos, importarInsumos } = require('../services/importadorInsumos');
 const { parsearCsvPlatos, importarPlatos } = require('../services/importadorPlatos');
@@ -19,6 +20,54 @@ const storageCsv = multer.diskStorage({
   filename: (req, file, cb) => cb(null, 'insumos_'+Date.now()+path.extname(file.originalname))
 });
 const uploadCsv = multer({ storage: storageCsv, limits:{fileSize:30*1024*1024} }); // hasta 30MB, sobra para miles de filas de texto
+
+// Períodos permitidos para la Variación de precios (en días)
+const PERIODOS_VARIACION = [7, 14, 21, 28];
+const LIMITE_VARIACION = 10;
+
+// Calcula el top de insumos según el modo elegido:
+// - 'subieron' / 'bajaron' / 'iguales': compara contra el precio de hace N días (historial_precios)
+// - 'caros': ordena todos los insumos por precio actual, sin importar si cambiaron
+async function calcularVariacionPrecios(dias, tipo) {
+  if (tipo === 'caros') {
+    return await db.all2(`
+      SELECT id, nombre, codigo, categoria, unidad,
+             precio_unitario AS precio_actual,
+             NULL AS precio_inicio, NULL AS variacion_abs, NULL AS variacion_pct
+      FROM insumos
+      WHERE precio_unitario > 0
+      ORDER BY precio_unitario DESC
+      LIMIT $1
+    `, [LIMITE_VARIACION]);
+  }
+
+  const filas = await db.all2(`
+    WITH primero AS (
+      SELECT DISTINCT ON (insumo_id) insumo_id, precio_anterior AS precio_inicio
+      FROM historial_precios
+      WHERE fecha >= NOW() - ($1 || ' days')::interval
+      ORDER BY insumo_id, fecha ASC
+    )
+    SELECT i.id, i.nombre, i.codigo, i.categoria, i.unidad,
+           i.precio_unitario AS precio_actual,
+           p.precio_inicio,
+           (i.precio_unitario - p.precio_inicio) AS variacion_abs,
+           CASE WHEN p.precio_inicio > 0
+                THEN ROUND((((i.precio_unitario - p.precio_inicio) / p.precio_inicio) * 100)::numeric, 1)
+                ELSE NULL END AS variacion_pct
+    FROM primero p
+    JOIN insumos i ON i.id = p.insumo_id
+    ORDER BY variacion_pct ${tipo === 'bajaron' ? 'ASC NULLS LAST' : 'DESC NULLS FIRST'}
+  `, [dias]);
+
+  if (tipo === 'iguales') {
+    return filas.filter(f => Math.abs(f.variacion_abs) < 0.01).slice(0, LIMITE_VARIACION);
+  } else if (tipo === 'bajaron') {
+    return filas.filter(f => f.variacion_abs < -0.01).slice(0, LIMITE_VARIACION);
+  } else {
+    return filas.filter(f => f.variacion_abs > 0.01).slice(0, LIMITE_VARIACION);
+  }
+}
 
 router.get('/', loginRequerido, async (req, res) => {
   const buscar = (req.query.buscar || '').trim();
@@ -69,10 +118,27 @@ router.get('/', loginRequerido, async (req, res) => {
   //    precio que tenía al INICIO del período elegido (según historial_precios).
   //    Solo entran los insumos que tuvieron al menos un cambio registrado en ese
   //    período — si nunca cambiaron, no hay "antes" con qué comparar.
-  const diasVariacion = parseInt(req.query.dias) || 30;
+  const DIAS_PERMITIDOS = [7, 14, 21, 28];
+  const diasVariacion = DIAS_PERMITIDOS.includes(parseInt(req.query.dias)) ? parseInt(req.query.dias) : 7;
   const tipoVariacion = ['subieron', 'bajaron', 'iguales'].includes(req.query.tipoVariacion)
     ? req.query.tipoVariacion : 'subieron';
 
+  const variacionPrecios = await calcularVariacionPrecios(diasVariacion, tipoVariacion, 10);
+
+  res.render('costos', {
+    insumos, platos, categorias, msg, geminiConfigurado,
+    buscar, letra, totalInsumos,
+    buscarPlato, totalPlatos, letraPlato,
+    mostrandoLimitado: !buscar && totalInsumos > LIMITE_SIN_BUSQUEDA,
+    limiteSinBusqueda: LIMITE_SIN_BUSQUEDA,
+    variacionPrecios, diasVariacion, tipoVariacion,
+    mostrarModalVariacion: req.query.dias !== undefined || req.query.tipoVariacion !== undefined
+  });
+});
+
+// Calcula el top de insumos que subieron / bajaron / se mantuvieron en un período.
+// Se usa tanto para mostrar el modal como para armar el Excel de descarga.
+async function calcularVariacionPrecios(diasVariacion, tipoVariacion, limite) {
   const filasVariacion = await db.all2(`
     WITH primero AS (
       SELECT DISTINCT ON (insumo_id) insumo_id, precio_anterior AS precio_inicio
@@ -92,25 +158,66 @@ router.get('/', loginRequerido, async (req, res) => {
     ORDER BY variacion_pct ${tipoVariacion === 'bajaron' ? 'ASC' : 'DESC'}
   `, [diasVariacion]);
 
-  const LIMITE_VARIACION = 10;
-  let variacionPrecios;
   if (tipoVariacion === 'iguales') {
-    variacionPrecios = filasVariacion.filter(f => Math.abs(f.variacion_abs) < 0.01).slice(0, LIMITE_VARIACION);
+    return filasVariacion.filter(f => Math.abs(f.variacion_abs) < 0.01).slice(0, limite);
   } else if (tipoVariacion === 'bajaron') {
-    variacionPrecios = filasVariacion.filter(f => f.variacion_abs < -0.01).slice(0, LIMITE_VARIACION);
-  } else {
-    variacionPrecios = filasVariacion.filter(f => f.variacion_abs > 0.01).slice(0, LIMITE_VARIACION);
+    return filasVariacion.filter(f => f.variacion_abs < -0.01).slice(0, limite);
   }
+  return filasVariacion.filter(f => f.variacion_abs > 0.01).slice(0, limite);
+}
 
-  res.render('costos', {
-    insumos, platos, categorias, msg, geminiConfigurado,
-    buscar, letra, totalInsumos,
-    buscarPlato, totalPlatos, letraPlato,
-    mostrandoLimitado: !buscar && totalInsumos > LIMITE_SIN_BUSQUEDA,
-    limiteSinBusqueda: LIMITE_SIN_BUSQUEDA,
-    variacionPrecios, diasVariacion, tipoVariacion,
-    mostrarModalVariacion: req.query.dias !== undefined || req.query.tipoVariacion !== undefined
+// Descarga en Excel la misma tabla que se ve en el modal de Variación de precios
+router.get('/variacion-excel', loginRequerido, async (req, res) => {
+  const DIAS_PERMITIDOS = [7, 14, 21, 28];
+  const diasVariacion = DIAS_PERMITIDOS.includes(parseInt(req.query.dias)) ? parseInt(req.query.dias) : 7;
+  const tipoVariacion = ['subieron', 'bajaron', 'iguales'].includes(req.query.tipoVariacion)
+    ? req.query.tipoVariacion : 'subieron';
+
+  const filas = await calcularVariacionPrecios(diasVariacion, tipoVariacion, 10);
+  const NOMBRE_TIPO = { subieron: 'Subieron', bajaron: 'Bajaron', iguales: 'Se mantuvieron' };
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Variación de precios');
+
+  ws.mergeCells('A1:E1');
+  const titulo = ws.getCell('A1');
+  titulo.value = `VARIACIÓN DE PRECIOS — ${NOMBRE_TIPO[tipoVariacion].toUpperCase()} — últimos ${diasVariacion} días`;
+  titulo.font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
+  titulo.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
+  titulo.alignment = { horizontal: 'center', vertical: 'middle' };
+  ws.getRow(1).height = 28;
+
+  const encRow = ws.addRow(['Insumo', 'Categoría', 'Precio antes', 'Precio actual', 'Variación %', 'Variación $']);
+  encRow.eachCell(c => {
+    c.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+    c.alignment = { horizontal: 'center', vertical: 'middle' };
   });
+
+  filas.forEach(f => {
+    const row = ws.addRow([
+      f.nombre, f.categoria || '',
+      parseFloat(f.precio_inicio), parseFloat(f.precio_actual),
+      parseFloat(f.variacion_pct), parseFloat(f.variacion_abs)
+    ]);
+    row.eachCell((c, col) => {
+      c.font = { size: 10 };
+      c.alignment = { horizontal: col === 1 || col === 2 ? 'left' : 'center', vertical: 'middle' };
+      if (col >= 3 && col <= 4) c.numFmt = '"$"#,##0.00';
+      if (col === 5) c.numFmt = '+0.0"%";-0.0"%"';
+      if (col === 6) c.numFmt = '+"$"#,##0.00;-"$"#,##0.00';
+      if (col === 5 || col === 6) {
+        c.font.bold = true;
+        c.font.color = { argb: parseFloat(f.variacion_abs) > 0 ? 'FFDC2626' : (parseFloat(f.variacion_abs) < 0 ? 'FF16A34A' : 'FF64748B') };
+      }
+    });
+  });
+
+  ws.columns = [{ width: 28 }, { width: 18 }, { width: 14 }, { width: 14 }, { width: 13 }, { width: 13 }];
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename=variacion_precios_${tipoVariacion}_${diasVariacion}d.xlsx`);
+  await wb.xlsx.write(res);
+  res.end();
 });
 
 router.post('/insumo/nuevo', loginRequerido, async (req, res) => {
@@ -130,11 +237,30 @@ router.post('/insumo/nuevo', loginRequerido, async (req, res) => {
 router.post('/insumo/:id/precio', loginRequerido, async (req, res) => {
   const insumo = await db.get2("SELECT * FROM insumos WHERE id=$1", [req.params.id]);
   if (insumo) {
-    await db.run2("INSERT INTO historial_precios (insumo_id,precio_anterior,precio_nuevo,origen) VALUES ($1,$2,$3,'manual')",
-      [insumo.id, insumo.precio_unitario, parseFloat(req.body.precio_nuevo)]);
-    await db.run2("UPDATE insumos SET precio_unitario=$1,actualizado_en=NOW() WHERE id=$2",
-      [parseFloat(req.body.precio_nuevo), req.params.id]);
-    await recalcularPlatos(insumo.id);
+    const precioActual = parseFloat(insumo.precio_unitario) || 0;
+    const precioNuevo = parseFloat(req.body.precio_nuevo);
+    const forzar = req.body.forzar_menor === '1';
+
+    if (isNaN(precioNuevo) || precioNuevo <= 0) {
+      return res.redirect('/costos?msg=' + encodeURIComponent('El precio ingresado no es válido.'));
+    }
+
+    // Regla: el precio de costo nunca baja solo — así el costeo de los platos
+    // siempre queda con el valor más alto conocido, como margen de seguridad.
+    // Se puede forzar a la baja tildando "Forzar" cuando es una corrección real.
+    if (precioNuevo < precioActual && !forzar) {
+      return res.redirect('/costos?msg=' + encodeURIComponent(
+        `El precio ingresado ($${precioNuevo.toFixed(2)}) es menor al actual ($${precioActual.toFixed(2)}) — no se aplicó. Se mantiene el más alto. Si es una corrección real, tildá "Forzar" y guardá de nuevo.`
+      ));
+    }
+
+    if (Math.abs(precioNuevo - precioActual) > 0.001) {
+      await db.run2("INSERT INTO historial_precios (insumo_id,precio_anterior,precio_nuevo,origen) VALUES ($1,$2,$3,'manual')",
+        [insumo.id, precioActual, precioNuevo]);
+      await db.run2("UPDATE insumos SET precio_unitario=$1,actualizado_en=NOW() WHERE id=$2",
+        [precioNuevo, req.params.id]);
+      await recalcularPlatos(insumo.id);
+    }
   }
   res.redirect('/costos');
 });
@@ -286,10 +412,19 @@ router.post('/factura', loginRequerido, upload.single('factura'), async (req, re
   if (!req.file) return res.redirect('/costos?msg=' + encodeURIComponent('No se recibió ninguna imagen.'));
 
   try {
-    const itemsDetectados = await analizarFactura(req.file.path);
+    const { tipoDocumento, items: itemsDetectados } = await analizarFactura(req.file.path);
 
+    if (tipoDocumento === 'nota_credito' || tipoDocumento === 'nota_debito') {
+      const nombreTipo = tipoDocumento === 'nota_credito' ? 'Nota de Crédito' : 'Nota de Débito';
+      return res.redirect('/costos?msg=' + encodeURIComponent(
+        `La imagen parece ser una ${nombreTipo}, no una factura de compra — no se cargó ningún precio. Subí la factura original si querés actualizar precios.`
+      ));
+    }
+    if (tipoDocumento === 'otro') {
+      return res.redirect('/costos?msg=' + encodeURIComponent('No se reconoció la imagen como una factura de compra.'));
+    }
     if (itemsDetectados.length === 0) {
-      return res.redirect('/costos?msg=' + encodeURIComponent('No se pudo leer ningún ítem en la factura.'));
+      return res.redirect('/costos?msg=' + encodeURIComponent('No se pudo leer ningún ítem con precio válido en la factura.'));
     }
 
     const insumos = await db.all2("SELECT * FROM insumos");
@@ -333,9 +468,22 @@ router.post('/factura/aplicar', loginRequerido, async (req, res) => {
   const idxsSeleccionados = seleccionados.map(s => parseInt(s));
 
   try {
+    let aplicados = 0;
+    let menoresIgnorados = 0;
+
     for (const idx of idxsSeleccionados) {
       const item = comparacion[idx];
       if (!item || !item.insumo_id) continue; // sin match a insumo existente, no tocamos nada
+      if (!(parseFloat(item.precio_detectado) > 0)) continue; // nunca aplicar precio en 0 o negativo
+
+      const precioActual = parseFloat(item.precio_actual) || 0;
+      const precioDetectado = parseFloat(item.precio_detectado);
+
+      // Regla: el precio de costo nunca baja solo — se mantiene el más alto conocido.
+      if (precioDetectado < precioActual) {
+        menoresIgnorados++;
+        continue;
+      }
 
       await db.run2(
         "INSERT INTO historial_precios (insumo_id,precio_anterior,precio_nuevo,origen) VALUES ($1,$2,$3,'gemini')",
@@ -346,10 +494,15 @@ router.post('/factura/aplicar', loginRequerido, async (req, res) => {
         [item.precio_detectado, item.insumo_id]
       );
       await recalcularPlatos(item.insumo_id);
+      aplicados++;
     }
 
     delete req.session.facturaPendiente;
-    res.redirect('/costos?msg=' + encodeURIComponent(`${idxsSeleccionados.length} precio(s) actualizados desde factura.`));
+    let mensaje = `${aplicados} precio(s) actualizados desde factura.`;
+    if (menoresIgnorados > 0) {
+      mensaje += ` ${menoresIgnorados} se ignoraron por tener un precio menor al actual (se mantiene el más alto).`;
+    }
+    res.redirect('/costos?msg=' + encodeURIComponent(mensaje));
   } catch (e) {
     console.error('Error aplicando precios de factura:', e.message);
     res.redirect('/costos?msg=' + encodeURIComponent('Error aplicando los cambios: ' + e.message));

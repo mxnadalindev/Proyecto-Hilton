@@ -381,7 +381,7 @@
 .sel-dia-estado:focus{border-color:var(--azul);}
 
 /* Calendario */
-.cal-dia{padding:6px 4px;border-radius:6px;cursor:pointer;font-size:0.8rem;color:var(--negro);transition:all 0.15s;border:1px solid transparent;}
+.cal-dia{padding:6px 4px;border-radius:6px;cursor:pointer;font-size:0.8rem;color:var(--negro);transition:all 0.15s;border:1px solid transparent;position:relative;}
 .cal-dia:hover{background:var(--azul-claro);color:var(--azul);}
 .cal-dia.hoy{font-weight:700;color:var(--azul);}
 .cal-dia.rango-sel{background:var(--azul);color:#fff;border-radius:0;}
@@ -390,6 +390,11 @@
 .cal-dia.rango-inicio.rango-fin{border-radius:6px;}
 .cal-dia.rango-pendiente{background:var(--azul-claro);color:var(--azul);border:1.5px dashed var(--azul);border-radius:6px;font-weight:700;}
 .cal-dia.vacio{visibility:hidden;}
+.cal-dia.es-feriado{border:1.5px solid #dc2626;font-weight:700;}
+.cal-dia.es-feriado.rango-sel{border-color:#fff;}
+.cal-dia-flag{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:var(--blanco);border:1px solid var(--gris-borde);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--gris-borde);cursor:pointer;transition:all 0.15s;line-height:1;z-index:2;}
+.cal-dia-flag:hover{border-color:#dc2626;color:#dc2626;transform:scale(1.25);}
+.cal-dia.es-feriado .cal-dia-flag{background:#dc2626;border-color:#dc2626;color:#fff;}
 .cal-nombre-dia{font-size:0.6rem;font-weight:600;color:var(--gris-texto);padding:4px 0;text-align:center;}
 </style>
 
@@ -411,6 +416,12 @@ function ajustarRecoff(uid, delta) {
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const bgEstados = {OFF:'#fbbf24',VAC:'#dc2626',RECOFF:'#22c55e',LIBRE:'#dc2626',FERIADO:'#dc2626',ART:'#dc2626',LICENCIA:'#dc2626',CUMPLE:'#dc2626',MUDANZA:'#dc2626',FRANCO:'#64748b'};
+
+// Feriados: mapa fecha -> nombre, para pintar el calendario. Solo visual,
+// no toca los horarios de nadie.
+const FERIADOS_PREVIOS = <%- JSON.stringify(feriados || []) %>;
+const FERIADOS_MAP = {};
+FERIADOS_PREVIOS.forEach(f => { FERIADOS_MAP[f.fecha] = f.nombre; });
 
 let calFecha = new Date('<%= inicio %>T00:00:00');
 // Rango seleccionado: mientras no se elija el día de fin, rangoFin queda en null.
@@ -452,6 +463,7 @@ function renderCal() {
     const esFin    = !!rangoFin && fechaStr === rangoFin;
     const enMedio  = !!rangoFin && fechaStr > rangoInicio && fechaStr < rangoFin;
     const esHoy    = fechaStr === hoy;
+    const nombreFeriado = FERIADOS_MAP[fechaStr];
 
     let cls = 'cal-dia';
     if (esInicio && !rangoFin) {
@@ -463,11 +475,44 @@ function renderCal() {
     } else if (esHoy) {
       cls += ' hoy';
     }
+    if (nombreFeriado) cls += ' es-feriado';
 
-    html += `<div class="${cls}" onclick="seleccionarDia('${fechaStr}')">${d}</div>`;
+    const titulo = nombreFeriado ? ` title="Feriado: ${nombreFeriado} — click en la banderita para editar/quitar"` : ' title="Click en la banderita para marcar como feriado"';
+
+    html += `<div class="${cls}" onclick="seleccionarDia('${fechaStr}')"${titulo}>${d}<span class="cal-dia-flag" onclick="event.stopPropagation();toggleFeriado('${fechaStr}')"><i class="ti ti-flag-filled"></i></span></div>`;
   }
 
   document.getElementById('cal-grid').innerHTML = html;
+}
+
+// Marca o desmarca un día como feriado, directo desde el calendario (sin recargar la página)
+async function toggleFeriado(fechaStr) {
+  const yaEsFeriado = !!FERIADOS_MAP[fechaStr];
+
+  if (yaEsFeriado) {
+    const confirmar = confirm(`¿Quitar "${FERIADOS_MAP[fechaStr]}" como feriado del ${fechaStr}?`);
+    if (!confirmar) return;
+    try {
+      const resp = await fetch(`/personal/feriados/${fechaStr}/eliminar`, { method: 'POST' });
+      const data = await resp.json();
+      if (data.ok) { delete FERIADOS_MAP[fechaStr]; renderCal(); }
+      else alert('Error: ' + data.error);
+    } catch (e) { alert('Error de conexión'); }
+    return;
+  }
+
+  const nombre = prompt('Nombre del feriado (ej: Día de la Independencia):');
+  if (!nombre || !nombre.trim()) return;
+  try {
+    const resp = await fetch('/personal/feriados', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fecha: fechaStr, nombre: nombre.trim() })
+    });
+    const data = await resp.json();
+    if (data.ok) { FERIADOS_MAP[fechaStr] = data.nombre; renderCal(); }
+    else alert('Error: ' + data.error);
+  } catch (e) { alert('Error de conexión'); }
 }
 
 function seleccionarDia(fechaStr) {

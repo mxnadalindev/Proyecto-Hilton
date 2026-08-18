@@ -203,11 +203,15 @@
                   <% } %>
                 </td>
                 <td>
-                  <form method="POST" action="/costos/insumo/<%= ins.id %>/precio" style="display:flex;gap:4px;align-items:center;">
+                  <form method="POST" action="/costos/insumo/<%= ins.id %>/precio" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
                     <span style="font-size:0.78rem;color:var(--gris-texto);">$</span>
                     <input type="number" name="precio_nuevo" value="<%= ins.precio_unitario %>" placeholder="Ej: 4500" step="0.01" min="0"
                            style="width:80px;padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.82rem;outline:none;">
                     <button type="submit" class="btn-sm" style="padding:4px 8px;">✓</button>
+                    <label title="El precio no baja solo — tildá esto solo si es una corrección real y querés bajarlo igual" style="display:flex;align-items:center;gap:3px;font-size:0.62rem;color:var(--gris-texto);cursor:pointer;white-space:nowrap;">
+                      <input type="checkbox" name="forzar_menor" value="1" style="width:11px;height:11px;accent-color:var(--rojo);">
+                      Forzar
+                    </label>
                   </form>
                 </td>
                 <td>
@@ -335,20 +339,25 @@
   <div class="modal-lista-caja">
     <div class="modal-lista-header">
       <p class="modal-lista-titulo"><i class="ti ti-chart-line"></i> Variación de precios</p>
-      <button onclick="hideModal('modal-variacion-precios')" class="modal-lista-cerrar"><i class="ti ti-x"></i></button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <a href="/costos/variacion-excel?dias=<%= diasVariacion %>&tipoVariacion=<%= tipoVariacion %>" class="btn-excel" style="padding:7px 12px;font-size:0.65rem;">
+          <i class="ti ti-file-spreadsheet"></i> Excel
+        </a>
+        <button onclick="hideModal('modal-variacion-precios')" class="modal-lista-cerrar"><i class="ti ti-x"></i></button>
+      </div>
     </div>
 
     <div class="modal-lista-body">
       <!-- Selector de período -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
-        <% [{v:7,l:'7 días'},{v:30,l:'30 días'},{v:90,l:'90 días'},{v:365,l:'1 año'}].forEach(p => { %>
+        <% [{v:7,l:'7 días'},{v:14,l:'14 días'},{v:21,l:'21 días'},{v:28,l:'28 días'}].forEach(p => { %>
         <a href="/costos?dias=<%= p.v %>&tipoVariacion=<%= tipoVariacion %>#modal-variacion-precios"
            class="chip-periodo <%= diasVariacion === p.v ? 'activo' : '' %>"><%= p.l %></a>
         <% }) %>
       </div>
 
       <!-- Pestañas subieron / bajaron / iguales -->
-      <div style="display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--gris-borde);">
+      <div style="display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--gris-borde);flex-wrap:wrap;">
         <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=subieron#modal-variacion-precios"
            class="tab-variacion <%= tipoVariacion === 'subieron' ? 'activo' : '' %>">
           <i class="ti ti-trending-up" style="color:#dc2626;"></i> Subieron
@@ -577,6 +586,8 @@
 .input-archivo-ok{border-color:#16a34a;background:#f0fdf4;color:#16a34a;}
 @keyframes girar{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 .girando{animation:girar 0.8s linear infinite;}
+.btn-excel{display:inline-flex;align-items:center;gap:6px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-family:var(--font-sans);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background 0.2s;}
+.btn-excel:hover{background:#15803d;}
 
 /* Chips de período y pestañas de la Variación de precios */
 .chip-periodo{font-size:0.72rem;font-weight:600;color:var(--gris-texto);background:var(--gris-fondo);border:1px solid var(--gris-borde);padding:5px 13px;border-radius:20px;text-decoration:none;transition:all 0.15s;}

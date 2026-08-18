@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const db = require('../db/database');
 
 // Mapeo de unidades del sistema de compras -> unidades que usa el portal
@@ -115,10 +115,18 @@ async function importarInsumos(productos, categoria) {
     actualizados: 0,
     sinCambios: 0,
     sinPrecio: 0,
+    negativosRechazados: 0, // filas con precio negativo (ej: nota de crédito colada en el archivo) — se ignoran
+    menoresIgnorados: 0, // precio nuevo menor al actual: se mantiene el más alto, no se aplica la baja
     cambiosDePrecios: [], // {codigo, nombre, precio_anterior, precio_nuevo}
   };
 
   for (const p of productos) {
+    // Precio negativo: no es un precio de compra válido (suele ser una bonificación
+    // o una nota de crédito mezclada en el archivo). No se crea ni se actualiza nada.
+    if (p.precio_unitario < 0) {
+      resumen.negativosRechazados++;
+      continue;
+    }
     if (p.precio_unitario === 0) resumen.sinPrecio++;
 
     const existente = await db.get2('SELECT * FROM insumos WHERE codigo=$1', [p.codigo]);
@@ -134,6 +142,14 @@ async function importarInsumos(productos, categoria) {
     }
 
     const precioAnterior = parseFloat(existente.precio_unitario) || 0;
+
+    // Regla: el precio de costo nunca baja solo por una importación — se mantiene
+    // el más alto conocido, como margen de seguridad para el costeo de los platos.
+    if (p.precio_unitario < precioAnterior) {
+      resumen.menoresIgnorados++;
+      continue;
+    }
+
     if (Math.abs(precioAnterior - p.precio_unitario) > 0.001) {
       await db.run2(
         `UPDATE insumos SET precio_unitario=$1, proveedor=$2, actualizado_en=NOW() WHERE codigo=$3`,
