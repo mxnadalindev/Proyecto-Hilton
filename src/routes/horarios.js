@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
-const { loginRequerido } = require('./middleware');
+const { loginRequerido, requiereDepartamento } = require('./middleware');
+router.use(loginRequerido, requiereDepartamento('/horarios'));
 const ExcelJS = require('exceljs');
 
 const SECTORES = [
@@ -20,6 +21,7 @@ function getLunes(fechaStr) {
   const day = d.getDay();
   const diff = (day === 0) ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
+  
   return d.toISOString().split('T')[0];
 }
 

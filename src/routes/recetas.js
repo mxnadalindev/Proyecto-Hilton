@@ -3,7 +3,8 @@ const router = express.Router();
 const db = require('../db/database');
 const multer = require('multer');
 const path = require('path');
-const { loginRequerido } = require('./middleware');
+const { loginRequerido, requiereDepartamento } = require('./middleware');
+router.use(loginRequerido, requiereDepartamento('/recetas'));
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),

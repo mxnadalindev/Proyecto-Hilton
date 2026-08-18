@@ -56,6 +56,7 @@ app.use('/horarios', require('./src/routes/horarios'));
 app.use('/costos',   require('./src/routes/costos'));
 app.use('/compras',  require('./src/routes/compras'));   // ← NUEVO
 app.use('/finanzas', require('./src/routes/finanzas'));  // ← NUEVO
+app.use('/asistente', require('./src/routes/asistente'));
 
 // Mostrar IPs de acceso
 function getIPs() {

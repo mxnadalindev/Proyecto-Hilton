@@ -19,13 +19,22 @@
   <main class="main-content">
     <div class="inicio-hero">
       <p class="inicio-saludo">Portal interno · Hilton Buenos Aires</p>
-      <h1 class="inicio-titulo">Bienvenido,<br><span><%= usuario?.nombre %></span></h1>
+      <%
+        const NOMBRES_DEPTO = {
+          cocina: 'Cocina',
+          ayb: 'Alimentos y Bebidas',
+          compras: 'Compras',
+          finanzas: 'Finanzas',
+        };
+        const nombreDepto = NOMBRES_DEPTO[usuario?.departamento] || '';
+      %>
+      <h1 class="inicio-titulo">Bienvenidos al portal<br><span><%= nombreDepto || usuario?.nombre %></span></h1>
 
       <%
         const depto = usuario?.departamento;
         const esAdmin = usuario?.rol === 'admin';
         let modulos = [];
-        if (depto === 'cocina' || depto === 'ayb') {
+        if (depto === 'cocina') {
           modulos = [
             { href: '/eventos',  icon: 'ti-calendar-event', nombre: 'Eventos',  desc: 'Gestión y presupuestos', g1:'#002f61', g2:'#007293',
               detalle: 'Planificá banquetes y eventos del hotel: armá el menú con platos ya costeados (o menús completos), asigná personal y vajilla, y calculá el costo total y las horas de producción antes de confirmar.' },
@@ -37,6 +46,17 @@
               detalle: 'Recetario digital del hotel, con ingredientes, pasos de preparación, imágenes y video — buscá por nombre o categoría desde cualquier dispositivo, en la cocina o desde tu casa.' },
             { href: '/costos',   icon: 'ti-coin',           nombre: 'Costos',   desc: 'Insumos y precios', g1:'#002f61', g2:'#06937e',
               detalle: 'Cargá insumos y sus precios, costeá platos automáticamente, y actualizá precios subiendo una foto de factura o el catálogo del proveedor — con historial completo de cada cambio.' },
+          ];
+          if (esAdmin) {
+            modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', g1:'#007293', g2:'#6bb030',
+              detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
+          }
+        } else if (depto === 'ayb') {
+          modulos = [
+            { href: '/personal', icon: 'ti-users', nombre: 'Miembro de equipo', desc: 'Equipo interno', g1:'#007293', g2:'#06937e',
+              detalle: 'Gestioná el equipo de Alimentos y Bebidas: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
+            { href: '/horarios', icon: 'ti-clock', nombre: 'Horarios', desc: 'Turnos del sector', g1:'#06937e', g2:'#6bb030',
+              detalle: 'Visualizá la grilla completa de turnos de Alimentos y Bebidas, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
           ];
           if (esAdmin) {
             modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', g1:'#007293', g2:'#6bb030',
@@ -183,12 +203,17 @@
   </main>
 
   <nav class="mobile-nav">
-    <% if (depto === 'cocina' || depto === 'ayb') { %>
+    <% if (depto === 'cocina') { %>
       <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
       <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i><span>Miembro de equipo</span></a>
       <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
       <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
       <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span>Costos</span></a>
+      <% if (esAdmin) { %><a href="/configuracion" class="mobile-nav-link"><i class="ti ti-settings"></i><span>Config</span></a><% } %>
+    <% } %>
+    <% if (depto === 'ayb') { %>
+      <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i><span>Miembro de equipo</span></a>
+      <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
       <% if (esAdmin) { %><a href="/configuracion" class="mobile-nav-link"><i class="ti ti-settings"></i><span>Config</span></a><% } %>
     <% } %>
     <% if (depto === 'compras') { %>
@@ -359,6 +384,18 @@ function pasoModulo(dir) {
 }
 
 actualizarPosiciones();
+
+// En esta página (Inicio), clickear un ícono del menú selecciona su tarjeta
+// en el carrusel en vez de navegar directo — un segundo click sobre la
+// misma tarjeta (ya al frente) sí entra al módulo.
+document.querySelectorAll('.nav-pill .nav-item[href]').forEach(link => {
+  const idx = MODULOS.findIndex(m => m.href === link.getAttribute('href'));
+  if (idx === -1) return; // no es uno de los módulos del carrusel (ej. Configuración, Salir)
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    clickCard(idx);
+  });
+});
 </script>
 </body>
 </html>
