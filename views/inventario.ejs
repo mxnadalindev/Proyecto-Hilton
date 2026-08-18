@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: 'inventario' }) %>
+  <main class="main-content">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Alimentos y Bebidas</p>
+        <h1 class="seccion-titulo">Inventario</h1>
+      </div>
+      <button type="button" class="btn-primary" onclick="showModal('modal-nuevo')">
+        <i class="ti ti-plus"></i> Cargar producto
+      </button>
+    </div>
+
+    <% if (msg === 'agregado') { %><div class="alerta alerta-ok">Producto cargado correctamente.</div><% } %>
+    <% if (msg === 'actualizado') { %><div class="alerta alerta-ok">Producto actualizado.</div><% } %>
+    <% if (msg === 'eliminado') { %><div class="alerta alerta-ok">Producto eliminado.</div><% } %>
+    <% if (msg === 'error') { %><div class="alerta alerta-error">Falta el nombre del producto.</div><% } %>
+
+    <!-- Resumen -->
+    <div class="resumen-grid">
+      <div class="resumen-card <%= totalVencidos > 0 ? 'resumen-card-rojo' : '' %>">
+        <p class="resumen-numero"><%= totalVencidos %></p>
+        <p class="resumen-label">Vencido<%= totalVencidos !== 1 ? 's' : '' %></p>
+      </div>
+      <div class="resumen-card <%= totalPorVencer > 0 ? 'resumen-card-amarillo' : '' %>">
+        <p class="resumen-numero"><%= totalPorVencer %></p>
+        <p class="resumen-label">Por vencer (15 días)</p>
+      </div>
+      <div class="resumen-card <%= totalStockBajo > 0 ? 'resumen-card-azul' : '' %>">
+        <p class="resumen-numero"><%= totalStockBajo %></p>
+        <p class="resumen-label">Stock bajo mínimo</p>
+      </div>
+    </div>
+
+    <!-- Búsqueda y filtro -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+      <form method="GET" action="/inventario" style="display:flex;gap:8px;flex:1;min-width:220px;max-width:340px;">
+        <input type="text" name="buscar" value="<%= buscar %>" placeholder="Buscar producto..."
+               style="flex:1;padding:9px 12px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.83rem;outline:none;background:var(--blanco);">
+        <% if (soloPorVencer) { %><input type="hidden" name="porVencer" value="1"><% } %>
+        <button type="submit" class="btn-secondary" style="padding:9px 14px;"><i class="ti ti-search"></i></button>
+      </form>
+      <a href="/inventario?porVencer=<%= soloPorVencer ? '0' : '1' %><%= buscar ? '&buscar='+buscar : '' %>"
+         class="<%= soloPorVencer ? 'btn-primary' : 'btn-secondary' %>">
+        <i class="ti ti-alarm"></i> Solo por vencer
+      </a>
+    </div>
+
+    <!-- Tabla -->
+    <div class="tabla-wrap" style="overflow-x:auto;">
+      <table class="tabla" style="min-width:820px;">
+        <thead>
+          <tr>
+            <th>Producto</th><th>Categoría</th><th>Cantidad</th><th>Proveedor</th><th>Vencimiento</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (productos.length > 0) { %>
+            <% productos.forEach(p => { %>
+            <tr>
+              <td style="font-weight:500;">
+                <%= p.nombre %>
+                <% if (p.stock_bajo) { %><span class="badge-stock-bajo">STOCK BAJO</span><% } %>
+              </td>
+              <td style="color:var(--gris-texto);"><%= p.categoria %></td>
+              <td><%= p.cantidad %> <%= p.unidad %></td>
+              <td style="color:var(--gris-texto);"><%= p.proveedor || '—' %></td>
+              <td>
+                <% if (p.fecha_vencimiento) { %>
+                  <span class="badge-vencimiento <%= p.vencido ? 'badge-vencido' : (p.por_vencer ? 'badge-por-vencer' : '') %>">
+                    <%= p.fecha_vencimiento.toISOString ? p.fecha_vencimiento.toISOString().slice(0,10) : p.fecha_vencimiento %>
+                    <% if (p.vencido) { %> · Vencido<% } else if (p.por_vencer) { %> · <%= p.dias_para_vencer %>d<% } %>
+                  </span>
+                <% } else { %>—<% } %>
+              </td>
+              <td>
+                <div style="display:flex;gap:4px;">
+                  <button type="button" class="btn-icono" title="Reponer / actualizar" onclick='abrirEditar(<%- JSON.stringify(p) %>)'><i class="ti ti-pencil"></i></button>
+                  <form method="POST" action="/inventario/<%= p.id %>/eliminar" onsubmit="return confirm('¿Eliminar este producto?')" style="margin:0;">
+                    <button type="submit" class="btn-icono btn-icono-rojo" title="Eliminar"><i class="ti ti-trash"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
+              <% if (buscar || soloPorVencer) { %>Sin resultados.<% } else { %>No hay productos cargados. Cargá el primero.<% } %>
+            </td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--gris-borde);">
+      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
+    </div>
+  </main>
+</div>
+
+<!-- Modal: cargar producto nuevo -->
+<div id="modal-nuevo" class="modal-lista" style="display:none;" onclick="if(event.target===this)hideModal('modal-nuevo')">
+  <div class="modal-lista-caja" style="max-width:480px;">
+    <div class="modal-lista-header">
+      <p class="modal-lista-titulo"><i class="ti ti-package"></i> Cargar producto</p>
+      <button onclick="hideModal('modal-nuevo')" class="modal-lista-cerrar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-lista-body">
+      <form method="POST" action="/inventario/nuevo">
+        <div class="field">
+          <label>Nombre del producto</label>
+          <input type="text" name="nombre" placeholder="Ej: Croutons" required>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Categoría</label>
+            <input type="text" name="categoria" placeholder="Ej: Panificados">
+          </div>
+          <div class="field">
+            <label>Proveedor</label>
+            <input type="text" name="proveedor" placeholder="Ej: Distribuidora XYZ">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Cantidad</label>
+            <input type="number" name="cantidad" step="0.01" min="0" placeholder="0">
+          </div>
+          <div class="field">
+            <label>Unidad</label>
+            <input type="text" name="unidad" placeholder="kg, unidad, caja..." value="unidad">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Stock mínimo (aviso)</label>
+            <input type="number" name="stock_minimo" step="0.01" min="0" placeholder="0">
+          </div>
+          <div class="field">
+            <label>Fecha de vencimiento</label>
+            <input type="date" name="fecha_vencimiento">
+          </div>
+        </div>
+        <div class="form-actions" style="margin-top:16px;padding-top:16px;">
+          <button type="button" class="btn-secondary" onclick="hideModal('modal-nuevo')">Cancelar</button>
+          <button type="submit" class="btn-primary"><i class="ti ti-device-floppy"></i> Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: reponer / editar -->
+<div id="modal-editar" class="modal-lista" style="display:none;" onclick="if(event.target===this)hideModal('modal-editar')">
+  <div class="modal-lista-caja" style="max-width:480px;">
+    <div class="modal-lista-header">
+      <p class="modal-lista-titulo" id="editarTitulo"><i class="ti ti-pencil"></i> Reponer producto</p>
+      <button onclick="hideModal('modal-editar')" class="modal-lista-cerrar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-lista-body">
+      <form method="POST" id="formEditar" action="">
+        <div class="field">
+          <label>Cantidad (nueva mercadería recibida — reemplaza la actual)</label>
+          <input type="number" name="cantidad" id="editarCantidad" step="0.01" min="0" required>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Stock mínimo</label>
+            <input type="number" name="stock_minimo" id="editarStockMinimo" step="0.01" min="0">
+          </div>
+          <div class="field">
+            <label>Proveedor</label>
+            <input type="text" name="proveedor" id="editarProveedor">
+          </div>
+        </div>
+        <div class="field">
+          <label>Fecha de vencimiento</label>
+          <input type="date" name="fecha_vencimiento" id="editarVencimiento">
+        </div>
+        <div class="form-actions" style="margin-top:16px;padding-top:16px;">
+          <button type="button" class="btn-secondary" onclick="hideModal('modal-editar')">Cancelar</button>
+          <button type="submit" class="btn-primary"><i class="ti ti-device-floppy"></i> Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 0.68rem; font-weight: 500; color: var(--negro); margin-bottom: 6px; letter-spacing: 0.05em; }
+.field input {
+  width: 100%; background: var(--gris-fondo); border: 1px solid var(--gris-borde);
+  border-radius: 8px; padding: 9px 12px; font-family: var(--font-sans);
+  font-size: 0.85rem; color: var(--negro); outline: none; box-sizing: border-box;
+}
+.field input:focus { border-color: var(--azul); background: var(--blanco); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--gris-borde); }
+
+.resumen-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+.resumen-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 18px; text-align: center; box-shadow: var(--sombra); }
+.resumen-numero { font-family: var(--font-serif); font-size: 2rem; color: var(--negro); margin: 0; line-height: 1; }
+.resumen-label { font-size: 0.72rem; color: var(--gris-texto); margin-top: 6px; }
+.resumen-card-rojo { border-color: #fecaca; background: #fef2f2; }
+.resumen-card-rojo .resumen-numero { color: #dc2626; }
+.resumen-card-amarillo { border-color: #fde68a; background: #fffbeb; }
+.resumen-card-amarillo .resumen-numero { color: #d97706; }
+.resumen-card-azul { border-color: var(--azul-borde); background: var(--azul-claro); }
+.resumen-card-azul .resumen-numero { color: var(--azul); }
+@media (max-width: 700px) { .resumen-grid { grid-template-columns: 1fr; } .field-row { grid-template-columns: 1fr; } }
+
+.badge-vencimiento { font-size: 0.75rem; color: var(--negro); }
+.badge-por-vencer { display: inline-block; background: #fffbeb; color: #d97706; border: 1px solid #fde68a; padding: 2px 8px; border-radius: 20px; font-weight: 600; font-size: 0.7rem; }
+.badge-vencido { display: inline-block; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 2px 8px; border-radius: 20px; font-weight: 600; font-size: 0.7rem; }
+.badge-stock-bajo { display: inline-block; margin-left: 6px; font-size: 0.6rem; font-weight: 700; background: var(--azul-claro); color: var(--azul); padding: 1px 7px; border-radius: 20px; }
+
+.alerta { padding: 10px 16px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 16px; }
+.alerta-ok { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.alerta-error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+.modal-lista{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;}
+.modal-lista-caja{background:var(--blanco);border-radius:16px;width:100%;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);max-height:88vh;}
+.modal-lista-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--gris-borde);}
+.modal-lista-titulo{font-size:0.95rem;font-weight:600;color:var(--negro);display:flex;align-items:center;gap:8px;margin:0;}
+.modal-lista-cerrar{background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);}
+.modal-lista-body{padding:20px 22px;overflow-y:auto;}
+@media (max-width:700px){ .modal-lista{padding:0;} .modal-lista-caja{max-width:100%!important;border-radius:0;height:100vh;max-height:100vh;} }
+
+.btn-icono{background:var(--azul-claro);border:none;color:var(--azul);cursor:pointer;font-size:15px;padding:6px 9px;border-radius:6px;transition:all 0.2s;}
+.btn-icono:hover{background:var(--azul);color:#fff;}
+.btn-icono-rojo{background:#fef2f2;color:#dc2626;}
+.btn-icono-rojo:hover{background:#dc2626;color:#fff;}
+</style>
+
+<script>
+function showModal(id){ document.getElementById(id).style.display='flex'; }
+function hideModal(id){ document.getElementById(id).style.display='none'; }
+
+function abrirEditar(p) {
+  document.getElementById('formEditar').action = '/inventario/' + p.id + '/editar';
+  document.getElementById('editarTitulo').innerHTML = '<i class="ti ti-pencil"></i> Reponer: ' + p.nombre;
+  document.getElementById('editarCantidad').value = p.cantidad || 0;
+  document.getElementById('editarStockMinimo').value = p.stock_minimo || 0;
+  document.getElementById('editarProveedor').value = p.proveedor || '';
+  document.getElementById('editarVencimiento').value = p.fecha_vencimiento ? p.fecha_vencimiento.slice(0,10) : '';
+  showModal('modal-editar');
+}
+</script>
+</body>
+</html>
