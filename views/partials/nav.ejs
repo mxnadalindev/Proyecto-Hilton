@@ -2,6 +2,9 @@
   <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
 
   <nav class="nav-pill desktop-only">
+    <a href="/inicio" class="nav-item <%= (typeof path !== 'undefined' && path === 'inicio') ? 'activo' : '' %>" title="Inicio">
+      <i class="ti ti-home" aria-hidden="true"></i>
+    </a>
     <% const _d = usuario?.departamento; const _r = usuario?.rol; %>
     <% if (_d === 'cocina' || (_r === 'admin' && _d !== 'ayb' && _d !== 'compras' && _d !== 'finanzas')) { %>
       <a href="/eventos" class="nav-item <%= (typeof path !== 'undefined' && path === 'eventos') ? 'activo' : '' %>" title="Eventos">
@@ -33,14 +36,11 @@
         <i class="ti ti-settings" aria-hidden="true"></i><span class="nav-label">Configuración</span>
       </a>
     <% } %>
-    <a href="/logout" class="nav-item nav-item-salir">
-      <i class="ti ti-logout" aria-hidden="true"></i><span class="nav-label">Salir</span>
-    </a>
   </nav>
 
   <div class="header-user">
     <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
-    <a href="/logout" class="btn-logout mobile-only-flex"><i class="ti ti-logout"></i></a>
+    <a href="/logout" class="btn-logout" title="Cerrar sesión"><i class="ti ti-logout"></i></a>
   </div>
 </header>
 
