@@ -1,10 +1,11 @@
 ﻿const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
-const { loginRequerido } = require('./middleware');
+const { loginRequerido, requiereDepartamento } = require('./middleware');
 const multer = require('multer');
 const path = require('path');
 const ExcelJS = require('exceljs');
+router.use(loginRequerido, requiereDepartamento('/costos'));
 const { analizarFactura } = require('../services/gemini');
 const { parsearCsvInsumos, importarInsumos } = require('../services/importadorInsumos');
 const { parsearCsvPlatos, importarPlatos } = require('../services/importadorPlatos');

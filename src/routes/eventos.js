@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
-const { loginRequerido } = require('./middleware');
+const { loginRequerido, requiereDepartamento } = require('./middleware');
+router.use(loginRequerido, requiereDepartamento('/eventos'));
 
 // Trae todos los menús con sus platos ya cargados (para los selectores de "menú completo")
 async function getMenusConPlatos() {

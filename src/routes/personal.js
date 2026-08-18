@@ -2,7 +2,8 @@
 const router = express.Router();
 const db = require('../db/database');
 const bcrypt = require('bcryptjs');
-const { loginRequerido } = require('./middleware');
+const { loginRequerido, requiereDepartamento } = require('./middleware');
+router.use(loginRequerido, requiereDepartamento('/personal'));
 
 const PUESTOS = ['Chef','Subchef','Encargado de cocina','Cocinero','Ayudante de cocina','Pastelero','Panadero'];
 const ROLES   = ['empleado','supervisor','admin'];
