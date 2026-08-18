@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 const { loginRequerido } = require('./middleware');
@@ -64,12 +64,52 @@ router.get('/', loginRequerido, async (req, res) => {
   const categorias = [...new Set(insumos.map(i=>i.categoria))];
   const msg = req.query.msg || null;
   const geminiConfigurado = !!process.env.GEMINI_API_KEY;
+
+  // ── Variación de precios: compara el precio actual de cada insumo contra el
+  //    precio que tenía al INICIO del período elegido (según historial_precios).
+  //    Solo entran los insumos que tuvieron al menos un cambio registrado en ese
+  //    período — si nunca cambiaron, no hay "antes" con qué comparar.
+  const diasVariacion = parseInt(req.query.dias) || 30;
+  const tipoVariacion = ['subieron', 'bajaron', 'iguales'].includes(req.query.tipoVariacion)
+    ? req.query.tipoVariacion : 'subieron';
+
+  const filasVariacion = await db.all2(`
+    WITH primero AS (
+      SELECT DISTINCT ON (insumo_id) insumo_id, precio_anterior AS precio_inicio
+      FROM historial_precios
+      WHERE fecha >= NOW() - ($1 || ' days')::interval
+      ORDER BY insumo_id, fecha ASC
+    )
+    SELECT i.id, i.nombre, i.codigo, i.categoria, i.unidad,
+           i.precio_unitario AS precio_actual,
+           p.precio_inicio,
+           (i.precio_unitario - p.precio_inicio) AS variacion_abs,
+           CASE WHEN p.precio_inicio > 0
+                THEN ROUND((((i.precio_unitario - p.precio_inicio) / p.precio_inicio) * 100)::numeric, 1)
+                ELSE 0 END AS variacion_pct
+    FROM primero p
+    JOIN insumos i ON i.id = p.insumo_id
+    ORDER BY variacion_pct ${tipoVariacion === 'bajaron' ? 'ASC' : 'DESC'}
+  `, [diasVariacion]);
+
+  const LIMITE_VARIACION = 10;
+  let variacionPrecios;
+  if (tipoVariacion === 'iguales') {
+    variacionPrecios = filasVariacion.filter(f => Math.abs(f.variacion_abs) < 0.01).slice(0, LIMITE_VARIACION);
+  } else if (tipoVariacion === 'bajaron') {
+    variacionPrecios = filasVariacion.filter(f => f.variacion_abs < -0.01).slice(0, LIMITE_VARIACION);
+  } else {
+    variacionPrecios = filasVariacion.filter(f => f.variacion_abs > 0.01).slice(0, LIMITE_VARIACION);
+  }
+
   res.render('costos', {
     insumos, platos, categorias, msg, geminiConfigurado,
     buscar, letra, totalInsumos,
     buscarPlato, totalPlatos, letraPlato,
     mostrandoLimitado: !buscar && totalInsumos > LIMITE_SIN_BUSQUEDA,
-    limiteSinBusqueda: LIMITE_SIN_BUSQUEDA
+    limiteSinBusqueda: LIMITE_SIN_BUSQUEDA,
+    variacionPrecios, diasVariacion, tipoVariacion,
+    mostrarModalVariacion: req.query.dias !== undefined || req.query.tipoVariacion !== undefined
   });
 });
 
@@ -166,6 +206,18 @@ router.post('/plato/:plato_id/insumo/:id/cantidad', loginRequerido, async (req, 
     console.error('Error actualizando cantidad:', e.message);
   }
   res.redirect('/costos/plato/'+req.params.plato_id);
+});
+
+router.post('/plato/:id/margen', loginRequerido, async (req, res) => {
+  const nuevoMargen = parseFloat(req.body.margen_ganancia);
+  try {
+    if (!isNaN(nuevoMargen) && nuevoMargen >= 0) {
+      await db.run2("UPDATE platos_costo SET margen_ganancia=$1 WHERE id=$2", [nuevoMargen, req.params.id]);
+    }
+  } catch (e) {
+    console.error('Error actualizando margen de ganancia:', e.message);
+  }
+  res.redirect('/costos/plato/'+req.params.id);
 });
 
 router.post('/plato/:id/eliminar', loginRequerido, async (req, res) => {

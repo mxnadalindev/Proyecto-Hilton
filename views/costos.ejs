@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -118,6 +118,20 @@
             <i class="ti ti-list"></i> Ver platos
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Variación de precios: franja de ancho completo, no rompe la grilla de 4 tarjetas de arriba -->
+    <div class="tarjeta-unificada tarjeta-variacion-franja" style="margin-top:20px;text-align:left;">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div class="tarjeta-unificada-icono" style="background:#fef3c7;color:#b45309;flex-shrink:0;"><i class="ti ti-trending-up"></i></div>
+        <div style="flex:1;min-width:220px;">
+          <p class="tarjeta-unificada-titulo" style="justify-content:flex-start;">Variación de precios</p>
+          <p class="tarjeta-unificada-desc" style="margin-bottom:0;">Los insumos que más subieron, bajaron o se mantuvieron en un período.</p>
+        </div>
+        <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=<%= tipoVariacion %>#modal-variacion-precios" class="btn-primary" style="flex-shrink:0;">
+          <i class="ti ti-chart-line"></i> Ver variación
+        </a>
       </div>
     </div>
 
@@ -316,6 +330,86 @@
   </div>
 </div>
 
+<!-- Modal: Variación de precios -->
+<div id="modal-variacion-precios" class="modal-lista" style="display:none;" onclick="if(event.target===this)hideModal('modal-variacion-precios')">
+  <div class="modal-lista-caja">
+    <div class="modal-lista-header">
+      <p class="modal-lista-titulo"><i class="ti ti-chart-line"></i> Variación de precios</p>
+      <button onclick="hideModal('modal-variacion-precios')" class="modal-lista-cerrar"><i class="ti ti-x"></i></button>
+    </div>
+
+    <div class="modal-lista-body">
+      <!-- Selector de período -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+        <% [{v:7,l:'7 días'},{v:30,l:'30 días'},{v:90,l:'90 días'},{v:365,l:'1 año'}].forEach(p => { %>
+        <a href="/costos?dias=<%= p.v %>&tipoVariacion=<%= tipoVariacion %>#modal-variacion-precios"
+           class="chip-periodo <%= diasVariacion === p.v ? 'activo' : '' %>"><%= p.l %></a>
+        <% }) %>
+      </div>
+
+      <!-- Pestañas subieron / bajaron / iguales -->
+      <div style="display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--gris-borde);">
+        <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=subieron#modal-variacion-precios"
+           class="tab-variacion <%= tipoVariacion === 'subieron' ? 'activo' : '' %>">
+          <i class="ti ti-trending-up" style="color:#dc2626;"></i> Subieron
+        </a>
+        <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=bajaron#modal-variacion-precios"
+           class="tab-variacion <%= tipoVariacion === 'bajaron' ? 'activo' : '' %>">
+          <i class="ti ti-trending-down" style="color:#16a34a;"></i> Bajaron
+        </a>
+        <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=iguales#modal-variacion-precios"
+           class="tab-variacion <%= tipoVariacion === 'iguales' ? 'activo' : '' %>">
+          <i class="ti ti-minus" style="color:var(--gris-texto);"></i> Se mantuvieron
+        </a>
+      </div>
+
+      <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:12px;">
+        Comparando el precio de hoy contra el precio de hace <%= diasVariacion %> día<%= diasVariacion !== 1 ? 's' : '' %>.
+        Top <%= variacionPrecios.length %> resultado<%= variacionPrecios.length !== 1 ? 's' : '' %>.
+      </p>
+
+      <div class="tabla-wrap">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Insumo</th>
+              <th>Precio antes</th>
+              <th>Precio actual</th>
+              <th>Variación</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (variacionPrecios.length > 0) { %>
+              <% variacionPrecios.forEach(f => { %>
+              <tr>
+                <td style="font-weight:500;">
+                  <%= f.nombre %>
+                  <% if (f.categoria) { %><span style="display:block;font-size:0.65rem;color:var(--gris-texto);"><%= f.categoria %></span><% } %>
+                </td>
+                <td style="color:var(--gris-texto);">$<%= parseFloat(f.precio_inicio).toFixed(2) %></td>
+                <td style="font-weight:600;">$<%= parseFloat(f.precio_actual).toFixed(2) %></td>
+                <td>
+                  <span style="font-weight:700;font-size:0.82rem;color:<%= f.variacion_abs > 0 ? '#dc2626' : (f.variacion_abs < 0 ? '#16a34a' : 'var(--gris-texto)') %>;">
+                    <%= f.variacion_abs > 0 ? '+' : '' %><%= parseFloat(f.variacion_pct).toFixed(1) %>%
+                  </span>
+                  <span style="display:block;font-size:0.68rem;color:var(--gris-texto);">
+                    <%= f.variacion_abs > 0 ? '+' : '' %>$<%= parseFloat(f.variacion_abs).toFixed(2) %>
+                  </span>
+                </td>
+              </tr>
+              <% }) %>
+            <% } else { %>
+              <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
+                No hay insumos que <%= tipoVariacion === 'subieron' ? 'hayan subido de precio' : (tipoVariacion === 'bajaron' ? 'hayan bajado de precio' : 'se hayan mantenido igual') %> en este período.
+              </td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal nuevo insumo -->
 <div id="modal-insumo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
@@ -483,6 +577,14 @@
 .input-archivo-ok{border-color:#16a34a;background:#f0fdf4;color:#16a34a;}
 @keyframes girar{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 .girando{animation:girar 0.8s linear infinite;}
+
+/* Chips de período y pestañas de la Variación de precios */
+.chip-periodo{font-size:0.72rem;font-weight:600;color:var(--gris-texto);background:var(--gris-fondo);border:1px solid var(--gris-borde);padding:5px 13px;border-radius:20px;text-decoration:none;transition:all 0.15s;}
+.chip-periodo:hover{border-color:var(--azul);color:var(--azul);}
+.chip-periodo.activo{background:var(--azul);border-color:var(--azul);color:#fff;}
+.tab-variacion{font-size:0.76rem;font-weight:600;color:var(--gris-texto);text-decoration:none;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;}
+.tab-variacion:hover{color:var(--negro);}
+.tab-variacion.activo{color:var(--negro);border-bottom-color:var(--azul);}
 </style>
 
 <script>
@@ -498,6 +600,9 @@ showModal('modal-lista-insumos');
 <% } %>
 <% if (buscarPlato || letraPlato) { %>
 showModal('modal-lista-platos');
+<% } %>
+<% if (mostrarModalVariacion) { %>
+showModal('modal-variacion-precios');
 <% } %>
 
 function toggleOtroPlato() {

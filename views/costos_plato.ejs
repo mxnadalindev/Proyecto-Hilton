@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,7 +40,12 @@
           </div>
           <div style="background:var(--gris-fondo);border-radius:10px;padding:16px;text-align:center;">
             <p style="font-size:0.65rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px;">Margen ganancia</p>
-            <p style="font-size:1.5rem;font-weight:700;color:#f59e0b;margin:0;"><%= plato.margen_ganancia %>%</p>
+            <form method="POST" action="/costos/plato/<%= plato.id %>/margen" style="display:flex;align-items:center;justify-content:center;gap:6px;margin:0;">
+              <input type="number" name="margen_ganancia" value="<%= plato.margen_ganancia %>" min="0" step="1"
+                     style="width:64px;text-align:center;font-size:1.3rem;font-weight:700;color:#f59e0b;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:6px;padding:2px 4px;font-family:var(--font-sans);outline:none;">
+              <span style="font-size:1.3rem;font-weight:700;color:#f59e0b;">%</span>
+              <button type="submit" class="btn-sm" title="Guardar margen" style="padding:5px 8px;">✓</button>
+            </form>
           </div>
           <div style="background:var(--gris-fondo);border-radius:10px;padding:16px;text-align:center;">
             <p style="font-size:0.65rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px;">Porciones</p>

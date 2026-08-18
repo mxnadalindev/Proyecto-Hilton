@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -662,7 +662,19 @@ function abrirEditar(id, nombre, email, legajo, puesto, rol, sector) {
   document.getElementById('edit-nombre').value = nombre;
   document.getElementById('edit-email').value  = email;
   document.getElementById('edit-legajo').value = legajo;
-  document.getElementById('edit-puesto').value = puesto;
+
+  // Si el puesto actual del empleado ya no está entre las opciones (por ejemplo,
+  // se sacó de la lista después de que se lo asignaron), lo agregamos como opción
+  // extra en vez de dejar que el <select> caiga en la primera por defecto sin avisar.
+  const selPuesto = document.getElementById('edit-puesto');
+  if (puesto && ![...selPuesto.options].some(o => o.value === puesto)) {
+    const opt = document.createElement('option');
+    opt.value = puesto;
+    opt.textContent = puesto + ' (fuera de lista)';
+    selPuesto.appendChild(opt);
+  }
+  selPuesto.value = puesto;
+
   document.getElementById('edit-rol').value    = rol;
   document.getElementById('edit-sector').value = sector;
   showModal('modal-editar');

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -250,21 +250,10 @@ document.querySelectorAll('.celda-horario').forEach(input => {
 // de "contar" como gesto real. Por eso acá no esperamos nada: se descarga el
 // Excel y se abre WhatsApp en el mismo instante del clic.
 function enviarExcelPorWhatsapp() {
-  const inicio = <%- JSON.stringify(inicio) %>;
-  const fin = <%- JSON.stringify(fin) %>;
-  const nombreArchivo = `horarios_${inicio}_a_${fin}.xlsx`;
   const mensaje = <%- JSON.stringify(msgHorarios) %>;
-  const urlExcel = `/horarios/excel?inicio=${encodeURIComponent(inicio)}&fin=${encodeURIComponent(fin)}`;
 
-  // 1) Descarga el Excel (link sintético, no necesita esperar nada)
-  const a = document.createElement('a');
-  a.href = urlExcel;
-  a.download = nombreArchivo;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-
-  // 2) Abre WhatsApp con el mensaje — en el mismo instante del clic, sin awaits antes
+  // Solo abre WhatsApp con el mensaje. La descarga del Excel ya la maneja
+  // el botón "Excel" aparte — no hace falta duplicarla acá.
   window.open('https://wa.me/?text=' + encodeURIComponent(mensaje), '_blank');
 }
 </script>
