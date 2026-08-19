@@ -60,9 +60,12 @@ router.post('/login', async (req, res) => {
   }
 
   try {
+    // Los mozos (eventuales/fijos/agencia) no siempre tienen email corporativo,
+    // así que además de por email se puede entrar con el CUIL (guardado en
+    // "legajo" — es el mismo campo que ya se usaba como identificador libre).
     const user = await db.get2(
-      'SELECT * FROM usuarios WHERE email = $1 AND activo = 1',
-      [email]
+      'SELECT * FROM usuarios WHERE (email = $1 OR legajo = $2) AND activo = 1',
+      [email, (req.body.email || '').trim()]
     );
 
     if (user && password && bcrypt.compareSync(password, user.password)) {

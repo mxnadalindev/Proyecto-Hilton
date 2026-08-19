@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi disponibilidad — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <% var path = 'mi-disponibilidad'; %>
+  <%- include('partials/nav', { path: path }) %>
+
+  <main class="main-content">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Portal interno</p>
+        <h1 class="seccion-titulo">Mi disponibilidad</h1>
+      </div>
+      <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+    </div>
+
+    <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:24px;max-width:480px;box-shadow:var(--sombra);">
+      <p style="font-size:0.85rem;color:var(--gris-texto);margin:0 0 20px;">
+        Marcá los días que podés trabajar la semana que viene — el sector arma los turnos con esto los viernes.
+        Click en un día para ir rotando: <strong>sin dato → disponible (con horario) → no disponible → sin dato</strong>.
+      </p>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <button onclick="dispMes(-1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:16px;">&#8249;</button>
+        <span id="disp-titulo" style="font-size:0.95rem;font-weight:600;color:var(--negro);"></span>
+        <button onclick="dispMes(1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:16px;">&#8250;</button>
+      </div>
+      <div id="disp-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;"></div>
+
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:20px;">
+        <span style="font-size:0.68rem;font-weight:700;background:#22c55e;border:1px solid #22c55e;color:#fff;padding:3px 11px;border-radius:20px;">Disponible</span>
+        <span style="font-size:0.68rem;font-weight:700;background:#dc2626;border:1px solid #dc2626;color:#fff;padding:3px 11px;border-radius:20px;">No disponible</span>
+        <span style="font-size:0.68rem;font-weight:700;background:var(--gris-fondo);border:1px solid var(--gris-borde);color:var(--gris-texto);padding:3px 11px;border-radius:20px;">Sin dato</span>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--gris-borde);">
+      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
+    </div>
+  </main>
+
+  <%- include('partials/mobile-nav', { path: path }) %>
+</div>
+
+<style>
+.cal-dia{padding:10px 4px;border-radius:8px;cursor:pointer;font-size:0.85rem;color:var(--negro);transition:all 0.15s;border:1px solid transparent;}
+.cal-dia:hover{background:var(--azul-claro);color:var(--azul);}
+.cal-dia.hoy{font-weight:700;color:var(--azul);border-color:var(--azul);}
+.cal-dia.vacio{visibility:hidden;}
+.cal-nombre-dia{font-size:0.65rem;font-weight:600;color:var(--gris-texto);padding:4px 0;text-align:center;}
+</style>
+
+<script>
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+let dispFecha = new Date();
+let dispMapa = {}; // { 'YYYY-MM-DD': {disponible, hora_desde, hora_hasta} }
+
+function dispMes(dir) {
+  dispFecha.setMonth(dispFecha.getMonth() + dir);
+  cargarDisponibilidad();
+}
+
+async function cargarDisponibilidad() {
+  const anio = dispFecha.getFullYear();
+  const mes  = dispFecha.getMonth();
+  const mesStr = `${anio}-${String(mes+1).padStart(2,'0')}`;
+  document.getElementById('disp-titulo').textContent = MESES[mes] + ' ' + anio;
+  try {
+    const resp = await fetch(`/personal/<%= usuario.id %>/disponibilidad?mes=${mesStr}`);
+    const data = await resp.json();
+    dispMapa = data.ok ? data.dias : {};
+  } catch (e) {
+    dispMapa = {};
+  }
+  renderDispCal();
+}
+
+function renderDispCal() {
+  const anio = dispFecha.getFullYear();
+  const mes  = dispFecha.getMonth();
+  const primerDia = new Date(anio, mes, 1).getDay();
+  const diasMes   = new Date(anio, mes + 1, 0).getDate();
+  const hoy = new Date().toISOString().split('T')[0];
+
+  let html = DIAS_SEMANA.map(d => `<div class="cal-nombre-dia">${d}</div>`).join('');
+  for (let i = 0; i < primerDia; i++) html += `<div class="cal-dia vacio"></div>`;
+
+  for (let d = 1; d <= diasMes; d++) {
+    const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const info = dispMapa[fechaStr];
+    const esHoy = fechaStr === hoy;
+
+    let bg = '', color = '', border = 'transparent', titulo = '';
+    if (info && info.disponible) {
+      bg = '#22c55e'; color = '#fff'; border = '#22c55e';
+      titulo = info.hora_hasta ? `Disponible de ${info.hora_desde} a ${info.hora_hasta}` : `Disponible desde las ${info.hora_desde}`;
+    } else if (info && !info.disponible) {
+      bg = '#dc2626'; color = '#fff'; border = '#dc2626';
+      titulo = 'No disponible';
+    }
+
+    let cls = 'cal-dia' + (esHoy && !info ? ' hoy' : '');
+    html += `<div class="${cls}" title="${titulo}" style="background:${bg};color:${color};border-color:${border};font-weight:${info ? '700' : '400'};" onclick="cicloDisponibilidad('${fechaStr}')">${d}</div>`;
+  }
+
+  document.getElementById('disp-grid').innerHTML = html;
+}
+
+// Cada click va rotando: sin dato → disponible (pide horario) → no disponible → sin dato de nuevo
+async function cicloDisponibilidad(fechaStr) {
+  const actual = dispMapa[fechaStr];
+  let estado, hora_desde = '', hora_hasta = '';
+
+  if (!actual) {
+    estado = 'disponible';
+    hora_desde = prompt('¿Desde qué hora estás disponible ese día? (ej: 10:00)');
+    if (!hora_desde || !hora_desde.trim()) return; // canceló: no guardamos nada
+    hora_desde = hora_desde.trim();
+    hora_hasta = prompt('¿Hasta qué hora? (dejalo vacío si no tenés límite)') || '';
+    hora_hasta = hora_hasta.trim();
+  } else if (actual.disponible) {
+    estado = 'no_disponible';
+  } else {
+    estado = '';
+  }
+
+  try {
+    const resp = await fetch(`/personal/<%= usuario.id %>/disponibilidad`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `fecha=${fechaStr}&estado=${estado}&hora_desde=${encodeURIComponent(hora_desde)}&hora_hasta=${encodeURIComponent(hora_hasta)}`
+    });
+    const data = await resp.json();
+    if (!data.ok) { alert('Error: ' + data.error); return; }
+    if (estado === '') delete dispMapa[fechaStr];
+    else dispMapa[fechaStr] = { disponible: estado === 'disponible', hora_desde, hora_hasta };
+    renderDispCal();
+  } catch (e) { alert('Error de conexión'); }
+}
+
+cargarDisponibilidad();
+</script>
+</body>
+</html>
