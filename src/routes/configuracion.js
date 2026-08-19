@@ -31,23 +31,41 @@ function getBackups() {
 }
 
 // ── GET / ──────────────────────────────────────────────
+// Nota: cada consulta va con su propio try/catch — así, si algo puntual
+// falla en la base (por ej. una tabla que todavía no se creó en esta
+// instancia), la página igual carga con esa sección vacía en vez de
+// tirar abajo el servidor entero por una promesa sin capturar.
 router.get('/', loginRequerido, soloAdmin, async (req, res) => {
-  const usuarios = await db.all2(`
-    SELECT id, nombre, email, rol, departamento, activo, creado_en::text as creado_en
-    FROM usuarios
-    WHERE departamento NOT IN ('Supervisores','Comis de Recepción','Panadería','Pastelería AM','Pastelería PM','Faro AM','Faro PM','Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D')
-    OR departamento IS NULL
-    ORDER BY creado_en DESC
-  `);
+  let usuarios = [];
+  try {
+    usuarios = await db.all2(`
+      SELECT id, nombre, email, rol, departamento, activo, creado_en::text as creado_en
+      FROM usuarios
+      WHERE departamento NOT IN ('Supervisores','Comis de Recepción','Panadería','Pastelería AM','Pastelería PM','Faro AM','Faro PM','Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D')
+      OR departamento IS NULL
+      ORDER BY creado_en DESC
+    `);
+  } catch (e) {
+    console.error('Error cargando usuarios en Configuración:', e.message);
+  }
 
-  const auditoria = await db.all2(`
-    SELECT id, usuario_nombre, accion, detalle, ip, creado_en::text as creado_en
-    FROM auditoria ORDER BY creado_en DESC LIMIT 100
-  `);
+  let auditoria = [];
+  try {
+    auditoria = await db.all2(`
+      SELECT id, usuario_nombre, accion, detalle, ip, creado_en::text as creado_en
+      FROM auditoria ORDER BY creado_en DESC LIMIT 100
+    `);
+  } catch (e) {
+    console.error('Error cargando auditoría en Configuración:', e.message);
+  }
 
-  const configRows = await db.all2('SELECT clave, valor FROM configuracion_sistema');
   const config = {};
-  configRows.forEach(r => config[r.clave] = r.valor);
+  try {
+    const configRows = await db.all2('SELECT clave, valor FROM configuracion_sistema');
+    configRows.forEach(r => config[r.clave] = r.valor);
+  } catch (e) {
+    console.error('Error cargando configuración del sistema:', e.message);
+  }
 
   const msg = req.query.msg || null;
   const backups = getBackups();

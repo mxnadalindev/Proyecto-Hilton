@@ -18,6 +18,11 @@
       <i class="ti ti-check"></i> Empleado actualizado.
     </div>
     <% } %>
+    <% if (msg === 'mozos_importados') { %>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
+      <i class="ti ti-check"></i> Se cargaron <%= cargadosMozos %> mozo<%= cargadosMozos != 1 ? 's' : '' %><% if (duplicadosMozos > 0) { %> (<%= duplicadosMozos %> ya existían por CUIL y se saltearon)<% } %>.
+    </div>
+    <% } %>
 
     <!-- Header -->
     <div class="seccion-header">
@@ -29,6 +34,9 @@
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
         <a href="/horarios?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-secondary"><i class="ti ti-clock"></i> Ver en Horarios</a>
         <% if (esAdmin) { %>
+        <% if (misDepto === 'ayb') { %>
+        <button onclick="showModal('modal-importar-mozos')" class="btn-secondary"><i class="ti ti-file-upload"></i> Importar mozos (CSV)</button>
+        <% } %>
         <button onclick="showModal('modal-nuevo')" class="btn-primary"><i class="ti ti-plus"></i> Nuevo empleado</button>
         <% } %>
       </div>
@@ -129,9 +137,15 @@
               <td><span class="puesto-badge"><%= p.puesto||'—' %></span></td>
 
               <td>
-                <% if (p.departamento) { %>
-                <span style="font-size:0.67rem;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:2px 6px;border-radius:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;" title="<%= p.departamento %>">
-                  <%= p.departamento %>
+                <%
+                  // Cocina muestra su sector (guardado en "departamento"); AYB
+                  // muestra la modalidad (Eventual/Fijo/Agencia) — ya no tiene
+                  // sector, "departamento" para AYB es siempre 'ayb' a secas.
+                  const etiquetaSector = p.departamento === 'ayb' ? p.modalidad : p.departamento;
+                %>
+                <% if (etiquetaSector) { %>
+                <span style="font-size:0.67rem;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:2px 6px;border-radius:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;" title="<%= etiquetaSector %>">
+                  <%= etiquetaSector %>
                 </span>
                 <% } else { %><span style="font-size:0.72rem;color:var(--gris-texto);">—</span><% } %>
               </td>
@@ -195,8 +209,11 @@
                   <i class="ti ti-dots-vertical"></i>
                 </button>
                 <div id="menu-<%= p.id %>" class="dropdown-menu" style="display:none;">
-                  <button onclick="abrirEditar(<%= p.id %>, '<%= p.nombre.replace(/'/g,'') %>', '<%= p.email||'' %>', '<%= p.legajo||'' %>', '<%= p.puesto||'' %>', '<%= p.rol||'' %>', '<%= p.departamento||'' %>')" class="dropdown-item">
+                  <button onclick="abrirEditar(<%= p.id %>, '<%= p.nombre.replace(/'/g,'') %>', '<%= p.email||'' %>', '<%= p.legajo||'' %>', '<%= p.puesto||'' %>', '<%= p.rol||'' %>', '<%= p.departamento === 'ayb' ? '' : (p.departamento||'') %>', '<%= p.modalidad||'' %>')" class="dropdown-item">
                     <i class="ti ti-pencil"></i> Editar
+                  </button>
+                  <button onclick="abrirDisponibilidad(<%= p.id %>, '<%= p.nombre.replace(/'/g,'') %>')" class="dropdown-item">
+                    <i class="ti ti-calendar-event"></i> Disponibilidad
                   </button>
                   <button onclick="abrirReset(<%= p.id %>, '<%= p.nombre.replace(/'/g,'') %>')" class="dropdown-item">
                     <i class="ti ti-key"></i> Contraseña
@@ -247,6 +264,20 @@
       <input type="hidden" name="id" id="edit-id">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="field" style="grid-column:1/-1;"><label>Nombre y apellido</label><input type="text" name="nombre" id="edit-nombre" required></div>
+        <% if (misDepto === 'ayb') { %>
+        <div class="field"><label>CUIL</label><input type="text" name="cuil" id="edit-cuil" placeholder="Ej: 20432824927"></div>
+        <div class="field"><label>Email (opcional)</label><input type="email" name="email" id="edit-email"></div>
+        <div class="field"><label>Rol</label>
+          <select name="rol" id="edit-rol" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+            <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>
+          </select>
+        </div>
+        <div class="field"><label>Modalidad</label>
+          <select name="modalidad" id="edit-modalidad" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+            <% modalidadesAyb.forEach(m => { %><option value="<%= m %>"><%= m %></option><% }) %>
+          </select>
+        </div>
+        <% } else { %>
         <div class="field"><label>Legajo</label><input type="text" name="legajo" id="edit-legajo"></div>
         <div class="field"><label>Email (opcional)</label><input type="email" name="email" id="edit-email"></div>
         <div class="field"><label>Puesto</label>
@@ -265,6 +296,7 @@
             <% sectores.forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
           </select>
         </div>
+        <% } %>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
         <button type="button" onclick="hideModal('modal-editar')" class="btn-secondary">Cancelar</button>
@@ -284,6 +316,20 @@
     <form method="POST" action="/personal/nuevo">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="field" style="grid-column:1/-1;"><label>Nombre y apellido</label><input type="text" name="nombre" placeholder="Ej: Juan García" required autofocus></div>
+        <% if (misDepto === 'ayb') { %>
+        <div class="field"><label>CUIL</label><input type="text" name="cuil" placeholder="Ej: 20432824927"></div>
+        <div class="field"><label>Modalidad</label>
+          <select name="modalidad" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+            <% modalidadesAyb.forEach(m => { %><option value="<%= m %>"><%= m %></option><% }) %>
+          </select>
+        </div>
+        <div class="field" style="grid-column:1/-1;"><label>Email (opcional)</label><input type="email" name="email" placeholder="nombre@hilton.com"></div>
+        <div class="field" style="grid-column:1/-1;"><label>Rol</label>
+          <select name="rol" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+            <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>
+          </select>
+        </div>
+        <% } else { %>
         <div class="field"><label>Legajo</label><input type="text" name="legajo" placeholder="Ej: 00123"></div>
         <div class="field"><label>Puesto</label>
           <select name="puesto" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
@@ -302,6 +348,7 @@
             <% sectores.forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
           </select>
         </div>
+        <% } %>
         <div class="field" style="grid-column:1/-1;"><label>Contraseña inicial</label><input type="text" name="password" value="Hilton2026!"></div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
@@ -334,6 +381,60 @@
         <button type="submit" class="btn-primary"><i class="ti ti-key"></i> Guardar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal importar mozos por CSV -->
+<div id="modal-importar-mozos" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Importar mozos (CSV)</h2>
+      <button onclick="hideModal('modal-importar-mozos')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:0.8rem;color:var(--gris-texto);margin:0 0 16px;">
+      Columnas esperadas: <strong>CUIL</strong>, <strong>Nombre</strong> y <strong>Modalidad</strong>
+      (Eventual / Fijo / Agencia). Los que ya estén cargados (mismo CUIL) se saltean solos.
+      Contraseña inicial para todos: <strong>Hilton2026!</strong>
+    </p>
+    <form method="POST" action="/personal/importar-mozos" enctype="multipart/form-data">
+      <div class="field">
+        <label>Archivo CSV</label>
+        <input type="file" name="archivo" accept=".csv" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);">
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
+        <button type="button" onclick="hideModal('modal-importar-mozos')" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-file-upload"></i> Importar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal disponibilidad: calendario mensual por empleado -->
+<div id="modal-disponibilidad" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:400;">Disponibilidad</h2>
+      <button onclick="hideModal('modal-disponibilidad')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:0.8rem;color:var(--gris-texto);margin:0 0 16px;">de <strong id="disp-nombre"></strong></p>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <button onclick="dispMes(-1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:16px;">&#8249;</button>
+      <span id="disp-titulo" style="font-size:0.9rem;font-weight:600;color:var(--negro);"></span>
+      <button onclick="dispMes(1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:16px;">&#8250;</button>
+    </div>
+    <div id="disp-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;"></div>
+
+    <p style="font-size:0.65rem;color:var(--gris-texto);margin:12px 0 8px;text-align:center;">Click en un día para ir cambiando: sin dato → disponible → no disponible.</p>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <span style="font-size:0.65rem;font-weight:700;background:#22c55e;border:1px solid #22c55e;color:#fff;padding:3px 11px;border-radius:20px;">Disponible</span>
+      <span style="font-size:0.65rem;font-weight:700;background:#dc2626;border:1px solid #dc2626;color:#fff;padding:3px 11px;border-radius:20px;">No disponible</span>
+      <span style="font-size:0.65rem;font-weight:700;background:var(--gris-fondo);border:1px solid var(--gris-borde);color:var(--gris-texto);padding:3px 11px;border-radius:20px;">Sin dato</span>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
+      <button type="button" onclick="hideModal('modal-disponibilidad')" class="btn-secondary">Cerrar</button>
+    </div>
   </div>
 </div>
 
@@ -701,27 +802,42 @@ document.addEventListener('click', e => {
     document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
 });
 
-function abrirEditar(id, nombre, email, legajo, puesto, rol, sector) {
+function abrirEditar(id, nombre, email, legajo, puesto, rol, sector, modalidad) {
   document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
   document.getElementById('edit-id').value     = id;
   document.getElementById('edit-nombre').value = nombre;
   document.getElementById('edit-email').value  = email;
-  document.getElementById('edit-legajo').value = legajo;
-
-  // Si el puesto actual del empleado ya no está entre las opciones (por ejemplo,
-  // se sacó de la lista después de que se lo asignaron), lo agregamos como opción
-  // extra en vez de dejar que el <select> caiga en la primera por defecto sin avisar.
-  const selPuesto = document.getElementById('edit-puesto');
-  if (puesto && ![...selPuesto.options].some(o => o.value === puesto)) {
-    const opt = document.createElement('option');
-    opt.value = puesto;
-    opt.textContent = puesto + ' (fuera de lista)';
-    selPuesto.appendChild(opt);
-  }
-  selPuesto.value = puesto;
-
   document.getElementById('edit-rol').value    = rol;
-  document.getElementById('edit-sector').value = sector;
+
+  // El modal tiene dos variantes (Cocina: legajo+puesto+sector / AYB:
+  // CUIL+modalidad) — solo una está presente en el HTML según misDepto,
+  // así que cada campo se llena solo si existe.
+  const elLegajo = document.getElementById('edit-legajo');
+  if (elLegajo) elLegajo.value = legajo;
+
+  const elCuil = document.getElementById('edit-cuil');
+  if (elCuil) elCuil.value = legajo; // el CUIL viaja en el mismo campo "legajo" del lado del servidor
+
+  const selPuesto = document.getElementById('edit-puesto');
+  if (selPuesto) {
+    // Si el puesto actual del empleado ya no está entre las opciones (por ejemplo,
+    // se sacó de la lista después de que se lo asignaron), lo agregamos como opción
+    // extra en vez de dejar que el <select> caiga en la primera por defecto sin avisar.
+    if (puesto && ![...selPuesto.options].some(o => o.value === puesto)) {
+      const opt = document.createElement('option');
+      opt.value = puesto;
+      opt.textContent = puesto + ' (fuera de lista)';
+      selPuesto.appendChild(opt);
+    }
+    selPuesto.value = puesto;
+  }
+
+  const selSector = document.getElementById('edit-sector');
+  if (selSector) selSector.value = sector;
+
+  const selModalidad = document.getElementById('edit-modalidad');
+  if (selModalidad) selModalidad.value = modalidad;
+
   showModal('modal-editar');
 }
 
@@ -737,6 +853,103 @@ function toggleResetPass() {
   const icon  = document.getElementById('eyeReset');
   input.type = input.type === 'text' ? 'password' : 'text';
   icon.className = input.type === 'text' ? 'ti ti-eye-off' : 'ti ti-eye';
+}
+
+// ── Disponibilidad: calendario mensual por empleado ──
+let dispUid = null;
+let dispFecha = new Date();
+let dispMapa = {}; // { 'YYYY-MM-DD': {disponible, hora_desde, hora_hasta} }
+
+function abrirDisponibilidad(id, nombre) {
+  document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
+  dispUid = id;
+  dispFecha = new Date();
+  document.getElementById('disp-nombre').textContent = nombre;
+  showModal('modal-disponibilidad');
+  cargarDisponibilidad();
+}
+
+function dispMes(dir) {
+  dispFecha.setMonth(dispFecha.getMonth() + dir);
+  cargarDisponibilidad();
+}
+
+async function cargarDisponibilidad() {
+  const anio = dispFecha.getFullYear();
+  const mes  = dispFecha.getMonth();
+  const mesStr = `${anio}-${String(mes+1).padStart(2,'0')}`;
+  document.getElementById('disp-titulo').textContent = MESES[mes] + ' ' + anio;
+  try {
+    const resp = await fetch(`/personal/${dispUid}/disponibilidad?mes=${mesStr}`);
+    const data = await resp.json();
+    dispMapa = data.ok ? data.dias : {};
+  } catch (e) {
+    dispMapa = {};
+  }
+  renderDispCal();
+}
+
+function renderDispCal() {
+  const anio = dispFecha.getFullYear();
+  const mes  = dispFecha.getMonth();
+  const primerDia = new Date(anio, mes, 1).getDay();
+  const diasMes   = new Date(anio, mes + 1, 0).getDate();
+  const hoy = new Date().toISOString().split('T')[0];
+
+  let html = DIAS_SEMANA.map(d => `<div class="cal-nombre-dia">${d}</div>`).join('');
+  for (let i = 0; i < primerDia; i++) html += `<div class="cal-dia vacio"></div>`;
+
+  for (let d = 1; d <= diasMes; d++) {
+    const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const info = dispMapa[fechaStr]; // {disponible, hora_desde, hora_hasta} o undefined
+    const esHoy = fechaStr === hoy;
+
+    let bg = '', color = '', border = 'transparent', titulo = '';
+    if (info && info.disponible) {
+      bg = '#22c55e'; color = '#fff'; border = '#22c55e';
+      titulo = info.hora_hasta ? `Disponible de ${info.hora_desde} a ${info.hora_hasta}` : `Disponible desde las ${info.hora_desde}`;
+    } else if (info && !info.disponible) {
+      bg = '#dc2626'; color = '#fff'; border = '#dc2626';
+      titulo = 'No disponible';
+    }
+
+    let cls = 'cal-dia' + (esHoy && !info ? ' hoy' : '');
+    html += `<div class="${cls}" title="${titulo}" style="background:${bg};color:${color};border-color:${border};font-weight:${info ? '700' : '400'};" onclick="cicloDisponibilidad('${fechaStr}')">${d}</div>`;
+  }
+
+  document.getElementById('disp-grid').innerHTML = html;
+}
+
+// Cada click va rotando: sin dato → disponible (pide horario) → no disponible → sin dato de nuevo
+async function cicloDisponibilidad(fechaStr) {
+  const actual = dispMapa[fechaStr];
+  let estado, hora_desde = '', hora_hasta = '';
+
+  if (!actual) {
+    estado = 'disponible';
+    hora_desde = prompt('¿Desde qué hora está disponible? (ej: 10:00)');
+    if (!hora_desde || !hora_desde.trim()) return; // canceló: no guardamos nada
+    hora_desde = hora_desde.trim();
+    hora_hasta = prompt('¿Hasta qué hora? (dejalo vacío si no tiene límite)') || '';
+    hora_hasta = hora_hasta.trim();
+  } else if (actual.disponible) {
+    estado = 'no_disponible';
+  } else {
+    estado = '';
+  }
+
+  try {
+    const resp = await fetch(`/personal/${dispUid}/disponibilidad`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `fecha=${fechaStr}&estado=${estado}&hora_desde=${encodeURIComponent(hora_desde)}&hora_hasta=${encodeURIComponent(hora_hasta)}`
+    });
+    const data = await resp.json();
+    if (!data.ok) { alert('Error: ' + data.error); return; }
+    if (estado === '') delete dispMapa[fechaStr];
+    else dispMapa[fechaStr] = { disponible: estado === 'disponible', hora_desde, hora_hasta };
+    renderDispCal();
+  } catch (e) { alert('Error de conexión'); }
 }
 
 function buscarPersonal() {

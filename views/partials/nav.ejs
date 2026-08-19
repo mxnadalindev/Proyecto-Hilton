@@ -33,6 +33,9 @@
       <a href="/croutons" class="nav-item <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>" title="Vencimientos">
         <i class="ti ti-package" aria-hidden="true"></i><span class="nav-label">Vencimientos</span>
       </a>
+      <a href="/personal/mi-disponibilidad" class="nav-item <%= (typeof path !== 'undefined' && path === 'mi-disponibilidad') ? 'activo' : '' %>" title="Mi disponibilidad">
+        <i class="ti ti-calendar-event" aria-hidden="true"></i><span class="nav-label">Mi disponibilidad</span>
+      </a>
     <% } %>
     <% if (usuario?.rol === 'admin') { %>
       <a href="/configuracion" class="nav-item <%= (typeof path !== 'undefined' && path === 'configuracion') ? 'activo' : '' %>" title="Configuración">

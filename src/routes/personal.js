@@ -2,13 +2,51 @@
 const router = express.Router();
 const db = require('../db/database');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
 const { loginRequerido, requiereDepartamento } = require('./middleware');
 router.use(loginRequerido, requiereDepartamento('/personal'));
+
+const storageMozos = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, 'mozos_' + Date.now() + path.extname(file.originalname))
+});
+const uploadMozos = multer({ storage: storageMozos, limits: { fileSize: 10 * 1024 * 1024 } });
 
 const PUESTOS = ['Chef','Subchef','Encargado de cocina','Cocinero','Ayudante de cocina','Pastelero','Panadero'];
 const ROLES   = ['empleado','supervisor','admin'];
 const SECTORES = ['Supervisores','Comis de Recepción','Panadería','Pastelería AM','Pastelería PM','Faro AM','Faro PM','Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D'];
 const ESTADOS = ['OFF','VAC','RECOFF','LIBRE','ART','LICENCIA','CUMPLE','MUDANZA','FRANCO'];
+
+// AYB (mozos) no se organiza por "sector" como Cocina — se divide en
+// Eventual / Fijo / Agencia. Reemplaza al placeholder de sectores de AYB
+// que había antes (era una copia inventada del esquema de Cocina).
+const MODALIDADES_AYB = ['Eventual', 'Fijo', 'Agencia'];
+
+// El <select> de "cambiar sector solo este día" en la grilla es un concepto
+// de Cocina — AYB ya no lo usa (se organiza por modalidad, no por sector),
+// así que para AYB no se le ofrecen opciones.
+function sectoresPara(usuario) {
+  if (usuario.departamento === 'ayb') return [];
+  return SECTORES;
+}
+
+// Trae el personal a mostrar en /personal según el departamento de quien
+// mira: Cocina sigue filtrando por su lista de sectores (departamento =
+// nombre de sector); AYB ahora es plano — todas las filas con
+// departamento='ayb', diferenciadas por "modalidad" en vez de sector. Un
+// admin sin departamento propio ve ambos grupos juntos.
+async function obtenerPersonal(usuarioSesion) {
+  const cols = `id,nombre,email,legajo,puesto,rol,activo,departamento,modalidad,creado_en,recoff_adeudado`;
+  if (usuarioSesion.departamento === 'ayb') {
+    return db.all2(`SELECT ${cols} FROM usuarios WHERE departamento='ayb' ORDER BY modalidad NULLS LAST, nombre`);
+  }
+  if (usuarioSesion.departamento === 'cocina') {
+    return db.all2(`SELECT ${cols} FROM usuarios WHERE departamento = ANY($1) ORDER BY departamento, nombre`, [SECTORES]);
+  }
+  return db.all2(`SELECT ${cols} FROM usuarios WHERE departamento = ANY($1) OR departamento='ayb' ORDER BY departamento, nombre`, [SECTORES]);
+}
 
 // ── Helpers de fecha ────────────────────────────────────
 
@@ -72,12 +110,13 @@ router.get('/', loginRequerido, async (req, res) => {
 
   const dias = getDiasRango(inicio, fin);
 
-  const personal = await db.all2(`
-    SELECT id,nombre,email,legajo,puesto,rol,activo,departamento,creado_en,recoff_adeudado
-    FROM usuarios
-    WHERE departamento = ANY($1)
-    ORDER BY departamento, nombre
-  `, [SECTORES]);
+  // Qué sectores puede ver/gestionar quien está mirando esta pantalla —
+  // antes esto estaba fijo a los sectores de Cocina, así que Alimentos y
+  // Bebidas nunca veía a su propio personal (ver sectoresPara arriba).
+  const sectoresVisibles = sectoresPara(req.session.usuario);
+  const misDepto = req.session.usuario.departamento;
+
+  const personal = await obtenerPersonal(req.session.usuario);
 
   // Cuántos RECOFF tiene puestos cada uno en TODA la grilla (no solo el rango visible)
   const usadosRaw = await db.all2(`
@@ -92,6 +131,8 @@ router.get('/', loginRequerido, async (req, res) => {
 
   const msg     = req.query.msg || null;
   const esAdmin = req.session.usuario.rol === 'admin';
+  const cargadosMozos    = parseInt(req.query.cargados) || 0;
+  const duplicadosMozos  = parseInt(req.query.duplicados) || 0;
 
   // Feriados: solo un marcador visual en el calendario, no toca horarios de nadie.
   const feriados = await db.all2('SELECT fecha::text, nombre FROM feriados ORDER BY fecha');
@@ -115,9 +156,10 @@ router.get('/', loginRequerido, async (req, res) => {
   });
 
   res.render('personal', {
-    personal, puestos: PUESTOS, roles: ROLES, sectores: SECTORES,
+    personal, puestos: PUESTOS, roles: ROLES, sectores: sectoresVisibles,
+    modalidadesAyb: MODALIDADES_AYB, misDepto,
     ESTADOS, msg, esAdmin, hoy, inicio, fin, dias, horarioSemanalMap, sectorDiaMap,
-    feriados,
+    feriados, cargadosMozos, duplicadosMozos,
     // compatibilidad con campos viejos
     horarioMap: {}
   });
@@ -248,19 +290,97 @@ router.post('/asignar-semana', loginRequerido, async (req, res) => {
 });
 
 // ── POST /nuevo ────────────────────────────────────────
+// ── Importar mozos por CSV (CUIL, Nombre, Modalidad) ────
+// Pensado para cargar de una el padrón que hoy vive en la planilla de
+// Excel. Duplicados por CUIL se saltean (no pisan al que ya está).
+function normalizarEncabezadoMozo(s) {
+  return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+}
+function parsearCsvMozos(rutaArchivo) {
+  const contenido = fs.readFileSync(rutaArchivo, 'utf8');
+  const lineas = contenido.split(/\r?\n/).filter(l => l.trim());
+  if (lineas.length === 0) throw new Error('El archivo está vacío.');
+
+  const cantComas = (lineas[0].match(/,/g) || []).length;
+  const cantPuntoYComa = (lineas[0].match(/;/g) || []).length;
+  const separador = cantPuntoYComa > cantComas ? ';' : ',';
+  const partir = (l) => l.split(separador).map(c => c.trim().replace(/^"|"$/g, ''));
+
+  const encabezados = partir(lineas[0]).map(normalizarEncabezadoMozo);
+  const COLS = {
+    cuil:      ['cuil', 'cuil/dni', 'dni', 'documento'],
+    nombre:    ['nombre', 'nombre y apellido', 'apellido y nombre', 'empleado'],
+    modalidad: ['modalidad', 'tipo', 'categoria'],
+  };
+  const buscar = (variantes) => { for (const v of variantes) { const i = encabezados.indexOf(v); if (i !== -1) return i; } return -1; };
+  const idx = { cuil: buscar(COLS.cuil), nombre: buscar(COLS.nombre), modalidad: buscar(COLS.modalidad) };
+  if (idx.nombre === -1) throw new Error('El archivo tiene que tener al menos una columna de nombre (ej: "Nombre").');
+
+  const filas = [];
+  for (let i = 1; i < lineas.length; i++) {
+    const campos = partir(lineas[i]);
+    const nombre = (campos[idx.nombre] || '').trim();
+    if (!nombre) continue;
+    const cuil = idx.cuil !== -1 ? (campos[idx.cuil] || '').trim() : '';
+    const modalidadCruda = idx.modalidad !== -1 ? normalizarEncabezadoMozo(campos[idx.modalidad]) : '';
+    const modalidad = MODALIDADES_AYB.find(m => m.toLowerCase() === modalidadCruda) || null;
+    filas.push({ nombre, cuil, modalidad });
+  }
+  return filas;
+}
+
+router.post('/importar-mozos', loginRequerido, uploadMozos.single('archivo'), async (req, res) => {
+  if (!req.file) return res.redirect('/personal?msg=' + encodeURIComponent('No se subió ningún archivo.'));
+  try {
+    const filas = parsearCsvMozos(req.file.path);
+    let cargados = 0, duplicados = 0;
+    for (const f of filas) {
+      if (f.cuil) {
+        const existe = await db.get2('SELECT id FROM usuarios WHERE legajo=$1', [f.cuil]);
+        if (existe) { duplicados++; continue; }
+      }
+      const hash = bcrypt.hashSync('Hilton2026!', 10);
+      await db.run2(
+        'INSERT INTO usuarios (nombre, legajo, puesto, rol, password, departamento, modalidad) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+        [f.nombre, f.cuil || null, 'Mozo', 'empleado', hash, 'ayb', f.modalidad]
+      );
+      cargados++;
+    }
+    fs.unlink(req.file.path, () => {});
+    res.redirect(`/personal?msg=mozos_importados&cargados=${cargados}&duplicados=${duplicados}`);
+  } catch (e) {
+    console.error('Error importando mozos:', e.message);
+    res.redirect('/personal?msg=' + encodeURIComponent('Error al importar: ' + e.message));
+  }
+});
+
 router.post('/nuevo', loginRequerido, async (req, res) => {
   try {
     const nombre   = String(req.body.nombre || '').trim();
     const email    = req.body.email ? String(req.body.email).toLowerCase().trim() : null;
-    const legajo   = req.body.legajo ? String(req.body.legajo).trim() : null;
-    const puesto   = String(req.body.puesto || 'Cocinero');
     const rol      = String(req.body.rol || 'empleado');
-    const sector   = req.body.sector || null;
     const password = String(req.body.password || 'Hilton2026!');
     const hash     = bcrypt.hashSync(password, 10);
+
+    // El formulario de alta manda "sector" (Cocina) o "modalidad" (AYB —
+    // mozos), nunca los dos. Un mozo se guarda con departamento='ayb' fijo,
+    // el CUIL en "legajo" (así se puede loguear sin email) y su modalidad.
+    let legajo, puesto, departamento, modalidad;
+    if (req.body.modalidad) {
+      legajo       = req.body.cuil ? String(req.body.cuil).trim() : null;
+      puesto       = 'Mozo';
+      departamento = 'ayb';
+      modalidad    = String(req.body.modalidad);
+    } else {
+      legajo       = req.body.legajo ? String(req.body.legajo).trim() : null;
+      puesto       = String(req.body.puesto || 'Cocinero');
+      departamento = req.body.sector || null;
+      modalidad    = null;
+    }
+
     await db.run2(
-      'INSERT INTO usuarios (nombre, email, legajo, puesto, rol, password, departamento) VALUES ($1,$2,$3,$4,$5,$6,$7)',
-      [nombre, email, legajo, puesto, rol, hash, sector]
+      'INSERT INTO usuarios (nombre, email, legajo, puesto, rol, password, departamento, modalidad) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+      [nombre, email, legajo, puesto, rol, hash, departamento, modalidad]
     );
   } catch(e) {
     console.error('Error creando usuario:', e.message);
@@ -271,12 +391,20 @@ router.post('/nuevo', loginRequerido, async (req, res) => {
 // ── POST /editar ───────────────────────────────────────
 router.post('/editar', loginRequerido, async (req, res) => {
   try {
-    const { id, nombre, legajo, puesto, rol, sector } = req.body;
+    const { id, nombre, legajo, puesto, rol, sector, cuil, modalidad } = req.body;
     const email = req.body.email ? String(req.body.email).toLowerCase().trim() : null;
-    await db.run2(
-      'UPDATE usuarios SET nombre=$1, email=$2, legajo=$3, puesto=$4, rol=$5, departamento=$6 WHERE id=$7',
-      [String(nombre).trim(), email, legajo || null, puesto, rol, sector || null, parseInt(id)]
-    );
+
+    if (modalidad) {
+      await db.run2(
+        'UPDATE usuarios SET nombre=$1, email=$2, legajo=$3, puesto=$4, rol=$5, departamento=$6, modalidad=$7 WHERE id=$8',
+        [String(nombre).trim(), email, cuil ? String(cuil).trim() : null, 'Mozo', rol, 'ayb', String(modalidad), parseInt(id)]
+      );
+    } else {
+      await db.run2(
+        'UPDATE usuarios SET nombre=$1, email=$2, legajo=$3, puesto=$4, rol=$5, departamento=$6, modalidad=NULL WHERE id=$7',
+        [String(nombre).trim(), email, legajo || null, puesto, rol, sector || null, parseInt(id)]
+      );
+    }
     res.redirect('/personal?msg=empleado_editado');
   } catch(e) {
     console.error('Error editando usuario:', e.message);
@@ -300,6 +428,83 @@ router.post('/:id/reset-password', loginRequerido, async (req, res) => {
   const hash = bcrypt.hashSync(password_nuevo, 10);
   await db.run2('UPDATE usuarios SET password=$1 WHERE id=$2', [hash, req.params.id]);
   res.redirect('/personal?msg=password_reseteada');
+});
+
+// Página propia y liviana para que cada mozo cargue su disponibilidad —
+// a diferencia de /personal (el roster completo), esto no expone a nadie
+// más que a uno mismo, así que alcanza con estar logueado.
+router.get('/mi-disponibilidad', loginRequerido, (req, res) => {
+  res.render('mi_disponibilidad', { usuario: req.session.usuario });
+});
+
+// ── Disponibilidad: calendario mensual por empleado ────
+// GET trae el mapa {fecha: {disponible, hora_desde, hora_hasta}} de un mes
+// puntual; POST carga/borra un día. Guardado disperso, igual que feriados:
+// si "estado" llega vacío, se borra la fila (vuelve a "sin dato").
+// Solo el propio empleado o un admin pueden ver/tocar esta disponibilidad —
+// antes cualquier usuario logueado podía pisarle la disponibilidad a
+// cualquier otro con solo cambiar el :id en la URL (no importaba mientras
+// esto lo usaba nada más que el menú de admin, pero ahora que cada mozo
+// carga la suya con su propio login hace falta esta verificación).
+function puedeVerDisponibilidad(req) {
+  const yo = req.session.usuario;
+  return yo.rol === 'admin' || yo.id === parseInt(req.params.id);
+}
+
+router.get('/:id/disponibilidad', loginRequerido, async (req, res) => {
+  try {
+    if (!puedeVerDisponibilidad(req)) return res.status(403).json({ ok: false, error: 'No autorizado.' });
+    const usuario_id = parseInt(req.params.id);
+    const mes = /^\d{4}-\d{2}$/.test(req.query.mes || '') ? req.query.mes : null;
+    if (!usuario_id || !mes) return res.json({ ok: false, error: 'Falta el mes (YYYY-MM).' });
+
+    const filas = await db.all2(
+      `SELECT fecha::text, disponible, hora_desde, hora_hasta FROM disponibilidad
+       WHERE usuario_id=$1 AND to_char(fecha,'YYYY-MM')=$2`,
+      [usuario_id, mes]
+    );
+    const dias = {};
+    filas.forEach(f => {
+      dias[f.fecha] = { disponible: f.disponible, hora_desde: f.hora_desde || '', hora_hasta: f.hora_hasta || '' };
+    });
+    res.json({ ok: true, dias });
+  } catch (e) {
+    console.error('Error cargando disponibilidad:', e.message);
+    res.json({ ok: false, error: e.message });
+  }
+});
+
+router.post('/:id/disponibilidad', loginRequerido, async (req, res) => {
+  try {
+    if (!puedeVerDisponibilidad(req)) return res.status(403).json({ ok: false, error: 'No autorizado.' });
+    const usuario_id = parseInt(req.params.id);
+    // estado: 'disponible' | 'no_disponible' | '' (sin dato)
+    // hora_desde/hora_hasta solo aplican cuando estado='disponible'. Si
+    // hora_hasta viene vacío significa "a partir de esa hora, sin límite".
+    const { fecha, estado } = req.body;
+    const hora_desde = req.body.hora_desde ? String(req.body.hora_desde).trim() : null;
+    const hora_hasta = req.body.hora_hasta ? String(req.body.hora_hasta).trim() : null;
+    if (!usuario_id || !fecha) return res.json({ ok: false, error: 'Faltan datos.' });
+
+    if (!estado) {
+      await db.run2('DELETE FROM disponibilidad WHERE usuario_id=$1 AND fecha=$2', [usuario_id, fecha]);
+      return res.json({ ok: true, fecha, estado: null });
+    }
+
+    const disponible = estado === 'disponible';
+    if (disponible && !hora_desde) {
+      return res.json({ ok: false, error: 'Falta indicar desde qué hora está disponible.' });
+    }
+    await db.run2(
+      `INSERT INTO disponibilidad (usuario_id, fecha, disponible, hora_desde, hora_hasta) VALUES ($1,$2,$3,$4,$5)
+       ON CONFLICT (usuario_id, fecha) DO UPDATE SET disponible=$3, hora_desde=$4, hora_hasta=$5`,
+      [usuario_id, fecha, disponible, disponible ? hora_desde : null, disponible ? hora_hasta : null]
+    );
+    res.json({ ok: true, fecha, estado, disponible, hora_desde: disponible ? hora_desde : null, hora_hasta: disponible ? hora_hasta : null });
+  } catch (e) {
+    console.error('Error guardando disponibilidad:', e.message);
+    res.json({ ok: false, error: e.message });
+  }
 });
 
 module.exports = router;
