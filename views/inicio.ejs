@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -57,8 +57,8 @@
               detalle: 'Gestioná el equipo de Alimentos y Bebidas: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
             { href: '/horarios', icon: 'ti-clock', nombre: 'Horarios', desc: 'Turnos del sector', g1:'#06937e', g2:'#6bb030',
               detalle: 'Visualizá la grilla completa de turnos de Alimentos y Bebidas, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
-            { href: '/croutons', icon: 'ti-package', nombre: 'Croutons', desc: 'Stock y vencimientos', g1:'#6bb030', g2:'#002f61',
-              detalle: 'Cargá cada ingreso de mercadería de croutons con su fecha de vencimiento — a mano, subiendo una foto del remito o el catálogo del proveedor — y recibí un aviso 15 días antes de que venza cada lote.' },
+            { href: '/croutons', icon: 'ti-package', nombre: 'Vencimientos', desc: 'Stock y caducidades de A&B', g1:'#6bb030', g2:'#002f61',
+              detalle: 'Cargá cada ingreso de mercadería de A&B con su fecha de vencimiento — a mano, escaneando el código de barras, subiendo una foto del remito o el catálogo del proveedor — y recibí un aviso 15 días antes de que venza cada lote.' },
           ];
           if (esAdmin) {
             modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', g1:'#007293', g2:'#6bb030',
@@ -143,7 +143,7 @@
                 <circle cx="130" cy="152" r="21" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="6" stroke-dasharray="4 6"/>
                 <circle cx="130" cy="152" r="7" fill="rgba(255,255,255,0.4)"/>
               </svg>`;
-            case 'Croutons':
+            case 'Vencimientos':
               return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
                 <rect x="50" y="96" width="26" height="26" rx="5" fill="rgba(255,255,255,0.92)" transform="rotate(-8 63 109)"/>
                 <rect x="84" y="86" width="26" height="26" rx="5" fill="rgba(255,255,255,0.6)" transform="rotate(6 97 99)"/>
@@ -226,7 +226,7 @@
     <% if (depto === 'ayb') { %>
       <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i><span>Miembro de equipo</span></a>
       <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
-      <a href="/croutons" class="mobile-nav-link"><i class="ti ti-package"></i><span>Croutons</span></a>
+      <a href="/croutons" class="mobile-nav-link"><i class="ti ti-package"></i><span>Vencimientos</span></a>
       <% if (esAdmin) { %><a href="/configuracion" class="mobile-nav-link"><i class="ti ti-settings"></i><span>Config</span></a><% } %>
     <% } %>
     <% if (depto === 'compras') { %>
