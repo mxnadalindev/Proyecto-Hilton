@@ -172,13 +172,6 @@
       </table>
     </div>
 
-    <%# Leyenda %>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center;">
-      <span style="font-size:0.68rem;color:var(--gris-texto);font-weight:600;">ESTADOS:</span>
-      <% [{v:'OFF',c:'#fbbf24'},{v:'VAC',c:'#ef4444'},{v:'RECOFF',c:'#22c55e'},{v:'FERIADO',c:'#ef4444'},{v:'LICENCIA',c:'#ec4899'},{v:'CUMPLE',c:'#a855f7'},{v:'MUDANZA',c:'#fb923c'}].forEach(l => { %>
-      <span style="font-size:0.68rem;font-weight:700;background:<%= l.c %>;border:1px solid <%= l.c %>;color:#fff;padding:3px 11px;border-radius:20px;"><%= l.v %></span>
-      <% }) %>
-    </div>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--gris-borde);">
       <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>

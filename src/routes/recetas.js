@@ -1,10 +1,9 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 const multer = require('multer');
 const path = require('path');
-const { loginRequerido, requiereDepartamento } = require('./middleware');
-router.use(loginRequerido, requiereDepartamento('/recetas'));
+const { loginRequerido } = require('./middleware');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -28,11 +27,21 @@ function requiereEdicion(req, res, next) {
   next();
 }
 
-// Categorías/áreas ya usadas en recetas existentes, para poblar los <select>
-async function getOpciones() {
-  const cats = await db.all2("SELECT DISTINCT categoria FROM recetas WHERE categoria IS NOT NULL AND categoria <> '' ORDER BY categoria");
-  const areas = await db.all2("SELECT DISTINCT area FROM recetas WHERE area IS NOT NULL AND area <> '' ORDER BY area");
-  return { categorias: cats.map(c => c.categoria), areas: areas.map(a => a.area) };
+// Listas fijas de Áreas (secciones de cocina) y Categorías (tipo de plato).
+// El formulario también permite escribir "Otra" para casos que no estén acá,
+// y si una receta vieja tiene un valor que ya no está en esta lista, igual se
+// respeta y se muestra (no se pierde el dato).
+const AREAS = [
+  'Cocina I+D', 'Restaurante AM', 'Restaurante PM', 'Bar', 'Room Service',
+  'BQT Frío', 'BQT Caliente', 'Panadería', 'Pastelería', 'Comedor',
+];
+const CATEGORIAS = [
+  'Snack', 'Entrada', 'Principal', 'Corte', 'Postre', 'Tapa',
+  'Sandwich', 'Sopas', 'Desayuno', 'Aderezos', 'Salsas',
+];
+
+function getOpciones() {
+  return { categorias: CATEGORIAS, areas: AREAS };
 }
 
 // ── Ingredientes: ahora vienen de la tabla "insumos" (ing_insumo_id_N + ing_cantidad_N + ing_unidad_N) ──

@@ -12,24 +12,26 @@ Te paso la imagen de un documento. Devolvé ÚNICAMENTE un JSON, sin texto adici
 
 {"tipo_documento": "...", "items": [...]}
 
-PASO 1 — Identificá "tipo_documento". Puede ser uno de estos 4 valores:
-- "factura": es una factura de compra real (remito, factura A/B/C, ticket de compra).
-- "nota_credito": es una Nota de Crédito — un descuento, devolución o bonificación del proveedor. NO es una compra.
+PASO 1 — Identificá "tipo_documento". Puede ser uno de estos 5 valores:
+- "factura": es una factura de compra real, impresa (remito, factura A/B/C, ticket de compra).
+- "apunte_manual": es una nota o apunte escrito A MANO (en un papel, cuaderno, etc.) con el nombre de uno o más productos y su precio — por ejemplo, alguien anotando a mano lo que le dictaron por teléfono o copiando un precio de un catálogo. SÍ es una fuente válida de precio, igual que una factura, aunque no tenga formato de factura formal.
+- "nota_credito": es una Nota de Crédito (impresa o manuscrita) — un descuento, devolución o bonificación del proveedor. NO es una compra.
 - "nota_debito": es una Nota de Débito — un cargo adicional del proveedor. Tampoco es una compra de insumos con precio unitario confiable.
-- "otro": cualquier otra cosa (imagen ilegible, no es un documento de compra, etc.)
+- "otro": cualquier otra cosa (imagen ilegible, no tiene ningún precio de producto, etc.)
 
 PASO 2 — Armá "items":
-- Si "tipo_documento" NO es "factura", "items" tiene que ir SIEMPRE vacío: []. Nunca extraigas productos ni montos de una nota de crédito o de débito, aunque la imagen tenga una tabla con productos y números — esos montos son ajustes, no precios de compra, y no hay que usarlos para actualizar precios.
-- Si "tipo_documento" SÍ es "factura", cada elemento de "items" debe tener estos campos:
-  - "nombre": el nombre del producto tal como figura en la factura (string)
+- Si "tipo_documento" es "nota_credito", "nota_debito" u "otro", "items" tiene que ir SIEMPRE vacío: []. Nunca extraigas productos ni montos de una nota de crédito o de débito, aunque la imagen tenga una tabla con productos y números — esos montos son ajustes, no precios de compra, y no hay que usarlos para actualizar precios.
+- Si "tipo_documento" es "factura" O "apunte_manual", cada elemento de "items" debe tener estos campos:
+  - "nombre": el nombre del producto tal como figura en el documento (string)
   - "cantidad": la cantidad comprada (número, usá 1 si no está claro)
-  - "unidad": la unidad (ej: "kg", "lt", "unidad", "caja", "paquete")
-  - "precio_unitario": el precio unitario en pesos, SIN el símbolo $ y SIN separador de miles (número, ej: 18500.50). SIEMPRE tiene que ser un número POSITIVO mayor a cero. Si en la factura ese renglón aparece como negativo, como una bonificación, o como un descuento aplicado dentro de la misma factura, NO incluyas ese ítem en el array.
+  - "unidad": la unidad (ej: "kg", "lt", "unidad", "caja", "paquete"). Si no figura, usá "unidad".
+  - "precio_unitario": el precio unitario en pesos, SIN el símbolo $ y SIN separador de miles (número, ej: 18500.50 — un precio como "$3.922,65" escrito a mano es 3922.65). SIEMPRE tiene que ser un número POSITIVO mayor a cero. Si en el documento ese renglón aparece como negativo, como una bonificación, o como un descuento, NO incluyas ese ítem en el array.
 
 Si no podés leer algún campo con confianza, no incluyas ese ítem.
 
 Ejemplos de respuesta:
 {"tipo_documento":"factura","items":[{"nombre":"Harina 000 x 25kg","cantidad":2,"unidad":"unidad","precio_unitario":18500},{"nombre":"Aceite de girasol 5L","cantidad":4,"unidad":"unidad","precio_unitario":6200}]}
+{"tipo_documento":"apunte_manual","items":[{"nombre":"Chocolate Lucciano's","cantidad":1,"unidad":"unidad","precio_unitario":3922.65}]}
 {"tipo_documento":"nota_credito","items":[]}`;
 
 function mimeDesdeExtension(rutaArchivo) {
@@ -38,11 +40,28 @@ function mimeDesdeExtension(rutaArchivo) {
   return mapa[ext] || 'image/jpeg';
 }
 
+function esperar(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Gemini a veces devuelve 503 ("modelo saturado, picos de demanda") — es temporal
+// y suele resolverse solo en unos segundos. Reintentamos unas pocas veces antes
+// de darnos por vencidos, para no tener que reintentar todo a mano cada vez.
+async function fetchConReintentos(url, opciones, intentos = 3) {
+  for (let i = 1; i <= intentos; i++) {
+    const resp = await fetch(url, opciones);
+    if (resp.status !== 503 || i === intentos) return resp;
+    await esperar(1500 * i); // espera creciente: 1.5s, 3s, 4.5s...
+  }
+}
+
 /**
  * Analiza una imagen de documento de compra con Gemini.
- * Identifica si es una factura real o una nota de crédito/débito (que NO se procesa),
- * y descarta cualquier ítem con precio negativo o cero como capa de seguridad extra,
- * por si el modelo no respetara la instrucción del prompt.
+ * Identifica si es una factura real, un apunte manual (válido también), o una
+ * nota de crédito/débito (que NO se procesa), y descarta cualquier ítem con
+ * precio negativo o cero como capa de seguridad extra, por si el modelo no
+ * respetara la instrucción del prompt. Reintenta unas pocas veces si Gemini
+ * devuelve 503 (saturado).
  *
  * @param {string} rutaImagen - ruta absoluta o relativa al archivo de imagen ya subido
  * @returns {Promise<{tipoDocumento: string, items: Array<{nombre:string, cantidad:number, unidad:string, precio_unitario:number}>}>}
@@ -70,7 +89,7 @@ async function analizarFactura(rutaImagen) {
     }
   };
 
-  const resp = await fetch(`${URL_BASE}?key=${apiKey}`, {
+  const resp = await fetchConReintentos(`${URL_BASE}?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
