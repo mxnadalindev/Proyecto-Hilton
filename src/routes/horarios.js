@@ -4,6 +4,8 @@ const db = require('../db/database');
 const { loginRequerido, requiereDepartamento } = require('./middleware');
 router.use(loginRequerido, requiereDepartamento('/horarios'));
 const ExcelJS = require('exceljs');
+const { getLunes, sumarDias, getDiasRango } = require('../utils/fechas');
+const { calcularRecoffPendiente, mapRecoffUsados } = require('../services/recoff');
 
 const SECTORES = [
   'Supervisores','Comis de Recepción','Panadería',
@@ -13,47 +15,12 @@ const SECTORES = [
 
 const ESTADOS = ['OFF','VAC','RECOFF','LIBRE','ART','LICENCIA','CUMPLE','MUDANZA'];
 
-// ── Helpers de fecha ────────────────────────────────────
-
-// Se mantienen por compatibilidad con enlaces viejos que todavía manden ?fecha=
-function getLunes(fechaStr) {
-  const d = new Date(fechaStr + 'T00:00:00');
-  const day = d.getDay();
-  const diff = (day === 0) ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  
-  return d.toISOString().split('T')[0];
-}
-
-function getDiasSemana(lunes) {
-  const dias = [];
-  const d = new Date(lunes + 'T00:00:00');
-  for (let i = 0; i < 7; i++) {
-    dias.push(d.toISOString().split('T')[0]);
-    d.setDate(d.getDate() + 1);
-  }
-  return dias;
-}
-
-function sumarDias(fechaStr, n) {
-  const d = new Date(fechaStr + 'T00:00:00');
-  d.setDate(d.getDate() + n);
-  return d.toISOString().split('T')[0];
-}
-
-// Nuevo: rango libre entre dos fechas (inclusive), cualquier cantidad de días
-function getDiasRango(inicioStr, finStr) {
-  const dias = [];
-  let d = new Date(inicioStr + 'T00:00:00');
-  const dFin = new Date(finStr + 'T00:00:00');
-  let cursor = d <= dFin ? d : dFin;
-  let limite = d <= dFin ? dFin : d;
-  while (cursor <= limite) {
-    dias.push(cursor.toISOString().split('T')[0]);
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return dias;
-}
+// CASE WHEN para ordenar por el mismo orden que SECTORES, armado una sola vez
+// a partir del array (antes estaba repetido a mano en la ruta / y en /excel).
+const ORDEN_DEPARTAMENTO_SQL = `CASE departamento
+  ${SECTORES.map((s, i) => `WHEN '${s}' THEN ${i + 1}`).join('\n  ')}
+  ELSE 99
+END`;
 
 // Resuelve inicio/fin a partir de los distintos formatos de query que puede recibir
 // (?inicio=&fin=  |  ?fecha=  viejo, semana completa  |  nada, semana actual)
@@ -76,7 +43,7 @@ function esSupervisorOAdmin(req) {
   return rol === 'supervisor' || rol === 'admin';
 }
 
-router.get('/', loginRequerido, async (req, res) => {
+router.get('/', async (req, res) => {
   const { inicio, fin } = resolverRango(req.query);
   const dias = getDiasRango(inicio, fin);
 
@@ -84,31 +51,11 @@ router.get('/', loginRequerido, async (req, res) => {
     SELECT id, nombre, puesto, departamento, recoff_adeudado
     FROM usuarios
     WHERE activo = 1
-    ORDER BY
-      CASE departamento
-        WHEN 'Supervisores'       THEN 1
-        WHEN 'Comis de Recepción' THEN 2
-        WHEN 'Panadería'          THEN 3
-        WHEN 'Pastelería AM'      THEN 4
-        WHEN 'Pastelería PM'      THEN 5
-        WHEN 'Faro AM'            THEN 6
-        WHEN 'Faro PM'            THEN 7
-        WHEN 'Nocturno'           THEN 8
-        WHEN 'BQTs Fríos'         THEN 9
-        WHEN 'BQTs Calientes'     THEN 10
-        WHEN 'Farolito'           THEN 11
-        WHEN 'Cocina I+D'         THEN 12
-        ELSE 99
-      END, nombre
+    ORDER BY ${ORDEN_DEPARTAMENTO_SQL}, nombre
   `);
 
   // Cuántos RECOFF tiene puestos cada uno en TODA la grilla (no solo el rango visible)
-  const usadosRaw = await db.all2(`
-    SELECT usuario_id, COUNT(*)::int AS usados
-    FROM horarios_semanales WHERE UPPER(valor)='RECOFF' GROUP BY usuario_id
-  `);
-  const recoffUsadosMap = {};
-  usadosRaw.forEach(r => { recoffUsadosMap[r.usuario_id] = r.usados; });
+  const recoffUsadosMap = await mapRecoffUsados();
   empleados.forEach(e => {
     e.recoff_pendiente = (e.recoff_adeudado || 0) - (recoffUsadosMap[e.id] || 0);
   });
@@ -171,7 +118,7 @@ router.get('/', loginRequerido, async (req, res) => {
   });
 });
 
-router.post('/celda', loginRequerido, async (req, res) => {
+router.post('/celda', async (req, res) => {
   const { usuario_id, fecha, valor } = req.body;
   try {
     const valorNuevo = (valor || '').trim().toUpperCase();
@@ -186,13 +133,7 @@ router.post('/celda', loginRequerido, async (req, res) => {
       `, [parseInt(usuario_id), fecha, valorNuevo]);
     }
 
-    // Pendiente real = adeudado (cargado a mano en Personal) - RECOFF que ya tiene puestos en toda la grilla
-    const filaAdeudado = await db.get2('SELECT recoff_adeudado FROM usuarios WHERE id=$1', [usuario_id]);
-    const usados = await db.get2(
-      "SELECT COUNT(*)::int AS c FROM horarios_semanales WHERE usuario_id=$1 AND UPPER(valor)='RECOFF'",
-      [usuario_id]
-    );
-    const pendiente = (filaAdeudado?.recoff_adeudado || 0) - (usados?.c || 0);
+    const pendiente = await calcularRecoffPendiente(usuario_id);
 
     res.json({ ok: true, recoff_pendiente: pendiente });
   } catch(e) {
@@ -202,7 +143,7 @@ router.post('/celda', loginRequerido, async (req, res) => {
 });
 
 // Copia el rango inmediatamente anterior (misma duración) al rango destino
-router.post('/copiar-semana', loginRequerido, async (req, res) => {
+router.post('/copiar-semana', async (req, res) => {
   const { inicio_destino, fin_destino, lunes_destino } = req.body;
 
   // Compatibilidad: si viene el campo viejo "lunes_destino", tratamos como semana completa
@@ -239,21 +180,14 @@ router.post('/copiar-semana', loginRequerido, async (req, res) => {
   }
 });
 
-router.get('/excel', loginRequerido, async (req, res) => {
+router.get('/excel', async (req, res) => {
   const { inicio, fin } = resolverRango(req.query);
   const dias = getDiasRango(inicio, fin);
   const NOMBRES_DIA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
   const empleados = await db.all2(`
     SELECT id, nombre, puesto, departamento FROM usuarios WHERE activo=1
-    ORDER BY CASE departamento
-      WHEN 'Supervisores' THEN 1 WHEN 'Comis de Recepción' THEN 2
-      WHEN 'Panadería' THEN 3 WHEN 'Pastelería AM' THEN 4
-      WHEN 'Pastelería PM' THEN 5 WHEN 'Faro AM' THEN 6
-      WHEN 'Faro PM' THEN 7 WHEN 'Nocturno' THEN 8
-      WHEN 'BQTs Fríos' THEN 9 WHEN 'BQTs Calientes' THEN 10
-      WHEN 'Farolito' THEN 11 WHEN 'Cocina I+D' THEN 12
-      ELSE 99 END, nombre
+    ORDER BY ${ORDEN_DEPARTAMENTO_SQL}, nombre
   `);
 
   const horariosRaw = await db.all2(`
@@ -343,7 +277,7 @@ router.get('/excel', loginRequerido, async (req, res) => {
 
 // ── POST /reiniciar-semana ────────────────────────────
 // Solo supervisores y admins pueden borrar horarios ya cargados
-router.post('/reiniciar-semana', loginRequerido, async (req, res) => {
+router.post('/reiniciar-semana', async (req, res) => {
   if (!esSupervisorOAdmin(req)) {
     return res.redirect('/horarios?msg=' + encodeURIComponent('Solo un supervisor puede reiniciar horarios ya cargados.'));
   }

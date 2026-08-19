@@ -133,7 +133,7 @@ const SQL_IMAGEN_LISTADO = `
   ) AS imagen_portada
 `;
 
-router.get('/', loginRequerido, async (req, res) => {
+router.get('/', async (req, res) => {
   const busqueda = req.query.q || '';
   const recetas = busqueda
     ? await db.all2(`
@@ -147,7 +147,7 @@ router.get('/', loginRequerido, async (req, res) => {
   res.render('recetas', { recetas, busqueda, puedeEditar: esAdminOSupervisor(req) });
 });
 
-router.get('/nueva', loginRequerido, requiereEdicion, async (req, res) => {
+router.get('/nueva', requiereEdicion, async (req, res) => {
   const { categorias, areas } = await getOpciones();
   const todosInsumos = await db.all2('SELECT id, nombre, unidad, precio_unitario FROM insumos ORDER BY nombre');
   res.render('receta_nueva', {
@@ -156,7 +156,7 @@ router.get('/nueva', loginRequerido, requiereEdicion, async (req, res) => {
   });
 });
 
-router.post('/nueva', loginRequerido, requiereEdicion, upload.any(), async (req, res) => {
+router.post('/nueva', requiereEdicion, upload.any(), async (req, res) => {
   const categoria = req.body.categoria === 'otro' ? (req.body.categoria_otro || '').trim() : (req.body.categoria || '').trim();
   const area = req.body.area === 'otro' ? (req.body.area_otro || '').trim() : (req.body.area || '').trim();
   const nombre = req.body.nombre || '';
@@ -186,7 +186,7 @@ router.post('/nueva', loginRequerido, requiereEdicion, upload.any(), async (req,
   res.redirect('/recetas/' + nueva.id);
 });
 
-router.get('/:id/editar', loginRequerido, requiereEdicion, async (req, res) => {
+router.get('/:id/editar', requiereEdicion, async (req, res) => {
   const receta = await db.get2("SELECT * FROM recetas WHERE id=$1", [req.params.id]);
   if (!receta) return res.redirect('/recetas');
 
@@ -206,7 +206,7 @@ router.get('/:id/editar', loginRequerido, requiereEdicion, async (req, res) => {
   });
 });
 
-router.post('/:id/editar', loginRequerido, requiereEdicion, upload.any(), async (req, res) => {
+router.post('/:id/editar', requiereEdicion, upload.any(), async (req, res) => {
   const id = req.params.id;
   const receta = await db.get2("SELECT * FROM recetas WHERE id=$1", [id]);
   if (!receta) return res.redirect('/recetas');
@@ -242,7 +242,7 @@ router.post('/:id/editar', loginRequerido, requiereEdicion, upload.any(), async 
   res.redirect('/recetas/' + id);
 });
 
-router.get('/:id', loginRequerido, async (req, res) => {
+router.get('/:id', async (req, res) => {
   const receta = await db.get2("SELECT * FROM recetas WHERE id=$1", [req.params.id]);
   if (!receta) return res.redirect('/recetas');
 
@@ -265,7 +265,7 @@ router.get('/:id', loginRequerido, async (req, res) => {
   });
 });
 
-router.post('/:id/eliminar', loginRequerido, requiereEdicion, async (req, res) => {
+router.post('/:id/eliminar', requiereEdicion, async (req, res) => {
   await db.run2("DELETE FROM recetas WHERE id=$1", [req.params.id]);
   res.redirect('/recetas');
 });

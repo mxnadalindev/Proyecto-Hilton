@@ -26,51 +26,7 @@ const uploadCsv = multer({ storage: storageCsv, limits:{fileSize:30*1024*1024} }
 const PERIODOS_VARIACION = [7, 14, 21, 28];
 const LIMITE_VARIACION = 10;
 
-// Calcula el top de insumos según el modo elegido:
-// - 'subieron' / 'bajaron' / 'iguales': compara contra el precio de hace N días (historial_precios)
-// - 'caros': ordena todos los insumos por precio actual, sin importar si cambiaron
-async function calcularVariacionPrecios(dias, tipo) {
-  if (tipo === 'caros') {
-    return await db.all2(`
-      SELECT id, nombre, codigo, categoria, unidad,
-             precio_unitario AS precio_actual,
-             NULL AS precio_inicio, NULL AS variacion_abs, NULL AS variacion_pct
-      FROM insumos
-      WHERE precio_unitario > 0
-      ORDER BY precio_unitario DESC
-      LIMIT $1
-    `, [LIMITE_VARIACION]);
-  }
-
-  const filas = await db.all2(`
-    WITH primero AS (
-      SELECT DISTINCT ON (insumo_id) insumo_id, precio_anterior AS precio_inicio
-      FROM historial_precios
-      WHERE fecha >= NOW() - ($1 || ' days')::interval
-      ORDER BY insumo_id, fecha ASC
-    )
-    SELECT i.id, i.nombre, i.codigo, i.categoria, i.unidad,
-           i.precio_unitario AS precio_actual,
-           p.precio_inicio,
-           (i.precio_unitario - p.precio_inicio) AS variacion_abs,
-           CASE WHEN p.precio_inicio > 0
-                THEN ROUND((((i.precio_unitario - p.precio_inicio) / p.precio_inicio) * 100)::numeric, 1)
-                ELSE NULL END AS variacion_pct
-    FROM primero p
-    JOIN insumos i ON i.id = p.insumo_id
-    ORDER BY variacion_pct ${tipo === 'bajaron' ? 'ASC NULLS LAST' : 'DESC NULLS FIRST'}
-  `, [dias]);
-
-  if (tipo === 'iguales') {
-    return filas.filter(f => Math.abs(f.variacion_abs) < 0.01).slice(0, LIMITE_VARIACION);
-  } else if (tipo === 'bajaron') {
-    return filas.filter(f => f.variacion_abs < -0.01).slice(0, LIMITE_VARIACION);
-  } else {
-    return filas.filter(f => f.variacion_abs > 0.01).slice(0, LIMITE_VARIACION);
-  }
-}
-
-router.get('/', loginRequerido, async (req, res) => {
+router.get('/', async (req, res) => {
   const buscar = (req.query.buscar || '').trim();
   const letra  = (req.query.letra || '').trim().toUpperCase().slice(0, 1);
   const LIMITE_SIN_BUSQUEDA = 200;
@@ -168,7 +124,7 @@ async function calcularVariacionPrecios(diasVariacion, tipoVariacion, limite) {
 }
 
 // Descarga en Excel la misma tabla que se ve en el modal de Variación de precios
-router.get('/variacion-excel', loginRequerido, async (req, res) => {
+router.get('/variacion-excel', async (req, res) => {
   const DIAS_PERMITIDOS = [7, 14, 21, 28];
   const diasVariacion = DIAS_PERMITIDOS.includes(parseInt(req.query.dias)) ? parseInt(req.query.dias) : 7;
   const tipoVariacion = ['subieron', 'bajaron', 'iguales'].includes(req.query.tipoVariacion)
@@ -221,7 +177,7 @@ router.get('/variacion-excel', loginRequerido, async (req, res) => {
   res.end();
 });
 
-router.post('/insumo/nuevo', loginRequerido, async (req, res) => {
+router.post('/insumo/nuevo', async (req, res) => {
   const { nombre, categoria, unidad, precio_unitario, stock_actual, proveedor, codigo } = req.body;
   try {
     await db.run2(
@@ -235,7 +191,7 @@ router.post('/insumo/nuevo', loginRequerido, async (req, res) => {
   }
 });
 
-router.post('/insumo/:id/precio', loginRequerido, async (req, res) => {
+router.post('/insumo/:id/precio', async (req, res) => {
   const insumo = await db.get2("SELECT * FROM insumos WHERE id=$1", [req.params.id]);
   if (insumo) {
     const precioActual = parseFloat(insumo.precio_unitario) || 0;
@@ -266,13 +222,13 @@ router.post('/insumo/:id/precio', loginRequerido, async (req, res) => {
   res.redirect('/costos');
 });
 
-router.post('/insumo/:id/eliminar', loginRequerido, async (req, res) => {
+router.post('/insumo/:id/eliminar', async (req, res) => {
   await db.run2("DELETE FROM plato_insumos WHERE insumo_id=$1", [req.params.id]);
   await db.run2("DELETE FROM insumos WHERE id=$1", [req.params.id]);
   res.redirect('/costos');
 });
 
-router.post('/plato/nuevo', loginRequerido, async (req, res) => {
+router.post('/plato/nuevo', async (req, res) => {
   const { nombre, categoria, porciones, precio_venta, margen_ganancia } = req.body;
   await db.run2(
     "INSERT INTO platos_costo (nombre,categoria,porciones,precio_venta,margen_ganancia) VALUES ($1,$2,$3,$4,$5)",
@@ -281,7 +237,7 @@ router.post('/plato/nuevo', loginRequerido, async (req, res) => {
   res.redirect('/costos');
 });
 
-router.get('/plato/:id', loginRequerido, async (req, res) => {
+router.get('/plato/:id', async (req, res) => {
   const plato = await db.get2("SELECT * FROM platos_costo WHERE id=$1", [req.params.id]);
   if (!plato) return res.redirect('/costos');
   const ingredientes = await db.all2(`
@@ -296,7 +252,7 @@ router.get('/plato/:id', loginRequerido, async (req, res) => {
   res.render('costos_plato', { plato, ingredientes, todosInsumos, historial });
 });
 
-router.post('/plato/:id/insumo', loginRequerido, async (req, res) => {
+router.post('/plato/:id/insumo', async (req, res) => {
   const { insumo_id, cantidad, unidad } = req.body;
   const insumo = await db.get2("SELECT * FROM insumos WHERE id=$1", [insumo_id]);
   if (insumo) {
@@ -310,13 +266,13 @@ router.post('/plato/:id/insumo', loginRequerido, async (req, res) => {
   res.redirect('/costos/plato/'+req.params.id);
 });
 
-router.post('/plato/:plato_id/insumo/:id/eliminar', loginRequerido, async (req, res) => {
+router.post('/plato/:plato_id/insumo/:id/eliminar', async (req, res) => {
   await db.run2("DELETE FROM plato_insumos WHERE id=$1", [req.params.id]);
   await recalcularCostoPlato(req.params.plato_id);
   res.redirect('/costos/plato/'+req.params.plato_id);
 });
 
-router.post('/plato/:plato_id/insumo/:id/cantidad', loginRequerido, async (req, res) => {
+router.post('/plato/:plato_id/insumo/:id/cantidad', async (req, res) => {
   const nuevaCantidad = parseFloat(req.body.cantidad);
   try {
     const item = await db.get2("SELECT * FROM plato_insumos WHERE id=$1", [req.params.id]);
@@ -335,7 +291,7 @@ router.post('/plato/:plato_id/insumo/:id/cantidad', loginRequerido, async (req, 
   res.redirect('/costos/plato/'+req.params.plato_id);
 });
 
-router.post('/plato/:id/margen', loginRequerido, async (req, res) => {
+router.post('/plato/:id/margen', async (req, res) => {
   const nuevoMargen = parseFloat(req.body.margen_ganancia);
   try {
     if (!isNaN(nuevoMargen) && nuevoMargen >= 0) {
@@ -347,7 +303,7 @@ router.post('/plato/:id/margen', loginRequerido, async (req, res) => {
   res.redirect('/costos/plato/'+req.params.id);
 });
 
-router.post('/plato/:id/eliminar', loginRequerido, async (req, res) => {
+router.post('/plato/:id/eliminar', async (req, res) => {
   await db.run2("DELETE FROM plato_insumos WHERE plato_id=$1", [req.params.id]);
   await db.run2("DELETE FROM platos_costo WHERE id=$1", [req.params.id]);
   res.redirect('/costos');
@@ -409,7 +365,7 @@ function buscarInsumoMasParecido(nombreDetectado, insumos) {
 }
 
 // 1) Sube la foto, la manda a Gemini, arma la comparación y la deja pendiente en sesión
-router.post('/factura', loginRequerido, upload.single('factura'), async (req, res) => {
+router.post('/factura', upload.single('factura'), async (req, res) => {
   if (!req.file) return res.redirect('/costos?msg=' + encodeURIComponent('No se recibió ninguna imagen.'));
 
   try {
@@ -456,13 +412,13 @@ router.post('/factura', loginRequerido, upload.single('factura'), async (req, re
 });
 
 // 2) Muestra la pantalla de confirmación con lo que Gemini detectó
-router.get('/factura/revisar', loginRequerido, async (req, res) => {
+router.get('/factura/revisar', async (req, res) => {
   const comparacion = req.session.facturaPendiente || [];
   res.render('factura_revisar', { comparacion });
 });
 
 // 3) Aplica los cambios que el usuario tildó y confirmó
-router.post('/factura/aplicar', loginRequerido, async (req, res) => {
+router.post('/factura/aplicar', async (req, res) => {
   const comparacion = req.session.facturaPendiente || [];
   let seleccionados = req.body.aplicar || [];
   if (!Array.isArray(seleccionados)) seleccionados = [seleccionados];
@@ -511,7 +467,7 @@ router.post('/factura/aplicar', loginRequerido, async (req, res) => {
 });
 
 // ── Importación masiva de insumos desde CSV del sistema de compras ────
-router.post('/insumos/importar', loginRequerido, uploadCsv.single('archivo_csv'), async (req, res) => {
+router.post('/insumos/importar', uploadCsv.single('archivo_csv'), async (req, res) => {
   if (!req.file) return res.redirect('/costos?msg=' + encodeURIComponent('No se recibió ningún archivo.'));
 
   const categoria = (req.body.categoria || '').trim();
@@ -539,13 +495,13 @@ router.post('/insumos/importar', loginRequerido, uploadCsv.single('archivo_csv')
   }
 });
 
-router.get('/insumos/importar/resultado', loginRequerido, async (req, res) => {
+router.get('/insumos/importar/resultado', async (req, res) => {
   const resumen = req.session.importacionResumen || null;
   res.render('importar_resultado', { resumen });
 });
 
 // ── Importación masiva de platos con sus insumos (CSV de costeo tipo "un bloque por plato") ──
-router.post('/platos/importar', loginRequerido, uploadCsv.single('archivo_platos'), async (req, res) => {
+router.post('/platos/importar', uploadCsv.single('archivo_platos'), async (req, res) => {
   if (!req.file) return res.redirect('/costos?msg=' + encodeURIComponent('No se recibió ningún archivo.'));
 
   const categoria = (req.body.categoria_platos || '').trim();
@@ -567,28 +523,32 @@ router.post('/platos/importar', loginRequerido, uploadCsv.single('archivo_platos
   }
 });
 
-router.get('/platos/importar/resultado', loginRequerido, async (req, res) => {
+router.get('/platos/importar/resultado', async (req, res) => {
   const resumen = req.session.importacionPlatosResumen || null;
   res.render('importar_platos_resultado', { resumen });
 });
 
 async function recalcularCostoPlato(plato_id) {
-  const items = await db.all2("SELECT * FROM plato_insumos WHERE plato_id=$1", [plato_id]);
-  const total = items.reduce((s,i) => s+(i.costo_parcial||0), 0);
-  await db.run2("UPDATE platos_costo SET costo_total=$1 WHERE id=$2", [total, plato_id]);
+  await db.run2(`
+    UPDATE platos_costo
+    SET costo_total = COALESCE((SELECT SUM(costo_parcial) FROM plato_insumos WHERE plato_id=$1), 0)
+    WHERE id=$1
+  `, [plato_id]);
 }
 
 async function recalcularPlatos(insumo_id) {
-  const platos = await db.all2("SELECT DISTINCT plato_id FROM plato_insumos WHERE insumo_id=$1", [insumo_id]);
   const insumo = await db.get2("SELECT precio_unitario FROM insumos WHERE id=$1", [insumo_id]);
+  if (!insumo) return;
+
+  // Un solo UPDATE recalcula el costo_parcial de todas las filas que usan este insumo,
+  // en vez de traer cada plato entero a JS y actualizar fila por fila.
+  await db.run2(
+    "UPDATE plato_insumos SET costo_parcial = cantidad * $1 WHERE insumo_id = $2",
+    [insumo.precio_unitario, insumo_id]
+  );
+
+  const platos = await db.all2("SELECT DISTINCT plato_id FROM plato_insumos WHERE insumo_id=$1", [insumo_id]);
   for (const p of platos) {
-    const items = await db.all2("SELECT * FROM plato_insumos WHERE plato_id=$1", [p.plato_id]);
-    for (const item of items) {
-      if (item.insumo_id == insumo_id) {
-        await db.run2("UPDATE plato_insumos SET costo_parcial=$1 WHERE id=$2",
-          [item.cantidad*insumo.precio_unitario, item.id]);
-      }
-    }
     await recalcularCostoPlato(p.plato_id);
   }
 }
