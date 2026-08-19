@@ -4,56 +4,16 @@ const db = require('../db/database');
 const bcrypt = require('bcryptjs');
 const { loginRequerido, requiereDepartamento } = require('./middleware');
 router.use(loginRequerido, requiereDepartamento('/personal'));
+const { getLunes, getDiasSemana, sumarDias, getDiasRango } = require('../utils/fechas');
+const { calcularRecoffPendiente, mapRecoffUsados, contarRecoffUsados } = require('../services/recoff');
 
 const PUESTOS = ['Chef','Subchef','Encargado de cocina','Cocinero','Ayudante de cocina','Pastelero','Panadero'];
 const ROLES   = ['empleado','supervisor','admin'];
 const SECTORES = ['Supervisores','Comis de Recepción','Panadería','Pastelería AM','Pastelería PM','Faro AM','Faro PM','Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D'];
 const ESTADOS = ['OFF','VAC','RECOFF','LIBRE','ART','LICENCIA','CUMPLE','MUDANZA','FRANCO'];
 
-// ── Helpers de fecha ────────────────────────────────────
-
-// Se mantienen por compatibilidad con /asignar-semana (ruta vieja)
-function getLunes(fechaStr) {
-  const d = new Date(fechaStr + 'T00:00:00');
-  const day = d.getDay();
-  const diff = (day === 0) ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  return d.toISOString().split('T')[0];
-}
-
-function getDiasSemana(lunes) {
-  const dias = [];
-  const d = new Date(lunes + 'T00:00:00');
-  for (let i = 0; i < 7; i++) {
-    dias.push(d.toISOString().split('T')[0]);
-    d.setDate(d.getDate() + 1);
-  }
-  return dias;
-}
-
-function sumarDias(fechaStr, n) {
-  const d = new Date(fechaStr + 'T00:00:00');
-  d.setDate(d.getDate() + n);
-  return d.toISOString().split('T')[0];
-}
-
-// Nuevo: rango libre entre dos fechas (inclusive), cualquier cantidad de días
-function getDiasRango(inicioStr, finStr) {
-  const dias = [];
-  let d = new Date(inicioStr + 'T00:00:00');
-  const dFin = new Date(finStr + 'T00:00:00');
-  // Si por algún motivo vienen invertidas, las corregimos
-  let cursor = d <= dFin ? d : dFin;
-  let limite = d <= dFin ? dFin : d;
-  while (cursor <= limite) {
-    dias.push(cursor.toISOString().split('T')[0]);
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return dias;
-}
-
 // ── GET / ──────────────────────────────────────────────
-router.get('/', loginRequerido, async (req, res) => {
+router.get('/', async (req, res) => {
   const hoy = new Date().toISOString().split('T')[0];
 
   // Compatibilidad: si todavía llega ?semana=..., lo tratamos como el inicio
@@ -80,12 +40,7 @@ router.get('/', loginRequerido, async (req, res) => {
   `, [SECTORES]);
 
   // Cuántos RECOFF tiene puestos cada uno en TODA la grilla (no solo el rango visible)
-  const usadosRaw = await db.all2(`
-    SELECT usuario_id, COUNT(*)::int AS usados
-    FROM horarios_semanales WHERE UPPER(valor)='RECOFF' GROUP BY usuario_id
-  `);
-  const recoffUsadosMap = {};
-  usadosRaw.forEach(r => { recoffUsadosMap[r.usuario_id] = r.usados; });
+  const recoffUsadosMap = await mapRecoffUsados();
   personal.forEach(p => {
     p.recoff_pendiente_real = (p.recoff_adeudado || 0) - (recoffUsadosMap[p.id] || 0);
   });
@@ -125,7 +80,7 @@ router.get('/', loginRequerido, async (req, res) => {
 
 // ── Feriados: marcador visual en el calendario, vía AJAX ──
 // Solo pinta el día en el calendario — no toca los horarios de ningún empleado.
-router.post('/feriados', loginRequerido, async (req, res) => {
+router.post('/feriados', async (req, res) => {
   const { fecha, nombre } = req.body;
   try {
     if (!fecha || !nombre || !nombre.trim()) {
@@ -143,7 +98,7 @@ router.post('/feriados', loginRequerido, async (req, res) => {
   }
 });
 
-router.post('/feriados/:fecha/eliminar', loginRequerido, async (req, res) => {
+router.post('/feriados/:fecha/eliminar', async (req, res) => {
   try {
     await db.run2('DELETE FROM feriados WHERE fecha=$1', [req.params.fecha]);
     res.json({ ok: true });
@@ -155,7 +110,7 @@ router.post('/feriados/:fecha/eliminar', loginRequerido, async (req, res) => {
 
 // ── POST /asignar-semana-completa ──────────────────────
 // Guarda un valor por cada día del rango: puede ser una hora de entrada o un estado especial
-router.post('/asignar-semana-completa', loginRequerido, async (req, res) => {
+router.post('/asignar-semana-completa', async (req, res) => {
   const { usuario_id, inicio, fin, valores, sectoresDia } = req.body;
   try {
     const dias = getDiasRango(inicio, fin || inicio);
@@ -189,21 +144,18 @@ router.post('/asignar-semana-completa', loginRequerido, async (req, res) => {
 });
 
 // Suma o resta días al saldo ADEUDADO de un empleado (carga manual)
-router.post('/:id/recoff-ajustar', loginRequerido, async (req, res) => {
+router.post('/:id/recoff-ajustar', async (req, res) => {
   try {
     const delta = parseInt(req.body.delta) || 0;
     const usuario_id = req.params.id;
 
     // El botón +/- cambia directamente el número que se VE (el pendiente),
     // sin importar cuántos RECOFF ya tenga puestos en la grilla.
-    const usados = await db.get2(
-      "SELECT COUNT(*)::int AS c FROM horarios_semanales WHERE usuario_id=$1 AND UPPER(valor)='RECOFF'",
-      [usuario_id]
-    );
+    const usados = await contarRecoffUsados(usuario_id);
     const filaActual = await db.get2('SELECT recoff_adeudado FROM usuarios WHERE id=$1', [usuario_id]);
-    const pendienteActual = (filaActual?.recoff_adeudado || 0) - (usados?.c || 0);
+    const pendienteActual = (filaActual?.recoff_adeudado || 0) - usados;
     const pendienteNuevo = Math.max(pendienteActual + delta, 0);
-    const nuevoAdeudado = pendienteNuevo + (usados?.c || 0);
+    const nuevoAdeudado = pendienteNuevo + usados;
 
     await db.run2('UPDATE usuarios SET recoff_adeudado = $1 WHERE id=$2', [nuevoAdeudado, usuario_id]);
     res.json({ ok: true, recoff_pendiente: pendienteNuevo });
@@ -212,19 +164,8 @@ router.post('/:id/recoff-ajustar', loginRequerido, async (req, res) => {
   }
 });
 
-// Pendiente real = días adeudados (cargados a mano) - RECOFF que ya tiene puestos en la grilla.
-// Se recalcula siempre en vivo, así no importa en qué orden se haya cargado cada cosa.
-async function calcularRecoffPendiente(usuario_id) {
-  const fila = await db.get2('SELECT recoff_adeudado FROM usuarios WHERE id=$1', [usuario_id]);
-  const usados = await db.get2(
-    "SELECT COUNT(*)::int AS c FROM horarios_semanales WHERE usuario_id=$1 AND UPPER(valor)='RECOFF'",
-    [usuario_id]
-  );
-  return (fila?.recoff_adeudado || 0) - (usados?.c || 0);
-}
-
 // ── POST /asignar-semana (compatibilidad) ──────────────
-router.post('/asignar-semana', loginRequerido, async (req, res) => {
+router.post('/asignar-semana', async (req, res) => {
   const { usuario_id, valor } = req.body;
   try {
     const hoy   = new Date().toISOString().split('T')[0];
@@ -248,7 +189,7 @@ router.post('/asignar-semana', loginRequerido, async (req, res) => {
 });
 
 // ── POST /nuevo ────────────────────────────────────────
-router.post('/nuevo', loginRequerido, async (req, res) => {
+router.post('/nuevo', async (req, res) => {
   try {
     const nombre   = String(req.body.nombre || '').trim();
     const email    = req.body.email ? String(req.body.email).toLowerCase().trim() : null;
@@ -269,7 +210,7 @@ router.post('/nuevo', loginRequerido, async (req, res) => {
 });
 
 // ── POST /editar ───────────────────────────────────────
-router.post('/editar', loginRequerido, async (req, res) => {
+router.post('/editar', async (req, res) => {
   try {
     const { id, nombre, legajo, puesto, rol, sector } = req.body;
     const email = req.body.email ? String(req.body.email).toLowerCase().trim() : null;
@@ -284,17 +225,17 @@ router.post('/editar', loginRequerido, async (req, res) => {
   }
 });
 
-router.post('/:id/eliminar', loginRequerido, async (req, res) => {
+router.post('/:id/eliminar', async (req, res) => {
   await db.run2('UPDATE usuarios SET activo=0 WHERE id=$1', [req.params.id]);
   res.redirect('/personal');
 });
 
-router.post('/:id/activar', loginRequerido, async (req, res) => {
+router.post('/:id/activar', async (req, res) => {
   await db.run2('UPDATE usuarios SET activo=1 WHERE id=$1', [req.params.id]);
   res.redirect('/personal');
 });
 
-router.post('/:id/reset-password', loginRequerido, async (req, res) => {
+router.post('/:id/reset-password', async (req, res) => {
   const password_nuevo = String(req.body.password_nuevo || '');
   if (password_nuevo.length < 6) return res.redirect('/personal');
   const hash = bcrypt.hashSync(password_nuevo, 10);

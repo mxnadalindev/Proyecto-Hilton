@@ -21,7 +21,7 @@ async function getMenusConPlatos() {
   return resultado;
 }
 
-router.get('/', loginRequerido, async (req, res) => {
+router.get('/', async (req, res) => {
   const eventos = await db.all2(`
     SELECT e.*, u.nombre as creador FROM eventos e
     LEFT JOIN usuarios u ON e.creado_por = u.id
@@ -30,7 +30,7 @@ router.get('/', loginRequerido, async (req, res) => {
   res.render('eventos', { eventos, path: 'eventos' });
 });
 
-router.get('/nuevo', loginRequerido, async (req, res) => {
+router.get('/nuevo', async (req, res) => {
   const personal       = await db.all2("SELECT id,nombre,rol FROM usuarios WHERE activo=1 ORDER BY nombre");
   const recetas        = await db.all2("SELECT id,nombre FROM recetas ORDER BY nombre");
   const platosConCosto = await db.all2("SELECT id,nombre,costo_total,porciones FROM platos_costo WHERE costo_total>0 ORDER BY nombre");
@@ -38,7 +38,7 @@ router.get('/nuevo', loginRequerido, async (req, res) => {
   res.render('evento_nuevo', { personal, recetas, platosConCosto, menus, path: 'eventos' });
 });
 
-router.post('/nuevo', loginRequerido, async (req, res) => {
+router.post('/nuevo', async (req, res) => {
   try {
     const { nombre, fecha, hora_inicio, hora_fin, descripcion, horas_produccion, prod_inicio, prod_fin } = req.body;
     let platos=[], personalLista=[], vajilla=[];
@@ -89,17 +89,17 @@ router.post('/nuevo', loginRequerido, async (req, res) => {
 // ── Menús (grupos de platos reutilizables) ─────────────
 // IMPORTANTE: estas rutas van antes de "/:id" para que Express no confunda "/menus" con un id de evento.
 
-router.get('/menus', loginRequerido, async (req, res) => {
+router.get('/menus', async (req, res) => {
   const menus = await getMenusConPlatos();
   res.render('menus', { menus, path: 'eventos' });
 });
 
-router.get('/menus/nuevo', loginRequerido, async (req, res) => {
+router.get('/menus/nuevo', async (req, res) => {
   const platosConCosto = await db.all2("SELECT id,nombre,costo_total,porciones FROM platos_costo WHERE costo_total>0 ORDER BY nombre");
   res.render('menu_nuevo', { platosConCosto, path: 'eventos' });
 });
 
-router.post('/menus/nuevo', loginRequerido, async (req, res) => {
+router.post('/menus/nuevo', async (req, res) => {
   try {
     const { nombre, descripcion } = req.body;
     let platoIds = req.body.platos || [];
@@ -119,7 +119,7 @@ router.post('/menus/nuevo', loginRequerido, async (req, res) => {
   }
 });
 
-router.get('/menus/:id', loginRequerido, async (req, res) => {
+router.get('/menus/:id', async (req, res) => {
   const menu = await db.get2("SELECT * FROM menus WHERE id=$1", [req.params.id]);
   if (!menu) return res.redirect('/eventos/menus');
   const platosDelMenu = await db.all2(`
@@ -133,7 +133,7 @@ router.get('/menus/:id', loginRequerido, async (req, res) => {
   res.render('menu_detalle', { menu, platosDelMenu, todosPlatos, path: 'eventos' });
 });
 
-router.post('/menus/:id/plato', loginRequerido, async (req, res) => {
+router.post('/menus/:id/plato', async (req, res) => {
   try {
     const { plato_id } = req.body;
     if (plato_id) {
@@ -151,12 +151,12 @@ router.post('/menus/:id/plato', loginRequerido, async (req, res) => {
   res.redirect('/eventos/menus/' + req.params.id);
 });
 
-router.post('/menus/:menu_id/plato/:id/eliminar', loginRequerido, async (req, res) => {
+router.post('/menus/:menu_id/plato/:id/eliminar', async (req, res) => {
   await db.run2("DELETE FROM menu_platos WHERE id=$1", [req.params.id]);
   res.redirect('/eventos/menus/' + req.params.menu_id);
 });
 
-router.post('/menus/:id/eliminar', loginRequerido, async (req, res) => {
+router.post('/menus/:id/eliminar', async (req, res) => {
   await db.run2("DELETE FROM menu_platos WHERE menu_id=$1", [req.params.id]);
   await db.run2("DELETE FROM menus WHERE id=$1", [req.params.id]);
   res.redirect('/eventos/menus');
@@ -164,7 +164,7 @@ router.post('/menus/:id/eliminar', loginRequerido, async (req, res) => {
 
 // ── Detalle de un evento ────────────────────────────────
 
-router.get('/:id', loginRequerido, async (req, res) => {
+router.get('/:id', async (req, res) => {
   const evento  = await db.get2(`SELECT e.*,u.nombre as creador FROM eventos e LEFT JOIN usuarios u ON e.creado_por=u.id WHERE e.id=$1`, [req.params.id]);
   if (!evento) return res.redirect('/eventos');
   const platos   = await db.all2("SELECT * FROM evento_platos WHERE evento_id=$1",  [req.params.id]);
@@ -176,7 +176,7 @@ router.get('/:id', loginRequerido, async (req, res) => {
 });
 
 // Agrega un plato al menú de un evento ya creado (elegido de Costos o cargado a mano)
-router.post('/:id/plato', loginRequerido, async (req, res) => {
+router.post('/:id/plato', async (req, res) => {
   try {
     const { plato_nombre, cantidad_porciones, costo_porcion } = req.body;
     const porciones = parseInt(cantidad_porciones) || 1;
@@ -195,7 +195,7 @@ router.post('/:id/plato', loginRequerido, async (req, res) => {
 });
 
 // Agrega TODOS los platos de un menú de una sola vez a un evento ya creado
-router.post('/:id/menu', loginRequerido, async (req, res) => {
+router.post('/:id/menu', async (req, res) => {
   try {
     const { menu_id } = req.body;
     const platosDelMenu = await db.all2(`
@@ -222,7 +222,7 @@ router.post('/:id/menu', loginRequerido, async (req, res) => {
 });
 
 // Quita un plato del menú de un evento ya creado
-router.post('/:evento_id/plato/:id/eliminar', loginRequerido, async (req, res) => {
+router.post('/:evento_id/plato/:id/eliminar', async (req, res) => {
   try {
     await db.run2("DELETE FROM evento_platos WHERE id=$1", [req.params.id]);
     await recalcularCostoEvento(req.params.evento_id);
@@ -238,7 +238,7 @@ async function recalcularCostoEvento(evento_id) {
   await db.run2("UPDATE eventos SET costo_total=$1 WHERE id=$2", [total, evento_id]);
 }
 
-router.post('/:id/eliminar', loginRequerido, async (req, res) => {
+router.post('/:id/eliminar', async (req, res) => {
   const id = req.params.id;
   await db.run2("DELETE FROM evento_platos   WHERE evento_id=$1", [id]);
   await db.run2("DELETE FROM evento_personal WHERE evento_id=$1", [id]);

@@ -1,10 +1,8 @@
 // src/db/database.js — PostgreSQL
 const { Pool } = require('pg');
-console.log('DB PASS TYPE:', typeof 'hilton2026', '| VALUE:', 'hilton2026');
 const bcrypt = require('bcryptjs');
 
 const DBPASS = 'hilton2026';
-console.log('POOL PASS:', DBPASS, typeof DBPASS);
 const pool = new Pool({
   host: 'localhost',
   port: 5432,
