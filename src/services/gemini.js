@@ -137,4 +137,100 @@ async function analizarFactura(rutaImagen) {
   return { tipoDocumento, items };
 }
 
-module.exports = { analizarFactura };
+const PROMPT_REMITO_CROUTONS = `Sos un asistente que lee remitos, etiquetas de caja o fotos de mercadería de croutons recibida en la cocina de un hotel.
+Te paso la imagen. Devolvé ÚNICAMENTE un JSON, sin texto adicional, sin explicación, sin markdown ni backticks, con este formato exacto:
+
+{"tipo_documento": "...", "items": [...]}
+
+PASO 1 — Identificá "tipo_documento":
+- "remito": es un remito, etiqueta de caja/bolsa, ticket de entrega, o cualquier documento/foto donde se pueda leer un producto con su fecha de vencimiento.
+- "otro": cualquier otra cosa (imagen ilegible, no tiene relación con una entrega de mercadería, etc.)
+
+PASO 2 — Armá "items":
+- Si "tipo_documento" es "otro", "items" va vacío: [].
+- Si es "remito", cada elemento de "items" debe tener estos campos:
+  - "nombre": el nombre del producto tal como figura (ej: "Croutons clásicos", "Croutons de ajo y hierbas"). Si no se especifica variedad, usá "Croutons".
+  - "cantidad": la cantidad recibida (número, usá 1 si no está claro)
+  - "unidad": la unidad (ej: "kg", "unidad", "caja", "bolsa", "paquete")
+  - "proveedor": el nombre del proveedor si figura en la imagen (string, dejalo vacío "" si no aparece)
+  - "fecha_vencimiento": la fecha de vencimiento o "vencimiento"/"consumir antes de"/"best before" del producto, SIEMPRE en formato "YYYY-MM-DD". Si en la imagen la fecha viene como DD/MM/YYYY convertila. Si no podés leer una fecha de vencimiento con confianza para ese ítem, NO incluyas ese ítem (una fecha de vencimiento es obligatoria).
+
+Ejemplo de respuesta:
+{"tipo_documento":"remito","items":[{"nombre":"Croutons clásicos","cantidad":5,"unidad":"kg","proveedor":"Distribuidora ABC","fecha_vencimiento":"2026-11-20"}]}
+{"tipo_documento":"otro","items":[]}`;
+
+/**
+ * Analiza una foto de remito/etiqueta de mercadería de croutons con Gemini,
+ * extrayendo producto, cantidad, proveedor y fecha de vencimiento de cada ítem.
+ * A diferencia de analizarFactura, acá la fecha de vencimiento es el dato
+ * clave — un ítem sin fecha legible se descarta directamente.
+ *
+ * @param {string} rutaImagen - ruta al archivo de imagen ya subido
+ * @returns {Promise<{tipoDocumento: string, items: Array<{nombre:string, cantidad:number, unidad:string, proveedor:string, fecha_vencimiento:string}>}>}
+ */
+async function analizarRemitoCroutons(rutaImagen) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Falta GEMINI_API_KEY en el archivo .env');
+  }
+
+  const bytes = fs.readFileSync(rutaImagen);
+  const base64 = bytes.toString('base64');
+  const mimeType = mimeDesdeExtension(rutaImagen);
+
+  const body = {
+    contents: [{
+      parts: [
+        { text: PROMPT_REMITO_CROUTONS },
+        { inline_data: { mime_type: mimeType, data: base64 } }
+      ]
+    }],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      temperature: 0.1
+    }
+  };
+
+  const resp = await fetch(`${URL_BASE}?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new Error(`Gemini respondió ${resp.status}: ${errText}`);
+  }
+
+  const data = await resp.json();
+  const textoRespuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!textoRespuesta) {
+    throw new Error('Gemini no devolvió contenido legible.');
+  }
+
+  let respuesta;
+  try {
+    respuesta = JSON.parse(textoRespuesta);
+  } catch (e) {
+    throw new Error('No se pudo interpretar la respuesta de Gemini como JSON: ' + textoRespuesta.slice(0, 200));
+  }
+
+  const tipoDocumento = respuesta?.tipo_documento || 'otro';
+  const itemsCrudos = Array.isArray(respuesta?.items) ? respuesta.items : [];
+
+  const REGEX_FECHA = /^\d{4}-\d{2}-\d{2}$/;
+
+  const items = itemsCrudos
+    .filter(it => it && it.nombre && it.fecha_vencimiento && REGEX_FECHA.test(String(it.fecha_vencimiento).trim()))
+    .map(it => ({
+      nombre: String(it.nombre).trim(),
+      cantidad: parseFloat(it.cantidad) || 1,
+      unidad: it.unidad ? String(it.unidad).trim() : 'kg',
+      proveedor: it.proveedor ? String(it.proveedor).trim() : '',
+      fecha_vencimiento: String(it.fecha_vencimiento).trim()
+    }));
+
+  return { tipoDocumento, items };
+}
+
+module.exports = { analizarFactura, analizarRemitoCroutons };

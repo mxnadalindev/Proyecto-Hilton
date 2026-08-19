@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Croutons — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <%- include('partials/nav', { path: 'croutons' }) %>
+
+  <main class="main-content main-content-ancho">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Alimentos y Bebidas</p>
+        <h1 class="seccion-titulo">Croutons</h1>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+        <button onclick="showModal('modal-lote')" class="btn-primary">
+          <i class="ti ti-plus"></i> Cargar lote a mano
+        </button>
+      </div>
+    </div>
+
+    <% if (typeof msg !== 'undefined' && msg) {
+      const msgTexto = decodeURIComponent(msg);
+      const esError  = /error/i.test(msgTexto);
+    %>
+    <div style="background:<%= esError ? '#fef2f2' : 'var(--azul-claro)' %>;border:1px solid <%= esError ? '#fecaca' : 'var(--azul-borde)' %>;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:<%= esError ? '#dc2626' : 'var(--azul)' %>;display:flex;align-items:center;gap:10px;">
+      <i class="ti <%= esError ? 'ti-alert-circle' : 'ti-check' %>" style="font-size:18px;"></i>
+      <%= msgTexto %>
+    </div>
+    <% } %>
+
+    <!-- Resumen -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;">
+      <div style="background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:12px;padding:16px;text-align:center;">
+        <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= totalLotes %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Lote<%= totalLotes !== 1 ? 's' : '' %> activo<%= totalLotes !== 1 ? 's' : '' %></p>
+      </div>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;text-align:center;">
+        <p style="font-size:1.8rem;font-weight:700;color:#dc2626;margin:0;"><%= vencidos.length %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#dc2626;margin:4px 0 0;">Vencido<%= vencidos.length !== 1 ? 's' : '' %></p>
+      </div>
+      <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:16px;text-align:center;">
+        <p style="font-size:1.8rem;font-weight:700;color:#92400e;margin:0;"><%= porVencer.length %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#92400e;margin:4px 0 0;">Vencen en <%= diasAlerta %> días o menos</p>
+      </div>
+    </div>
+
+    <!-- Carga de mercadería: un solo selector, detecta foto de remito vs. catálogo -->
+    <div class="tarjeta-unificada">
+      <div class="tarjeta-unificada-icono"><i class="ti ti-truck-delivery"></i></div>
+      <p class="tarjeta-unificada-titulo">
+        Carga de mercadería
+        <% if (geminiConfigurado) { %>
+          <span class="badge-activo"><i class="ti ti-circle-filled" style="font-size:7px;"></i> Activo</span>
+        <% } else { %>
+          <span class="badge-inactivo">Foto no configurada</span>
+        <% } %>
+      </p>
+      <p class="tarjeta-unificada-desc">Elegí una foto del remito/etiqueta o el catálogo del proveedor — el sistema detecta solo cuál es y lee la fecha de vencimiento de cada producto.</p>
+
+      <div class="tarjeta-unificada-opciones">
+        <form id="form-carga-croutons" method="POST" enctype="multipart/form-data"
+              class="opcion-precio opcion-precio-sola" onsubmit="return prepararEnvioCroutons()">
+          <input type="text" id="input-proveedor-csv" name="proveedor_csv" placeholder="Proveedor (si es catálogo, opcional)" class="precio-card-input-categoria" style="display:none;">
+          <label class="input-archivo" id="label-archivo-croutons">
+            <i class="ti ti-paperclip"></i>
+            <span id="nombre-archivo-croutons">Elegir archivo</span>
+            <input type="file" id="input-croutons" required onchange="detectarTipoArchivoCroutons(this)">
+          </label>
+          <button type="submit" id="btn-carga-croutons" class="btn-primary">
+            <i class="ti ti-upload" id="icon-carga-croutons"></i>
+            <span id="texto-carga-croutons">Subir</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Listado de lotes -->
+    <% if (lotes.length === 0) { %>
+      <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:32px;text-align:center;color:var(--gris-texto);">
+        <i class="ti ti-package-off" style="font-size:32px;display:block;margin-bottom:10px;"></i>
+        Todavía no hay ningún lote de croutons cargado. Usá "Cargar lote a mano" o subí una foto del remito.
+      </div>
+    <% } else { %>
+    <div class="tabla-wrap">
+      <table class="tabla" style="width:100%;">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Proveedor</th>
+            <th>Ingreso</th>
+            <th>Vencimiento</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% lotes.forEach(l => {
+            const dias = l.dias_para_vencer;
+            let estadoTexto, estadoColor, estadoFondo, estadoBorde;
+            if (dias < 0) {
+              estadoTexto = `Vencido hace ${Math.abs(dias)} día${Math.abs(dias) !== 1 ? 's' : ''}`;
+              estadoColor = '#dc2626'; estadoFondo = '#fef2f2'; estadoBorde = '#fecaca';
+            } else if (dias <= diasAlerta) {
+              estadoTexto = dias === 0 ? 'Vence hoy' : `Vence en ${dias} día${dias !== 1 ? 's' : ''}`;
+              estadoColor = '#92400e'; estadoFondo = '#fef3c7'; estadoBorde = '#fde68a';
+            } else {
+              estadoTexto = `Vence en ${dias} días`;
+              estadoColor = '#16a34a'; estadoFondo = '#f0fdf4'; estadoBorde = '#bbf7d0';
+            }
+          %>
+          <tr>
+            <td style="font-size:0.82rem;font-weight:500;">
+              <%= l.producto %>
+              <% if (l.lote_proveedor) { %><span style="display:block;font-size:0.68rem;color:var(--gris-texto);">Lote: <%= l.lote_proveedor %></span><% } %>
+            </td>
+            <td style="font-size:0.82rem;">
+              <form method="POST" action="/croutons/lote/<%= l.id %>/cantidad" style="display:flex;gap:4px;align-items:center;">
+                <input type="number" name="cantidad" value="<%= l.cantidad %>" step="0.01" min="0"
+                       style="width:70px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:5px 7px;font-size:0.8rem;">
+                <span style="color:var(--gris-texto);"><%= l.unidad %></span>
+                <button type="submit" class="btn-icono" title="Guardar cantidad"><i class="ti ti-device-floppy"></i></button>
+              </form>
+            </td>
+            <td style="font-size:0.8rem;color:var(--gris-texto);"><%= l.proveedor || '—' %></td>
+            <td style="font-size:0.8rem;color:var(--gris-texto);"><%= new Date(l.fecha_ingreso).toLocaleDateString('es-AR') %></td>
+            <td style="font-size:0.82rem;font-weight:600;"><%= new Date(l.fecha_vencimiento).toLocaleDateString('es-AR') %></td>
+            <td>
+              <span style="font-size:0.68rem;font-weight:700;color:<%= estadoColor %>;background:<%= estadoFondo %>;border:1px solid <%= estadoBorde %>;padding:3px 9px;border-radius:20px;white-space:nowrap;display:inline-block;">
+                <%= estadoTexto %>
+              </span>
+            </td>
+            <td style="white-space:nowrap;">
+              <form method="POST" action="/croutons/lote/<%= l.id %>/consumir" style="display:inline;" onsubmit="return confirm('¿Marcar este lote como consumido?');">
+                <button type="submit" class="btn-icono" title="Marcar como consumido"><i class="ti ti-check"></i></button>
+              </form>
+              <form method="POST" action="/croutons/lote/<%= l.id %>/eliminar" style="display:inline;" onsubmit="return confirm('¿Eliminar este lote? Esta acción no se puede deshacer.');">
+                <button type="submit" class="btn-icono" title="Eliminar" style="color:#dc2626;"><i class="ti ti-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+
+  </main>
+
+  <%- include('partials/mobile-nav', { path: 'croutons' }) %>
+</div>
+
+<!-- Modal nuevo lote -->
+<div id="modal-lote" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Cargar lote de croutons</h2>
+      <button onclick="hideModal('modal-lote')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <form method="POST" action="/croutons/lote/nuevo">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="field" style="grid-column:1/-1;">
+          <label>Producto</label>
+          <input type="text" name="producto" placeholder="Ej: Croutons clásicos" required>
+        </div>
+        <div class="field">
+          <label>Cantidad</label>
+          <input type="number" name="cantidad" placeholder="Ej: 5" step="0.01" min="0">
+        </div>
+        <div class="field">
+          <label>Unidad</label>
+          <select name="unidad" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="unidad">unidad</option>
+            <option value="paquete">paquete</option>
+            <option value="caja">caja</option>
+            <option value="bolsa">bolsa</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Fecha de vencimiento</label>
+          <input type="date" name="fecha_vencimiento" required>
+        </div>
+        <div class="field">
+          <label>Proveedor</label>
+          <input type="text" name="proveedor" placeholder="Ej: Distribuidora ABC">
+        </div>
+        <div class="field">
+          <label>Lote del proveedor (opcional)</label>
+          <input type="text" name="lote_proveedor" placeholder="Ej: L-4521">
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Notas (opcional)</label>
+          <input type="text" name="notas" placeholder="Ej: guardado en depósito seco">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
+        <button type="button" onclick="hideModal('modal-lote')" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> Agregar lote</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.tarjeta-unificada{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:22px;box-shadow:var(--sombra);text-align:center;margin-bottom:22px;}
+.tarjeta-unificada-icono{width:44px;height:44px;border-radius:10px;background:var(--azul-claro);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px;}
+.tarjeta-unificada-titulo{font-size:0.9rem;font-weight:600;color:var(--negro);margin:0 0 4px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
+.tarjeta-unificada-desc{font-size:0.76rem;color:var(--gris-texto);margin:0 0 16px;line-height:1.5;}
+.tarjeta-unificada-opciones{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;}
+.opcion-precio-sola{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;}
+.precio-card-input-categoria{border:1px solid var(--gris-borde);border-radius:8px;padding:9px 12px;font-size:0.8rem;outline:none;background:var(--gris-fondo);min-width:180px;}
+.precio-card-input-categoria:focus{border-color:var(--azul);background:var(--blanco);}
+
+.badge-activo{font-size:0.62rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;padding:2px 8px 2px 6px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;}
+.badge-activo i{color:#16a34a;}
+.badge-inactivo{font-size:0.62rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--gris-texto);background:var(--gris-borde);padding:2px 8px;border-radius:20px;}
+
+.input-archivo{display:flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--gris-borde);border-radius:8px;font-size:0.8rem;color:var(--gris-texto);cursor:pointer;background:var(--gris-fondo);transition:border-color 0.2s;max-width:220px;}
+.input-archivo:hover{border-color:var(--azul);}
+.input-archivo span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.input-archivo input[type=file]{display:none;}
+.input-archivo-ok{border-color:#16a34a;background:#f0fdf4;color:#16a34a;}
+
+.girando{animation:girar 0.8s linear infinite;}
+@keyframes girar{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+
+.btn-icono{background:none;border:1px solid var(--gris-borde);border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gris-texto);transition:border-color .2s,color .2s;}
+.btn-icono:hover{border-color:var(--azul);color:var(--azul);}
+
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:0.72rem;font-weight:600;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.04em;}
+.field input{border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;background:var(--gris-fondo);}
+.field input:focus{border-color:var(--azul);background:var(--blanco);}
+</style>
+
+<script>
+function showModal(id){
+  document.getElementById(id).style.display='flex';
+  setTimeout(()=>{const f=document.querySelector('#'+id+' input:not([type=hidden])');if(f)f.focus();},100);
+}
+function hideModal(id){ document.getElementById(id).style.display='none'; }
+
+const geminiConfigurado = <%= geminiConfigurado ? 'true' : 'false' %>;
+
+function esImagen(nombreArchivo) {
+  return /\.(jpe?g|png|gif|webp|heic|bmp)$/i.test(nombreArchivo);
+}
+
+// Al elegir el archivo, muestra u oculta el campo Proveedor según sea foto o catálogo
+function detectarTipoArchivoCroutons(input) {
+  const label      = input.closest('.input-archivo');
+  const nombreSpan = document.getElementById('nombre-archivo-croutons');
+  const provInput  = document.getElementById('input-proveedor-csv');
+  const textoBoton = document.getElementById('texto-carga-croutons');
+
+  if (!input.files || !input.files[0]) {
+    nombreSpan.textContent = 'Elegir archivo';
+    label.classList.remove('input-archivo-ok');
+    return;
+  }
+
+  const archivo = input.files[0];
+  nombreSpan.textContent = archivo.name;
+  label.classList.add('input-archivo-ok');
+
+  if (esImagen(archivo.name)) {
+    provInput.style.display = 'none';
+    textoBoton.textContent = 'Subir';
+  } else {
+    provInput.style.display = '';
+    textoBoton.textContent = 'Importar';
+  }
+}
+
+// Al enviar, arma la acción y el nombre del campo según haya detectado foto o catálogo
+function prepararEnvioCroutons() {
+  const form     = document.getElementById('form-carga-croutons');
+  const input    = document.getElementById('input-croutons');
+  const provInput = document.getElementById('input-proveedor-csv');
+  const btn      = document.getElementById('btn-carga-croutons');
+  const icon     = document.getElementById('icon-carga-croutons');
+  const texto    = document.getElementById('texto-carga-croutons');
+
+  if (!input.files || !input.files[0]) {
+    alert('Primero tenés que elegir un archivo — una foto del remito o el catálogo del proveedor.');
+    return false;
+  }
+  const archivo = input.files[0];
+
+  if (esImagen(archivo.name)) {
+    if (!geminiConfigurado) {
+      alert('La lectura de fotos todavía no está configurada. Usá el catálogo en su lugar, o cargá el lote a mano.');
+      return false;
+    }
+    form.action = '/croutons/remito';
+    input.name = 'remito';
+    provInput.name = '';
+    texto.textContent = 'Analizando remito...';
+  } else {
+    form.action = '/croutons/importar';
+    input.name = 'archivo_croutons';
+    provInput.name = 'proveedor_csv';
+    texto.textContent = 'Importando...';
+  }
+
+  btn.disabled = true;
+  input.style.pointerEvents = 'none';
+  icon.className = 'ti ti-loader-2 girando';
+  return true;
+}
+</script>
+</body>
+</html>

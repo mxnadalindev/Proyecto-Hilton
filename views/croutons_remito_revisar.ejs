@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revisar remito de croutons — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: 'croutons' }) %>
+
+  <main class="main-content">
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Croutons</p>
+        <h1 class="seccion-titulo">Revisar mercadería detectada</h1>
+      </div>
+      <a href="/croutons" class="btn-secondary"><i class="ti ti-arrow-left"></i> Cancelar y volver</a>
+    </div>
+
+    <% if (items.length === 0) { %>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;color:#dc2626;">
+        No hay ningún remito pendiente de revisión. <a href="/croutons">Volver a Croutons</a>.
+      </div>
+    <% } else { %>
+
+      <p style="font-size:0.85rem;color:var(--gris-texto);margin-bottom:16px;">
+        Gemini detectó <%= items.length %> producto(s) en la imagen. Revisá y corregí los datos si hace falta — sobre todo la fecha de vencimiento — y tildá los que querés cargar como lotes nuevos.
+      </p>
+
+      <form method="POST" action="/croutons/remito/aplicar">
+        <div class="tabla-wrap">
+          <table class="tabla" style="width:100%;">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Unidad</th>
+                <th>Proveedor</th>
+                <th>Vencimiento</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% items.forEach((item, i) => { %>
+              <tr>
+                <td style="text-align:center;">
+                  <input type="checkbox" name="aplicar" value="<%= i %>" checked
+                         style="accent-color:var(--azul);width:16px;height:16px;">
+                </td>
+                <td>
+                  <input type="text" name="producto[<%= i %>]" value="<%= item.nombre %>" required
+                         style="width:100%;min-width:160px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:7px 9px;font-size:0.82rem;">
+                </td>
+                <td>
+                  <input type="number" name="cantidad[<%= i %>]" value="<%= item.cantidad %>" step="0.01" min="0"
+                         style="width:80px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:7px 9px;font-size:0.82rem;">
+                </td>
+                <td>
+                  <select name="unidad[<%= i %>]" style="background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:7px 9px;font-size:0.82rem;">
+                    <% ['kg','g','unidad','paquete','caja','bolsa'].forEach(u => { %>
+                      <option value="<%= u %>" <%= item.unidad === u ? 'selected' : '' %>><%= u %></option>
+                    <% }) %>
+                  </select>
+                </td>
+                <td>
+                  <input type="text" name="proveedor[<%= i %>]" value="<%= item.proveedor || '' %>"
+                         style="width:100%;min-width:130px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:7px 9px;font-size:0.82rem;">
+                </td>
+                <td>
+                  <input type="date" name="fecha_vencimiento[<%= i %>]" value="<%= item.fecha_vencimiento %>" required
+                         style="background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:7px 9px;font-size:0.82rem;">
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:20px;display:flex;gap:12px;">
+          <button type="submit" class="btn-primary"><i class="ti ti-check"></i> Cargar lotes tildados</button>
+          <a href="/croutons" class="btn-secondary">Descartar todo</a>
+        </div>
+      </form>
+    <% } %>
+  </main>
+</div>
+</body>
+</html>

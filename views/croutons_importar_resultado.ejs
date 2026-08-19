@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Importación de croutons — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: 'croutons' }) %>
+
+  <main class="main-content">
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Croutons</p>
+        <h1 class="seccion-titulo">Resultado de la importación</h1>
+      </div>
+      <a href="/croutons" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver a Croutons</a>
+    </div>
+
+    <% if (!resumen) { %>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;color:#dc2626;">
+        No hay ninguna importación reciente para mostrar. <a href="/croutons">Volver a Croutons</a>.
+      </div>
+    <% } else { %>
+
+      <p style="font-size:0.85rem;color:var(--gris-texto);margin-bottom:20px;">
+        <%= resumen.totalProcesados %> fila(s) procesadas del archivo.
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;">
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:#16a34a;margin:0;"><%= resumen.cargados %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#166534;margin:4px 0 0;">Lotes cargados</p>
+        </div>
+        <% if (resumen.sinProducto > 0) { %>
+        <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:#92400e;margin:0;"><%= resumen.sinProducto %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#92400e;margin:4px 0 0;">Sin nombre de producto</p>
+        </div>
+        <% } %>
+        <% if (resumen.sinVencimiento > 0) { %>
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:#dc2626;margin:0;"><%= resumen.sinVencimiento %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#dc2626;margin:4px 0 0;">Sin fecha de vencimiento válida</p>
+        </div>
+        <% } %>
+      </div>
+
+      <% if (resumen.sinVencimiento > 0) { %>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:0.8rem;color:#dc2626;display:flex;align-items:center;gap:8px;">
+        <i class="ti ti-alert-circle"></i>
+        <%= resumen.sinVencimiento %> fila<%= resumen.sinVencimiento !== 1 ? 's' : '' %> no tenía<%= resumen.sinVencimiento !== 1 ? 'n' : '' %> una fecha de vencimiento reconocible (formato esperado: AAAA-MM-DD o DD/MM/AAAA) — no se cargaron esos lotes. Revisá el archivo o cargalos a mano.
+      </div>
+      <% } %>
+
+    <% } %>
+  </main>
+</div>
+</body>
+</html>

@@ -56,8 +56,8 @@ app.use('/horarios', require('./src/routes/horarios'));
 app.use('/costos',   require('./src/routes/costos'));
 app.use('/compras',  require('./src/routes/compras'));   // ← NUEVO
 app.use('/finanzas', require('./src/routes/finanzas'));  // ← NUEVO
+app.use('/croutons', require('./src/routes/croutons'));  // ← NUEVO — AYB: carga de mercadería y vencimientos
 app.use('/asistente', require('./src/routes/asistente'));
-app.use('/inventario', require('./src/routes/inventario'));
 
 // Mostrar IPs de acceso
 function getIPs() {

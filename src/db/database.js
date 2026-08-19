@@ -177,6 +177,33 @@ const init = async () => {
     )
   `);
 
+  // Alimentos y Bebidas — Croutons: cada fila es un LOTE (una entrada de
+  // mercadería), no un producto único. Así, si llega una entrega nueva de
+  // croutons mientras todavía queda stock viejo, conviven dos filas con
+  // vencimientos distintos, en vez de pisar la fecha del lote anterior.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS croutons_lotes (
+      id SERIAL PRIMARY KEY,
+      producto TEXT NOT NULL,
+      cantidad REAL DEFAULT 0,
+      unidad TEXT DEFAULT 'kg',
+      proveedor TEXT,
+      lote_proveedor TEXT,
+      fecha_ingreso DATE DEFAULT CURRENT_DATE,
+      fecha_vencimiento DATE NOT NULL,
+      notas TEXT,
+      estado TEXT DEFAULT 'activo',
+      creado_por INTEGER REFERENCES usuarios(id),
+      creado_en TIMESTAMP DEFAULT NOW(),
+      actualizado_en TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_croutons_lotes_vencimiento
+    ON croutons_lotes (fecha_vencimiento)
+    WHERE estado = 'activo'
+  `);
+
   // Admin por defecto
   const admin = await db.get2(
     "SELECT id FROM usuarios WHERE email = $1", ['admin@hilton.com']

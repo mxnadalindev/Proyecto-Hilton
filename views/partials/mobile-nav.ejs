@@ -10,6 +10,9 @@
     <a href="/recetas"  class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'recetas')  ? 'activo' : '' %>"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
     <a href="/costos"   class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'costos')   ? 'activo' : '' %>"><i class="ti ti-coin"></i><span>Costos</span></a>
   <% } %>
+  <% if (_dm === 'ayb' || _rm === 'admin') { %>
+    <a href="/croutons" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>"><i class="ti ti-package"></i><span>Croutons</span></a>
+  <% } %>
   <% if (_dm === 'compras' || _rm === 'admin') { %>
     <a href="/compras"  class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'compras')  ? 'activo' : '' %>"><i class="ti ti-shopping-cart"></i><span>Compras</span></a>
   <% } %>
