@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Croutons — Hilton</title>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Vencimientos A&B — Hilton</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
 <div class="app-layout">
@@ -16,7 +17,7 @@
     <div class="seccion-header">
       <div class="seccion-header-left">
         <p class="seccion-label">Alimentos y Bebidas</p>
-        <h1 class="seccion-titulo">Croutons</h1>
+        <h1 class="seccion-titulo">Vencimientos</h1>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
@@ -86,7 +87,7 @@
     <% if (lotes.length === 0) { %>
       <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:32px;text-align:center;color:var(--gris-texto);">
         <i class="ti ti-package-off" style="font-size:32px;display:block;margin-bottom:10px;"></i>
-        Todavía no hay ningún lote de croutons cargado. Usá "Cargar lote a mano" o subí una foto del remito.
+        Todavía no hay ningún lote cargado. Usá "Cargar lote a mano", escaneá un código de barras, o subí una foto del remito.
       </div>
     <% } else { %>
     <div class="tabla-wrap">
@@ -123,12 +124,15 @@
               <% if (l.lote_proveedor) { %><span style="display:block;font-size:0.68rem;color:var(--gris-texto);">Lote: <%= l.lote_proveedor %></span><% } %>
             </td>
             <td style="font-size:0.82rem;">
-              <form method="POST" action="/croutons/lote/<%= l.id %>/cantidad" style="display:flex;gap:4px;align-items:center;">
-                <input type="number" name="cantidad" value="<%= l.cantidad %>" step="0.01" min="0"
-                       style="width:70px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:5px 7px;font-size:0.8rem;">
+              <form method="POST" action="/croutons/lote/<%= l.id %>/cantidad" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+                <input type="number" name="cantidad" value="<%= l.cantidad %>" step="1" min="0"
+                       style="width:55px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:5px 7px;font-size:0.8rem;">
                 <span style="color:var(--gris-texto);"><%= l.unidad %></span>
                 <button type="submit" class="btn-icono" title="Guardar cantidad"><i class="ti ti-device-floppy"></i></button>
               </form>
+              <% if (l.peso) { %>
+                <span style="display:block;font-size:0.68rem;color:var(--gris-texto);margin-top:2px;"><%= parseFloat(l.peso) %> <%= l.unidad_peso || 'kg' %></span>
+              <% } %>
             </td>
             <td style="font-size:0.8rem;color:var(--gris-texto);"><%= l.proveedor || '—' %></td>
             <td style="font-size:0.8rem;color:var(--gris-texto);"><%= new Date(l.fecha_ingreso).toLocaleDateString('es-AR') %></td>
@@ -160,33 +164,73 @@
 
 <!-- Modal nuevo lote -->
 <div id="modal-lote" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:92vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Cargar lote de croutons</h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Cargar lote</h2>
       <button onclick="hideModal('modal-lote')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
+
+    <!-- Escáner de código de barras -->
+    <div id="bloque-escaner" style="margin-bottom:18px;">
+      <button type="button" id="btn-abrir-escaner" onclick="abrirEscaner()" class="btn-secondary" style="width:100%;justify-content:center;">
+        <i class="ti ti-barcode"></i> Escanear código de barras
+      </button>
+      <div id="escaner-visor" style="display:none;margin-top:10px;border-radius:10px;overflow:hidden;border:1px solid var(--gris-borde);"></div>
+      <div id="escaner-estado" style="display:none;margin-top:8px;font-size:0.78rem;padding:8px 12px;border-radius:8px;"></div>
+      <button type="button" id="btn-cerrar-escaner" onclick="cerrarEscaner()" style="display:none;margin-top:8px;width:100%;background:none;border:1px solid var(--gris-borde);border-radius:8px;padding:8px;font-size:0.75rem;color:var(--gris-texto);cursor:pointer;">
+        Cancelar escaneo
+      </button>
+    </div>
+
     <form method="POST" action="/croutons/lote/nuevo">
+      <div class="field" style="margin-bottom:14px;">
+        <label>Código de barras</label>
+        <input type="text" name="codigo_barras" id="input-codigo-barras" placeholder="Se completa solo al escanear, o escribilo a mano">
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="field" style="grid-column:1/-1;">
           <label>Producto</label>
-          <input type="text" name="producto" placeholder="Ej: Croutons clásicos" required>
+          <input type="text" name="producto" id="input-producto" placeholder="Ej: Croutons clásicos, Aceitunas verdes..." required>
+        </div>
+        <div class="field" style="grid-column:1/-1;background:var(--gris-fondo);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label>Cantidad de bultos</label>
+            <input type="number" name="cantidad" placeholder="Ej: 3" step="1" min="0">
+          </div>
+          <div>
+            <label>Empaque</label>
+            <select name="unidad" id="input-unidad" style="width:100%;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
+              <option value="unidad">unidad suelta</option>
+              <option value="paquete">paquete</option>
+              <option value="caja">caja</option>
+              <option value="bolsa">bolsa</option>
+            </select>
+          </div>
+          <p style="font-size:0.66rem;color:var(--gris-texto);margin:0;grid-column:1/-1;">Ej: 3 + "caja" = entraron 3 cajas del producto</p>
+        </div>
+
+        <div class="field" style="grid-column:1/-1;background:var(--gris-fondo);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label>Peso o volumen (opcional)</label>
+            <input type="number" name="peso" id="input-peso" placeholder="Ej: 5" step="0.01" min="0">
+          </div>
+          <div>
+            <label>Unidad</label>
+            <select name="unidad_peso" id="input-unidad-peso" style="width:100%;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
+              <option value="kg">kg</option>
+              <option value="g">g</option>
+              <option value="lt">lt</option>
+              <option value="ml">ml</option>
+            </select>
+          </div>
+          <p style="font-size:0.66rem;color:var(--gris-texto);margin:0;grid-column:1/-1;">Ej: 5 + "kg" = cada bulto (o el total) pesa 5 kg — dejalo vacío si no aplica</p>
+        </div>
+
+        <div class="field">
+          <label>Fecha de ingreso</label>
+          <input type="date" name="fecha_ingreso" value="<%= new Date().toISOString().split('T')[0] %>" required>
         </div>
         <div class="field">
-          <label>Cantidad</label>
-          <input type="number" name="cantidad" placeholder="Ej: 5" step="0.01" min="0">
-        </div>
-        <div class="field">
-          <label>Unidad</label>
-          <select name="unidad" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
-            <option value="kg">kg</option>
-            <option value="g">g</option>
-            <option value="unidad">unidad</option>
-            <option value="paquete">paquete</option>
-            <option value="caja">caja</option>
-            <option value="bolsa">bolsa</option>
-          </select>
-        </div>
-        <div class="field" style="grid-column:1/-1;">
           <label>Fecha de vencimiento</label>
           <input type="date" name="fecha_vencimiento" required>
         </div>
@@ -241,6 +285,28 @@
 .field label{font-size:0.72rem;font-weight:600;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.04em;}
 .field input{border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;background:var(--gris-fondo);}
 .field input:focus{border-color:var(--azul);background:var(--blanco);}
+#escaner-visor video { width: 100%; border-radius: 8px; display: block; }
+#btn-abrir-escaner, #btn-cerrar-escaner { min-height: 44px; }
+
+/* ── Tablet (iPad y similares): objetivos táctiles más grandes, sin depender de :hover ── */
+@media (min-width: 600px) and (max-width: 1180px), (pointer: coarse) {
+  .btn-primary, .btn-secondary, .btn-sm, button, .input-archivo {
+    min-height: 44px; /* mínimo táctil recomendado */
+  }
+  .field input, .field select {
+    min-height: 44px;
+    font-size: 16px; /* evita que Safari haga zoom automático al enfocar el campo */
+  }
+  #modal-lote > div {
+    max-width: 92vw;
+    padding: 24px;
+  }
+  .tarjeta-unificada-opciones {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .tabla-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
 </style>
 
 <script>
@@ -318,6 +384,116 @@ function prepararEnvioCroutons() {
   icon.className = 'ti ti-loader-2 girando';
   return true;
 }
+
+// ── Escáner de código de barras (cámara del dispositivo) ──
+// Usa html5-qrcode, que decodifica en el propio navegador (funciona en
+// Safari/iPad, a diferencia de la API nativa BarcodeDetector que Safari
+// todavía no soporta).
+let escanerActivo = null;
+
+function abrirEscaner() {
+  document.getElementById('btn-abrir-escaner').style.display = 'none';
+  document.getElementById('escaner-visor').style.display = 'block';
+  document.getElementById('btn-cerrar-escaner').style.display = 'block';
+  ocultarEstadoEscaner();
+
+  escanerActivo = new Html5Qrcode('escaner-visor');
+  const config = {
+    fps: 10,
+    qrbox: { width: 260, height: 140 }, // rectángulo horizontal, mejor para códigos de barras
+    formatsToSupport: [
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.QR_CODE,
+    ],
+  };
+
+  escanerActivo.start(
+    { facingMode: 'environment' }, // cámara trasera
+    config,
+    onCodigoDetectado,
+    () => {} // callback de "no detectó nada todavía en este frame" — se ignora, es constante
+  ).catch(err => {
+    mostrarEstadoEscaner('No se pudo abrir la cámara. Revisá los permisos del navegador/tablet.', 'error');
+    cerrarEscaner();
+    console.error('Error abriendo cámara:', err);
+  });
+}
+
+async function onCodigoDetectado(codigoDecodificado) {
+  // Frena el escaneo apenas detecta algo, para no seguir leyendo mientras procesamos
+  if (escanerActivo) {
+    try { await escanerActivo.stop(); } catch (e) {}
+  }
+
+  mostrarEstadoEscaner('Código detectado: ' + codigoDecodificado + ' — buscando...', 'info');
+  document.getElementById('input-codigo-barras').value = codigoDecodificado;
+
+  try {
+    const resp = await fetch('/croutons/productos/buscar?codigo=' + encodeURIComponent(codigoDecodificado));
+    const data = await resp.json();
+
+    if (data.encontrado) {
+      document.getElementById('input-producto').value = data.producto.nombre;
+      if (data.producto.unidad_default) {
+        document.getElementById('input-unidad').value = data.producto.unidad_default;
+      }
+      mostrarEstadoEscaner('✓ Producto reconocido: ' + data.producto.nombre, 'ok');
+    } else {
+      mostrarEstadoEscaner('Código nuevo — no está en el catálogo todavía. Escribí el nombre y se va a guardar para la próxima vez.', 'info');
+      document.getElementById('input-producto').focus();
+    }
+  } catch (e) {
+    mostrarEstadoEscaner('No se pudo consultar el catálogo, pero el código quedó cargado. Completá el nombre a mano.', 'error');
+  }
+
+  cerrarEscanerVisor();
+}
+
+function mostrarEstadoEscaner(texto, tipo) {
+  const el = document.getElementById('escaner-estado');
+  const colores = {
+    ok:    { bg: '#f0fdf4', border: '#bbf7d0', color: '#16a34a' },
+    info:  { bg: 'var(--azul-claro)', border: 'var(--azul-borde)', color: 'var(--azul)' },
+    error: { bg: '#fef2f2', border: '#fecaca', color: '#dc2626' },
+  }[tipo] || {};
+  el.style.display = 'block';
+  el.style.background = colores.bg;
+  el.style.border = '1px solid ' + colores.border;
+  el.style.color = colores.color;
+  el.textContent = texto;
+}
+
+function ocultarEstadoEscaner() {
+  const el = document.getElementById('escaner-estado');
+  el.style.display = 'none';
+  el.textContent = '';
+}
+
+// Cierra solo la cámara (el estado del resultado se queda visible)
+function cerrarEscanerVisor() {
+  document.getElementById('escaner-visor').style.display = 'none';
+  document.getElementById('btn-cerrar-escaner').style.display = 'none';
+  document.getElementById('btn-abrir-escaner').style.display = 'block';
+  document.getElementById('btn-abrir-escaner').innerHTML = '<i class="ti ti-barcode"></i> Escanear otro código';
+}
+
+// Cancela el escaneo del todo (botón "Cancelar escaneo")
+function cerrarEscaner() {
+  if (escanerActivo) {
+    escanerActivo.stop().catch(() => {}).finally(() => { escanerActivo = null; });
+  }
+  cerrarEscanerVisor();
+  ocultarEstadoEscaner();
+}
+
+// Si cierran el modal con la cámara abierta, la apagamos (no dejarla prendida de fondo)
+document.getElementById('modal-lote')?.addEventListener('click', (e) => {
+  if (e.target.id === 'modal-lote') cerrarEscaner();
+});
 </script>
 </body>
 </html>

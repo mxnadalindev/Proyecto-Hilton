@@ -1,4 +1,4 @@
-// bots/vencimientos_ayb.js
+﻿// bots/vencimientos_ayb.js
 // Revisa qué productos de Alimentos y Bebidas vencen en los próximos 15
 // días, arma un aviso con IA, y lo guarda en un archivo de texto. Pensado
 // para programarse con el Programador de tareas de Windows (corre solo).
@@ -10,7 +10,10 @@ const db = require('../src/db/database');
 const fs = require('fs');
 const path = require('path');
 
-const MODELO = 'gemini-2.5-flash';
+// Usamos el alias "gemini-flash-latest" en vez de una versión fija — Google va
+// dando de baja versiones puntuales con el tiempo, y el alias siempre apunta
+// al modelo Flash vigente.
+const MODELO = 'gemini-flash-latest';
 const URL_GEMINI = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent`;
 
 async function pedirResumenAGemini(listaTexto, cantidad) {
@@ -35,10 +38,10 @@ async function main() {
   console.log('=== Bot: vencimientos de Alimentos y Bebidas ===\n');
 
   const productos = await db.all2(`
-    SELECT nombre, categoria, fecha_vencimiento,
+    SELECT producto AS nombre, fecha_vencimiento,
            (fecha_vencimiento - CURRENT_DATE) AS dias_restantes
-    FROM inventario_ayb
-    WHERE fecha_vencimiento IS NOT NULL
+    FROM croutons_lotes
+    WHERE estado = 'activo'
       AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '15 days'
     ORDER BY fecha_vencimiento ASC
   `);
@@ -52,7 +55,7 @@ async function main() {
       .map(p => {
         const dias = parseInt(p.dias_restantes);
         const etiqueta = dias < 0 ? `VENCIDO hace ${Math.abs(dias)} días` : `vence en ${dias} días`;
-        return `- ${p.nombre} (${p.categoria || 'sin categoría'}) — ${etiqueta}`;
+        return `- ${p.nombre} — ${etiqueta}`;
       })
       .join('\n');
     console.log(`Encontrados ${productos.length} productos por vencer o vencidos. Pidiéndole el resumen a Gemini...`);
