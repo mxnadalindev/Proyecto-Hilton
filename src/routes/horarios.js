@@ -83,7 +83,10 @@ function esSupervisorOAdmin(req) {
 // se ve reflejado (la tabla de equipo armada con esto) vive en "Miembro de
 // equipo", no acá — así no queda todo mezclado en la misma pantalla.
 function renderMiCalendarioAyb(req, res) {
-  res.render('horarios_ayb', { path: 'horarios', usuario: req.session.usuario });
+  // esGestor (admin/supervisor de AYB) también decide, del lado del
+  // servidor, si se muestra el botón "Ver equipo" — un mozo común no debe
+  // ver la sección de Miembro de equipo (ni sus vencimientos).
+  res.render('horarios_ayb', { path: 'horarios', usuario: req.session.usuario, esGestor: puedeGestionarEventosAyb(req) });
 }
 
 // ── Eventos AYB: el encargado carga eventos (nombre, horario, cupo de

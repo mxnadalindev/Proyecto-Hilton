@@ -5,15 +5,26 @@
   <a href="/inicio" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'inicio') ? 'activo' : '' %>">
     <i class="ti ti-home"></i><span>Inicio</span>
   </a>
-  <% if (_dm === 'cocina' || _dm === 'ayb' || _rm === 'admin') { %>
+  <% // Cocina (o admin general, que ve todo esto salvo que sea de otro
+     // depto) tiene su propio set de módulos; AYB tiene el suyo, separado,
+     // porque no comparte rutas como Eventos/Recetas/Costos con Cocina. %>
+  <% if (_dm === 'cocina' || (_rm === 'admin' && _dm !== 'ayb' && _dm !== 'compras' && _dm !== 'finanzas')) { %>
     <a href="/eventos"  class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'eventos')  ? 'activo' : '' %>"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
     <a href="/personal" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'personal') ? 'activo' : '' %>"><i class="ti ti-users"></i><span>Miembro de equipo</span></a>
     <a href="/horarios" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>"><i class="ti ti-clock"></i><span>Horarios</span></a>
     <a href="/recetas"  class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'recetas')  ? 'activo' : '' %>"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
     <a href="/costos"   class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'costos')   ? 'activo' : '' %>"><i class="ti ti-coin"></i><span>Costos</span></a>
   <% } %>
-  <% if (_dm === 'ayb' || _rm === 'admin') { %>
+  <% if (_dm === 'ayb') { %>
+    <% // Miembro de equipo y Croutons son solo para quien gestiona AYB
+       // (admin/supervisor) — un mozo común solo entra a Horarios. %>
+    <% if (_rm === 'admin' || _rm === 'supervisor') { %>
+    <a href="/personal" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'personal') ? 'activo' : '' %>"><i class="ti ti-users"></i><span>Miembro de equipo</span></a>
+    <% } %>
+    <a href="/horarios" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>"><i class="ti ti-clock"></i><span>Horarios</span></a>
+    <% if (_rm === 'admin' || _rm === 'supervisor') { %>
     <a href="/croutons" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>"><i class="ti ti-package"></i><span>Croutons</span></a>
+    <% } %>
   <% } %>
   <% if (_dm === 'compras' || _rm === 'admin') { %>
     <a href="/compras"  class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'compras')  ? 'activo' : '' %>"><i class="ti ti-shopping-cart"></i><span>Compras</span></a>

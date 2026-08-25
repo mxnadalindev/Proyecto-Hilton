@@ -27,15 +27,21 @@
       </a>
     <% } %>
     <% if (_d === 'ayb') { %>
+      <% // Miembro de equipo y Croutons son solo para quien gestiona AYB
+         // (admin/supervisor) — un mozo común solo entra a Horarios. %>
+      <% if (_r === 'admin' || _r === 'supervisor') { %>
       <a href="/personal" class="nav-item <%= (typeof path !== 'undefined' && path === 'personal') ? 'activo' : '' %>" title="Miembro de equipo">
         <i class="ti ti-users" aria-hidden="true"></i><span class="nav-label">Miembro de equipo</span>
       </a>
+      <% } %>
       <a href="/horarios" class="nav-item <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>" title="Horarios">
         <i class="ti ti-clock" aria-hidden="true"></i><span class="nav-label">Horarios</span>
       </a>
+      <% if (_r === 'admin' || _r === 'supervisor') { %>
       <a href="/croutons" class="nav-item <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>" title="Croutons">
         <i class="ti ti-package" aria-hidden="true"></i><span class="nav-label">Croutons</span>
       </a>
+      <% } %>
     <% } %>
     <% if (_r === 'admin') { %>
       <a href="/configuracion" class="nav-item <%= (typeof path !== 'undefined' && path === 'configuracion') ? 'activo' : '' %>" title="Configuración">

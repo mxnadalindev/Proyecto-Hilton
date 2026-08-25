@@ -5,6 +5,17 @@ const { loginRequerido, requiereDepartamento } = require('./middleware');
 const multer = require('multer');
 const path = require('path');
 router.use(loginRequerido, requiereDepartamento('/croutons'));
+// Croutons (vencimientos de mercadería) es solo para quien gestiona AYB
+// (admin/supervisor) — un mozo común solo debe poder entrar a Horarios,
+// nada más de A&B (mismo criterio que "Miembro de equipo" en personal.js).
+router.use((req, res, next) => {
+  const departamento = (req.session.usuario.departamento || '').toLowerCase();
+  const rol = (req.session.usuario.rol || '').toLowerCase();
+  if (departamento === 'ayb' && rol !== 'admin' && rol !== 'supervisor') {
+    return res.redirect('/horarios');
+  }
+  next();
+});
 const { analizarRemitoCroutons, mensajeErrorGemini } = require('../services/gemini');
 const { parsearCsvCroutons, importarLotesCroutons } = require('../services/importadorCroutons');
 

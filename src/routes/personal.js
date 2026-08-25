@@ -126,6 +126,16 @@ function getDiasRango(inicioStr, finStr) {
 
 // ── GET / ──────────────────────────────────────────────
 router.get('/', loginRequerido, async (req, res) => {
+  // "Miembro de equipo" (con Vencimientos) es solo para quien gestiona AYB
+  // (admin/supervisor) — un mozo común no debe entrar, ni siquiera
+  // escribiendo la URL directamente (el link ya está oculto para él, esto
+  // es el mismo chequeo del lado del servidor).
+  const miDeptoLower = (req.session.usuario.departamento || '').toLowerCase();
+  const miRolLower = (req.session.usuario.rol || '').toLowerCase();
+  if (miDeptoLower === 'ayb' && miRolLower !== 'admin' && miRolLower !== 'supervisor') {
+    return res.redirect('/horarios');
+  }
+
   const hoy = new Date().toISOString().split('T')[0];
 
   // Compatibilidad: si todavía llega ?semana=..., lo tratamos como el inicio

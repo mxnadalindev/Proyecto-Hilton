@@ -19,7 +19,11 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <button type="button" onclick="abrirMisCompromisos()" class="btn-secondary"><i class="ti ti-calendar-event"></i> Mi agenda</button>
+        <% // "Miembro de equipo" (con Vencimientos) es solo para quien gestiona
+           // AYB (admin/supervisor) — un mozo común no debe verlo. %>
+        <% if (esGestor) { %>
         <a href="/personal" class="btn-secondary"><i class="ti ti-users"></i> Ver equipo</a>
+        <% } %>
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
       </div>
     </div>
@@ -91,17 +95,15 @@
           <span id="c-cant-sel">0</span> día<span id="c-plural-sel">s</span>
         </p>
 
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
-          <div class="field" style="flex:1;min-width:120px;">
-            <label style="display:block;font-size:0.72rem;font-weight:500;color:var(--negro);margin-bottom:6px;">Desde</label>
-            <input type="time" id="c-hora-desde" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:11px 12px;font-family:var(--font-sans);font-size:0.95rem;color:var(--negro);outline:none;">
+        <div id="dias-lista-wrap" style="display:none;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <p style="font-size:0.68rem;color:var(--gris-texto);margin:0;">Un horario por cada día — no hace falta que sean todos iguales.</p>
+            <button type="button" onclick="copiarPrimerHorarioATodos()" style="background:none;border:none;color:var(--azul);text-decoration:underline;cursor:pointer;font-size:0.68rem;white-space:nowrap;">Copiar el 1° a todos</button>
           </div>
-          <div class="field" style="flex:1;min-width:120px;">
-            <label style="display:block;font-size:0.72rem;font-weight:500;color:var(--negro);margin-bottom:6px;">Hasta (opcional)</label>
-            <input type="time" id="c-hora-hasta" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:11px 12px;font-family:var(--font-sans);font-size:0.95rem;color:var(--negro);outline:none;">
-          </div>
+          <div id="dias-lista" style="display:flex;flex-direction:column;gap:10px;max-height:280px;overflow-y:auto;padding-right:4px;"></div>
+          <p style="font-size:0.72rem;color:var(--gris-texto);margin:10px 0 0;">Si dejás "Hasta" vacío, queda como "disponible desde esa hora, sin límite". Para "Marcar no disponible" el horario no hace falta.</p>
         </div>
-        <p style="font-size:0.72rem;color:var(--gris-texto);margin:0 0 22px;">Si dejás "Hasta" vacío, queda como "disponible desde esa hora, sin límite".</p>
+        <div id="dias-lista-vacio" style="font-size:0.8rem;color:var(--gris-texto);font-style:italic;margin-bottom:16px;">Tildá días en el calendario para cargarles horario.</div>
 
         <div style="display:flex;flex-direction:column;gap:10px;">
           <button type="button" onclick="confirmarSeleccion('disponible')" class="btn-primary" style="width:100%;padding:13px;font-size:0.85rem;">
@@ -291,15 +293,61 @@ function renderGridGestor() {
   document.getElementById('c-grid').innerHTML = html;
 }
 
+// Horarios cargados por día en el panel de la derecha, independientes
+// entre sí: { 'YYYY-MM-DD': { desde, hasta } }. Así cada día puede tener
+// un horario distinto — antes había un solo Desde/Hasta que se aplicaba
+// igual a todos los días tildados.
+let horariosPorDia = {};
+
 function toggleDia(fechaStr) {
-  if (seleccionados.has(fechaStr)) seleccionados.delete(fechaStr);
-  else seleccionados.add(fechaStr);
+  if (seleccionados.has(fechaStr)) {
+    seleccionados.delete(fechaStr);
+    delete horariosPorDia[fechaStr];
+  } else {
+    seleccionados.add(fechaStr);
+    // Si el día ya tenía disponibilidad cargada, arrancamos con esos
+    // valores precargados (para editarlos), si no, vacío.
+    const info = dispMapa[fechaStr];
+    horariosPorDia[fechaStr] = {
+      desde: (info && info.disponible) ? (info.hora_desde || '') : '',
+      hasta: (info && info.disponible) ? (info.hora_hasta || '') : '',
+    };
+  }
   renderGrid();
+  renderDiasLista();
 }
 
 function limpiarSeleccion() {
   seleccionados.clear();
+  horariosPorDia = {};
   renderGrid();
+  renderDiasLista();
+}
+
+// Dibuja, en el panel de la derecha, una fila editable (Desde/Hasta) por
+// cada día tildado en el calendario, ordenadas por fecha.
+function renderDiasLista() {
+  const dias = [...seleccionados].sort();
+  document.getElementById('dias-lista-wrap').style.display = dias.length ? 'block' : 'none';
+  document.getElementById('dias-lista-vacio').style.display = dias.length ? 'none' : 'block';
+  document.getElementById('dias-lista').innerHTML = dias.map(fecha => {
+    const h = horariosPorDia[fecha] || { desde: '', hasta: '' };
+    return `
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:0.75rem;font-weight:600;color:var(--negro);min-width:44px;">${fmtFechaCorta(fecha)}</span>
+        <input type="time" value="${h.desde}" onchange="horariosPorDia['${fecha}'].desde=this.value" style="flex:1;min-width:0;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:8px 10px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+        <input type="time" value="${h.hasta}" onchange="horariosPorDia['${fecha}'].hasta=this.value" style="flex:1;min-width:0;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:8px 10px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+        <button type="button" onclick="toggleDia('${fecha}');renderGrid();" title="Sacar este día" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;padding:2px 4px;">&times;</button>
+      </div>`;
+  }).join('');
+}
+
+function copiarPrimerHorarioATodos() {
+  const dias = [...seleccionados].sort();
+  if (dias.length < 2) return;
+  const primero = horariosPorDia[dias[0]];
+  dias.slice(1).forEach(f => { horariosPorDia[f] = { desde: primero.desde, hasta: primero.hasta }; });
+  renderDiasLista();
 }
 
 function cMes(dir) {
@@ -310,24 +358,34 @@ function cMes(dir) {
 
 async function confirmarSeleccion(estado) {
   if (seleccionados.size === 0) { alert('Elegí al menos un día en el calendario.'); return; }
-  const horaDesde = document.getElementById('c-hora-desde').value;
-  const horaHasta = document.getElementById('c-hora-hasta').value;
-  if (estado === 'disponible' && !horaDesde) { alert('Poné desde qué hora estás disponible.'); return; }
 
   const dias = [...seleccionados];
+  // Para "disponible" cada día lleva su propio horario (pueden ser
+  // distintos entre sí); para "no disponible" el horario no se usa.
+  if (estado === 'disponible') {
+    const sinHorario = dias.filter(f => !(horariosPorDia[f] && horariosPorDia[f].desde));
+    if (sinHorario.length) {
+      alert(`Falta el horario "Desde" de: ${sinHorario.map(fmtFechaCorta).join(', ')}.`);
+      return;
+    }
+  }
+
   let errores = 0;
   for (const fecha of dias) {
+    const h = horariosPorDia[fecha] || { desde: '', hasta: '' };
     try {
       const resp = await fetch(`/personal/${uid}/disponibilidad`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `fecha=${fecha}&estado=${estado}&hora_desde=${encodeURIComponent(horaDesde)}&hora_hasta=${encodeURIComponent(horaHasta)}`
+        body: `fecha=${fecha}&estado=${estado}&hora_desde=${encodeURIComponent(h.desde)}&hora_hasta=${encodeURIComponent(h.hasta)}`
       });
       const data = await resp.json();
       if (!data.ok) errores++;
     } catch (e) { errores++; }
   }
   seleccionados.clear();
+  horariosPorDia = {};
+  renderDiasLista();
   await cargarMes();
   if (errores > 0) alert(`Se guardaron ${dias.length - errores} de ${dias.length} días. Hubo un error con el resto.`);
 }
@@ -695,6 +753,7 @@ async function eliminarEvento(id) {
 
 cargarMes();
 cargarEventos();
+renderDiasLista();
 </script>
 </body>
 </html>
