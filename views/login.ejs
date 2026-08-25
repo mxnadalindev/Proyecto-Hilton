@@ -226,10 +226,17 @@
           </div>
         </div>
         <div class="field">
-          <div class="field-label"><span>Correo electrónico corporativo</span></div>
+          <div class="field-label"><span>Correo electrónico corporativo</span><small>Opcional para Alimentos y Bebidas</small></div>
           <div class="input-wrap">
             <i class="ti ti-mail input-icon"></i>
-            <input type="email" name="email" placeholder="tu.nombre@hilton.com" required>
+            <input type="email" name="email" placeholder="tu.nombre@hilton.com">
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label"><span>CUIL</span><small>Solo si sos de Alimentos y Bebidas</small></div>
+          <div class="input-wrap">
+            <i class="ti ti-id input-icon"></i>
+            <input type="text" name="cuil" placeholder="20432824927">
           </div>
         </div>
         <div class="field">
@@ -251,13 +258,12 @@
           </div>
         </div>
         <div class="field">
-          <div class="field-label"><span>Departamento</span></div>
+          <div class="field-label"><span>Departamento</span><small>No hace falta si activás cuenta con CUIL</small></div>
           <div class="input-wrap">
             <i class="ti ti-building input-icon"></i>
-            <select name="departamento" required>
+            <select name="departamento">
               <option value="">Seleccioná tu área...</option>
               <option value="cocina">Cocina</option>
-              <option value="ayb">Alimentos y Bebidas</option>
               <option value="compras">Compras</option>
               <option value="finanzas">Finanzas</option>
             </select>

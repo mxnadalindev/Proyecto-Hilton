@@ -1,11 +1,11 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 const { loginRequerido, requiereDepartamento } = require('./middleware');
 const multer = require('multer');
 const path = require('path');
 router.use(loginRequerido, requiereDepartamento('/croutons'));
-const { analizarRemitoCroutons } = require('../services/gemini');
+const { analizarRemitoCroutons, mensajeErrorGemini } = require('../services/gemini');
 const { parsearCsvCroutons, importarLotesCroutons } = require('../services/importadorCroutons');
 
 const storageRemito = multer.diskStorage({
@@ -49,63 +49,29 @@ router.get('/', async (req, res) => {
   });
 });
 
-// ── Catálogo de productos (para el lector de código de barras) ────
-// Busca un producto por su código de barras — el frontend la llama justo
-// después de decodificar el código con la cámara, para autocompletar.
-router.get('/productos/buscar', async (req, res) => {
-  const codigo = (req.query.codigo || '').trim();
-  if (!codigo) return res.json({ encontrado: false });
-  try {
-    const producto = await db.get2('SELECT * FROM productos_ayb WHERE codigo_barras = $1', [codigo]);
-    if (producto) return res.json({ encontrado: true, producto });
-    res.json({ encontrado: false, codigo });
-  } catch (e) {
-    console.error('Error buscando producto por código:', e.message);
-    res.json({ encontrado: false, error: e.message });
-  }
-});
-
 // ── Alta manual de un lote ────────────────────────────────────────
 router.post('/lote/nuevo', async (req, res) => {
   const producto = (req.body.producto || '').trim();
   const fechaVencimiento = (req.body.fecha_vencimiento || '').trim();
-  const fechaIngreso = (req.body.fecha_ingreso || '').trim();
-  const codigoBarras = (req.body.codigo_barras || '').trim();
 
   if (!producto) return res.redirect('/croutons?msg=' + encodeURIComponent('Falta el nombre del producto.'));
   if (!fechaVencimiento) return res.redirect('/croutons?msg=' + encodeURIComponent('Falta la fecha de vencimiento.'));
 
   try {
     await db.run2(
-      `INSERT INTO croutons_lotes (producto, cantidad, unidad, peso, unidad_peso, proveedor, lote_proveedor, fecha_ingreso, fecha_vencimiento, notas, creado_por)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+      `INSERT INTO croutons_lotes (producto, cantidad, unidad, proveedor, lote_proveedor, fecha_vencimiento, notas, creado_por)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
       [
         producto,
         parseFloat(req.body.cantidad) || 0,
-        (req.body.unidad || 'unidad').trim(),
-        req.body.peso ? parseFloat(req.body.peso) : null,
-        (req.body.unidad_peso || 'kg').trim(),
+        (req.body.unidad || 'kg').trim(),
         (req.body.proveedor || '').trim(),
         (req.body.lote_proveedor || '').trim(),
-        fechaIngreso || new Date().toISOString().split('T')[0], // si no viene, hoy (mismo comportamiento de antes)
         fechaVencimiento,
         (req.body.notas || '').trim(),
         req.session.usuario.id,
       ]
     );
-
-    // Si vino de un escaneo con código de barras y ese código todavía no
-    // está en el catálogo, lo guardamos — así la próxima vez que se escanee
-    // el mismo producto, se autocompleta solo.
-    if (codigoBarras) {
-      await db.run2(
-        `INSERT INTO productos_ayb (codigo_barras, nombre, unidad_default)
-         VALUES ($1,$2,$3)
-         ON CONFLICT (codigo_barras) DO NOTHING`,
-        [codigoBarras, producto, (req.body.unidad || 'unidad').trim()]
-      );
-    }
-
     res.redirect('/croutons?msg=' + encodeURIComponent('Lote de croutons agregado.'));
   } catch (e) {
     console.error('Error agregando lote de croutons:', e.message);
@@ -170,8 +136,8 @@ router.post('/remito', uploadRemito.single('remito'), async (req, res) => {
     req.session.croutonsRemitoPendiente = items;
     res.redirect('/croutons/remito/revisar');
   } catch (e) {
-    console.error('Error analizando remito de croutons con Gemini:', e.message);
-    res.redirect('/croutons?msg=' + encodeURIComponent('Error analizando la imagen: ' + e.message));
+    console.error('Error analizando remito de croutons con Gemini:', e.message, e.cause || '');
+    res.redirect('/croutons?msg=' + encodeURIComponent(mensajeErrorGemini(e)));
   }
 });
 

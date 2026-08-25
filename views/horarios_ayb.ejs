@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horarios — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: 'horarios' }) %>
+
+  <main class="main-content">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Portal interno</p>
+        <h1 class="seccion-titulo" id="ayb-titulo">Mi disponibilidad</h1>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button type="button" onclick="abrirMisCompromisos()" class="btn-secondary"><i class="ti ti-calendar-event"></i> Mi agenda</button>
+        <a href="/personal" class="btn-secondary"><i class="ti ti-users"></i> Ver equipo</a>
+        <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+      </div>
+    </div>
+
+    <!-- Modal: anotados de un evento / marcar asistencia -->
+    <div id="modal-inscriptos" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+      <div style="background:var(--blanco);border-radius:16px;padding:28px;width:min(460px,92vw);max-height:80vh;display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <h2 id="ins-titulo" style="font-size:1.1rem;font-weight:600;color:var(--negro);">Anotados</h2>
+          <button type="button" onclick="hideModal('modal-inscriptos')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--gris-texto);">&times;</button>
+        </div>
+        <p style="font-size:0.78rem;color:var(--gris-texto);margin-bottom:14px;">Marcá quién vino realmente a trabajar el día del evento.</p>
+        <div id="ins-lista" style="overflow-y:auto;flex:1;"></div>
+      </div>
+    </div>
+
+    <!-- Modal: Mis próximos compromisos -->
+    <div id="modal-mis-compromisos" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+      <div style="background:var(--blanco);border-radius:16px;padding:28px;width:min(480px,92vw);max-height:80vh;display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <h2 style="font-size:1.1rem;font-weight:600;color:var(--negro);">Mis próximos compromisos</h2>
+          <button type="button" onclick="hideModal('modal-mis-compromisos')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--gris-texto);">&times;</button>
+        </div>
+        <p style="font-size:0.78rem;color:var(--gris-texto);margin-bottom:14px;">Eventos en los que estás anotado y días que marcaste como disponible, de hoy en adelante.</p>
+        <div id="mc-lista" style="overflow-y:auto;flex:1;"></div>
+      </div>
+    </div>
+
+    <div id="ayb-info-mozo" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#1d4ed8;display:flex;align-items:center;gap:8px;">
+      <i class="ti ti-info-circle"></i> Tildá los días que podés trabajar (podés elegir varios de una vez), poné el horario y confirmá. Se refleja en "Miembro de equipo" para que el sector organice.
+    </div>
+    <div id="ayb-info-gestor" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#1d4ed8;align-items:center;gap:8px;display:none;">
+      <i class="ti ti-info-circle"></i> Los días con eventos muestran cuántos mozos ya están anotados. Tocá cualquier día para cargar un evento nuevo en esa fecha.
+    </div>
+
+    <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:28px;box-shadow:var(--sombra);display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap;">
+
+      <!-- Calendario -->
+      <div style="min-width:360px;flex:1.1;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <button onclick="cMes(-1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:18px;">&#8249;</button>
+          <span id="c-titulo" style="font-size:1.15rem;font-weight:600;color:var(--negro);"></span>
+          <button onclick="cMes(1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:18px;">&#8250;</button>
+        </div>
+        <div id="c-nombres" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;margin-bottom:6px;"></div>
+        <div id="c-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;"></div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:20px;">
+          <div id="c-leyenda-mozo" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:0.68rem;font-weight:700;background:#22c55e;border:1px solid #22c55e;color:#fff;padding:4px 12px;border-radius:20px;">Disponible</span>
+            <span style="font-size:0.68rem;font-weight:700;background:#dc2626;border:1px solid #dc2626;color:#fff;padding:4px 12px;border-radius:20px;">No disponible</span>
+            <span style="font-size:0.68rem;font-weight:700;background:var(--gris-fondo);border:1px solid var(--gris-borde);color:var(--gris-texto);padding:4px 12px;border-radius:20px;">Sin cargar</span>
+            <span style="font-size:0.68rem;font-weight:700;background:var(--azul);border:1px solid var(--azul);color:#fff;padding:4px 12px;border-radius:20px;">Seleccionado</span>
+          </div>
+          <div id="c-leyenda-gestor" style="display:none;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:0.68rem;font-weight:700;background:var(--azul-claro);border:1px solid var(--azul);color:var(--azul);padding:4px 12px;border-radius:20px;">Con eventos</span>
+            <span style="font-size:0.68rem;font-weight:700;background:var(--gris-fondo);border:1px solid var(--gris-borde);color:var(--gris-texto);padding:4px 12px;border-radius:20px;">Sin eventos</span>
+          </div>
+          <button type="button" id="ev-btn-nuevo" onclick="abrirCargarEvento()" class="btn-primary" style="display:none;padding:7px 14px;font-size:0.75rem;white-space:nowrap;">
+            <i class="ti ti-plus"></i> Cargar evento
+          </button>
+        </div>
+      </div>
+
+      <!-- Formulario -->
+      <div id="ayb-form-mozo" style="flex:1;min-width:280px;padding-top:2px;">
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 8px;">Días elegidos</p>
+        <p style="font-size:1.3rem;font-weight:600;color:var(--negro);margin:0 0 20px;">
+          <span id="c-cant-sel">0</span> día<span id="c-plural-sel">s</span>
+        </p>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+          <div class="field" style="flex:1;min-width:120px;">
+            <label style="display:block;font-size:0.72rem;font-weight:500;color:var(--negro);margin-bottom:6px;">Desde</label>
+            <input type="time" id="c-hora-desde" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:11px 12px;font-family:var(--font-sans);font-size:0.95rem;color:var(--negro);outline:none;">
+          </div>
+          <div class="field" style="flex:1;min-width:120px;">
+            <label style="display:block;font-size:0.72rem;font-weight:500;color:var(--negro);margin-bottom:6px;">Hasta (opcional)</label>
+            <input type="time" id="c-hora-hasta" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:11px 12px;font-family:var(--font-sans);font-size:0.95rem;color:var(--negro);outline:none;">
+          </div>
+        </div>
+        <p style="font-size:0.72rem;color:var(--gris-texto);margin:0 0 22px;">Si dejás "Hasta" vacío, queda como "disponible desde esa hora, sin límite".</p>
+
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button type="button" onclick="confirmarSeleccion('disponible')" class="btn-primary" style="width:100%;padding:13px;font-size:0.85rem;">
+            <i class="ti ti-check"></i> Confirmar disponible
+          </button>
+          <button type="button" onclick="confirmarSeleccion('no_disponible')" class="btn-secondary" style="width:100%;padding:13px;font-size:0.85rem;color:#dc2626;border-color:#fecaca;">
+            <i class="ti ti-x"></i> Marcar no disponible
+          </button>
+        </div>
+        <button type="button" onclick="limpiarSeleccion()" style="background:none;border:none;color:var(--gris-texto);text-decoration:underline;cursor:pointer;font-size:0.75rem;margin-top:14px;">Vaciar selección</button>
+      </div>
+
+      <!-- Eventos del mes: dentro de la misma tarjeta del calendario -->
+      <div style="flex-basis:100%;border-top:1px solid var(--gris-borde);margin-top:16px;padding-top:16px;">
+        <div id="ev-lista"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
+      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
+    </div>
+  </main>
+  <%- include('partials/mobile-nav', { path: 'horarios' }) %>
+</div>
+
+<!-- Modal: cargar evento -->
+<div id="modal-evento" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h2 id="ev-modal-titulo" style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Cargar evento</h2>
+      <button onclick="hideModal('modal-evento')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+
+    <input type="hidden" id="ev-id" value="">
+    <div class="field" style="margin-bottom:14px;">
+      <label style="display:block;font-size:0.72rem;font-weight:500;color:var(--negro);margin-bottom:6px;">Nombre del evento</label>
+      <input type="text" id="ev-nombre" placeholder="Ej: Casamiento García" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div class="field">
+        <label style="display:block;font-size:0.72rem;font-weight:500;color:var(--negro);margin-bottom:6px;">Fecha</label>
+        <input type="date" id="ev-fecha" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+      </div>
+      <div class="field">
+        <label style="display:block;font-size:0.72rem;font-weight:500;color:var(--negro);margin-bottom:6px;">Mozos necesarios</label>
+        <input type="number" id="ev-cupo" min="1" value="1" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;">
+      <div class="field">
+        <label style="display:block;font-size:0.72rem;font-weight:500;color:var(--negro);margin-bottom:6px;">Desde</label>
+        <input type="time" id="ev-hora-desde" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+      </div>
+      <div class="field">
+        <label style="display:block;font-size:0.72rem;font-weight:500;color:var(--negro);margin-bottom:6px;">Hasta (opcional)</label>
+        <input type="time" id="ev-hora-hasta" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:24px;padding-top:20px;border-top:1px solid var(--gris-borde);">
+      <button type="button" onclick="abrirInformeDesdeModal()" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;padding:9px 14px;font-size:0.75rem;color:var(--gris-texto);cursor:pointer;">
+        <i class="ti ti-users"></i> Ver mozos disponibles
+      </button>
+      <div style="display:flex;gap:12px;">
+        <button type="button" onclick="hideModal('modal-evento')" class="btn-secondary">Cancelar</button>
+        <button type="button" onclick="guardarEvento()" class="btn-primary"><i class="ti ti-check"></i> <span id="ev-modal-btn-texto">Guardar evento</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: informe de disponibilidad (para armar el mensaje de WhatsApp) -->
+<div id="modal-informe" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1100;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <h2 id="inf-titulo" style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Disponibles</h2>
+      <button onclick="hideModal('modal-informe')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:0.75rem;color:var(--gris-texto);margin-bottom:16px;">Mozos de AYB que cargaron disponibilidad ese día. "Enviar WhatsApp" abre el chat con el mensaje ya escrito — vos lo mandás.</p>
+    <div id="inf-lista"></div>
+  </div>
+</div>
+
+<style>
+.c-dia{padding:14px 6px;border-radius:8px;cursor:pointer;font-size:1rem;font-weight:600;color:var(--negro);transition:all 0.12s;border:1px solid transparent;background:var(--gris-fondo);}
+.c-dia:hover{box-shadow:0 0 0 1px var(--azul) inset;}
+.c-dia.vacio{visibility:hidden;cursor:default;}
+.c-nombre-dia{font-size:0.75rem;font-weight:600;color:var(--gris-texto);padding:6px 0;}
+.btn-whatsapp{display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-sans);font-size:0.68rem;font-weight:600;text-decoration:none;cursor:pointer;transition:background 0.2s;}
+.btn-whatsapp:hover{background:#1ea952;}
+</style>
+
+<script>
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const uid = <%= usuario.id %>;
+
+let cFecha = new Date();
+let dispMapa = {};        // { 'YYYY-MM-DD': {disponible, hora_desde, hora_hasta} }
+let seleccionados = new Set();
+
+document.getElementById('c-nombres').innerHTML = DIAS_SEMANA.map(d => `<div class="c-nombre-dia">${d}</div>`).join('');
+
+async function cargarMes() {
+  const anio = cFecha.getFullYear();
+  const mes  = cFecha.getMonth();
+  const mesStr = `${anio}-${String(mes+1).padStart(2,'0')}`;
+  document.getElementById('c-titulo').textContent = MESES[mes] + ' ' + anio;
+  try {
+    const resp = await fetch(`/personal/${uid}/disponibilidad?mes=${mesStr}`);
+    const data = await resp.json();
+    dispMapa = data.ok ? data.dias : {};
+  } catch (e) { dispMapa = {}; }
+  renderGrid();
+}
+
+function renderGrid() {
+  if (esGestorEventos) { renderGridGestor(); return; }
+
+  const anio = cFecha.getFullYear();
+  const mes  = cFecha.getMonth();
+  const primerDia = new Date(anio, mes, 1).getDay();
+  const diasMes   = new Date(anio, mes + 1, 0).getDate();
+  let html = '';
+  for (let i = 0; i < primerDia; i++) html += `<div class="c-dia vacio"></div>`;
+  for (let d = 1; d <= diasMes; d++) {
+    const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const info = dispMapa[fechaStr];
+    const sel = seleccionados.has(fechaStr);
+    let bg = 'var(--gris-fondo)', color = 'var(--negro)', border = 'transparent';
+    if (sel) {
+      bg = 'var(--azul)'; color = '#fff'; border = 'var(--azul)';
+    } else if (info && info.disponible) {
+      bg = '#22c55e'; color = '#fff'; border = '#22c55e';
+    } else if (info && !info.disponible) {
+      bg = '#dc2626'; color = '#fff'; border = '#dc2626';
+    }
+    let titulo = '';
+    if (info && info.disponible) titulo = info.hora_hasta ? `Disponible de ${info.hora_desde} a ${info.hora_hasta}` : `Disponible desde las ${info.hora_desde}`;
+    else if (info) titulo = 'No disponible';
+    html += `<div class="c-dia" style="background:${bg};color:${color};border-color:${border};" title="${titulo}" onclick="toggleDia('${fechaStr}')">${d}</div>`;
+  }
+  document.getElementById('c-grid').innerHTML = html;
+  document.getElementById('c-cant-sel').textContent = seleccionados.size;
+  document.getElementById('c-plural-sel').textContent = seleccionados.size === 1 ? '' : 's';
+}
+
+// Vista del encargado/admin: el calendario no le sirve para tildar su
+// propia disponibilidad (no trabaja turnos como mozo) — en cambio, cada
+// día muestra cuántos mozos ya están anotados a los eventos de ese día, y
+// tocar cualquier fecha abre "Cargar evento" con esa fecha ya puesta.
+function renderGridGestor() {
+  const anio = cFecha.getFullYear();
+  const mes  = cFecha.getMonth();
+  const primerDia = new Date(anio, mes, 1).getDay();
+  const diasMes   = new Date(anio, mes + 1, 0).getDate();
+
+  // Agrupa eventosMes por fecha para sumar anotados/cupo por día.
+  const porDia = {};
+  eventosMes.forEach(ev => {
+    if (!porDia[ev.fecha]) porDia[ev.fecha] = { anotados: 0, cupo: 0, nombres: [] };
+    porDia[ev.fecha].anotados += ev.anotados;
+    porDia[ev.fecha].cupo += ev.cupo;
+    porDia[ev.fecha].nombres.push(`${ev.nombre} (${ev.anotados}/${ev.cupo})`);
+  });
+
+  let html = '';
+  for (let i = 0; i < primerDia; i++) html += `<div class="c-dia vacio"></div>`;
+  for (let d = 1; d <= diasMes; d++) {
+    const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const info = porDia[fechaStr];
+    const disp = dispResumenMes[fechaStr] || [];
+    let bg = 'var(--gris-fondo)', color = 'var(--negro)', border = 'transparent';
+    let sub = '';
+    let titulo = 'Tocá para cargar un evento este día';
+    if (info) {
+      bg = 'var(--azul-claro)'; color = 'var(--azul)'; border = 'var(--azul)';
+      sub = `<div style="font-size:0.6rem;font-weight:700;margin-top:2px;">${info.anotados}/${info.cupo}</div>`;
+      titulo = info.nombres.join(' · ');
+    }
+    let subDisp = '';
+    if (disp.length) {
+      subDisp = `<div onclick="event.stopPropagation();abrirInforme('${fechaStr}')" style="font-size:0.56rem;font-weight:700;margin-top:1px;color:#16a34a;text-decoration:underline;">${disp.length} disp</div>`;
+    }
+    html += `<div class="c-dia" style="background:${bg};color:${color};border-color:${border};display:flex;flex-direction:column;align-items:center;justify-content:center;" title="${titulo}" onclick="abrirCargarEvento('${fechaStr}')">${d}${sub}${subDisp}</div>`;
+  }
+  document.getElementById('c-grid').innerHTML = html;
+}
+
+function toggleDia(fechaStr) {
+  if (seleccionados.has(fechaStr)) seleccionados.delete(fechaStr);
+  else seleccionados.add(fechaStr);
+  renderGrid();
+}
+
+function limpiarSeleccion() {
+  seleccionados.clear();
+  renderGrid();
+}
+
+function cMes(dir) {
+  cFecha.setMonth(cFecha.getMonth() + dir);
+  cargarMes();
+  cargarEventos();
+}
+
+async function confirmarSeleccion(estado) {
+  if (seleccionados.size === 0) { alert('Elegí al menos un día en el calendario.'); return; }
+  const horaDesde = document.getElementById('c-hora-desde').value;
+  const horaHasta = document.getElementById('c-hora-hasta').value;
+  if (estado === 'disponible' && !horaDesde) { alert('Poné desde qué hora estás disponible.'); return; }
+
+  const dias = [...seleccionados];
+  let errores = 0;
+  for (const fecha of dias) {
+    try {
+      const resp = await fetch(`/personal/${uid}/disponibilidad`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `fecha=${fecha}&estado=${estado}&hora_desde=${encodeURIComponent(horaDesde)}&hora_hasta=${encodeURIComponent(horaHasta)}`
+      });
+      const data = await resp.json();
+      if (!data.ok) errores++;
+    } catch (e) { errores++; }
+  }
+  seleccionados.clear();
+  await cargarMes();
+  if (errores > 0) alert(`Se guardaron ${dias.length - errores} de ${dias.length} días. Hubo un error con el resto.`);
+}
+
+// ── Eventos AYB (nombre, horario, cupo de mozos) ────
+let esGestorEventos = false;
+let eventosMes = [];
+let dispResumenMes = {}; // { 'YYYY-MM-DD': [{usuario_id, nombre, celular, hora_desde, hora_hasta}] } — solo gestor
+
+async function cargarEventos() {
+  const anio = cFecha.getFullYear();
+  const mes  = cFecha.getMonth();
+  const mesStr = `${anio}-${String(mes+1).padStart(2,'0')}`;
+  try {
+    const resp = await fetch(`/horarios/eventos?mes=${mesStr}`);
+    const data = await resp.json();
+    if (data.ok) {
+      eventosMes = data.eventos;
+      const eraGestor = esGestorEventos;
+      esGestorEventos = data.esGestor;
+      document.getElementById('ev-btn-nuevo').style.display = esGestorEventos ? 'inline-flex' : 'none';
+      aplicarModoVista();
+      // Si recién ahora supimos que es gestor (primera carga), el
+      // calendario ya se había dibujado en modo "mozo" — hay que
+      // redibujarlo en modo gestor. En las cargas siguientes (cambiar de
+      // mes) alcanza con renderGrid() de más abajo.
+      if (esGestorEventos !== eraGestor) renderGrid();
+    } else {
+      eventosMes = [];
+    }
+  } catch (e) { eventosMes = []; }
+  if (esGestorEventos) await cargarDisponibilidadResumen(mesStr);
+  renderEventos();
+  if (esGestorEventos) renderGrid(); // los conteos por día dependen de eventosMes y dispResumenMes
+}
+
+// Informe de disponibilidad de mozos AYB por día (solo gestor) — para el
+// badge "N disp" en el calendario y para el modal de "Ver disponibles".
+async function cargarDisponibilidadResumen(mesStr) {
+  try {
+    const resp = await fetch(`/horarios/disponibilidad-resumen?mes=${mesStr}`);
+    const data = await resp.json();
+    dispResumenMes = data.ok ? data.dias : {};
+  } catch (e) { dispResumenMes = {}; }
+}
+
+// Muestra/oculta los bloques que son específicos de mozo vs. de
+// encargado/admin — se decide una sola vez por carga, según lo que
+// devuelva /horarios/eventos (esGestor).
+function aplicarModoVista() {
+  document.getElementById('ayb-titulo').textContent = esGestorEventos ? 'Eventos de Alimentos y Bebidas' : 'Mi disponibilidad';
+  document.getElementById('ayb-info-mozo').style.display = esGestorEventos ? 'none' : 'flex';
+  document.getElementById('ayb-info-gestor').style.display = esGestorEventos ? 'flex' : 'none';
+  document.getElementById('c-leyenda-mozo').style.display = esGestorEventos ? 'none' : 'flex';
+  document.getElementById('c-leyenda-gestor').style.display = esGestorEventos ? 'flex' : 'none';
+  document.getElementById('ayb-form-mozo').style.display = esGestorEventos ? 'none' : 'block';
+}
+
+// Abre "Cargar evento" en modo alta. Si viene de tocar un día del
+// calendario (gestor), precarga esa fecha; si viene del botón del header,
+// la deja vacía.
+function abrirCargarEvento(fechaStr) {
+  document.getElementById('ev-id').value = '';
+  document.getElementById('ev-nombre').value = '';
+  document.getElementById('ev-fecha').value = fechaStr || '';
+  document.getElementById('ev-hora-desde').value = '';
+  document.getElementById('ev-hora-hasta').value = '';
+  document.getElementById('ev-cupo').value = '1';
+  document.getElementById('ev-modal-titulo').textContent = 'Cargar evento';
+  document.getElementById('ev-modal-btn-texto').textContent = 'Guardar evento';
+  showModal('modal-evento');
+}
+
+// Abre el mismo modal en modo edición, precargado con los datos del
+// evento que ya está en eventosMes (evita otro viaje al servidor).
+function abrirEditarEvento(id) {
+  const ev = eventosMes.find(e => e.id === id);
+  if (!ev) return;
+  document.getElementById('ev-id').value = ev.id;
+  document.getElementById('ev-nombre').value = ev.nombre;
+  document.getElementById('ev-fecha').value = ev.fecha;
+  document.getElementById('ev-hora-desde').value = ev.hora_desde || '';
+  document.getElementById('ev-hora-hasta').value = ev.hora_hasta || '';
+  document.getElementById('ev-cupo').value = ev.cupo;
+  document.getElementById('ev-modal-titulo').textContent = 'Editar evento';
+  document.getElementById('ev-modal-btn-texto').textContent = 'Guardar cambios';
+  showModal('modal-evento');
+}
+
+// Abre el informe de disponibles de un día. Si mensajeCtx viene con nombre
+// de evento, el mensaje de WhatsApp lo menciona; si no, es un mensaje
+// genérico de consulta de disponibilidad.
+function fmtFechaLarga(fechaStr) {
+  const d = new Date(fechaStr + 'T00:00:00');
+  return d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+function abrirInforme(fechaStr) {
+  const disp = dispResumenMes[fechaStr] || [];
+  document.getElementById('inf-titulo').textContent = 'Disponibles — ' + fmtFechaLarga(fechaStr);
+  const el = document.getElementById('inf-lista');
+  if (!disp.length) {
+    el.innerHTML = '<p style="font-size:0.85rem;color:var(--gris-texto);font-style:italic;padding:16px 0;">Nadie cargó disponibilidad ese día todavía.</p>';
+  } else {
+    const nombreEvento = document.getElementById('ev-nombre') ? document.getElementById('ev-nombre').value.trim() : '';
+    const horaEvDesde = document.getElementById('ev-hora-desde') ? document.getElementById('ev-hora-desde').value : '';
+    const horaEvHasta = document.getElementById('ev-hora-hasta') ? document.getElementById('ev-hora-hasta').value : '';
+    el.innerHTML = disp.map(p => {
+      const horario = p.hora_hasta ? `${p.hora_desde} a ${p.hora_hasta}` : `desde las ${p.hora_desde}`;
+      let mensaje;
+      if (nombreEvento) {
+        const horarioEvento = horaEvHasta ? `de ${horaEvDesde} a ${horaEvHasta}` : `desde las ${horaEvDesde}`;
+        mensaje = `Hola ${p.nombre}! Te escribimos de Hilton Buenos Aires por el evento "${nombreEvento}" el ${fmtFechaLarga(fechaStr)} ${horarioEvento}. ¿Te queda bien? Contanos si podés venir.`;
+      } else {
+        mensaje = `Hola ${p.nombre}! Te escribimos de Hilton Buenos Aires para consultarte tu disponibilidad del ${fmtFechaLarga(fechaStr)} (nos pusiste ${horario}). ¿Nos confirmás?`;
+      }
+      const link = p.celular
+        ? `https://wa.me/${p.celular.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`
+        : null;
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 4px;border-bottom:1px solid var(--gris-borde);">
+          <div>
+            <div style="font-size:0.85rem;font-weight:600;color:var(--negro);">${p.nombre}</div>
+            <div style="font-size:0.72rem;color:var(--gris-texto);margin-top:2px;">${horario}${p.celular ? '' : ' · sin celular cargado'}</div>
+          </div>
+          ${link
+            ? `<a href="${link}" target="_blank" class="btn-whatsapp" style="padding:7px 12px;font-size:0.7rem;text-decoration:none;"><i class="ti ti-brand-whatsapp"></i> WhatsApp</a>`
+            : `<button type="button" disabled class="btn-secondary" style="padding:7px 12px;font-size:0.7rem;opacity:0.5;cursor:not-allowed;">Sin celular</button>`}
+        </div>`;
+    }).join('');
+  }
+  showModal('modal-informe');
+}
+
+// Botón "Ver mozos disponibles" dentro del modal de Cargar/Editar evento —
+// usa la fecha que el gestor ya haya puesto en ese formulario.
+function abrirInformeDesdeModal() {
+  const fecha = document.getElementById('ev-fecha').value;
+  if (!fecha) { alert('Elegí primero una fecha.'); return; }
+  abrirInforme(fecha);
+}
+
+function showModal(id) {
+  document.getElementById(id).style.display = 'flex';
+  setTimeout(() => { const p = document.querySelector('#'+id+' input:not([type=hidden])'); if (p) p.focus(); }, 100);
+}
+function hideModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+function fmtFechaCorta(fechaStr) {
+  const [a, m, d] = fechaStr.split('-');
+  return `${d}/${m}`;
+}
+
+// ── Mis próximos compromisos ────────────────────────
+const DIAS_LARGO = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+function fmtFechaLarga(fechaStr) {
+  const [a, m, d] = fechaStr.split('-').map(Number);
+  const fecha = new Date(a, m - 1, d);
+  return `${DIAS_LARGO[fecha.getDay()]} ${d}/${m}`;
+}
+
+async function abrirMisCompromisos() {
+  showModal('modal-mis-compromisos');
+  const el = document.getElementById('mc-lista');
+  el.innerHTML = '<p style="font-size:0.8rem;color:var(--gris-texto);padding:8px 0;">Cargando...</p>';
+  try {
+    const resp = await fetch('/horarios/mis-compromisos');
+    const data = await resp.json();
+    if (!data.ok) { el.innerHTML = '<p style="font-size:0.8rem;color:#dc2626;">No se pudo cargar tu agenda.</p>'; return; }
+
+    const items = [
+      ...data.eventos.map(ev => ({
+        fecha: ev.fecha,
+        tipo: 'evento',
+        texto: ev.nombre,
+        horario: ev.hora_hasta ? `${ev.hora_desde} a ${ev.hora_hasta}` : `desde las ${ev.hora_desde}`
+      })),
+      ...data.disponibilidad.map(d => ({
+        fecha: d.fecha,
+        tipo: 'disponible',
+        texto: 'Disponible para trabajar',
+        horario: d.hora_hasta ? `${d.hora_desde} a ${d.hora_hasta}` : `desde las ${d.hora_desde}`
+      }))
+    ].sort((a, b) => a.fecha.localeCompare(b.fecha) || (a.tipo === 'evento' ? -1 : 1));
+
+    if (!items.length) {
+      el.innerHTML = '<p style="font-size:0.85rem;color:var(--gris-texto);font-style:italic;padding:16px 0;">No tenés compromisos cargados de acá en adelante.</p>';
+      return;
+    }
+
+    el.innerHTML = items.map(it => {
+      const esEvento = it.tipo === 'evento';
+      const icono = esEvento ? 'ti-users' : 'ti-clock';
+      const colorFondo = esEvento ? '#eff6ff' : '#f0fdf4';
+      const colorTexto = esEvento ? '#1d4ed8' : '#16a34a';
+      return `
+        <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid var(--gris-borde);">
+          <div style="width:34px;height:34px;border-radius:8px;background:${colorFondo};color:${colorTexto};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ti ${icono}"></i></div>
+          <div>
+            <div style="font-size:0.85rem;font-weight:600;color:var(--negro);">${fmtFechaLarga(it.fecha)}</div>
+            <div style="font-size:0.8rem;color:var(--gris-texto);margin-top:2px;">${it.texto} · ${it.horario}</div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    el.innerHTML = '<p style="font-size:0.8rem;color:#dc2626;">No se pudo cargar tu agenda.</p>';
+  }
+}
+
+function renderEventos() {
+  const el = document.getElementById('ev-lista');
+  if (!eventosMes.length) {
+    el.innerHTML = '<p style="font-size:0.8rem;color:var(--gris-texto);font-style:italic;padding:8px 0;">No hay eventos cargados este mes.</p>';
+    return;
+  }
+  el.innerHTML = eventosMes.map(ev => {
+    const horario = ev.hora_hasta ? `${ev.hora_desde} a ${ev.hora_hasta}` : `desde las ${ev.hora_desde}`;
+    const cupoTxt = `${ev.anotados}/${ev.cupo}`;
+    let badge = '';
+    if (!esGestorEventos && ev.yo_anotado) {
+      badge = `<span style="font-size:0.65rem;font-weight:700;background:#16a34a;color:#fff;padding:3px 10px;border-radius:20px;"><i class="ti ti-check"></i> Estás anotado</span>`;
+    }
+    if (ev.cubierto) {
+      badge += ` <span style="font-size:0.65rem;font-weight:700;background:#22c55e;color:#fff;padding:3px 10px;border-radius:20px;">Cupo completo</span>`;
+    }
+    if (ev.oculto) {
+      badge += ` <span style="font-size:0.65rem;font-weight:700;background:var(--gris-fondo);border:1px solid var(--gris-borde);color:var(--gris-texto);padding:3px 10px;border-radius:20px;">Oculto</span>`;
+    }
+    let accionMozo = '';
+    if (!esGestorEventos) {
+      if (ev.yo_anotado) {
+        accionMozo = `<button type="button" onclick="desanotarse(${ev.id})" class="btn-secondary" style="padding:7px 14px;font-size:0.78rem;color:#dc2626;border-color:#fecaca;"><i class="ti ti-x"></i> Anotado — retirarme</button>`;
+      } else if (ev.cubierto) {
+        accionMozo = `<button type="button" disabled class="btn-secondary" style="padding:7px 14px;font-size:0.78rem;opacity:0.5;cursor:not-allowed;">Cupo completo</button>`;
+      } else {
+        accionMozo = `<button type="button" onclick="anotarse(${ev.id})" class="btn-primary" style="padding:7px 14px;font-size:0.78rem;"><i class="ti ti-check"></i> Anotarme</button>`;
+      }
+    }
+    let accionesGestor = '';
+    if (esGestorEventos) {
+      accionesGestor = `
+        <button type="button" onclick="abrirInscriptos(${ev.id}, '${ev.nombre.replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;padding:7px 12px;font-size:0.75rem;color:var(--gris-texto);cursor:pointer;">
+          Ver anotados (${ev.anotados})
+        </button>
+        <button type="button" onclick="abrirEditarEvento(${ev.id})" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;padding:7px 12px;font-size:0.75rem;color:var(--gris-texto);cursor:pointer;">
+          Modificar
+        </button>
+        <button type="button" onclick="ocultarEvento(${ev.id}, ${!ev.oculto})" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;padding:7px 12px;font-size:0.75rem;color:var(--gris-texto);cursor:pointer;">
+          ${ev.oculto ? 'Mostrar' : 'Ocultar'}
+        </button>
+        <button type="button" onclick="eliminarEvento(${ev.id})" style="background:none;border:1px solid #fecaca;border-radius:8px;padding:7px 12px;font-size:0.75rem;color:#dc2626;cursor:pointer;">
+          Eliminar
+        </button>`;
+    }
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 4px;border-bottom:1px solid var(--gris-borde);">
+        <div>
+          <div style="font-size:0.9rem;font-weight:600;color:var(--negro);">${ev.nombre} ${badge}</div>
+          <div style="font-size:0.78rem;color:var(--gris-texto);margin-top:2px;">${fmtFechaCorta(ev.fecha)} · ${horario} · ${cupoTxt} mozos</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          ${accionMozo}${accionesGestor}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function guardarEvento() {
+  const id = document.getElementById('ev-id').value;
+  const nombre = document.getElementById('ev-nombre').value.trim();
+  const fecha = document.getElementById('ev-fecha').value;
+  const hora_desde = document.getElementById('ev-hora-desde').value;
+  const hora_hasta = document.getElementById('ev-hora-hasta').value;
+  const cupo = document.getElementById('ev-cupo').value;
+  if (!nombre || !fecha || !hora_desde || !cupo) { alert('Completá nombre, fecha, hora desde y cupo.'); return; }
+  const url = id ? `/horarios/eventos/${id}/editar` : '/horarios/eventos';
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `nombre=${encodeURIComponent(nombre)}&fecha=${fecha}&hora_desde=${encodeURIComponent(hora_desde)}&hora_hasta=${encodeURIComponent(hora_hasta)}&cupo=${encodeURIComponent(cupo)}`
+    });
+    const data = await resp.json();
+    if (!data.ok) { alert(data.error || 'No se pudo guardar el evento.'); return; }
+    hideModal('modal-evento');
+    if (fecha) { cFecha = new Date(fecha + 'T00:00:00'); }
+    await cargarEventos();
+  } catch (e) { alert('No se pudo guardar el evento.'); }
+}
+
+async function anotarse(id) {
+  const resp = await fetch(`/horarios/eventos/${id}/anotarse`, { method: 'POST' });
+  const data = await resp.json();
+  if (!data.ok) alert(data.error || 'No se pudo anotar.');
+  else if (data.aviso) alert('Quedaste anotado, pero ojo: ' + data.aviso);
+  await cargarEventos();
+}
+
+async function desanotarse(id) {
+  await fetch(`/horarios/eventos/${id}/desanotarse`, { method: 'POST' });
+  await cargarEventos();
+}
+
+// ── Asistencia real (quién vino de verdad, no solo quién se anotó) ──
+let insEventoId = null;
+async function abrirInscriptos(eventoId, nombreEvento) {
+  insEventoId = eventoId;
+  document.getElementById('ins-titulo').textContent = 'Anotados — ' + nombreEvento;
+  showModal('modal-inscriptos');
+  await cargarInscriptos();
+}
+async function cargarInscriptos() {
+  const el = document.getElementById('ins-lista');
+  el.innerHTML = '<p style="font-size:0.8rem;color:var(--gris-texto);padding:8px 0;">Cargando...</p>';
+  try {
+    const resp = await fetch(`/horarios/eventos/${insEventoId}/inscriptos`);
+    const data = await resp.json();
+    if (!data.ok) { el.innerHTML = '<p style="font-size:0.8rem;color:#dc2626;">No se pudo cargar.</p>'; return; }
+    if (!data.inscriptos.length) { el.innerHTML = '<p style="font-size:0.85rem;color:var(--gris-texto);font-style:italic;padding:16px 0;">Todavía no se anotó nadie.</p>'; return; }
+    el.innerHTML = data.inscriptos.map(p => {
+      let estado = `<span style="font-size:0.7rem;color:var(--gris-texto);">Sin marcar</span>`;
+      if (p.asistio === true) estado = `<span style="font-size:0.7rem;font-weight:700;color:#16a34a;"><i class="ti ti-check"></i> Vino</span>`;
+      if (p.asistio === false) estado = `<span style="font-size:0.7rem;font-weight:700;color:#dc2626;"><i class="ti ti-x"></i> No vino</span>`;
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 4px;border-bottom:1px solid var(--gris-borde);">
+          <div>
+            <div style="font-size:0.85rem;font-weight:600;color:var(--negro);">${p.nombre}</div>
+            <div style="margin-top:2px;">${estado}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button type="button" onclick="marcarAsistencia(${p.usuario_id},'si')" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;border-radius:7px;padding:6px 10px;font-size:0.72rem;cursor:pointer;">Vino</button>
+            <button type="button" onclick="marcarAsistencia(${p.usuario_id},'no')" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:7px;padding:6px 10px;font-size:0.72rem;cursor:pointer;">No vino</button>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    el.innerHTML = '<p style="font-size:0.8rem;color:#dc2626;">No se pudo cargar.</p>';
+  }
+}
+async function marcarAsistencia(usuarioId, valor) {
+  await fetch(`/horarios/eventos/${insEventoId}/inscripciones/${usuarioId}/asistencia`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `asistio=${valor}`
+  });
+  await cargarInscriptos();
+}
+
+async function ocultarEvento(id, oculto) {
+  await fetch(`/horarios/eventos/${id}/ocultar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `oculto=${oculto}`
+  });
+  await cargarEventos();
+}
+
+async function eliminarEvento(id) {
+  if (!confirm('¿Eliminar este evento? No se puede deshacer.')) return;
+  await fetch(`/horarios/eventos/${id}/eliminar`, { method: 'POST' });
+  await cargarEventos();
+}
+
+cargarMes();
+cargarEventos();
+</script>
+</body>
+</html>

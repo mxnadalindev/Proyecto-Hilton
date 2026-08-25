@@ -71,6 +71,17 @@ const init = async () => {
   // siempre en 'ayb', ya no se pisa con nombres de sector como pasaba antes).
   await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS modalidad TEXT`);
 
+  // "fecha_alta": desde cuándo está activo un mozo eventual de AYB. La
+  // modalidad "Eventual" tiene un límite real de contrato de 6 meses desde
+  // esta fecha — la usamos para avisarle al encargado cuando se acerca el
+  // vencimiento, en vez de que se entere tarde. Para los mozos que ya
+  // estaban cargados antes de esta columna no tenemos forma de saber la
+  // fecha real, así que queda NULL (sin aviso) hasta que el encargado la
+  // cargue a mano en "Miembro de equipo"; los que se cargan de acá en más
+  // (a mano, por CSV o por foto) la reciben automáticamente en el momento del alta.
+  await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS fecha_alta DATE`);
+  await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS celular TEXT`);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS eventos (
       id SERIAL PRIMARY KEY,
@@ -289,6 +300,43 @@ const init = async () => {
   await pool.query(`ALTER TABLE disponibilidad ADD COLUMN IF NOT EXISTS hora_desde TEXT`);
   await pool.query(`ALTER TABLE disponibilidad ADD COLUMN IF NOT EXISTS hora_hasta TEXT`);
 
+  // eventos_ayb: eventos que carga el encargado/admin de A&B (nombre, horario,
+  // cupo de mozos necesarios) dentro del mismo almanaque de Horarios. Los
+  // mozos se anotan hasta llenar el cupo; "oculto" lo usa el encargado para
+  // sacarlo de la vista de los mozos una vez cubierto, sin borrar el evento.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS eventos_ayb (
+      id SERIAL PRIMARY KEY,
+      nombre TEXT NOT NULL,
+      fecha DATE NOT NULL,
+      hora_desde TEXT NOT NULL,
+      hora_hasta TEXT,
+      cupo INTEGER NOT NULL,
+      oculto BOOLEAN NOT NULL DEFAULT false,
+      creado_por INTEGER REFERENCES usuarios(id),
+      creado_en TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_eventos_ayb_fecha ON eventos_ayb (fecha)`);
+
+  // eventos_ayb_inscripciones: quién se anotó a cada evento. Un mozo no
+  // puede anotarse dos veces al mismo evento (UNIQUE).
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS eventos_ayb_inscripciones (
+      id SERIAL PRIMARY KEY,
+      evento_id INTEGER NOT NULL REFERENCES eventos_ayb(id) ON DELETE CASCADE,
+      usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      inscrito_en TIMESTAMP DEFAULT NOW(),
+      UNIQUE (evento_id, usuario_id)
+    )
+  `);
+
+  // "asistio": marca de asistencia real, separada de "se anotó". NULL =
+  // todavía sin marcar (el evento no pasó, o el encargado no lo marcó
+  // después), true = vino, false = faltó. La carga el encargado/admin de
+  // AYB después del evento, desde la lista de anotados.
+  await pool.query(`ALTER TABLE eventos_ayb_inscripciones ADD COLUMN IF NOT EXISTS asistio BOOLEAN`);
+
   // receta_fotos y receta_insumos: igual que con auditoria/configuracion_sistema,
   // el código de src/routes/recetas.js ya las usa (incluso en el listado
   // principal de /recetas, en la subconsulta de imagen de portada) pero
@@ -313,6 +361,92 @@ const init = async () => {
       unidad TEXT
     )
   `);
+
+  // Insumos — código de producto (antes migración 004 aparte): columna
+  // opcional pero única cuando está cargada, para poder buscar/matchear
+  // insumos por código de proveedor sin duplicados.
+  await pool.query(`ALTER TABLE insumos ADD COLUMN IF NOT EXISTS codigo VARCHAR(50)`);
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_insumos_codigo_unico
+    ON insumos (codigo)
+    WHERE codigo IS NOT NULL
+  `);
+
+  // Menús (antes migración 005 aparte): agrupan varios platos de Costos en
+  // un combo/menú armado, con su cantidad de porciones por plato.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS menus (
+      id SERIAL PRIMARY KEY,
+      nombre TEXT NOT NULL,
+      descripcion TEXT,
+      creado_en TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS menu_platos (
+      id SERIAL PRIMARY KEY,
+      menu_id INTEGER NOT NULL REFERENCES menus(id) ON DELETE CASCADE,
+      plato_id INTEGER NOT NULL REFERENCES platos_costo(id) ON DELETE CASCADE,
+      cantidad_porciones INTEGER DEFAULT 1
+    )
+  `);
+
+  // Recetas — mejoras (antes migración 006 aparte): "pasos" pasa a llamarse
+  // "procedimiento" (se conserva el contenido si ya tenía), se suma
+  // ingredientes_json para el formato estructurado, y receta_videos permite
+  // varios videos por receta en vez de uno solo. El video_url viejo (si
+  // había) se migra una sola vez a la tabla nueva, sin duplicar en cada
+  // arranque.
+  const recetasPasos = await pool.query(`
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name='recetas' AND column_name='pasos'
+  `);
+  if (recetasPasos.rows.length) {
+    await pool.query(`ALTER TABLE recetas RENAME COLUMN pasos TO procedimiento`);
+  }
+  await pool.query(`ALTER TABLE recetas ADD COLUMN IF NOT EXISTS ingredientes_json JSONB`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS receta_videos (
+      id SERIAL PRIMARY KEY,
+      receta_id INTEGER NOT NULL REFERENCES recetas(id) ON DELETE CASCADE,
+      clasificacion TEXT NOT NULL DEFAULT 'Otros',
+      origen TEXT NOT NULL,
+      valor TEXT NOT NULL,
+      titulo TEXT,
+      orden INTEGER DEFAULT 0,
+      creado_en TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  const recetasVideoUrl = await pool.query(`
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name='recetas' AND column_name='video_url'
+  `);
+  if (recetasVideoUrl.rows.length) {
+    const conVideo = await pool.query(`SELECT id, video_url FROM recetas WHERE video_url IS NOT NULL AND video_url <> ''`);
+    for (const r of conVideo.rows) {
+      const yaMigrado = await pool.query(`SELECT 1 FROM receta_videos WHERE receta_id=$1 AND valor=$2`, [r.id, r.video_url]);
+      if (yaMigrado.rows.length) continue;
+      const esUrl = /^https?:\/\//i.test(r.video_url);
+      await pool.query(
+        `INSERT INTO receta_videos (receta_id, clasificacion, origen, valor) VALUES ($1,'Otros',$2,$3)`,
+        [r.id, esUrl ? 'url' : 'archivo', r.video_url]
+      );
+    }
+  }
+
+  // usuarios.recoff_adeudado (antes migraciones 007+008 aparte): días de
+  // franco compensatorio que se le deben a cada empleado. Se llamó
+  // "recoff_pendiente" en un primer momento; si una base vieja todavía
+  // tiene esa columna con ese nombre, se renombra en vez de duplicar.
+  const recoffViejo = await pool.query(`
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name='usuarios' AND column_name='recoff_pendiente'
+  `);
+  if (recoffViejo.rows.length) {
+    await pool.query(`ALTER TABLE usuarios RENAME COLUMN recoff_pendiente TO recoff_adeudado`);
+  } else {
+    await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recoff_adeudado INTEGER DEFAULT 0`);
+  }
 
   // Alimentos y Bebidas — Croutons: cada fila es un LOTE (una entrada de
   // mercadería), no un producto único. Así, si llega una entrega nueva de

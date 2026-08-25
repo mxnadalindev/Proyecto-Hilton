@@ -36,9 +36,17 @@
     </div>
     <% } %>
 
+    <% if (!general) { %>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#1d4ed8;display:flex;align-items:center;gap:8px;">
+      <i class="ti ti-info-circle"></i> Estás viendo solo la gente de tu departamento (<%= miDepto %>). Podés activar, desactivar o cambiar el rol de tu equipo. Backups, auditoría y seguridad del sistema son exclusivos del admin general.
+    </div>
+    <% } %>
+
     <!-- Tabs -->
+    <% const tabListFull = [{id:'usuarios',label:'Usuarios'},{id:'backup',label:'Backup BD'},{id:'auditoria',label:'Auditoría'},{id:'seguridad',label:'Seguridad'},{id:'notificaciones',label:'Notificaciones'},{id:'importacion',label:'Importación'}]; %>
+    <% const tabList = general ? tabListFull : tabListFull.filter(t => t.id === 'usuarios'); %>
+    <% if (tabList.length > 1) { %>
     <div style="display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--gris-borde);overflow-x:auto;">
-      <% const tabList = [{id:'usuarios',label:'Usuarios'},{id:'backup',label:'Backup BD'},{id:'auditoria',label:'Auditoría'},{id:'seguridad',label:'Seguridad'},{id:'notificaciones',label:'Notificaciones'},{id:'importacion',label:'Importación'}]; %>
       <% tabList.forEach((t,i) => { %>
       <button onclick="mostrarTab('<%= t.id %>')" id="tab-<%= t.id %>"
               style="padding:10px 16px;background:none;border:none;font-family:var(--font-sans);font-size:0.8rem;font-weight:500;cursor:pointer;border-bottom:2px solid <%= i===0?'var(--azul)':'transparent' %>;margin-bottom:-2px;color:<%= i===0?'var(--azul)':'var(--gris-texto)' %>;white-space:nowrap;transition:all 0.15s;">
@@ -46,6 +54,9 @@
       </button>
       <% }) %>
     </div>
+    <% } else { %>
+    <div style="margin-bottom:20px;"></div>
+    <% } %>
 
     <!-- TAB: Usuarios -->
     <div id="tab-content-usuarios">
@@ -67,8 +78,8 @@
               <tr class="fila-usuario" style="border-bottom:1px solid var(--gris-borde);">
                 <td><div style="display:flex;align-items:center;gap:8px;"><div style="width:30px;height:30px;border-radius:50%;background:<%= u.activo?'var(--azul-claro)':'var(--gris-fondo)' %>;color:<%= u.activo?'var(--azul)':'var(--gris-texto)' %>;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;flex-shrink:0;"><%= (u.nombre||'?').charAt(0).toUpperCase() %></div><span style="font-size:0.82rem;font-weight:500;"><%= u.nombre %></span></div></td>
                 <td style="font-size:0.78rem;color:var(--gris-texto);"><%= u.email||'—' %></td>
-                <td><form method="POST" action="/configuracion/usuario/<%= u.id %>/departamento" style="margin:0;"><select name="departamento" onchange="this.form.submit()" style="padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.75rem;font-family:var(--font-sans);background:var(--gris-fondo);outline:none;cursor:pointer;max-width:150px;"><option value="">— Sin asignar —</option><% [...DEPTOS,...SECTORES].forEach(d => { %><option value="<%= d %>" <%= u.departamento===d?'selected':'' %>><%= d %></option><% }) %></select></form></td>
-                <td><form method="POST" action="/configuracion/usuario/<%= u.id %>/rol" style="margin:0;"><select name="rol" onchange="this.form.submit()" style="padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.75rem;font-family:var(--font-sans);background:var(--gris-fondo);outline:none;cursor:pointer;"><option value="empleado" <%= u.rol==='empleado'?'selected':'' %>>Empleado</option><option value="supervisor" <%= u.rol==='supervisor'?'selected':'' %>>Supervisor</option><option value="admin" <%= u.rol==='admin'?'selected':'' %>>Admin</option></select></form></td>
+                <td><% if (general) { %><form method="POST" action="/configuracion/usuario/<%= u.id %>/departamento" style="margin:0;"><select name="departamento" onchange="this.form.submit()" style="padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.75rem;font-family:var(--font-sans);background:var(--gris-fondo);outline:none;cursor:pointer;max-width:150px;"><option value="">— Sin asignar —</option><% [...DEPTOS,...SECTORES].forEach(d => { %><option value="<%= d %>" <%= u.departamento===d?'selected':'' %>><%= d %></option><% }) %></select></form><% } else { %><span style="font-size:0.78rem;color:var(--gris-texto);"><%= u.departamento||'—' %></span><% } %></td>
+                <td><form method="POST" action="/configuracion/usuario/<%= u.id %>/rol" style="margin:0;"><select name="rol" onchange="this.form.submit()" style="padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.75rem;font-family:var(--font-sans);background:var(--gris-fondo);outline:none;cursor:pointer;"><option value="empleado" <%= (u.rol||'').toLowerCase()==='empleado'?'selected':'' %>>Empleado</option><option value="supervisor" <%= (u.rol||'').toLowerCase()==='supervisor'?'selected':'' %>>Supervisor</option><option value="admin" <%= (u.rol||'').toLowerCase()==='admin'?'selected':'' %>>Admin</option></select></form></td>
                 <td><span style="font-size:0.68rem;font-weight:600;background:<%= u.activo?'#f0fdf4':'#fef2f2' %>;color:<%= u.activo?'#16a34a':'#dc2626' %>;border:1px solid <%= u.activo?'#bbf7d0':'#fecaca' %>;padding:2px 8px;border-radius:20px;"><%= u.activo?'Activo':'Inactivo' %></span></td>
                 <td style="font-size:0.72rem;color:var(--gris-texto);"><%= u.creado_en?u.creado_en.slice(0,10):'—' %></td>
                 <td><div style="display:flex;gap:4px;justify-content:flex-end;"><% if (u.activo) { %><form method="POST" action="/configuracion/usuario/<%= u.id %>/desactivar" style="margin:0;"><button type="submit" title="Desactivar" class="btn-icono"><i class="ti ti-user-off"></i></button></form><% } else { %><form method="POST" action="/configuracion/usuario/<%= u.id %>/activar" style="margin:0;"><button type="submit" title="Activar" class="btn-icono btn-icono-verde"><i class="ti ti-user-check"></i></button></form><% } %><form method="POST" action="/configuracion/usuario/<%= u.id %>/eliminar" style="margin:0;" onsubmit="return confirm('¿Eliminar permanentemente a <%= u.nombre %>?')"><button type="submit" title="Eliminar" class="btn-icono btn-icono-rojo"><i class="ti ti-trash"></i></button></form></div></td>
@@ -81,6 +92,7 @@
     </div>
 
     <!-- TAB: Backup -->
+    <% if (general) { %>
     <div id="tab-content-backup" style="display:none;">
       <div class="cfg-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
@@ -109,8 +121,10 @@
         <% } %>
       </div>
     </div>
+    <% } %>
 
     <!-- TAB: Auditoría -->
+    <% if (general) { %>
     <div id="tab-content-auditoria" style="display:none;">
       <div class="cfg-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
@@ -135,8 +149,10 @@
         <% } %>
       </div>
     </div>
+    <% } %>
 
     <!-- TAB: Seguridad -->
+    <% if (general) { %>
     <div id="tab-content-seguridad" style="display:none;">
       <div class="cfg-card">
         <p class="cfg-titulo" style="margin-bottom:24px;"><i class="ti ti-shield-lock"></i> Configuración de seguridad</p>
@@ -186,8 +202,10 @@
         </form>
       </div>
     </div>
+    <% } %>
 
     <!-- TAB: Notificaciones (próximamente) -->
+    <% if (general) { %>
     <div id="tab-content-notificaciones" style="display:none;">
       <div class="cfg-card" style="text-align:center;padding:48px;">
         <i class="ti ti-mail" style="font-size:3rem;color:var(--gris-borde);display:block;margin-bottom:16px;"></i>
@@ -196,8 +214,10 @@
         <span style="font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--gris-fondo);color:var(--gris-texto);padding:4px 12px;border-radius:20px;margin-top:16px;display:inline-block;">Próximamente</span>
       </div>
     </div>
+    <% } %>
 
     <!-- TAB: Importación (próximamente) -->
+    <% if (general) { %>
     <div id="tab-content-importacion" style="display:none;">
       <div class="cfg-card" style="text-align:center;padding:48px;">
         <i class="ti ti-file-import" style="font-size:3rem;color:var(--gris-borde);display:block;margin-bottom:16px;"></i>
@@ -206,6 +226,7 @@
         <span style="font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--gris-fondo);color:var(--gris-texto);padding:4px 12px;border-radius:20px;margin-top:16px;display:inline-block;">Próximamente</span>
       </div>
     </div>
+    <% } %>
 
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
       <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
@@ -229,7 +250,7 @@
 </style>
 
 <script>
-const tabIds = ['usuarios','backup','auditoria','seguridad','notificaciones','importacion'];
+const tabIds = <%- JSON.stringify(tabList.map(t => t.id)) %>;
 
 function mostrarTab(tab) {
   tabIds.forEach(t => {

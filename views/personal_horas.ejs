@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horas trabajadas — <%= empleado.nombre %> — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: 'personal' }) %>
+
+  <main class="main-content">
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Miembro de equipo</p>
+        <h1 class="seccion-titulo">Horas de <%= empleado.nombre %></h1>
+      </div>
+      <a href="/personal" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al equipo</a>
+    </div>
+
+    <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:24px 28px;margin-bottom:24px;box-shadow:var(--sombra);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--azul-claro);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:600;">
+          <%= empleado.nombre.charAt(0).toUpperCase() %>
+        </div>
+        <div>
+          <div style="font-size:1rem;font-weight:600;color:var(--negro);"><%= empleado.nombre %></div>
+          <div style="font-size:0.78rem;color:var(--gris-texto);">
+            <%= empleado.modalidad || 'Sin modalidad' %><% if (empleado.legajo) { %> · CUIL <%= empleado.legajo %><% } %>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 4px;">Total histórico</p>
+        <p style="font-size:1.6rem;font-weight:700;color:var(--negro);margin:0;"><%= totalGeneral %>hs</p>
+      </div>
+    </div>
+
+    <% if (meses.length === 0) { %>
+      <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:40px;text-align:center;color:var(--gris-texto);font-size:0.85rem;">
+        Todavía no tiene ningún evento marcado como "vino" — cuando el encargado empiece a marcar asistencia en los eventos, va a aparecer acá.
+      </div>
+    <% } %>
+
+    <% meses.forEach(m => { %>
+    <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:24px 28px;margin-bottom:16px;box-shadow:var(--sombra);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <h2 style="font-size:1rem;font-weight:600;color:var(--negro);text-transform:capitalize;"><%= m.etiqueta %></h2>
+        <span style="font-size:0.85rem;font-weight:700;color:var(--azul);"><%= m.subtotal %>hs</span>
+      </div>
+      <div class="tabla-wrap">
+        <table class="tabla" style="width:100%;">
+          <thead>
+            <tr><th>Fecha</th><th>Evento</th><th>Horario</th><th style="text-align:right;">Horas</th></tr>
+          </thead>
+          <tbody>
+            <% m.eventos.forEach(ev => { %>
+            <tr>
+              <td style="font-size:0.82rem;"><%= new Date(ev.fecha+'T00:00:00').toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'}) %></td>
+              <td style="font-size:0.82rem;font-weight:500;"><%= ev.nombre %></td>
+              <td style="font-size:0.82rem;color:var(--gris-texto);"><%= ev.hora_hasta ? `${ev.hora_desde} a ${ev.hora_hasta}` : `desde las ${ev.hora_desde}` %></td>
+              <td style="font-size:0.82rem;text-align:right;font-weight:600;"><%= ev.horas %>hs</td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <% }) %>
+  </main>
+</div>
+</body>
+</html>

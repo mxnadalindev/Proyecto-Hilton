@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 const { loginRequerido } = require('./middleware');
+const { horasDelMes } = require('../services/horasTrabajadas');
 
 const MODELO = 'gemini-2.5-flash';
 const URL_GEMINI = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent`;
@@ -24,6 +25,18 @@ const HERRAMIENTAS = [{
           sector: { type: 'STRING', description: 'Nombre del sector para filtrar (opcional), ej: Panadería' },
         },
         required: ['fecha'],
+      },
+    },
+    {
+      name: 'consultar_horas_trabajadas',
+      description: 'Devuelve cuántas horas trabajó un empleado en un mes determinado (sumando sus eventos AYB con asistencia confirmada, o sus horarios cargados en Cocina). Útil para informes de horas y para ayudar a decidir a quién asignarle un evento.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          nombre_empleado: { type: 'STRING', description: 'Nombre (o parte del nombre) del empleado' },
+          mes: { type: 'STRING', description: 'Mes a consultar en formato YYYY-MM. Si no lo dice, usar el mes actual.' },
+        },
+        required: ['nombre_empleado'],
       },
     },
     {
@@ -97,6 +110,22 @@ async function ejecutarConsulta(nombre, args) {
     return {
       fecha: args.fecha,
       empleados: rows.map(r => ({ nombre: r.nombre, sector: r.departamento, estado: r.valor || 'Normal' })),
+    };
+  }
+
+  if (nombre === 'consultar_horas_trabajadas') {
+    const candidatos = await buscarEmpleadoPorNombre(args.nombre_empleado);
+    if (candidatos.length === 0) return { error: `No encontré ningún empleado que coincida con "${args.nombre_empleado}".` };
+    if (candidatos.length > 1) return { error: `Encontré varios empleados que coinciden con "${args.nombre_empleado}": ${candidatos.map(c => c.nombre).join(', ')}. Decime cuál exactamente.` };
+    const emp = candidatos[0];
+    const mes = /^\d{4}-\d{2}$/.test(args.mes || '') ? args.mes : new Date().toISOString().slice(0, 7);
+    const resultado = await horasDelMes(emp.id, emp.departamento, mes);
+    return {
+      empleado: emp.nombre,
+      mes,
+      horas_trabajadas: resultado.horas,
+      dias_trabajados: resultado.dias,
+      eventos_trabajados: resultado.eventos,
     };
   }
 

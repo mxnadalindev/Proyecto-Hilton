@@ -6,7 +6,7 @@ const multer = require('multer');
 const path = require('path');
 const ExcelJS = require('exceljs');
 router.use(loginRequerido, requiereDepartamento('/costos'));
-const { analizarFactura } = require('../services/gemini');
+const { analizarFactura, mensajeErrorGemini } = require('../services/gemini');
 const { parsearCsvInsumos, importarInsumos } = require('../services/importadorInsumos');
 const { parsearCsvPlatos, importarPlatos } = require('../services/importadorPlatos');
 
@@ -450,8 +450,8 @@ router.post('/factura', loginRequerido, upload.single('factura'), async (req, re
 
     res.redirect('/costos/factura/revisar');
   } catch (e) {
-    console.error('Error analizando factura con Gemini:', e.message);
-    res.redirect('/costos?msg=' + encodeURIComponent('Error analizando la factura: ' + e.message));
+    console.error('Error analizando factura con Gemini:', e.message, e.cause || '');
+    res.redirect('/costos?msg=' + encodeURIComponent(mensajeErrorGemini(e)));
   }
 });
 

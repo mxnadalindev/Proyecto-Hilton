@@ -1,5 +1,7 @@
 <nav class="mobile-nav">
-  <% const _dm = usuario?.departamento; const _rm = usuario?.rol; %>
+  <% // .toLowerCase(): mismo motivo que en nav.ejs — evita ocultar ítems
+     // del menú por diferencias de mayúsculas en departamento/rol.
+     const _dm = (usuario?.departamento || '').toLowerCase(); const _rm = (usuario?.rol || '').toLowerCase(); %>
   <a href="/inicio" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'inicio') ? 'activo' : '' %>">
     <i class="ti ti-home"></i><span>Inicio</span>
   </a>
@@ -12,7 +14,6 @@
   <% } %>
   <% if (_dm === 'ayb' || _rm === 'admin') { %>
     <a href="/croutons" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>"><i class="ti ti-package"></i><span>Croutons</span></a>
-    <a href="/personal/mi-disponibilidad" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'mi-disponibilidad') ? 'activo' : '' %>"><i class="ti ti-calendar-event"></i><span>Mi disponibilidad</span></a>
   <% } %>
   <% if (_dm === 'compras' || _rm === 'admin') { %>
     <a href="/compras"  class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'compras')  ? 'activo' : '' %>"><i class="ti ti-shopping-cart"></i><span>Compras</span></a>
