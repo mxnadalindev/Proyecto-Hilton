@@ -22,7 +22,7 @@
         <% // "Miembro de equipo" (con Vencimientos) es solo para quien gestiona
            // AYB (admin/supervisor) — un mozo común no debe verlo. %>
         <% if (esGestor) { %>
-        <a href="/personal" class="btn-secondary"><i class="ti ti-users"></i> Ver equipo</a>
+        <a href="/personal" id="ayb-btn-ver-equipo" class="btn-secondary"><i class="ti ti-users"></i> Ver equipo</a>
         <% } %>
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
       </div>
@@ -212,6 +212,11 @@ async function cargarMes() {
   const mes  = cFecha.getMonth();
   const mesStr = `${anio}-${String(mes+1).padStart(2,'0')}`;
   document.getElementById('c-titulo').textContent = MESES[mes] + ' ' + anio;
+  // "Ver equipo" se lleva el mes que se está mirando acá, así en Miembro de
+  // equipo aparecen solo los mozos con algo cargado ese mes (a pedido) en
+  // vez de la lista completa siempre.
+  const btnVerEquipo = document.getElementById('ayb-btn-ver-equipo');
+  if (btnVerEquipo) btnVerEquipo.href = `/personal?mes=${mesStr}`;
   try {
     const resp = await fetch(`/personal/${uid}/disponibilidad?mes=${mesStr}`);
     const data = await resp.json();
@@ -332,14 +337,37 @@ function renderDiasLista() {
   document.getElementById('dias-lista-vacio').style.display = dias.length ? 'none' : 'block';
   document.getElementById('dias-lista').innerHTML = dias.map(fecha => {
     const h = horariosPorDia[fecha] || { desde: '', hasta: '' };
+    // AM/PM: no hay turnos fijos en AYB (cada mozo carga su propia
+    // disponibilidad, no un horario de convenio), así que estos botones son
+    // solo un atajo — completan Desde/Hasta con un rango genérico de mañana
+    // o de tarde/noche para no tener que tipear, pero el mozo puede seguir
+    // ajustando los campos a mano después si su disponibilidad real es otra.
+    const esAM = h.desde === '00:00' && h.hasta === '12:00';
+    const esPM = h.desde === '12:00' && h.hasta === '23:59';
     return `
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:0.75rem;font-weight:600;color:var(--negro);min-width:44px;">${fmtFechaCorta(fecha)}</span>
-        <input type="time" value="${h.desde}" onchange="horariosPorDia['${fecha}'].desde=this.value" style="flex:1;min-width:0;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:8px 10px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
-        <input type="time" value="${h.hasta}" onchange="horariosPorDia['${fecha}'].hasta=this.value" style="flex:1;min-width:0;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:8px 10px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
-        <button type="button" onclick="toggleDia('${fecha}');renderGrid();" title="Sacar este día" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;padding:2px 4px;">&times;</button>
+      <div style="display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid var(--gris-borde);border-radius:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:0.75rem;font-weight:600;color:var(--negro);min-width:44px;">${fmtFechaCorta(fecha)}</span>
+          <button type="button" onclick="setRangoAmPm('${fecha}','AM')" style="padding:6px 10px;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid ${esAM ? 'var(--azul)' : 'var(--gris-borde)'};background:${esAM ? 'var(--azul-claro)' : 'var(--blanco)'};color:${esAM ? 'var(--azul)' : 'var(--gris-texto)'};">AM</button>
+          <button type="button" onclick="setRangoAmPm('${fecha}','PM')" style="padding:6px 10px;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid ${esPM ? 'var(--azul)' : 'var(--gris-borde)'};background:${esPM ? 'var(--azul-claro)' : 'var(--blanco)'};color:${esPM ? 'var(--azul)' : 'var(--gris-texto)'};">PM</button>
+          <button type="button" onclick="toggleDia('${fecha}');renderGrid();" title="Sacar este día" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;padding:2px 4px;margin-left:auto;">&times;</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="time" value="${h.desde}" onchange="horariosPorDia['${fecha}'].desde=this.value;renderDiasLista();" style="flex:1;min-width:0;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:8px 10px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+          <input type="time" value="${h.hasta}" onchange="horariosPorDia['${fecha}'].hasta=this.value;renderDiasLista();" style="flex:1;min-width:0;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:8px 10px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+        </div>
       </div>`;
   }).join('');
+}
+
+// Completa Desde/Hasta de un día con un rango genérico de mañana (AM,
+// 00:00–12:00) o tarde/noche (PM, 12:00–23:59) — ver comentario en
+// renderDiasLista sobre por qué son valores genéricos y no un turno real.
+function setRangoAmPm(fecha, periodo) {
+  horariosPorDia[fecha] = periodo === 'AM'
+    ? { desde: '00:00', hasta: '12:00' }
+    : { desde: '12:00', hasta: '23:59' };
+  renderDiasLista();
 }
 
 function copiarPrimerHorarioATodos() {
@@ -754,6 +782,37 @@ async function eliminarEvento(id) {
 cargarMes();
 cargarEventos();
 renderDiasLista();
+
+<% /* Alertas de eventuales de AYB (bolsa de 200hs + topes de 12hs) — a
+      pedido, el bot las muestra solo, apenas el encargado entra acá, sin
+      que nadie le tenga que preguntar nada. Solo para esGestor: un mozo
+      no ve esto de sus compañeros. Se arma en el servidor (ver
+      alertasEventualesAyb en src/routes/horarios.js) y acá simplemente se
+      empuja como mensajes del bot usando lo que ya existe en nav.ejs. */ %>
+<% if (esGestor && alertasEventuales && alertasEventuales.length) { %>
+(function () {
+  const alertas = <%- JSON.stringify(alertasEventuales) %>;
+  const panel = document.getElementById('asistentePanel');
+  const burbuja = document.getElementById('asistenteBurbuja');
+  if (!panel || !burbuja || typeof agregarMensajeAsistente !== 'function') return;
+
+  const totalAvisos = alertas.reduce((n, a) => n + a.detalles.length, 0);
+  agregarMensajeAsistente(
+    `⚠️ Ojo con los eventuales de AYB: encontré ${totalAvisos} aviso${totalAvisos === 1 ? '' : 's'} entre ${alertas.length} mozo${alertas.length === 1 ? '' : 's'} este mes (bolsa de 200hs y/o descanso de 12hs).`,
+    'bot'
+  );
+  alertas.forEach(a => {
+    agregarMensajeAsistente(`${a.nombre} (${a.horasTotales}hs este mes):\n• ${a.detalles.join('\n• ')}`, 'bot');
+  });
+
+  // Abre el panel solo, para que la alerta se vea apenas se entra — a
+  // pedido explícito ("que el bot lo muestre como una alerta al ingresar
+  // al admin de AYB"), no alcanza con dejar solo el pulso esperando a que
+  // alguien abra el chat por su cuenta.
+  panel.classList.add('abierto');
+  burbuja.classList.add('oculta-pulso');
+})();
+<% } %>
 </script>
 </body>
 </html>
