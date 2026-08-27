@@ -1,8 +1,8 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Vencimientos A&B — Hilton</title>
+  <title>Croutons — Hilton</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -17,13 +17,46 @@
     <div class="seccion-header">
       <div class="seccion-header-left">
         <p class="seccion-label">Alimentos y Bebidas</p>
-        <h1 class="seccion-titulo">Vencimientos</h1>
+        <h1 class="seccion-titulo">Croutons</h1>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
-        <button onclick="showModal('modal-lote')" class="btn-primary">
-          <i class="ti ti-plus"></i> Cargar lote a mano
+        <button id="btn-avisos" onclick="toggleAvisos()" class="btn-secondary">
+          <i class="ti ti-bell" id="icon-avisos"></i> <span id="texto-avisos">Activar avisos</span>
         </button>
+
+        <!-- Más opciones: Consumidos + Excel -->
+        <div class="desplegable-croutons">
+          <button onclick="toggleDesplegable('menu-mas-opciones')" class="btn-secondary">
+            <i class="ti ti-dots-vertical"></i> Más opciones
+          </button>
+          <div id="menu-mas-opciones" class="desplegable-croutons-panel" style="display:none;">
+            <button type="button" onclick="cerrarDesplegables();showModal('modal-catalogo')" class="desplegable-croutons-item">
+              <i class="ti ti-list-details"></i> Catálogo
+            </button>
+            <button type="button" onclick="cerrarDesplegables();abrirConsumidos()" class="desplegable-croutons-item">
+              <i class="ti ti-archive"></i> Consumidos<% if (totalConsumidos > 0) { %> (<%= totalConsumidos %>)<% } %>
+            </button>
+            <a href="/croutons/excel" class="desplegable-croutons-item">
+              <i class="ti ti-file-spreadsheet" style="color:#16a34a;"></i> Excel
+            </a>
+          </div>
+        </div>
+
+        <!-- Nuevo lote: a mano/escanear, o por foto -->
+        <div class="desplegable-croutons">
+          <button onclick="toggleDesplegable('menu-nuevo-lote')" class="btn-primary">
+            <i class="ti ti-plus"></i> Nuevo lote <i class="ti ti-chevron-down" style="font-size:13px;"></i>
+          </button>
+          <div id="menu-nuevo-lote" class="desplegable-croutons-panel" style="display:none;">
+            <button type="button" onclick="cerrarDesplegables();abrirNuevoLote()" class="desplegable-croutons-item">
+              <i class="ti ti-pencil"></i> A mano / escanear código
+            </button>
+            <button type="button" onclick="cerrarDesplegables();showModal('modal-carga-foto')" class="desplegable-croutons-item">
+              <i class="ti ti-camera"></i> Por foto del remito
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -31,30 +64,311 @@
       const msgTexto = decodeURIComponent(msg);
       const esError  = /error/i.test(msgTexto);
     %>
-    <div style="background:<%= esError ? '#fef2f2' : 'var(--azul-claro)' %>;border:1px solid <%= esError ? '#fecaca' : 'var(--azul-borde)' %>;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:<%= esError ? '#dc2626' : 'var(--azul)' %>;display:flex;align-items:center;gap:10px;">
-      <i class="ti <%= esError ? 'ti-alert-circle' : 'ti-check' %>" style="font-size:18px;"></i>
-      <%= msgTexto %>
+    <div id="toast-mensaje" style="position:fixed;top:20px;right:20px;z-index:2000;background:<%= esError ? '#fef2f2' : '#f0fdf4' %>;border:1px solid <%= esError ? '#fecaca' : '#bbf7d0' %>;border-radius:10px;padding:14px 18px;font-size:0.83rem;color:<%= esError ? '#dc2626' : '#16a34a' %>;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.15);max-width:360px;transition:opacity .4s, transform .4s;">
+      <i class="ti <%= esError ? 'ti-alert-circle' : 'ti-check' %>" style="font-size:18px;flex-shrink:0;"></i>
+      <span><%= msgTexto %></span>
+      <button type="button" onclick="cerrarToast()" style="background:none;border:none;cursor:pointer;color:inherit;opacity:0.6;font-size:14px;margin-left:4px;flex-shrink:0;"><i class="ti ti-x"></i></button>
+    </div>
+    <script>
+      (function() {
+        const toast = document.getElementById('toast-mensaje');
+        if (!toast) return;
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(-10px)';
+          setTimeout(() => toast.remove(), 400);
+        }, 4000);
+      })();
+      function cerrarToast() {
+        const toast = document.getElementById('toast-mensaje');
+        if (toast) toast.remove();
+      }
+    </script>
+    <% } %>
+
+    <!-- Buscador -->
+    <div style="position:relative;margin-bottom:16px;max-width:360px;">
+      <i class="ti ti-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
+      <input type="text" id="buscador-productos" oninput="filtrarProductos()" placeholder="Buscar producto..."
+             style="width:100%;padding:9px 12px 9px 34px;border:1px solid var(--gris-borde);border-radius:9px;font-family:var(--font-sans);font-size:0.83rem;outline:none;background:var(--blanco);color:var(--negro);">
+    </div>
+
+    <!-- Resumen: tarjetas clickeables que filtran el listado de abajo -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:14px;">
+      <a href="/croutons" style="text-decoration:none;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:12px;padding:16px;text-align:center;display:block;">
+        <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= totalProductos %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Producto<%= totalProductos !== 1 ? 's' : '' %></p>
+      </a>
+      <a href="/croutons?tipo=vencidos" style="text-decoration:none;background:#fef2f2;border:<%= tipoFiltro==='vencidos' ? '2px' : '1px' %> solid #<%= tipoFiltro==='vencidos' ? 'dc2626' : 'fecaca' %>;border-radius:12px;padding:16px;text-align:center;display:block;">
+        <p style="font-size:1.8rem;font-weight:700;color:#dc2626;margin:0;"><%= vencidos.length %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#dc2626;margin:4px 0 0;">Vencido<%= vencidos.length !== 1 ? 's' : '' %></p>
+      </a>
+      <a href="/croutons?tipo=porvencer" style="text-decoration:none;background:#fef3c7;border:<%= tipoFiltro==='porvencer' ? '2px' : '1px' %> solid #<%= tipoFiltro==='porvencer' ? 'ef9f27' : 'fde68a' %>;border-radius:12px;padding:16px;text-align:center;display:block;">
+        <p style="font-size:1.8rem;font-weight:700;color:#92400e;margin:0;"><%= porVencer.length %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#92400e;margin:4px 0 0;">Vencen en <%= diasAlerta %> días o menos</p>
+      </a>
+      <a href="/croutons?tipo=stockbajo" style="text-decoration:none;background:var(--azul-claro);border:<%= tipoFiltro==='stockbajo' ? '2px' : '1px' %> solid <%= tipoFiltro==='stockbajo' ? 'var(--azul)' : 'var(--azul-borde)' %>;border-radius:12px;padding:16px;text-align:center;display:block;">
+        <p style="font-size:1.8rem;font-weight:700;color:var(--azul);margin:0;"><%= productosStockBajo.length %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--azul);margin:4px 0 0;">Stock bajo — reponer</p>
+      </a>
+    </div>
+
+    <% if (tipoFiltro) {
+      const colorChip = tipoFiltro==='vencidos' ? '#dc2626' : (tipoFiltro==='porvencer' ? '#ef9f27' : 'var(--azul)');
+      const textoChip = tipoFiltro==='vencidos' ? 'Vencidos' : (tipoFiltro==='porvencer' ? `Vencen en ${diasAlerta} días o menos` : 'Stock bajo — reponer');
+    %>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <span style="font-size:0.75rem;color:var(--gris-texto);">Mostrando:</span>
+      <a href="/croutons" style="text-decoration:none;background:<%= colorChip %>;color:#fff;font-size:0.72rem;font-weight:600;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:6px;">
+        <%= textoChip %> <i class="ti ti-x" style="font-size:12px;"></i>
+      </a>
     </div>
     <% } %>
 
-    <!-- Resumen -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;">
-      <div style="background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:12px;padding:16px;text-align:center;">
-        <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= totalLotes %></p>
-        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Lote<%= totalLotes !== 1 ? 's' : '' %> activo<%= totalLotes !== 1 ? 's' : '' %></p>
+    <div class="panel-productos">
+      <% if (productos.length === 0) { %>
+        <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:32px;text-align:center;color:var(--gris-texto);">
+          <i class="ti ti-package-off" style="font-size:32px;display:block;margin-bottom:10px;"></i>
+          <% if (tipoFiltro) { %>
+            No hay productos en este filtro.
+          <% } else { %>
+            Todavía no hay ningún lote cargado. Usá "Cargar lote a mano", escaneá un código de barras, o subí una foto del remito.
+          <% } %>
+        </div>
+      <% } else { %>
+      <div id="lista-productos" style="display:flex;flex-direction:column;gap:10px;">
+        <% categorias.forEach((cat, ci) => { %>
+        <div class="acordeon-categoria">
+          <button type="button" class="acordeon-alerta-header" onclick="toggleAcordeon('acordeon-cat-<%= ci %>')" style="background:var(--blanco);border:1px solid var(--gris-borde);color:var(--negro);">
+            <i class="ti ti-category" style="font-size:17px;color:var(--gris-texto);"></i>
+            <span style="flex:1;text-align:left;"><%= cat.categoria %></span>
+            <span class="acordeon-alerta-badge" style="background:var(--gris-texto);"><%= cat.productos.length %></span>
+            <i class="ti ti-chevron-down acordeon-alerta-chevron"></i>
+          </button>
+          <div id="acordeon-cat-<%= ci %>" class="acordeon-alerta-body">
+            <% cat.productos.forEach(p => {
+              const i = productos.indexOf(p);
+              const dias = p.diasParaVencerMinimo;
+              let estadoTexto, estadoColor, estadoFondo, estadoBorde;
+              if (dias < 0) {
+                estadoTexto = `Vencido hace ${Math.abs(dias)} día${Math.abs(dias) !== 1 ? 's' : ''}`;
+                estadoColor = '#dc2626'; estadoFondo = '#fef2f2'; estadoBorde = '#fecaca';
+              } else if (dias <= diasAlerta) {
+                estadoTexto = dias === 0 ? 'Vence hoy' : `Vence en ${dias} día${dias !== 1 ? 's' : ''}`;
+                estadoColor = '#92400e'; estadoFondo = '#fef3c7'; estadoBorde = '#fde68a';
+              } else {
+                estadoTexto = `Vence en ${dias} días`;
+                estadoColor = '#16a34a'; estadoFondo = '#f0fdf4'; estadoBorde = '#bbf7d0';
+              }
+            %>
+            <div class="fila-producto" data-nombre="<%= p.producto.toLowerCase() %>" onclick="showModal('modal-producto-<%= i %>')"
+                 style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color .15s;">
+              <div>
+                <p style="font-weight:600;color:var(--negro);margin:0 0 3px;font-size:0.88rem;"><%= p.producto %></p>
+                <p style="font-size:0.75rem;color:var(--gris-texto);margin:0;">
+                  <%= p.totalLotes %> lote<%= p.totalLotes !== 1 ? 's' : '' %><% if (p.pesoTotalKg > 0) { %> · <%= p.pesoTotalKg.toFixed(2) %> kg total<% } %>
+                </p>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;">
+                <% if (p.stockBajo) { %>
+                <span style="font-size:0.68rem;font-weight:700;color:var(--azul);background:var(--azul-claro);border:1px solid var(--azul-borde);padding:3px 9px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;">
+                  <i class="ti ti-shopping-cart" style="font-size:12px;"></i> Stock bajo
+                </span>
+                <% } %>
+                <span style="font-size:0.68rem;font-weight:700;color:<%= estadoColor %>;background:<%= estadoFondo %>;border:1px solid <%= estadoBorde %>;padding:3px 9px;border-radius:20px;white-space:nowrap;"><%= estadoTexto %></span>
+                <i class="ti ti-chevron-right" style="color:var(--gris-texto);"></i>
+              </div>
+            </div>
+            <% }) %>
+          </div>
+        </div>
+        <% }) %>
       </div>
-      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;text-align:center;">
-        <p style="font-size:1.8rem;font-weight:700;color:#dc2626;margin:0;"><%= vencidos.length %></p>
-        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#dc2626;margin:4px 0 0;">Vencido<%= vencidos.length !== 1 ? 's' : '' %></p>
-      </div>
-      <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:16px;text-align:center;">
-        <p style="font-size:1.8rem;font-weight:700;color:#92400e;margin:0;"><%= porVencer.length %></p>
-        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#92400e;margin:4px 0 0;">Vencen en <%= diasAlerta %> días o menos</p>
+      <p id="mensaje-sin-resultados" style="display:none;text-align:center;color:var(--gris-texto);font-size:0.82rem;padding:20px;">Ningún producto coincide con la búsqueda.</p>
+      <% } %>
       </div>
     </div>
 
-    <!-- Carga de mercadería: un solo selector, detecta foto de remito vs. catálogo -->
-    <div class="tarjeta-unificada">
+  </main>
+
+  <%- include('partials/mobile-nav', { path: 'croutons' }) %>
+</div>
+
+<!-- Modal: detalle de lotes por producto (uno por cada producto del listado) -->
+<% productos.forEach((p, i) => { %>
+<div id="modal-producto-<%= i %>" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:28px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:88vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:400;"><%= p.producto %></h2>
+      <button onclick="hideModal('modal-producto-<%= i %>')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:0.75rem;color:var(--gris-texto);margin:0 0 16px;">
+      Total: <%= p.totalLotes %> lote<%= p.totalLotes !== 1 ? 's' : '' %><% if (p.pesoTotalKg > 0) { %> · <%= p.pesoTotalKg.toFixed(2) %> kg<% } %>
+    </p>
+
+    <!-- Stock mínimo para alerta de reposición — se guarda solo, sin recargar -->
+    <div style="background:var(--azul-claro);border:1px solid var(--azul-borde);border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <i class="ti ti-shopping-cart" style="color:var(--azul);font-size:16px;flex-shrink:0;"></i>
+      <label style="font-size:0.76rem;color:var(--azul);font-weight:600;white-space:nowrap;">Stock mínimo:</label>
+      <input type="number" min="0" step="1" placeholder="Sin definir"
+             value="<%= p.stockMinimo !== null ? p.stockMinimo : '' %>"
+             id="input-stock-minimo-<%= i %>"
+             onchange="guardarStockMinimo('<%= p.producto.replace(/'/g, "\\'") %>', this.value, <%= i %>)"
+             style="width:80px;border:1px solid var(--azul-borde);border-radius:7px;padding:6px 9px;font-size:0.82rem;outline:none;background:var(--blanco);color:var(--negro);">
+      <span style="font-size:0.72rem;color:var(--azul);">(hoy: <%= p.stockActual %> <%= p.lotes[0] ? p.lotes[0].unidad : '' %>)</span>
+      <span id="estado-guardado-minimo-<%= i %>" style="font-size:0.72rem;color:var(--azul);"></span>
+    </div>
+
+    <!-- Categoría del producto — con qué barra se agrupa en el listado -->
+    <div style="background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <i class="ti ti-category" style="color:var(--gris-texto);font-size:16px;flex-shrink:0;"></i>
+      <label style="font-size:0.76rem;color:var(--gris-texto);font-weight:600;white-space:nowrap;">Categoría:</label>
+      <input type="text" placeholder="General"
+             value="<%= p.categoria !== 'General' ? p.categoria : '' %>"
+             id="input-categoria-<%= i %>"
+             onchange="guardarCategoria('<%= p.producto.replace(/'/g, "\\'") %>', this.value, <%= i %>)"
+             style="width:140px;border:1px solid var(--gris-borde);border-radius:7px;padding:6px 9px;font-size:0.82rem;outline:none;background:var(--blanco);color:var(--negro);">
+      <span id="estado-guardado-categoria-<%= i %>" style="font-size:0.72rem;color:var(--gris-texto);"></span>
+    </div>
+
+    <p style="font-size:0.66rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--gris-texto);margin:0 0 8px;font-weight:600;">Lotes cargados</p>
+
+    <% const idPrimerNoVencido = (p.lotes.find(l => l.dias_para_vencer >= 0) || {}).id; %>
+    <% p.lotes.forEach(l => {
+      const dias = l.dias_para_vencer;
+      let colorLote;
+      if (dias < 0) colorLote = '#dc2626';
+      else if (dias <= diasAlerta) colorLote = '#92400e';
+      else colorLote = '#16a34a';
+      const textoLote = dias < 0 ? `Vencido hace ${Math.abs(dias)} día${Math.abs(dias) !== 1 ? 's' : ''}` : (dias === 0 ? 'Vence hoy' : `Vence en ${dias} día${dias !== 1 ? 's' : ''}`);
+      const esUsarPrimero = p.lotes.length > 1 && l.id === idPrimerNoVencido;
+    %>
+    <div style="background:var(--gris-fondo);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;<% if (esUsarPrimero) { %>border:1.5px solid var(--azul);<% } %>">
+      <div style="min-width:0;">
+        <p style="font-size:0.8rem;font-weight:600;color:<%= colorLote %>;margin:0 0 2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <%= textoLote %> (<%= new Date(l.fecha_vencimiento).toLocaleDateString('es-AR') %>)
+          <% if (esUsarPrimero) { %>
+          <span style="font-size:0.62rem;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;color:var(--azul);background:var(--azul-claro);border:1px solid var(--azul-borde);padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:3px;">
+            <i class="ti ti-arrow-big-up-line" style="font-size:11px;"></i> Usar primero
+          </span>
+          <% } %>
+        </p>
+        <p style="font-size:0.74rem;color:var(--gris-texto);margin:0;">
+          <%= l.cantidad %> <%= l.unidad %><% if (l.peso) { %> · <%= parseFloat(l.peso) %> <%= l.unidad_peso || 'kg' %><% } %> · ingresó <%= new Date(l.fecha_ingreso).toLocaleDateString('es-AR') %>
+          <% if (l.proveedor) { %><br><%= l.proveedor %><% } %>
+        </p>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button type="button" class="btn-icono" title="Editar" onclick='abrirEditarLote(<%- JSON.stringify({
+          id: l.id, producto: l.producto, cantidad: l.cantidad, unidad: l.unidad,
+          peso: l.peso, unidad_peso: l.unidad_peso,
+          fecha_ingreso: l.fecha_ingreso ? new Date(l.fecha_ingreso).toISOString().split("T")[0] : "",
+          fecha_vencimiento: l.fecha_vencimiento ? new Date(l.fecha_vencimiento).toISOString().split("T")[0] : "",
+          proveedor: l.proveedor, lote_proveedor: l.lote_proveedor, notas: l.notas,
+          categoria: p.categoria && p.categoria !== 'General' ? p.categoria : ''
+        }) %>)'><i class="ti ti-pencil"></i></button>
+        <form method="POST" action="/croutons/lote/<%= l.id %>/consumir" style="display:inline;" onsubmit="return confirm('¿Marcar este lote como consumido?');">
+          <button type="submit" class="btn-icono" title="Marcar como consumido"><i class="ti ti-check"></i></button>
+        </form>
+        <form method="POST" action="/croutons/lote/<%= l.id %>/eliminar" style="display:inline;" onsubmit="return confirm('¿Eliminar este lote? Esta acción no se puede deshacer.');">
+          <button type="submit" class="btn-icono" title="Eliminar" style="color:#dc2626;"><i class="ti ti-trash"></i></button>
+        </form>
+      </div>
+    </div>
+    <% }) %>
+
+    <button type="button" onclick="hideModal('modal-producto-<%= i %>')" class="btn-secondary" style="width:100%;justify-content:center;margin-top:8px;">Cerrar</button>
+  </div>
+</div>
+<% }) %>
+
+<!-- Modal: Consumidos (papelera con restaurar) -->
+<div id="modal-consumidos" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:28px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:88vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:400;">Consumidos</h2>
+      <button onclick="hideModal('modal-consumidos')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:0.75rem;color:var(--gris-texto);margin:0 0 16px;">Se borran solos a los 15 días de marcarse como consumidos.</p>
+    <div id="lista-consumidos">
+      <p style="text-align:center;color:var(--gris-texto);font-size:0.82rem;padding:16px;">Cargando...</p>
+    </div>
+    <button type="button" onclick="hideModal('modal-consumidos')" class="btn-secondary" style="width:100%;justify-content:center;margin-top:8px;">Cerrar</button>
+  </div>
+</div>
+
+<!-- Modal: Catálogo — nombre, categoría y stock mínimo de cada producto,
+     exista o no un lote activo cargado ahora mismo. -->
+<div id="modal-catalogo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:28px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:88vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:400;">Catálogo</h2>
+      <button onclick="hideModal('modal-catalogo')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:0.75rem;color:var(--gris-texto);margin:0 0 16px;">Categoría y stock mínimo de cada producto, tenga o no lotes cargados ahora mismo.</p>
+
+    <!-- Alta rápida de un producto nuevo, sin necesidad de cargarle un lote -->
+    <form onsubmit="return agregarProductoCatalogo(event)" style="display:flex;gap:6px;margin-bottom:16px;">
+      <input type="text" id="input-nuevo-producto-catalogo" placeholder="Nombre del producto..." required
+             style="flex:1;border:1px solid var(--gris-borde);border-radius:8px;padding:8px 10px;font-size:0.8rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
+      <button type="submit" class="btn-secondary" style="padding:8px 12px;font-size:0.78rem;"><i class="ti ti-plus"></i></button>
+    </form>
+
+    <% if (catalogo.length === 0) { %>
+    <p style="text-align:center;color:var(--gris-texto);font-size:0.8rem;padding:16px;">Todavía no hay productos en el catálogo.</p>
+    <% } else { %>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <% catalogo.forEach((c, ci) => { %>
+      <div style="background:var(--gris-fondo);border-radius:9px;padding:10px 12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;">
+          <p style="font-size:0.8rem;font-weight:600;color:var(--negro);margin:0;"><%= c.nombre %></p>
+          <button type="button" class="btn-icono" title="Eliminar del catálogo" onclick="eliminarProductoCatalogo(<%= c.id %>, '<%= c.nombre.replace(/'/g, "\\'") %>')" style="color:#dc2626;flex-shrink:0;width:28px;height:28px;">
+            <i class="ti ti-trash" style="font-size:14px;"></i>
+          </button>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+          <input type="text" placeholder="Categoría" value="<%= c.categoria && c.categoria !== 'General' ? c.categoria : '' %>"
+                 id="cat-input-categoria-<%= ci %>"
+                 onchange="guardarCategoria('<%= c.nombre.replace(/'/g, "\\'") %>', this.value, 'cat-<%= ci %>')"
+                 style="flex:1;min-width:90px;border:1px solid var(--gris-borde);border-radius:7px;padding:5px 8px;font-size:0.76rem;outline:none;background:var(--blanco);color:var(--negro);">
+          <input type="number" min="0" step="1" placeholder="Mínimo" value="<%= c.stock_minimo !== null ? c.stock_minimo : '' %>"
+                 id="cat-input-stock-minimo-cat-<%= ci %>"
+                 onchange="guardarStockMinimo('<%= c.nombre.replace(/'/g, "\\'") %>', this.value, 'cat-<%= ci %>')"
+                 style="width:70px;border:1px solid var(--gris-borde);border-radius:7px;padding:5px 8px;font-size:0.76rem;outline:none;background:var(--blanco);color:var(--negro);">
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <select id="cat-input-unidad-cat-<%= ci %>"
+                  onchange="guardarUnidad('<%= c.nombre.replace(/'/g, "\\'") %>', this.value, 'cat-<%= ci %>')"
+                  style="flex:1;min-width:90px;border:1px solid var(--gris-borde);border-radius:7px;padding:5px 8px;font-size:0.76rem;outline:none;background:var(--blanco);color:var(--negro);">
+            <option value="unidad" <%= (c.unidad_default || 'unidad') === 'unidad' ? 'selected' : '' %>>unidad suelta</option>
+            <option value="paquete" <%= c.unidad_default === 'paquete' ? 'selected' : '' %>>paquete</option>
+            <option value="caja" <%= c.unidad_default === 'caja' ? 'selected' : '' %>>caja</option>
+            <option value="bolsa" <%= c.unidad_default === 'bolsa' ? 'selected' : '' %>>bolsa</option>
+          </select>
+          <input type="text" placeholder="Código de barras" value="<%= c.codigo_barras || '' %>"
+                 id="cat-input-codigo-cat-<%= ci %>"
+                 onchange="guardarCodigoBarras('<%= c.nombre.replace(/'/g, "\\'") %>', this.value, 'cat-<%= ci %>')"
+                 style="flex:1;min-width:110px;border:1px solid var(--gris-borde);border-radius:7px;padding:5px 8px;font-size:0.76rem;outline:none;background:var(--blanco);color:var(--negro);">
+        </div>
+        <span id="estado-guardado-categoria-cat-<%= ci %>" style="font-size:0.68rem;color:var(--gris-texto);"></span>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <button type="button" onclick="hideModal('modal-catalogo')" class="btn-secondary" style="width:100%;justify-content:center;margin-top:16px;">Cerrar</button>
+  </div>
+</div>
+
+<!-- Modal: Cargar por foto (remito o catálogo del proveedor) -->
+<div id="modal-carga-foto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Cargar por foto</h2>
+      <button onclick="hideModal('modal-carga-foto')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+
+    <div class="tarjeta-unificada" style="margin-bottom:0;box-shadow:none;border:none;padding:0;">
       <div class="tarjeta-unificada-icono"><i class="ti ti-truck-delivery"></i></div>
       <p class="tarjeta-unificada-titulo">
         Carga de mercadería
@@ -82,95 +396,18 @@
         </form>
       </div>
     </div>
-
-    <!-- Listado de lotes -->
-    <% if (lotes.length === 0) { %>
-      <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:32px;text-align:center;color:var(--gris-texto);">
-        <i class="ti ti-package-off" style="font-size:32px;display:block;margin-bottom:10px;"></i>
-        Todavía no hay ningún lote cargado. Usá "Cargar lote a mano", escaneá un código de barras, o subí una foto del remito.
-      </div>
-    <% } else { %>
-    <div class="tabla-wrap">
-      <table class="tabla" style="width:100%;">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Proveedor</th>
-            <th>Ingreso</th>
-            <th>Vencimiento</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% lotes.forEach(l => {
-            const dias = l.dias_para_vencer;
-            let estadoTexto, estadoColor, estadoFondo, estadoBorde;
-            if (dias < 0) {
-              estadoTexto = `Vencido hace ${Math.abs(dias)} día${Math.abs(dias) !== 1 ? 's' : ''}`;
-              estadoColor = '#dc2626'; estadoFondo = '#fef2f2'; estadoBorde = '#fecaca';
-            } else if (dias <= diasAlerta) {
-              estadoTexto = dias === 0 ? 'Vence hoy' : `Vence en ${dias} día${dias !== 1 ? 's' : ''}`;
-              estadoColor = '#92400e'; estadoFondo = '#fef3c7'; estadoBorde = '#fde68a';
-            } else {
-              estadoTexto = `Vence en ${dias} días`;
-              estadoColor = '#16a34a'; estadoFondo = '#f0fdf4'; estadoBorde = '#bbf7d0';
-            }
-          %>
-          <tr>
-            <td style="font-size:0.82rem;font-weight:500;">
-              <%= l.producto %>
-              <% if (l.lote_proveedor) { %><span style="display:block;font-size:0.68rem;color:var(--gris-texto);">Lote: <%= l.lote_proveedor %></span><% } %>
-            </td>
-            <td style="font-size:0.82rem;">
-              <form method="POST" action="/croutons/lote/<%= l.id %>/cantidad" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
-                <input type="number" name="cantidad" value="<%= l.cantidad %>" step="1" min="0"
-                       style="width:55px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:5px 7px;font-size:0.8rem;">
-                <span style="color:var(--gris-texto);"><%= l.unidad %></span>
-                <button type="submit" class="btn-icono" title="Guardar cantidad"><i class="ti ti-device-floppy"></i></button>
-              </form>
-              <% if (l.peso) { %>
-                <span style="display:block;font-size:0.68rem;color:var(--gris-texto);margin-top:2px;"><%= parseFloat(l.peso) %> <%= l.unidad_peso || 'kg' %></span>
-              <% } %>
-            </td>
-            <td style="font-size:0.8rem;color:var(--gris-texto);"><%= l.proveedor || '—' %></td>
-            <td style="font-size:0.8rem;color:var(--gris-texto);"><%= new Date(l.fecha_ingreso).toLocaleDateString('es-AR') %></td>
-            <td style="font-size:0.82rem;font-weight:600;"><%= new Date(l.fecha_vencimiento).toLocaleDateString('es-AR') %></td>
-            <td>
-              <span style="font-size:0.68rem;font-weight:700;color:<%= estadoColor %>;background:<%= estadoFondo %>;border:1px solid <%= estadoBorde %>;padding:3px 9px;border-radius:20px;white-space:nowrap;display:inline-block;">
-                <%= estadoTexto %>
-              </span>
-            </td>
-            <td style="white-space:nowrap;">
-              <form method="POST" action="/croutons/lote/<%= l.id %>/consumir" style="display:inline;" onsubmit="return confirm('¿Marcar este lote como consumido?');">
-                <button type="submit" class="btn-icono" title="Marcar como consumido"><i class="ti ti-check"></i></button>
-              </form>
-              <form method="POST" action="/croutons/lote/<%= l.id %>/eliminar" style="display:inline;" onsubmit="return confirm('¿Eliminar este lote? Esta acción no se puede deshacer.');">
-                <button type="submit" class="btn-icono" title="Eliminar" style="color:#dc2626;"><i class="ti ti-trash"></i></button>
-              </form>
-            </td>
-          </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    </div>
-    <% } %>
-
-  </main>
-
-  <%- include('partials/mobile-nav', { path: 'croutons' }) %>
+  </div>
 </div>
 
-<!-- Modal nuevo lote -->
+<!-- Modal: Cargar / Editar lote (mismo formulario, cambia de modo con JS) -->
 <div id="modal-lote" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:92vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Cargar lote</h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;" id="titulo-modal-lote">Cargar lote</h2>
       <button onclick="hideModal('modal-lote')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
 
-    <!-- Escáner de código de barras -->
+    <!-- Escáner de código de barras (solo tiene sentido al cargar uno nuevo) -->
     <div id="bloque-escaner" style="margin-bottom:18px;">
       <button type="button" id="btn-abrir-escaner" onclick="abrirEscaner()" class="btn-secondary" style="width:100%;justify-content:center;">
         <i class="ti ti-barcode"></i> Escanear código de barras
@@ -182,8 +419,8 @@
       </button>
     </div>
 
-    <form method="POST" action="/croutons/lote/nuevo">
-      <div class="field" style="margin-bottom:14px;">
+    <form method="POST" action="/croutons/lote/nuevo" id="form-lote">
+      <div class="field" style="margin-bottom:14px;" id="campo-codigo-barras">
         <label>Código de barras</label>
         <input type="text" name="codigo_barras" id="input-codigo-barras" placeholder="Se completa solo al escanear, o escribilo a mano">
       </div>
@@ -195,7 +432,7 @@
         <div class="field" style="grid-column:1/-1;background:var(--gris-fondo);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
           <div>
             <label>Cantidad de bultos</label>
-            <input type="number" name="cantidad" placeholder="Ej: 3" step="1" min="0">
+            <input type="number" name="cantidad" id="input-cantidad" placeholder="Ej: 3" step="1" min="0">
           </div>
           <div>
             <label>Empaque</label>
@@ -228,28 +465,35 @@
 
         <div class="field">
           <label>Fecha de ingreso</label>
-          <input type="date" name="fecha_ingreso" value="<%= new Date().toISOString().split('T')[0] %>" required>
+          <input type="date" name="fecha_ingreso" id="input-fecha-ingreso" value="<%= new Date().toISOString().split('T')[0] %>" required>
         </div>
         <div class="field">
           <label>Fecha de vencimiento</label>
-          <input type="date" name="fecha_vencimiento" required>
+          <input type="date" name="fecha_vencimiento" id="input-fecha-vencimiento" required>
         </div>
         <div class="field">
           <label>Proveedor</label>
-          <input type="text" name="proveedor" placeholder="Ej: Distribuidora ABC">
+          <input type="text" name="proveedor" id="input-proveedor" placeholder="Ej: Distribuidora ABC">
         </div>
         <div class="field">
           <label>Lote del proveedor (opcional)</label>
-          <input type="text" name="lote_proveedor" placeholder="Ej: L-4521">
+          <input type="text" name="lote_proveedor" id="input-lote-proveedor" placeholder="Ej: L-4521">
+        </div>
+        <div class="field">
+          <label>Categoría (opcional)</label>
+          <input type="text" name="categoria" id="input-categoria-lote" list="lista-categorias" placeholder="Ej: Golosinas">
+          <datalist id="lista-categorias">
+            <% categoriasDisponibles.forEach(cat => { %><option value="<%= cat %>"><% }) %>
+          </datalist>
         </div>
         <div class="field" style="grid-column:1/-1;">
           <label>Notas (opcional)</label>
-          <input type="text" name="notas" placeholder="Ej: guardado en depósito seco">
+          <input type="text" name="notas" id="input-notas" placeholder="Ej: guardado en depósito seco">
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
         <button type="button" onclick="hideModal('modal-lote')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> Agregar lote</button>
+        <button type="submit" class="btn-primary" id="btn-guardar-lote"><i class="ti ti-plus"></i> Agregar lote</button>
       </div>
     </form>
   </div>
@@ -278,8 +522,10 @@
 .girando{animation:girar 0.8s linear infinite;}
 @keyframes girar{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
 
-.btn-icono{background:none;border:1px solid var(--gris-borde);border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gris-texto);transition:border-color .2s,color .2s;}
+.btn-icono{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gris-texto);transition:border-color .2s,color .2s;}
 .btn-icono:hover{border-color:var(--azul);color:var(--azul);}
+
+.fila-producto:hover{border-color:var(--azul);}
 
 .field{display:flex;flex-direction:column;gap:6px;}
 .field label{font-size:0.72rem;font-weight:600;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.04em;}
@@ -288,24 +534,114 @@
 #escaner-visor video { width: 100%; border-radius: 8px; display: block; }
 #btn-abrir-escaner, #btn-cerrar-escaner { min-height: 44px; }
 
-/* ── Tablet (iPad y similares): objetivos táctiles más grandes, sin depender de :hover ── */
-@media (min-width: 600px) and (max-width: 1180px), (pointer: coarse) {
-  .btn-primary, .btn-secondary, .btn-sm, button, .input-archivo {
-    min-height: 44px; /* mínimo táctil recomendado */
-  }
-  .field input, .field select {
-    min-height: 44px;
-    font-size: 16px; /* evita que Safari haga zoom automático al enfocar el campo */
-  }
-  #modal-lote > div {
-    max-width: 92vw;
-    padding: 24px;
-  }
+/* ── Específico de Croutons: nada de esto existe en el CSS global,
+   porque son grillas propias de esta pantalla. Los botones, inputs,
+   header y modales genéricos ya se resuelven en public/css/style.css
+   para toda la app — acá solo lo que le hace falta a este layout puntual. ── */
+
+/* Acordeón de alertas (Vencidos / Por vencer / Stock bajo): colapsado por
+   defecto, se despliega al tocar el encabezado — evita mostrar todo junto
+   de una y que se sienta desordenado, sobre todo en tablet. */
+.acordeon-alerta-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+.acordeon-alerta-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fff;
+  padding: 2px 9px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+.acordeon-alerta-chevron {
+  flex-shrink: 0;
+  transition: transform .2s;
+}
+.acordeon-alerta-chevron.abierto {
+  transform: rotate(180deg);
+}
+.acordeon-alerta-body {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.acordeon-alerta-body.abierto {
+  display: flex;
+}
+
+/* Menús desplegables del header ("Más opciones" y "Nuevo lote") */
+.desplegable-croutons { position: relative; }
+.desplegable-croutons-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  min-width: 210px;
+  padding: 6px;
+  z-index: 200;
+}
+.desplegable-croutons-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  font-family: var(--font-sans);
+  color: var(--negro);
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 7px;
+  text-align: left;
+}
+.desplegable-croutons-item:hover { background: var(--gris-fondo); }
+
+/* La regla global de mobile fuerza padding:12px en TODOS los inputs (para
+   evitar el zoom de iOS) — eso le comía el espacio que este buscador
+   reservaba para la lupita a la izquierda. Se lo devolvemos solo a este
+   campo puntual, sin tocar la regla global para los demás inputs. */
+#buscador-productos {
+  padding-left: 34px !important;
+}
+
+@media (pointer: coarse) {
   .tarjeta-unificada-opciones {
     flex-direction: column;
     align-items: stretch;
   }
-  .tabla-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+@media (max-width: 480px) {
+  /* Tarjetas de resumen (Productos/Vencidos/Vencen en 15 días/Stock bajo):
+     grilla de 2 columnas, más cuadradas, en vez de una debajo de otra. */
+  div[style*="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Fila de producto: un poco más compacta */
+  .fila-producto { padding: 12px 14px; }
+  .fila-producto p { font-size: 0.82rem; }
+
+  /* Cantidad/Empaque y Peso/Unidad: se apilan en vez de ir en 2 columnas */
+  #form-lote > div[style*="grid-template-columns:1fr 1fr"],
+  #form-lote div[style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
 }
 </style>
 
@@ -316,13 +652,300 @@ function showModal(id){
 }
 function hideModal(id){ document.getElementById(id).style.display='none'; }
 
+// ── Acordeón de alertas (Vencidos / Por vencer / Stock bajo) ──
+function toggleAcordeon(id) {
+  const body = document.getElementById(id);
+  const header = body.previousElementSibling;
+  const chevron = header.querySelector('.acordeon-alerta-chevron');
+  const yaAbierto = body.classList.contains('abierto');
+  body.classList.toggle('abierto', !yaAbierto);
+  if (chevron) chevron.classList.toggle('abierto', !yaAbierto);
+}
+
+// ── Menús desplegables del header ("Más opciones" y "Nuevo lote") ──
+function toggleDesplegable(id) {
+  const panel = document.getElementById(id);
+  const yaAbierto = panel.style.display === 'block';
+  cerrarDesplegables();
+  if (!yaAbierto) panel.style.display = 'block';
+}
+function cerrarDesplegables() {
+  document.querySelectorAll('.desplegable-croutons-panel').forEach(p => p.style.display = 'none');
+}
+
+// ── Pestañas Productos/Alertas (solo importan en celular, ver CSS) ──
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.desplegable-croutons')) cerrarDesplegables();
+});
+
+// ── Buscador de productos (filtra en el navegador, sin recargar) ──
+function filtrarProductos() {
+  const q = document.getElementById('buscador-productos').value.trim().toLowerCase();
+  const categorias = document.querySelectorAll('.acordeon-categoria');
+  let totalVisibles = 0;
+
+  categorias.forEach(cat => {
+    const filas = cat.querySelectorAll('.fila-producto');
+    let visiblesCat = 0;
+    filas.forEach(f => {
+      const coincide = f.dataset.nombre.includes(q);
+      f.style.display = coincide ? 'flex' : 'none';
+      if (coincide) visiblesCat++;
+    });
+    cat.style.display = visiblesCat > 0 ? 'block' : 'none';
+    totalVisibles += visiblesCat;
+
+    // Con búsqueda activa, despliega solas las categorías que tienen
+    // resultados — así no hay que ir abriendo una por una para encontrar algo.
+    if (q) {
+      const body = cat.querySelector('.acordeon-alerta-body');
+      const chevron = cat.querySelector('.acordeon-alerta-chevron');
+      if (visiblesCat > 0) {
+        body.classList.add('abierto');
+        if (chevron) chevron.classList.add('abierto');
+      }
+    }
+  });
+
+  const msgVacio = document.getElementById('mensaje-sin-resultados');
+  if (msgVacio) msgVacio.style.display = (totalVisibles === 0 && categorias.length > 0) ? 'block' : 'none';
+}
+
+// ── Modal Cargar/Editar lote: mismo formulario, dos modos ──
+function abrirNuevoLote() {
+  const form = document.getElementById('form-lote');
+  form.reset();
+  form.action = '/croutons/lote/nuevo';
+  document.getElementById('titulo-modal-lote').textContent = 'Cargar lote';
+  document.getElementById('btn-guardar-lote').innerHTML = '<i class="ti ti-plus"></i> Agregar lote';
+  document.getElementById('input-fecha-ingreso').value = new Date().toISOString().split('T')[0];
+  document.getElementById('campo-codigo-barras').style.display = '';
+  document.getElementById('bloque-escaner').style.display = '';
+  showModal('modal-lote');
+}
+
+function abrirEditarLote(datos) {
+  const form = document.getElementById('form-lote');
+  form.reset();
+  form.action = '/croutons/lote/' + datos.id + '/editar';
+  document.getElementById('titulo-modal-lote').textContent = 'Editar lote';
+  document.getElementById('btn-guardar-lote').innerHTML = '<i class="ti ti-device-floppy"></i> Guardar cambios';
+
+  document.getElementById('input-producto').value = datos.producto || '';
+  document.getElementById('input-cantidad').value = datos.cantidad || '';
+  document.getElementById('input-unidad').value = datos.unidad || 'unidad';
+  document.getElementById('input-peso').value = datos.peso || '';
+  document.getElementById('input-unidad-peso').value = datos.unidad_peso || 'kg';
+  document.getElementById('input-fecha-ingreso').value = datos.fecha_ingreso || '';
+  document.getElementById('input-fecha-vencimiento').value = datos.fecha_vencimiento || '';
+  document.getElementById('input-proveedor').value = datos.proveedor || '';
+  document.getElementById('input-lote-proveedor').value = datos.lote_proveedor || '';
+  document.getElementById('input-categoria-lote').value = datos.categoria || '';
+  document.getElementById('input-notas').value = datos.notas || '';
+
+  // El escáner ahora queda disponible también al editar — por ejemplo,
+  // para asociarle un código de barras a un lote que se cargó a mano.
+  document.getElementById('campo-codigo-barras').style.display = '';
+  document.getElementById('bloque-escaner').style.display = '';
+
+  showModal('modal-lote');
+}
+
+// ── Consumidos (papelera con restaurar) ──
+async function abrirConsumidos() {
+  showModal('modal-consumidos');
+  const cont = document.getElementById('lista-consumidos');
+  cont.innerHTML = '<p style="text-align:center;color:var(--gris-texto);font-size:0.82rem;padding:16px;">Cargando...</p>';
+
+  try {
+    const resp = await fetch('/croutons/consumidos');
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.error || 'Error');
+
+    if (data.consumidos.length === 0) {
+      cont.innerHTML = '<p style="text-align:center;color:var(--gris-texto);font-size:0.82rem;padding:16px;">No hay productos consumidos.</p>';
+      return;
+    }
+
+    cont.innerHTML = data.consumidos.map(c => `
+      <div style="background:var(--gris-fondo);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;" id="fila-consumido-${c.id}">
+        <div style="min-width:0;">
+          <p style="font-size:0.82rem;font-weight:600;color:var(--negro);margin:0 0 2px;">${c.producto} — ${c.cantidad} ${c.unidad}</p>
+          <p style="font-size:0.72rem;color:var(--gris-texto);margin:0;">Consumido hace ${c.dias_transcurridos} día${c.dias_transcurridos !== 1 ? 's' : ''} · se borra en ${c.dias_restantes} día${c.dias_restantes !== 1 ? 's' : ''}</p>
+        </div>
+        <button type="button" class="btn-secondary" style="flex-shrink:0;padding:7px 11px;font-size:0.72rem;" onclick="restaurarLote(${c.id})">
+          <i class="ti ti-arrow-back-up"></i> Restaurar
+        </button>
+      </div>
+    `).join('');
+  } catch (e) {
+    cont.innerHTML = '<p style="text-align:center;color:#dc2626;font-size:0.82rem;padding:16px;">No se pudo cargar la lista.</p>';
+  }
+}
+
+async function restaurarLote(id) {
+  try {
+    const resp = await fetch('/croutons/lote/' + id + '/restaurar', { method: 'POST' });
+    const data = await resp.json();
+    if (data.ok) {
+      window.location.reload();
+    } else {
+      alert('Error al restaurar: ' + (data.error || ''));
+    }
+  } catch (e) {
+    alert('Error de conexión al restaurar.');
+  }
+}
+
+// ── Catálogo: eliminar un producto (no borra lotes ya cargados con ese nombre) ──
+async function eliminarProductoCatalogo(id, nombre) {
+  if (!confirm(`¿Eliminar "${nombre}" del catálogo? Esto no borra los lotes ya cargados con ese nombre, solo la categoría y el mínimo configurados.`)) return;
+  try {
+    const resp = await fetch('/croutons/producto/' + id + '/eliminar', { method: 'POST' });
+    const data = await resp.json();
+    if (data.ok) {
+      window.location.reload();
+    } else {
+      alert('No se pudo eliminar: ' + (data.error || ''));
+    }
+  } catch (e) {
+    alert('Error de conexión al eliminar.');
+  }
+}
+
+// ── Catálogo: alta rápida de un producto sin cargarle un lote todavía ──
+async function agregarProductoCatalogo(evento) {
+  evento.preventDefault();
+  const input = document.getElementById('input-nuevo-producto-catalogo');
+  const producto = input.value.trim();
+  if (!producto) return false;
+
+  try {
+    const resp = await fetch('/croutons/producto/nuevo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ producto }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      window.location.reload();
+    } else {
+      alert('No se pudo agregar: ' + (data.error || ''));
+    }
+  } catch (e) {
+    alert('Error de conexión al agregar el producto.');
+  }
+  return false;
+}
+
+// ── Unidad por defecto (empaque habitual del producto) ──
+async function guardarUnidad(producto, valor, i) {
+  const estado = document.getElementById('estado-guardado-categoria-' + i);
+  if (estado) estado.textContent = 'Guardando...';
+  try {
+    const resp = await fetch('/croutons/producto/unidad', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ producto, unidad_default: valor }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      if (estado) estado.textContent = '✓ Guardado';
+      setTimeout(() => { if (estado) estado.textContent = ''; }, 2000);
+    } else {
+      if (estado) estado.textContent = '';
+      alert('No se pudo guardar: ' + (data.error || ''));
+    }
+  } catch (e) {
+    if (estado) estado.textContent = '';
+    alert('Error de conexión al guardar la unidad.');
+  }
+}
+
+// ── Código de barras (asociarlo manualmente, sin escanear) ──
+async function guardarCodigoBarras(producto, valor, i) {
+  const estado = document.getElementById('estado-guardado-categoria-' + i);
+  if (estado) estado.textContent = 'Guardando...';
+  try {
+    const resp = await fetch('/croutons/producto/codigo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ producto, codigo_barras: valor }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      if (estado) estado.textContent = '✓ Guardado';
+      setTimeout(() => { if (estado) estado.textContent = ''; }, 2000);
+    } else {
+      if (estado) estado.textContent = '';
+      alert('No se pudo guardar: ' + (data.error || ''));
+    }
+  } catch (e) {
+    if (estado) estado.textContent = '';
+    alert('Error de conexión al guardar el código de barras.');
+  }
+}
+
+// ── Categoría (agrupado del panel de productos) ──
+async function guardarCategoria(producto, valor, i) {
+  const estado = document.getElementById('estado-guardado-categoria-' + i);
+  if (estado) estado.textContent = 'Guardando...';
+  try {
+    const resp = await fetch('/croutons/producto/categoria', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ producto, categoria: valor }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      if (estado) estado.textContent = '✓ Guardado, actualizando...';
+      setTimeout(() => { window.location.reload(); }, 500);
+    } else {
+      if (estado) estado.textContent = '';
+      alert('No se pudo guardar: ' + (data.error || ''));
+    }
+  } catch (e) {
+    if (estado) estado.textContent = '';
+    alert('Error de conexión al guardar la categoría.');
+  }
+}
+
+// ── Stock mínimo (alerta de reposición) ──
+async function guardarStockMinimo(producto, valor, i) {
+  const estado = document.getElementById('estado-guardado-minimo-' + i);
+  if (estado) estado.textContent = 'Guardando...';
+  try {
+    const resp = await fetch('/croutons/producto/minimo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ producto, stock_minimo: valor }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      if (estado) estado.textContent = '✓ Guardado, actualizando...';
+      // Recarga para que las tarjetas de arriba (Stock bajo, badges, panel
+      // de alertas) se recalculen ya con el nuevo mínimo — se arman en el
+      // servidor, no se recalculan solas en el navegador. Al usarse desde
+      // tablet, más vale ver el resultado reflejado ya, aunque se pierda
+      // el modal abierto.
+      setTimeout(() => { window.location.reload(); }, 500);
+    } else {
+      if (estado) estado.textContent = '';
+      alert('No se pudo guardar: ' + (data.error || ''));
+    }
+  } catch (e) {
+    if (estado) estado.textContent = '';
+    alert('Error de conexión al guardar el mínimo.');
+  }
+}
+
 const geminiConfigurado = <%= geminiConfigurado ? 'true' : 'false' %>;
 
 function esImagen(nombreArchivo) {
   return /\.(jpe?g|png|gif|webp|heic|bmp)$/i.test(nombreArchivo);
 }
 
-// Al elegir el archivo, muestra u oculta el campo Proveedor según sea foto o catálogo
 function detectarTipoArchivoCroutons(input) {
   const label      = input.closest('.input-archivo');
   const nombreSpan = document.getElementById('nombre-archivo-croutons');
@@ -348,7 +971,6 @@ function detectarTipoArchivoCroutons(input) {
   }
 }
 
-// Al enviar, arma la acción y el nombre del campo según haya detectado foto o catálogo
 function prepararEnvioCroutons() {
   const form     = document.getElementById('form-carga-croutons');
   const input    = document.getElementById('input-croutons');
@@ -386,9 +1008,6 @@ function prepararEnvioCroutons() {
 }
 
 // ── Escáner de código de barras (cámara del dispositivo) ──
-// Usa html5-qrcode, que decodifica en el propio navegador (funciona en
-// Safari/iPad, a diferencia de la API nativa BarcodeDetector que Safari
-// todavía no soporta).
 let escanerActivo = null;
 
 function abrirEscaner() {
@@ -400,22 +1019,17 @@ function abrirEscaner() {
   escanerActivo = new Html5Qrcode('escaner-visor');
   const config = {
     fps: 10,
-    qrbox: { width: 260, height: 140 }, // rectángulo horizontal, mejor para códigos de barras
-    formatsToSupport: [
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.EAN_8,
-      Html5QrcodeSupportedFormats.UPC_A,
-      Html5QrcodeSupportedFormats.UPC_E,
-      Html5QrcodeSupportedFormats.CODE_128,
-      Html5QrcodeSupportedFormats.QR_CODE,
-    ],
+    qrbox: { width: 260, height: 140 },
+    // Sin "formatsToSupport": así la librería intenta reconocer CUALQUIER
+    // formato de código (barras o QR), en vez de limitarse a una lista fija.
+    // Restringir formatos puede hacer que se le escapen variantes válidas.
   };
 
   escanerActivo.start(
-    { facingMode: 'environment' }, // cámara trasera
+    { facingMode: 'environment' },
     config,
     onCodigoDetectado,
-    () => {} // callback de "no detectó nada todavía en este frame" — se ignora, es constante
+    () => {}
   ).catch(err => {
     mostrarEstadoEscaner('No se pudo abrir la cámara. Revisá los permisos del navegador/tablet.', 'error');
     cerrarEscaner();
@@ -424,29 +1038,43 @@ function abrirEscaner() {
 }
 
 async function onCodigoDetectado(codigoDecodificado) {
-  // Frena el escaneo apenas detecta algo, para no seguir leyendo mientras procesamos
   if (escanerActivo) {
     try { await escanerActivo.stop(); } catch (e) {}
   }
 
   mostrarEstadoEscaner('Código detectado: ' + codigoDecodificado + ' — buscando...', 'info');
-  document.getElementById('input-codigo-barras').value = codigoDecodificado;
+
+  // Un código de barras tradicional (EAN/UPC) es solo números. Si lo
+  // escaneado tiene letras, es un QR armado a mano con el nombre del
+  // producto como texto — no es un código de barras real, así que ese
+  // campo se deja vacío y solo se completa "Producto".
+  const pareceTexto = /[a-zA-ZñÑáéíóúÁÉÍÓÚ]/.test(codigoDecodificado);
+  if (!pareceTexto) {
+    document.getElementById('input-codigo-barras').value = codigoDecodificado;
+  }
 
   try {
     const resp = await fetch('/croutons/productos/buscar?codigo=' + encodeURIComponent(codigoDecodificado));
     const data = await resp.json();
 
     if (data.encontrado) {
+      // Si ya está en el catálogo, el código guardado es el que corresponde
+      // a ese producto (numérico o texto), así que sí se muestra.
+      document.getElementById('input-codigo-barras').value = codigoDecodificado;
       document.getElementById('input-producto').value = data.producto.nombre;
       if (data.producto.unidad_default) {
         document.getElementById('input-unidad').value = data.producto.unidad_default;
       }
       mostrarEstadoEscaner('✓ Producto reconocido: ' + data.producto.nombre, 'ok');
+    } else if (pareceTexto) {
+      document.getElementById('input-producto').value = codigoDecodificado;
+      mostrarEstadoEscaner('Se completó "Producto" con el texto leído. Revisalo y corregilo si hace falta.', 'info');
     } else {
       mostrarEstadoEscaner('Código nuevo — no está en el catálogo todavía. Escribí el nombre y se va a guardar para la próxima vez.', 'info');
       document.getElementById('input-producto').focus();
     }
   } catch (e) {
+    if (!pareceTexto) document.getElementById('input-codigo-barras').value = codigoDecodificado;
     mostrarEstadoEscaner('No se pudo consultar el catálogo, pero el código quedó cargado. Completá el nombre a mano.', 'error');
   }
 
@@ -473,7 +1101,6 @@ function ocultarEstadoEscaner() {
   el.textContent = '';
 }
 
-// Cierra solo la cámara (el estado del resultado se queda visible)
 function cerrarEscanerVisor() {
   document.getElementById('escaner-visor').style.display = 'none';
   document.getElementById('btn-cerrar-escaner').style.display = 'none';
@@ -481,7 +1108,6 @@ function cerrarEscanerVisor() {
   document.getElementById('btn-abrir-escaner').innerHTML = '<i class="ti ti-barcode"></i> Escanear otro código';
 }
 
-// Cancela el escaneo del todo (botón "Cancelar escaneo")
 function cerrarEscaner() {
   if (escanerActivo) {
     escanerActivo.stop().catch(() => {}).finally(() => { escanerActivo = null; });
@@ -490,10 +1116,152 @@ function cerrarEscaner() {
   ocultarEstadoEscaner();
 }
 
-// Si cierran el modal con la cámara abierta, la apagamos (no dejarla prendida de fondo)
 document.getElementById('modal-lote')?.addEventListener('click', (e) => {
   if (e.target.id === 'modal-lote') cerrarEscaner();
 });
+
+// ── Notificaciones push (avisos de vencimiento en tiempo real) ──
+const CANAL_AVISOS = 'croutons';
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function actualizarBotonAvisos(activo) {
+  const icon = document.getElementById('icon-avisos');
+  const texto = document.getElementById('texto-avisos');
+  const btn = document.getElementById('btn-avisos');
+  if (activo) {
+    icon.className = 'ti ti-bell-ringing';
+    texto.textContent = 'Avisos activados';
+    btn.style.background = '#f0fdf4';
+    btn.style.borderColor = '#bbf7d0';
+    btn.style.color = '#16a34a';
+  } else {
+    icon.className = 'ti ti-bell';
+    texto.textContent = 'Activar avisos';
+    btn.style.background = '';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+}
+
+async function toggleAvisos() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    alert('Este navegador no soporta notificaciones push.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-avisos');
+  btn.disabled = true;
+
+  try {
+    const registro = await navigator.serviceWorker.ready;
+    const suscripcionActual = await registro.pushManager.getSubscription();
+
+    if (suscripcionActual) {
+      await fetch('/push/desuscribir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: suscripcionActual.endpoint }),
+      });
+      await suscripcionActual.unsubscribe();
+      actualizarBotonAvisos(false);
+      return;
+    }
+
+    const permiso = await Notification.requestPermission();
+    if (permiso !== 'granted') {
+      alert('No se activaron los avisos — hace falta aceptar el permiso de notificaciones.');
+      return;
+    }
+
+    const resp = await fetch('/push/vapid-public-key');
+    const { publicKey } = await resp.json();
+    if (!publicKey) {
+      alert('Los avisos push todavía no están configurados del lado del servidor.');
+      return;
+    }
+
+    const nuevaSuscripcion = await registro.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey),
+    });
+
+    await fetch('/push/suscribir', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...nuevaSuscripcion.toJSON(), canal: CANAL_AVISOS }),
+    });
+
+    actualizarBotonAvisos(true);
+  } catch (e) {
+    console.error('Error activando/desactivando avisos:', e);
+    alert('No se pudo cambiar el estado de los avisos.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+(async () => {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const registro = await navigator.serviceWorker.ready;
+    const suscripcion = await registro.pushManager.getSubscription();
+    actualizarBotonAvisos(!!suscripcion);
+  } catch (e) { /* silencioso, no rompe el resto de la página */ }
+})();
+
+// ── Notificación local al entrar (como FreshGuard) ──
+// A diferencia del push (que depende de un bot corriendo en el servidor,
+// aunque no tengas la página abierta), esto se dispara SOLO ACÁ, apenas se
+// abre esta pantalla — no necesita servidor aparte, ni bot programado, y
+// funciona hasta en localhost sin HTTPS.
+//
+// IMPORTANTE: se muestra a través del Service Worker (registration.
+// showNotification), no con "new Notification()" directo — en Chrome
+// Android (y la mayoría de navegadores mobile) crear la notificación
+// directo desde la página está bloqueado y falla en silencio. Pasando por
+// el Service Worker funciona igual en celular y en PC.
+//
+// Una notificación POR PRODUCTO (no una sola con todos juntos), y se
+// guarda en localStorage la fecha del último aviso para no repetirlas
+// cada vez que se recarga la página en el mismo día.
+async function mostrarAlertaLocalAlEntrar() {
+  if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+
+  const items = <%- JSON.stringify(
+    [
+      ...vencidos.map(l => ({ producto: l.producto, cuerpo: `Vencido hace ${Math.abs(l.dias_para_vencer)} día(s)` })),
+      ...porVencer.map(l => ({ producto: l.producto, cuerpo: l.dias_para_vencer === 0 ? 'Vence hoy' : `Vence en ${l.dias_para_vencer} día(s)` })),
+      ...productosStockBajo.map(p => ({ producto: p.producto, cuerpo: `Stock bajo — quedan ${p.stockActual}, mínimo ${p.stockMinimo}` })),
+    ]
+  ) %>;
+  if (items.length === 0) return;
+
+  const hoy = new Date().toISOString().split('T')[0];
+  const claveStorage = 'croutons_alerta_local_mostrada';
+  if (localStorage.getItem(claveStorage) === hoy) return; // ya se avisó hoy
+
+  try {
+    const registro = await navigator.serviceWorker.ready;
+    items.forEach((item, i) => {
+      registro.showNotification(`Croutons — ${item.producto}`, {
+        body: item.cuerpo,
+        icon: '/img/BUEHI_K_RGB (1).png',
+        tag: 'croutons-alerta-' + i, // cada una queda separada, no se pisan entre sí
+      });
+    });
+    localStorage.setItem(claveStorage, hoy);
+  } catch (e) {
+    console.error('No se pudieron mostrar las alertas locales:', e);
+  }
+}
+mostrarAlertaLocalAlEntrar();
 </script>
 </body>
 </html>

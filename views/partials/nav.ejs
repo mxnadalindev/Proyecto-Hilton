@@ -1,4 +1,4 @@
-﻿﻿<header class="header">
+<header class="header">
   <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
 
   <nav class="nav-pill desktop-only">
@@ -30,8 +30,8 @@
       <a href="/horarios" class="nav-item <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>" title="Horarios">
         <i class="ti ti-clock" aria-hidden="true"></i><span class="nav-label">Horarios</span>
       </a>
-      <a href="/croutons" class="nav-item <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>" title="Vencimientos">
-        <i class="ti ti-package" aria-hidden="true"></i><span class="nav-label">Vencimientos</span>
+      <a href="/croutons" class="nav-item <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>" title="Croutons">
+        <i class="ti ti-package" aria-hidden="true"></i><span class="nav-label">Croutons</span>
       </a>
       <a href="/personal/mi-disponibilidad" class="nav-item <%= (typeof path !== 'undefined' && path === 'mi-disponibilidad') ? 'activo' : '' %>" title="Mi disponibilidad">
         <i class="ti ti-calendar-event" aria-hidden="true"></i><span class="nav-label">Mi disponibilidad</span>
@@ -147,6 +147,17 @@
 </div>
 
 <script>
+// Registra el Service Worker (necesario para caché offline y notificaciones
+// push) — vive acá porque nav.ejs se incluye en todas las páginas, así se
+// activa una sola vez para todo el portal.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => {
+      console.error('Error registrando el Service Worker:', err);
+    });
+  });
+}
+
 function toggleAsistente() {
   document.getElementById('asistentePanel').classList.toggle('abierto');
 }

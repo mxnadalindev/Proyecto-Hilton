@@ -541,6 +541,14 @@ input::placeholder, textarea::placeholder {
     padding: 12px !important;
   }
 
+  /* ── Modales: más ancho de pantalla disponible, en cualquier módulo ──
+     Aplica a TODO modal que siga la convención id="modal-xxx" ya usada
+     en toda la app (Personal, Costos, Recetas, Croutons, etc.) ── */
+  div[id^="modal-"] > div {
+    max-width: 94vw !important;
+    padding: 20px !important;
+  }
+
   /* ── Clases utilitarias ── */
   .desktop-only { display: none !important; }
 }

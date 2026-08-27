@@ -1,2 +1,5 @@
 uploads/
 .env
+node_modules/
+backups/
+avisos-bot/
