@@ -23,6 +23,7 @@
     <%
       const msgs = {
         rol_actualizado:'Rol actualizado.', depto_actualizado:'Departamento actualizado.',
+        admin_general_actualizado:'Acceso de admin general actualizado.',
         usuario_activado:'Usuario activado.', usuario_desactivado:'Usuario desactivado.',
         usuario_eliminado:'Usuario eliminado.', backup_creado:'Backup creado correctamente.',
         backup_eliminado:'Backup eliminado.', backup_restaurado:'Base de datos restaurada.',
@@ -38,13 +39,12 @@
 
     <% if (!general) { %>
     <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#1d4ed8;display:flex;align-items:center;gap:8px;">
-      <i class="ti ti-info-circle"></i> Estás viendo solo la gente de tu departamento (<%= miDepto %>). Podés activar, desactivar o cambiar el rol de tu equipo. Backups, auditoría y seguridad del sistema son exclusivos del admin general.
+      <i class="ti ti-info-circle"></i> En Usuarios ves solo a la gente de tu departamento (<%= miDepto %>) — ahí podés activar, desactivar o cambiar el rol de tu equipo. La auditoría también queda acotada a tu sector. Backup y Seguridad son de la base y el login de todo el hotel, así que lo que hagas ahí afecta a todos los departamentos, no solo al tuyo.
     </div>
     <% } %>
 
     <!-- Tabs -->
-    <% const tabListFull = [{id:'usuarios',label:'Usuarios'},{id:'backup',label:'Backup BD'},{id:'auditoria',label:'Auditoría'},{id:'seguridad',label:'Seguridad'},{id:'notificaciones',label:'Notificaciones'},{id:'importacion',label:'Importación'}]; %>
-    <% const tabList = general ? tabListFull : tabListFull.filter(t => t.id === 'usuarios'); %>
+    <% const tabList = [{id:'usuarios',label:'Usuarios'},{id:'backup',label:'Backup BD'},{id:'auditoria',label:'Auditoría'},{id:'seguridad',label:'Seguridad'},{id:'notificaciones',label:'Notificaciones'},{id:'importacion',label:'Importación'}]; %>
     <% if (tabList.length > 1) { %>
     <div style="display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--gris-borde);overflow-x:auto;">
       <% tabList.forEach((t,i) => { %>
@@ -79,7 +79,18 @@
                 <td><div style="display:flex;align-items:center;gap:8px;"><div style="width:30px;height:30px;border-radius:50%;background:<%= u.activo?'var(--azul-claro)':'var(--gris-fondo)' %>;color:<%= u.activo?'var(--azul)':'var(--gris-texto)' %>;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;flex-shrink:0;"><%= (u.nombre||'?').charAt(0).toUpperCase() %></div><span style="font-size:0.82rem;font-weight:500;"><%= u.nombre %></span></div></td>
                 <td style="font-size:0.78rem;color:var(--gris-texto);"><%= u.email||'—' %></td>
                 <td><% if (general) { %><form method="POST" action="/configuracion/usuario/<%= u.id %>/departamento" style="margin:0;"><select name="departamento" onchange="this.form.submit()" style="padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.75rem;font-family:var(--font-sans);background:var(--gris-fondo);outline:none;cursor:pointer;max-width:150px;"><option value="">— Sin asignar —</option><% [...DEPTOS,...SECTORES].forEach(d => { %><option value="<%= d %>" <%= u.departamento===d?'selected':'' %>><%= d %></option><% }) %></select></form><% } else { %><span style="font-size:0.78rem;color:var(--gris-texto);"><%= u.departamento||'—' %></span><% } %></td>
-                <td><form method="POST" action="/configuracion/usuario/<%= u.id %>/rol" style="margin:0;"><select name="rol" onchange="this.form.submit()" style="padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.75rem;font-family:var(--font-sans);background:var(--gris-fondo);outline:none;cursor:pointer;"><option value="empleado" <%= (u.rol||'').toLowerCase()==='empleado'?'selected':'' %>>Empleado</option><option value="supervisor" <%= (u.rol||'').toLowerCase()==='supervisor'?'selected':'' %>>Supervisor</option><option value="admin" <%= (u.rol||'').toLowerCase()==='admin'?'selected':'' %>>Admin</option></select></form></td>
+                <td>
+                  <form method="POST" action="/configuracion/usuario/<%= u.id %>/rol" style="margin:0;"><select name="rol" onchange="this.form.submit()" style="padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.75rem;font-family:var(--font-sans);background:var(--gris-fondo);outline:none;cursor:pointer;"><option value="empleado" <%= (u.rol||'').toLowerCase()==='empleado'?'selected':'' %>>Empleado</option><option value="supervisor" <%= (u.rol||'').toLowerCase()==='supervisor'?'selected':'' %>>Supervisor</option><option value="admin" <%= (u.rol||'').toLowerCase()==='admin'?'selected':'' %>>Admin</option></select></form>
+                  <% if (general && (u.rol||'').toLowerCase()==='admin') { %>
+                  <form method="POST" action="/configuracion/usuario/<%= u.id %>/admin-general" style="margin-top:5px;" onsubmit="return true;">
+                    <input type="hidden" name="es_admin_general" value="<%= u.es_admin_general ? '0' : '1' %>">
+                    <label title="Acceso completo en Configuración (Usuarios sin acotar, reasignar departamentos, Auditoría sin acotar), sin importar el departamento que tenga." style="display:flex;align-items:center;gap:4px;font-size:0.62rem;color:var(--gris-texto);cursor:pointer;white-space:nowrap;">
+                      <input type="checkbox" onchange="this.form.submit()" <%= u.es_admin_general ? 'checked' : '' %> style="width:11px;height:11px;accent-color:var(--azul);">
+                      Admin general
+                    </label>
+                  </form>
+                  <% } %>
+                </td>
                 <td><span style="font-size:0.68rem;font-weight:600;background:<%= u.activo?'#f0fdf4':'#fef2f2' %>;color:<%= u.activo?'#16a34a':'#dc2626' %>;border:1px solid <%= u.activo?'#bbf7d0':'#fecaca' %>;padding:2px 8px;border-radius:20px;"><%= u.activo?'Activo':'Inactivo' %></span></td>
                 <td style="font-size:0.72rem;color:var(--gris-texto);"><%= u.creado_en?u.creado_en.slice(0,10):'—' %></td>
                 <td><div style="display:flex;gap:4px;justify-content:flex-end;"><% if (u.activo) { %><form method="POST" action="/configuracion/usuario/<%= u.id %>/desactivar" style="margin:0;"><button type="submit" title="Desactivar" class="btn-icono"><i class="ti ti-user-off"></i></button></form><% } else { %><form method="POST" action="/configuracion/usuario/<%= u.id %>/activar" style="margin:0;"><button type="submit" title="Activar" class="btn-icono btn-icono-verde"><i class="ti ti-user-check"></i></button></form><% } %><form method="POST" action="/configuracion/usuario/<%= u.id %>/eliminar" style="margin:0;" onsubmit="return confirm('¿Eliminar permanentemente a <%= u.nombre %>?')"><button type="submit" title="Eliminar" class="btn-icono btn-icono-rojo"><i class="ti ti-trash"></i></button></form></div></td>
@@ -92,7 +103,6 @@
     </div>
 
     <!-- TAB: Backup -->
-    <% if (general) { %>
     <div id="tab-content-backup" style="display:none;">
       <div class="cfg-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
@@ -101,6 +111,11 @@
             <button type="submit" class="btn-primary"><i class="ti ti-database-export"></i> Crear backup ahora</button>
           </form>
         </div>
+        <% if (!general) { %>
+        <p style="font-size:0.78rem;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:16px;">
+          <i class="ti ti-alert-triangle"></i> Esta es la base de datos completa de todo el hotel, no solo de <%= miDepto %>. Restaurar un backup viejo pisa los datos de todos los sectores.
+        </p>
+        <% } %>
         <% if (!backups.length) { %>
         <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;padding:16px 0;">No hay backups disponibles todavía.</p>
         <% } else { %>
@@ -121,16 +136,17 @@
         <% } %>
       </div>
     </div>
-    <% } %>
 
     <!-- TAB: Auditoría -->
-    <% if (general) { %>
     <div id="tab-content-auditoria" style="display:none;">
       <div class="cfg-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:8px;">
           <p class="cfg-titulo"><i class="ti ti-history"></i> Registro de auditoría</p>
-          <span style="font-size:0.72rem;color:var(--gris-texto);">Últimas 100 acciones</span>
+          <span style="font-size:0.72rem;color:var(--gris-texto);"><%= general ? 'Últimas 100 acciones' : `Últimas 100 acciones de ${miDepto}` %></span>
         </div>
+        <% if (!general) { %>
+        <p style="font-size:0.78rem;color:var(--gris-texto);margin:-12px 0 16px;">Solo se muestran acciones de usuarios que siguen dados de alta en tu departamento. Si alguien fue eliminado después de la acción, esa fila no aparece acá.</p>
+        <% } %>
         <% if (!auditoria.length) { %>
         <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;padding:16px 0;">No hay acciones registradas todavía.</p>
         <% } else { %>
@@ -149,13 +165,16 @@
         <% } %>
       </div>
     </div>
-    <% } %>
 
     <!-- TAB: Seguridad -->
-    <% if (general) { %>
     <div id="tab-content-seguridad" style="display:none;">
       <div class="cfg-card">
         <p class="cfg-titulo" style="margin-bottom:24px;"><i class="ti ti-shield-lock"></i> Configuración de seguridad</p>
+        <% if (!general) { %>
+        <p style="font-size:0.78rem;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin:-14px 0 20px;">
+          <i class="ti ti-alert-triangle"></i> Esto es del login de todo el hotel, no solo de <%= miDepto %>. Lo que guardes acá afecta a todos los usuarios del sistema.
+        </p>
+        <% } %>
         <form method="POST" action="/configuracion/seguridad">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
 
@@ -202,10 +221,8 @@
         </form>
       </div>
     </div>
-    <% } %>
 
     <!-- TAB: Notificaciones (próximamente) -->
-    <% if (general) { %>
     <div id="tab-content-notificaciones" style="display:none;">
       <div class="cfg-card" style="text-align:center;padding:48px;">
         <i class="ti ti-mail" style="font-size:3rem;color:var(--gris-borde);display:block;margin-bottom:16px;"></i>
@@ -214,10 +231,8 @@
         <span style="font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--gris-fondo);color:var(--gris-texto);padding:4px 12px;border-radius:20px;margin-top:16px;display:inline-block;">Próximamente</span>
       </div>
     </div>
-    <% } %>
 
     <!-- TAB: Importación (próximamente) -->
-    <% if (general) { %>
     <div id="tab-content-importacion" style="display:none;">
       <div class="cfg-card" style="text-align:center;padding:48px;">
         <i class="ti ti-file-import" style="font-size:3rem;color:var(--gris-borde);display:block;margin-bottom:16px;"></i>
@@ -226,7 +241,6 @@
         <span style="font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--gris-fondo);color:var(--gris-texto);padding:4px 12px;border-radius:20px;margin-top:16px;display:inline-block;">Próximamente</span>
       </div>
     </div>
-    <% } %>
 
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
       <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>

@@ -23,13 +23,18 @@
     body {
       font-family: 'Inter', system-ui, sans-serif; font-size: 15px; color: #fff;
       min-height: 100vh;
-      /* Foto nocturna del hotel (cartel "Hilton" azul + estelas de luz de
-         autos) de fondo. El degradé es mucho más liviano que en la versión
-         diurna porque la foto de noche ya es oscura de por sí — alcanza con
-         un toque para que el texto blanco flotante siga legible en las
-         zonas más claras del cielo/carteles. */
-      background-image: linear-gradient(180deg, rgba(4,10,20,0.55) 0%, rgba(4,10,20,0.35) 40%, rgba(4,10,20,0.62) 100%), url('/img/hilton_noche_login.jpg');
+      /* Foto del atardecer con las torres y el cartel "Hilton" en la
+         azotea (aclarada respecto del original — más brillo y un toque
+         más de saturación, a pedido). El degradé queda liviano para que
+         se note el cielo con los colores del atardecer, con lo justo para
+         que el texto blanco flotante siga legible. */
+      background-image: linear-gradient(180deg, rgba(4,10,20,0.42) 0%, rgba(4,10,20,0.22) 40%, rgba(4,10,20,0.5) 100%), url('/img/hilton_atardecer_hotel_foco_login.jpg');
       background-size: cover;
+      /* Esta imagen ya es un recorte propio (le sacamos buena parte del
+         cielo/altura de las torres arriba) para que el edificio del hotel,
+         el cartel "Hilton" y la pileta ocupen más lugar en el encuadre —
+         a pedido: "que se vea el hotel un poco más". Con este recorte el
+         "cover" ya no necesita sesgo vertical, así que va centrado. */
       background-position: center;
       background-attachment: fixed;
       background-repeat: no-repeat;
@@ -46,8 +51,15 @@
        tapar la foto. */
     .auth-shell {
       position: relative;
-      width: min(920px, 100%);
-      height: 720px;
+      width: min(980px, 100%);
+      /* Un poco más alta que antes (720→790) para que en la mayoría de las
+         pantallas de escritorio el registro (6 campos) entre sin
+         scrollear. El límite real, igual, lo pone el viewport: si la
+         ventana es más chica que esto, el scroll interno de
+         .auth-form-inner sigue siendo la red de seguridad — por eso NO
+         conviene agrandar más allá de lo que entra cómodo en una laptop
+         chica (~800px de alto de ventana). */
+      height: min(790px, calc(100vh - 64px));
       background: rgba(4,10,20,0.14);
       -webkit-backdrop-filter: blur(3px);
       backdrop-filter: blur(3px);
@@ -58,14 +70,25 @@
 
     .auth-form-side {
       position: absolute; top: 0; height: 100%; width: 56%;
-      display: flex; align-items: center; overflow: visible;
+      display: flex; align-items: center; overflow: hidden;
       transition: opacity 0.3s ease 0.15s;
     }
     .auth-form-login { left: 0; }
     .auth-form-registro { right: 0; opacity: 0; pointer-events: none; }
     .auth-shell.mode-registro .auth-form-login { opacity: 0; pointer-events: none; }
     .auth-shell.mode-registro .auth-form-registro { opacity: 1; pointer-events: auto; }
-    .auth-form-inner { width: 100%; padding: 44px 56px; }
+    /* max-height + overflow-y:auto: el form de registro (6 campos) es más
+       alto que los 720px del auth-shell — antes, al centrarse verticalmente,
+       se pasaba por arriba Y por abajo y el overflow:hidden del shell lo
+       cortaba en limpio (el logo "Hilton" arriba, "Crear cuenta" abajo).
+       Ahora en vez de cortarse, scrollea dentro de su propio panel. */
+    .auth-form-inner {
+      width: 100%; padding: 48px 56px; max-height: 100%; overflow-y: auto;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.28) transparent;
+    }
+    .auth-form-inner::-webkit-scrollbar { width: 6px; }
+    .auth-form-inner::-webkit-scrollbar-track { background: transparent; }
+    .auth-form-inner::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.28); border-radius: 3px; }
 
     /* Todo el texto que antes era navy/slate pasa a blanco + text-shadow:
        ya no hay tarjeta clara detrás que garantice contraste, así que el
@@ -129,6 +152,52 @@
     .toggle-pass { position: absolute; right: 12px; background: none; border: none; font-size: 16px; color: rgba(255,255,255,0.65); cursor: pointer; padding: 4px; }
     .field-valid .input-wrap input { border-color: var(--success); }
     .field-error .input-wrap input { border-color: #fca5a5; background: rgba(239,68,68,0.16); }
+
+    /* ── Select custom en vidrio esmerilado ──
+       Un <select> nativo abre su lista con el estilo del sistema operativo
+       (blanco sólido, imposible de restylear con CSS puro) — rompía todo
+       el look de vidrio. Este widget reemplaza visualmente al select: el
+       <select> real queda oculto pero sigue existiendo en el DOM (recibe
+       los cambios y viaja con el form), y el "trigger" + la lista de
+       opciones de acá abajo son los que ve el usuario, ya con el mismo
+       fondo semitransparente + blur que el resto de los campos. */
+    .custom-select { position: relative; }
+    .custom-select select { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+    .custom-select-trigger {
+      width: 100%; height: 43px;
+      background: rgba(255,255,255,0.14);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      border: 1.5px solid rgba(255,255,255,0.32);
+      border-radius: 9px; padding: 0 40px;
+      display: flex; align-items: center;
+      font-family: 'Inter', sans-serif; font-size: 0.85rem; color: rgba(255,255,255,0.6);
+      cursor: pointer; user-select: none;
+      transition: border-color var(--tr), background var(--tr), box-shadow var(--tr);
+    }
+    .custom-select-trigger.tiene-valor { color: #fff; }
+    .custom-select.abierto .custom-select-trigger { background: rgba(255,255,255,0.24); border-color: rgba(255,255,255,0.7); box-shadow: 0 0 0 3px rgba(255,255,255,0.14); }
+    .custom-select-chevron { position: absolute; right: 13px; font-size: 15px; color: rgba(255,255,255,0.65); pointer-events: none; transition: transform var(--tr); }
+    .custom-select.abierto .custom-select-chevron { transform: rotate(180deg); }
+    .custom-select-list {
+      position: absolute; left: 0; right: 0; top: calc(100% + 6px);
+      background: rgba(12,22,34,0.55);
+      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 10px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+      padding: 6px; z-index: 30;
+      opacity: 0; transform: translateY(-6px); pointer-events: none;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      max-height: 220px; overflow-y: auto;
+    }
+    .custom-select.abierto .custom-select-list { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .custom-select-list.hacia-arriba { top: auto; bottom: calc(100% + 6px); transform: translateY(6px); }
+    .custom-select.abierto .custom-select-list.hacia-arriba { transform: translateY(0); }
+    .custom-select-opcion { padding: 9px 12px; border-radius: 7px; font-size: 0.83rem; color: rgba(255,255,255,0.92); cursor: pointer; transition: background var(--tr); }
+    .custom-select-opcion:hover, .custom-select-opcion.resaltada { background: rgba(255,255,255,0.16); }
+    .custom-select-opcion.seleccionada { color: #3fe0be; font-weight: 600; }
     .pass-hint { font-size: 0.66rem; color: rgba(255,255,255,0.68); margin-top: 4px; text-shadow: 0 1px 6px rgba(0,0,0,0.5); }
 
     .check-row { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
@@ -146,19 +215,21 @@
     .mobile-switch { display: none; text-align: center; font-size: 0.8rem; color: rgba(255,255,255,0.85); margin-top: 18px; text-shadow: 0 1px 6px rgba(0,0,0,0.5); }
     .mobile-switch button { background: none; border: none; color: #fff; font-weight: 600; cursor: pointer; font-size: 0.8rem; text-decoration: underline; }
 
-    /* ── Overlay diagonal deslizante — misma foto nocturna que el body ──
+    /* ── Overlay diagonal deslizante — misma foto que el body ──
        background-attachment:fixed en este panel Y en <body>, con el mismo
        background-size/position, hace que las dos capas muestren
        exactamente los mismos píxeles de la foto alineados a la pantalla —
        así el panel diagonal se ve como una "ventana" recortada sobre una
        única foto continua. El degradé acá es apenas un tinte verde-azulado
        muy liviano, solo para diferenciar el panel del lado del formulario
-       sin taparlo — la foto de noche ya tiene contraste de sobra sola. */
+       sin taparlo. */
     .auth-overlay {
       position: absolute; top: 0; height: 100%; width: 46%;
       left: 54%;
-      background-image: linear-gradient(135deg, rgba(4,20,18,0.22) 0%, rgba(6,147,126,0.22) 100%), url('/img/hilton_noche_login.jpg');
+      background-image: linear-gradient(135deg, rgba(4,20,18,0.18) 0%, rgba(6,147,126,0.2) 100%), url('/img/hilton_atardecer_hotel_foco_login.jpg');
       background-size: cover;
+      /* Mismo ancla que en el body (ver comentario ahí) para que las dos
+         capas sigan alineadas píxel a píxel. */
       background-position: center;
       background-attachment: fixed;
       clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%);
@@ -317,14 +388,22 @@
         </div>
         <div class="field">
           <div class="field-label"><span>Departamento</span></div>
-          <div class="input-wrap">
+          <div class="input-wrap custom-select" id="deptoCustomSelect">
             <i class="ti ti-building input-icon"></i>
-            <select name="departamento">
+            <select name="departamento" id="deptoSelectReal" tabindex="-1">
               <option value="">Seleccioná tu área...</option>
               <option value="cocina">Cocina</option>
               <option value="compras">Compras</option>
               <option value="finanzas">Finanzas</option>
             </select>
+            <div class="custom-select-trigger" id="deptoTrigger" tabindex="0" role="button" aria-haspopup="listbox">Seleccioná tu área...</div>
+            <i class="ti ti-chevron-down custom-select-chevron"></i>
+            <div class="custom-select-list" id="deptoList" role="listbox">
+              <div class="custom-select-opcion seleccionada" data-value="">Seleccioná tu área...</div>
+              <div class="custom-select-opcion" data-value="cocina">Cocina</div>
+              <div class="custom-select-opcion" data-value="compras">Compras</div>
+              <div class="custom-select-opcion" data-value="finanzas">Finanzas</div>
+            </div>
           </div>
           <p class="pass-hint">Si cargaste tu CUIL arriba, este campo no hace falta — tu área ya está definida en tu ficha.</p>
         </div>
@@ -405,6 +484,56 @@ document.getElementById('loginForm').addEventListener('submit', () => {
   btn.classList.add('loading');
   btn.disabled = true;
 });
+
+// ── Select custom de Departamento (vidrio esmerilado) ──
+// El <select> real (#deptoSelectReal) queda oculto pero vive en el DOM y
+// es el que efectivamente viaja con el form — este bloque solo sincroniza
+// el trigger/lista visuales con su valor.
+(function () {
+  const wrap    = document.getElementById('deptoCustomSelect');
+  const trigger = document.getElementById('deptoTrigger');
+  const list    = document.getElementById('deptoList');
+  const real    = document.getElementById('deptoSelectReal');
+  if (!wrap || !trigger || !list || !real) return;
+
+  function cerrar() { wrap.classList.remove('abierto'); }
+  function abrir() {
+    // Si no entra la lista completa hacia abajo dentro del panel con
+    // scroll (el campo puede quedar cerca del final del form), la abrimos
+    // hacia arriba en vez de que quede tapada/cortada por el borde del
+    // panel — igual que haría un <select> nativo.
+    const scrollPanel = wrap.closest('.auth-form-inner');
+    const espacioAbajo = scrollPanel
+      ? scrollPanel.getBoundingClientRect().bottom - wrap.getBoundingClientRect().bottom
+      : window.innerHeight - wrap.getBoundingClientRect().bottom;
+    list.classList.toggle('hacia-arriba', espacioAbajo < 180);
+    wrap.classList.add('abierto');
+  }
+
+  trigger.addEventListener('click', () => {
+    wrap.classList.contains('abierto') ? cerrar() : abrir();
+  });
+  trigger.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); }
+    if (e.key === 'Escape') cerrar();
+  });
+
+  list.querySelectorAll('.custom-select-opcion').forEach((opcion) => {
+    opcion.addEventListener('click', () => {
+      const valor = opcion.dataset.value;
+      real.value = valor;
+      trigger.textContent = opcion.textContent;
+      trigger.classList.toggle('tiene-valor', !!valor);
+      list.querySelectorAll('.custom-select-opcion').forEach((o) => o.classList.toggle('seleccionada', o === opcion));
+      cerrar();
+      real.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!wrap.contains(e.target)) cerrar();
+  });
+})();
 </script>
 </body>
 </html>

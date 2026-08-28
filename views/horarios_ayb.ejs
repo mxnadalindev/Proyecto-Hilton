@@ -344,18 +344,26 @@ function renderDiasLista() {
     // ajustando los campos a mano después si su disponibilidad real es otra.
     const esAM = h.desde === '00:00' && h.hasta === '12:00';
     const esPM = h.desde === '12:00' && h.hasta === '23:59';
+    // Texto de abajo: en vez de tener que mirar los dos relojes para saber
+    // qué quedó cargado, se lee directo ("Mañana: 00:00 a 12:00") — a
+    // pedido, para que cargar el horario sea más fácil de entender de un
+    // vistazo, sobre todo antes de tocar nada.
+    let leyenda = 'Elegí AM, PM, o cargá un horario a mano abajo.';
+    if (h.desde && h.hasta) leyenda = `${esAM ? 'Mañana' : esPM ? 'Tarde/noche' : 'Horario'}: ${h.desde} a ${h.hasta}.`;
+    else if (h.desde) leyenda = `Desde las ${h.desde}, sin límite.`;
     return `
       <div style="display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid var(--gris-borde);border-radius:8px;">
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-size:0.75rem;font-weight:600;color:var(--negro);min-width:44px;">${fmtFechaCorta(fecha)}</span>
-          <button type="button" onclick="setRangoAmPm('${fecha}','AM')" style="padding:6px 10px;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid ${esAM ? 'var(--azul)' : 'var(--gris-borde)'};background:${esAM ? 'var(--azul-claro)' : 'var(--blanco)'};color:${esAM ? 'var(--azul)' : 'var(--gris-texto)'};">AM</button>
-          <button type="button" onclick="setRangoAmPm('${fecha}','PM')" style="padding:6px 10px;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid ${esPM ? 'var(--azul)' : 'var(--gris-borde)'};background:${esPM ? 'var(--azul-claro)' : 'var(--blanco)'};color:${esPM ? 'var(--azul)' : 'var(--gris-texto)'};">PM</button>
+          <button type="button" onclick="setRangoAmPm('${fecha}','AM')" title="Mañana: 00:00 a 12:00" style="padding:6px 10px;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid ${esAM ? 'var(--azul)' : 'var(--gris-borde)'};background:${esAM ? 'var(--azul-claro)' : 'var(--blanco)'};color:${esAM ? 'var(--azul)' : 'var(--gris-texto)'};">AM · 00-12h</button>
+          <button type="button" onclick="setRangoAmPm('${fecha}','PM')" title="Tarde/noche: 12:00 a 23:59" style="padding:6px 10px;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid ${esPM ? 'var(--azul)' : 'var(--gris-borde)'};background:${esPM ? 'var(--azul-claro)' : 'var(--blanco)'};color:${esPM ? 'var(--azul)' : 'var(--gris-texto)'};">PM · 12-24h</button>
           <button type="button" onclick="toggleDia('${fecha}');renderGrid();" title="Sacar este día" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:1rem;padding:2px 4px;margin-left:auto;">&times;</button>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="time" value="${h.desde}" onchange="horariosPorDia['${fecha}'].desde=this.value;renderDiasLista();" style="flex:1;min-width:0;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:8px 10px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
           <input type="time" value="${h.hasta}" onchange="horariosPorDia['${fecha}'].hasta=this.value;renderDiasLista();" style="flex:1;min-width:0;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:8px 10px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
         </div>
+        <p style="font-size:0.68rem;color:var(--gris-texto);margin:0;">${leyenda}</p>
       </div>`;
   }).join('');
 }

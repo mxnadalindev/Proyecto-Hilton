@@ -63,10 +63,12 @@ input::placeholder, textarea::placeholder {
   100% { transform: rotateY(360deg); opacity: 1; }
 }
 .logo-moneda {
+  /* Antes giraba en loop (efecto "moneda") y de paso quedaba de perfil/
+     espejado la mitad del tiempo — a pedido, se saca la animación y se
+     deja el wordmark quieto y en negrita, más parecido al isotipo real
+     de Hilton, con el mismo verde/teal de marca que ya usa el resto del
+     portal (var(--azul)). */
   display: inline-block;
-  animation: moneda 3.5s ease-in-out infinite;
-  transform-style: preserve-3d;
-  perspective: 600px;
 }
 
 /* ══════════════════════════════
@@ -97,8 +99,8 @@ input::placeholder, textarea::placeholder {
 .header-logo {
   font-family: var(--font-serif);
   font-size: 1.5rem;
-  font-weight: 400;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   color: var(--azul);
   text-decoration: none;
   flex-shrink: 0;

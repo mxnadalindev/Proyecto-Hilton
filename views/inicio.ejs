@@ -101,6 +101,31 @@
           ];
           if (esAdmin) modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', g1:'#007293', g2:'#6bb030',
             detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
+        } else if (esAdmin) {
+          // Admin general (sin departamento — cuenta "Administrador"): no
+          // matcheaba ninguna rama de arriba, así que modulos quedaba
+          // vacío y el carrusel de inicio no aparecía. El admin general
+          // pasa igual todos los guards de requiereDepartamento() en
+          // middleware.js, así que acá le mostramos el set completo — los
+          // mismos módulos que ya ve en la barra de navegación (nav.ejs).
+          modulos = [
+            { href: '/eventos',  icon: 'ti-calendar-event', nombre: 'Eventos',  desc: 'Gestión y presupuestos', g1:'#002f61', g2:'#007293',
+              detalle: 'Planificá banquetes y eventos del hotel: armá el menú con platos ya costeados (o menús completos), asigná personal y vajilla, y calculá el costo total y las horas de producción antes de confirmar.' },
+            { href: '/personal', icon: 'ti-users',          nombre: 'Miembro de equipo', desc: 'Equipo interno', g1:'#007293', g2:'#06937e',
+              detalle: 'Gestioná el equipo del hotel: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
+            { href: '/horarios', icon: 'ti-clock',          nombre: 'Horarios', desc: 'Turnos automáticos', g1:'#06937e', g2:'#6bb030',
+              detalle: 'Visualizá la grilla completa de turnos de todos los sectores, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
+            { href: '/recetas',  icon: 'ti-chef-hat',       nombre: 'Recetas',  desc: 'Recetario y videos', g1:'#6bb030', g2:'#002f61',
+              detalle: 'Recetario digital del hotel, con ingredientes, pasos de preparación, imágenes y video — buscá por nombre o categoría desde cualquier dispositivo, en la cocina o desde tu casa.' },
+            { href: '/costos',   icon: 'ti-coin',           nombre: 'Costos',   desc: 'Insumos y precios', g1:'#002f61', g2:'#06937e',
+              detalle: 'Cargá insumos y sus precios, costeá platos automáticamente, y actualizá precios subiendo una foto de factura o el catálogo del proveedor — con historial completo de cada cambio.' },
+            { href: '/compras',  icon: 'ti-shopping-cart',  nombre: 'Compras',  desc: 'Órdenes y proveedores', g1:'#002f61', g2:'#007293',
+              detalle: 'Gestión de órdenes de compra y proveedores del hotel.' },
+            { href: '/finanzas', icon: 'ti-report-money',   nombre: 'Finanzas', desc: 'Reportes y presupuestos', g1:'#007293', g2:'#06937e',
+              detalle: 'Reportes financieros y seguimiento de presupuestos del hotel.' },
+            { href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', g1:'#007293', g2:'#6bb030',
+              detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' },
+          ];
         }
       %>
 
@@ -234,6 +259,25 @@
       </div>
       <% } %>
 
+      <% if (typeof resumen !== 'undefined' && resumen && resumen.tarjetas) { %>
+      <!-- "Resumen rápido": antes la home terminaba en el botón "Entrar" y
+           dejaba un tramo grande de espacio en blanco debajo en pantallas
+           altas. Este renglón de tarjetas da un vistazo del estado del
+           sector (activos, alertas, vencimientos) sin tener que entrar a
+           ningún módulo — llena ese espacio con algo útil en vez de vacío. -->
+      <div class="resumen-rapido">
+        <% resumen.tarjetas.forEach(t => { %>
+        <div class="resumen-tarjeta <%= t.alerta ? 'resumen-tarjeta--alerta' : '' %>">
+          <div class="resumen-tarjeta-icono"><i class="ti <%= t.icon %>" aria-hidden="true"></i></div>
+          <div>
+            <div class="resumen-tarjeta-valor"><%= t.valor %></div>
+            <div class="resumen-tarjeta-etiqueta"><%= t.etiqueta %></div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+
     </div>
   </main>
 
@@ -322,6 +366,30 @@
   padding: 12px 26px; border-radius: 9px; text-decoration: none; transition: background 0.2s, transform 0.2s;
 }
 .stage-btn:hover { background: var(--azul-hover); transform: translateY(-1px); }
+
+/* ── Resumen rápido — renglón de tarjetas al pie de la home ── */
+.resumen-rapido {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 16px;
+  max-width: 760px; margin: 56px auto 24px;
+}
+.resumen-tarjeta {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 14px;
+  padding: 16px 22px; box-shadow: var(--sombra); min-width: 210px; flex: 1;
+}
+.resumen-tarjeta-icono {
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  background: var(--azul-claro); color: var(--azul);
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.resumen-tarjeta--alerta .resumen-tarjeta-icono { background: var(--rojo-claro); color: var(--rojo); }
+.resumen-tarjeta-valor { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 500; color: var(--negro); line-height: 1.1; }
+.resumen-tarjeta--alerta .resumen-tarjeta-valor { color: var(--rojo); }
+.resumen-tarjeta-etiqueta { font-size: 0.72rem; color: var(--gris-texto); margin-top: 2px; }
+@media (max-width: 768px) {
+  .resumen-rapido { margin: 36px auto 16px; }
+  .resumen-tarjeta { min-width: 100%; }
+}
 
 /* Flechas y puntos */
 .deck-controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 28px; }

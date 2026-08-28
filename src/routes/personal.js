@@ -160,7 +160,30 @@ router.get('/', loginRequerido, async (req, res) => {
   const sectoresVisibles = sectoresPara(req.session.usuario);
   const misDepto = req.session.usuario.departamento;
 
-  const personal = await obtenerPersonal(req.session.usuario);
+  let personal = await obtenerPersonal(req.session.usuario);
+
+  // Filtro "cargados en el calendario": a pedido, cuando se entra a Ver
+  // equipo desde el calendario de AYB (el link ahora manda ?mes=YYYY-MM
+  // con el mes que se está mirando ahí), se muestra solo a los mozos que
+  // tienen algo cargado ese mes — disponibilidad marcada y/o anotados a
+  // algún evento — en vez de la lista completa siempre. Si no viene el
+  // parámetro (por ejemplo entrando por "Menú principal"), se ve todo
+  // como siempre.
+  const mesFiltro = /^\d{4}-\d{2}$/.test(req.query.mes || '') ? req.query.mes : null;
+  if (mesFiltro && miDeptoLower === 'ayb') {
+    const cargadosRaw = await db.all2(`
+      SELECT DISTINCT usuario_id FROM (
+        SELECT usuario_id FROM disponibilidad
+        WHERE disponible = true AND to_char(fecha, 'YYYY-MM') = $1
+        UNION
+        SELECT i.usuario_id FROM eventos_ayb_inscripciones i
+        JOIN eventos_ayb e ON e.id = i.evento_id
+        WHERE to_char(e.fecha, 'YYYY-MM') = $1
+      ) x
+    `, [mesFiltro]);
+    const idsCargados = new Set(cargadosRaw.map(r => r.usuario_id));
+    personal = personal.filter(p => idsCargados.has(p.id));
+  }
 
   // Cuántos RECOFF tiene puestos cada uno en TODA la grilla (no solo el rango visible)
   const usadosRaw = await db.all2(`
@@ -308,7 +331,7 @@ router.get('/', loginRequerido, async (req, res) => {
     modalidadesAyb: MODALIDADES_AYB, misDepto,
     ESTADOS, msg, esAdmin, hoy, inicio, fin, dias, horarioSemanalMap, sectorDiaMap,
     feriados, cargadosMozos, duplicadosMozos, dispMap, rangoAnterior, rangoSiguiente,
-    mozosVencidos, mozosPorVencer,
+    mozosVencidos, mozosPorVencer, mesFiltro,
     // compatibilidad con campos viejos
     horarioMap: {}
   });

@@ -448,6 +448,17 @@ const init = async () => {
     await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recoff_adeudado INTEGER DEFAULT 0`);
   }
 
+  // "Admin general" (acceso a Backups/Auditoría completa/reasignar
+  // departamentos) ya NO depende de que la cuenta no tenga departamento
+  // asignado — antes esos dos conceptos estaban pegados al mismo campo
+  // "departamento", así que un admin no podía a la vez estar "scopeado" a
+  // su sector (para que Personal/Horarios no le mezclen otros sectores) Y
+  // tener acceso general a Configuración. Con esta columna separada, un
+  // admin puede tener departamento='cocina' (ve solo Cocina en
+  // Personal/Horarios) y es_admin_general=true (ve todo en Configuración)
+  // al mismo tiempo — son dos cosas independientes.
+  await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS es_admin_general BOOLEAN NOT NULL DEFAULT false`);
+
   // Alimentos y Bebidas — Croutons: cada fila es un LOTE (una entrada de
   // mercadería), no un producto único. Así, si llega una entrega nueva de
   // croutons mientras todavía queda stock viejo, conviven dos filas con

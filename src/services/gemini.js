@@ -13,10 +13,10 @@ Te paso la imagen de un documento. Devolvé ÚNICAMENTE un JSON, sin texto adici
 {"tipo_documento": "...", "items": [...]}
 
 PASO 1 — Identificá "tipo_documento". Puede ser uno de estos 4 valores:
-- "factura": es una factura de compra real (remito, factura A/B/C, ticket de compra).
+- "factura": es CUALQUIER documento o anotación que muestre uno o más productos con su precio de compra — un remito, una factura A/B/C, un ticket de compra, el catálogo/lista de precios de un proveedor, e incluso una nota o anotación escrita a mano en un papel suelto (por ejemplo, alguien anotó a mano "Chocolate x unidad $3922"). NO hace falta que sea un comprobante fiscal formal ni que tenga membrete, CUIT, fecha, etc. — alcanza con que se pueda leer con confianza al menos un nombre de producto junto a un precio. La imagen puede estar rotada o inclinada, leela igual.
 - "nota_credito": es una Nota de Crédito — un descuento, devolución o bonificación del proveedor. NO es una compra.
 - "nota_debito": es una Nota de Débito — un cargo adicional del proveedor. Tampoco es una compra de insumos con precio unitario confiable.
-- "otro": cualquier otra cosa (imagen ilegible, no es un documento de compra, etc.)
+- "otro": la imagen es ilegible, no tiene relación con productos/precios, o es una lista de personas/otro tipo de documento sin ningún producto con precio (ejemplo: una lista de empleados, un remito de mercadería sin precios, una foto sin texto).
 
 PASO 2 — Armá "items":
 - Si "tipo_documento" NO es "factura", "items" tiene que ir SIEMPRE vacío: []. Nunca extraigas productos ni montos de una nota de crédito o de débito, aunque la imagen tenga una tabla con productos y números — esos montos son ajustes, no precios de compra, y no hay que usarlos para actualizar precios.
@@ -30,6 +30,7 @@ Si no podés leer algún campo con confianza, no incluyas ese ítem.
 
 Ejemplos de respuesta:
 {"tipo_documento":"factura","items":[{"nombre":"Harina 000 x 25kg","cantidad":2,"unidad":"unidad","precio_unitario":18500},{"nombre":"Aceite de girasol 5L","cantidad":4,"unidad":"unidad","precio_unitario":6200}]}
+{"tipo_documento":"factura","items":[{"nombre":"Chocolate Los Cuyanos","cantidad":1,"unidad":"unidad","precio_unitario":3922.65}]}
 {"tipo_documento":"nota_credito","items":[]}`;
 
 function mimeDesdeExtension(rutaArchivo) {
@@ -60,9 +61,14 @@ async function llamarGeminiConReintentos(url, opciones, intentos = 3) {
   // Sin esto, si la conexión queda "colgada" (un firewall que descarta los
   // paquetes en silencio en vez de rechazarlos) el fetch nunca resuelve ni
   // rechaza — la pantalla se queda "pensando" para siempre y no queda nada
-  // en el log del server para diagnosticar. Con el timeout, a los 25s
-  // cortamos nosotros mismos y al menos queda un error claro.
-  const TIMEOUT_MS = 25000;
+  // en el log del server para diagnosticar. Con el timeout, cortamos
+  // nosotros mismos y al menos queda un error claro.
+  // Subido de 25s a 45s: en redes corporativas con antivirus/EDR que
+  // inspeccionan el tráfico HTTPS (como la de Hilton), ese análisis agrega
+  // demora real antes de que el pedido llegue a destino — no significa que
+  // esté cortado, solo que tarda más. Con 25s lo estábamos cortando
+  // nosotros mismos antes de que Google llegara a responder.
+  const TIMEOUT_MS = 45000;
   let ultimoError;
   for (let i = 0; i < intentos; i++) {
     let resp;

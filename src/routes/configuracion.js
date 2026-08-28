@@ -16,14 +16,21 @@ function soloAdmin(req, res, next) {
   next();
 }
 
-// Admin "general" = sin departamento asignado (la cuenta del dueño/IT, para
-// lo que es del sistema entero: backups, auditoría, seguridad de login).
+// Admin "general" = tiene acceso completo en Configuración: la lista de
+// Usuarios sin acotar a un departamento, la posibilidad de reasignar el
+// departamento de alguien, y Auditoría sin acotar. Dos formas de serlo:
+// (a) la columna es_admin_general=true (marca explícita, independiente del
+// departamento — así una cuenta puede estar scopeada a Cocina en
+// Personal/Horarios Y tener acceso general en Configuración a la vez), o
+// (b) no tener departamento asignado (comportamiento histórico, se
+// mantiene por compatibilidad con cuentas viejas que nunca se marcaron).
 // Admin "de departamento" = el supervisor de un sector puntual (Cocina,
 // AYB, etc.) — entra a la MISMA pantalla de Configuración, pero solo ve y
-// gestiona a su propia gente.
+// gestiona a su propia gente (salvo que además sea es_admin_general).
 function esGeneral(usuario) {
   const rol = (usuario?.rol || '').toLowerCase();
-  return rol === 'admin' && !usuario?.departamento;
+  if (rol !== 'admin') return false;
+  return !!usuario?.es_admin_general || !usuario?.departamento;
 }
 
 function soloAdminGeneral(req, res, next) {
@@ -72,7 +79,7 @@ router.get('/', loginRequerido, soloAdmin, async (req, res) => {
   try {
     if (general) {
       usuarios = await db.all2(`
-        SELECT id, nombre, email, rol, departamento, activo, creado_en::text as creado_en
+        SELECT id, nombre, email, rol, departamento, activo, es_admin_general, creado_en::text as creado_en
         FROM usuarios
         WHERE departamento NOT IN ('Supervisores','Comis de Recepción','Panadería','Pastelería AM','Pastelería PM','Faro AM','Faro PM','Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D')
         OR departamento IS NULL
@@ -81,7 +88,7 @@ router.get('/', loginRequerido, soloAdmin, async (req, res) => {
     } else {
       // Admin de departamento: solo su propia gente.
       usuarios = await db.all2(`
-        SELECT id, nombre, email, rol, departamento, activo, creado_en::text as creado_en
+        SELECT id, nombre, email, rol, departamento, activo, es_admin_general, creado_en::text as creado_en
         FROM usuarios
         WHERE departamento = $1
         ORDER BY creado_en DESC
@@ -91,30 +98,47 @@ router.get('/', loginRequerido, soloAdmin, async (req, res) => {
     console.error('Error cargando usuarios en Configuración:', e.message);
   }
 
-  // Backups, auditoría y seguridad son del sistema entero (una sola base
-  // compartida, un solo login) — quedan reservados al admin general.
+  // Backup BD y Seguridad son del sistema entero (una sola base compartida,
+  // un solo login) — cualquier admin (general o de departamento) puede
+  // verlas y usarlas, a pedido: "las mismas opciones necesito" en todos los
+  // admins. No hay forma de "acotarlas" por departamento porque no son
+  // datos de un sector puntual, son de la base/login de todo el hotel.
+  // Auditoría, en cambio, sí tiene sentido acotada por departamento: un
+  // admin de sector puede ver las acciones de SU propia gente (se filtra
+  // uniendo auditoria.usuario_id con usuarios.departamento). Ojo: si el
+  // usuario que hizo la acción fue eliminado después, auditoria.usuario_id
+  // queda en NULL y esa fila deja de poder atribuirse a ningún departamento
+  // — no aparece ni para el admin general por acá, ni para ningún sector.
   let auditoria = [];
   const config = {};
-  if (general) {
-    try {
+  try {
+    if (general) {
       auditoria = await db.all2(`
         SELECT id, usuario_nombre, accion, detalle, ip, creado_en::text as creado_en
         FROM auditoria ORDER BY creado_en DESC LIMIT 100
       `);
-    } catch (e) {
-      console.error('Error cargando auditoría en Configuración:', e.message);
+    } else {
+      auditoria = await db.all2(`
+        SELECT a.id, a.usuario_nombre, a.accion, a.detalle, a.ip, a.creado_en::text as creado_en
+        FROM auditoria a
+        JOIN usuarios u ON u.id = a.usuario_id
+        WHERE u.departamento = $1
+        ORDER BY a.creado_en DESC LIMIT 100
+      `, [miDepto]);
     }
+  } catch (e) {
+    console.error('Error cargando auditoría en Configuración:', e.message);
+  }
 
-    try {
-      const configRows = await db.all2('SELECT clave, valor FROM configuracion_sistema');
-      configRows.forEach(r => config[r.clave] = r.valor);
-    } catch (e) {
-      console.error('Error cargando configuración del sistema:', e.message);
-    }
+  try {
+    const configRows = await db.all2('SELECT clave, valor FROM configuracion_sistema');
+    configRows.forEach(r => config[r.clave] = r.valor);
+  } catch (e) {
+    console.error('Error cargando configuración del sistema:', e.message);
   }
 
   const msg = req.query.msg || null;
-  const backups = general ? getBackups() : [];
+  const backups = getBackups();
   res.render('configuracion', { usuarios, DEPTOS, SECTORES, msg, path: 'configuracion', backups, auditoria, config, general, miDepto });
 });
 
@@ -138,6 +162,20 @@ router.post('/usuario/:id/departamento', loginRequerido, soloAdminGeneral, async
   await db.run2('UPDATE usuarios SET departamento=$1 WHERE id=$2', [req.body.departamento, req.params.id]);
   await registrar(req, 'cambio_departamento', `${u?.nombre} → ${req.body.departamento}`);
   res.redirect('/configuracion?msg=depto_actualizado');
+});
+
+// Marca/desmarca a un admin como "admin general" (acceso completo en
+// Configuración) independientemente de su departamento. Reservado al admin
+// general — igual que con el departamento, solo alguien que ya tiene
+// acceso general puede otorgárselo a otro, para no dejar un agujero de
+// seguridad donde cualquier admin de sector se lo dé a sí mismo.
+router.post('/usuario/:id/admin-general', loginRequerido, soloAdminGeneral, async (req, res) => {
+  const u = await db.get2('SELECT nombre, rol FROM usuarios WHERE id=$1', [req.params.id]);
+  if (!u || (u.rol || '').toLowerCase() !== 'admin') return res.redirect('/configuracion?msg=' + encodeURIComponent('Solo se puede marcar como admin general a una cuenta con rol Admin.'));
+  const nuevoValor = req.body.es_admin_general === '1';
+  await db.run2('UPDATE usuarios SET es_admin_general=$1 WHERE id=$2', [nuevoValor, req.params.id]);
+  await registrar(req, 'cambio_admin_general', `${u.nombre} → ${nuevoValor ? 'admin general' : 'ya no es admin general'}`);
+  res.redirect('/configuracion?msg=admin_general_actualizado');
 });
 
 router.post('/usuario/:id/activar', loginRequerido, soloAdmin, async (req, res) => {
@@ -199,7 +237,7 @@ router.post('/usuario/:id/eliminar', loginRequerido, soloAdmin, async (req, res)
 });
 
 // ── Backup ────────────────────────────────────────────
-router.post('/backup/crear', loginRequerido, soloAdminGeneral, (req, res) => {
+router.post('/backup/crear', loginRequerido, soloAdmin, (req, res) => {
   const fecha = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   const archivo = path.join(BACKUPS_DIR, `hilton_db_${fecha}.dump`);
   const pgDump = '"C:\\Program Files\\PostgreSQL\\18\\bin\\pg_dump.exe"';
@@ -212,21 +250,21 @@ router.post('/backup/crear', loginRequerido, soloAdminGeneral, (req, res) => {
   });
 });
 
-router.get('/backup/descargar/:nombre', loginRequerido, soloAdminGeneral, async (req, res) => {
+router.get('/backup/descargar/:nombre', loginRequerido, soloAdmin, async (req, res) => {
   const archivo = path.join(BACKUPS_DIR, req.params.nombre);
   if (!fs.existsSync(archivo)) return res.redirect('/configuracion?msg=backup_no_encontrado');
   await registrar(req, 'backup_descargado', req.params.nombre);
   res.download(archivo);
 });
 
-router.post('/backup/eliminar/:nombre', loginRequerido, soloAdminGeneral, async (req, res) => {
+router.post('/backup/eliminar/:nombre', loginRequerido, soloAdmin, async (req, res) => {
   const archivo = path.join(BACKUPS_DIR, req.params.nombre);
   try { fs.unlinkSync(archivo); } catch(e) {}
   await registrar(req, 'backup_eliminado', req.params.nombre);
   res.redirect('/configuracion?msg=backup_eliminado');
 });
 
-router.post('/backup/restaurar/:nombre', loginRequerido, soloAdminGeneral, async (req, res) => {
+router.post('/backup/restaurar/:nombre', loginRequerido, soloAdmin, async (req, res) => {
   const archivo = path.join(BACKUPS_DIR, req.params.nombre);
   if (!fs.existsSync(archivo)) return res.redirect('/configuracion?msg=backup_no_encontrado');
   const pgRestore = '"C:\\Program Files\\PostgreSQL\\18\\bin\\pg_restore.exe"';
@@ -240,7 +278,7 @@ router.post('/backup/restaurar/:nombre', loginRequerido, soloAdminGeneral, async
 });
 
 // ── Seguridad ─────────────────────────────────────────
-router.post('/seguridad', loginRequerido, soloAdminGeneral, async (req, res) => {
+router.post('/seguridad', loginRequerido, soloAdmin, async (req, res) => {
   const { max_intentos_login, tiempo_bloqueo_min, sesion_horas, forzar_cambio_password } = req.body;
   const valores = {
     max_intentos_login: parseInt(max_intentos_login) || 5,

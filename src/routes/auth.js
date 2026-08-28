@@ -70,7 +70,7 @@ router.post('/login', async (req, res) => {
 
     if (user && password && bcrypt.compareSync(password, user.password)) {
       registrarIntento(email, true);
-      req.session.usuario = { id: user.id, nombre: user.nombre, rol: user.rol, email: user.email, departamento: user.departamento };
+      req.session.usuario = { id: user.id, nombre: user.nombre, rol: user.rol, email: user.email, departamento: user.departamento, es_admin_general: user.es_admin_general };
       req.session.mostrarBienvenida = true;
       await registrar(req, 'login', user.email);
       return res.redirect('/inicio');
@@ -94,11 +94,110 @@ router.get('/logout', async (req, res) => {
   res.redirect('/login');
 });
 
-router.get('/inicio', (req, res) => {
+// Mismos sectores de Cocina que en horarios.js/personal.js (duplicado acá
+// a propósito para no depender de esos módulos — es una lista chica y
+// estable, y evita acoplar rutas que no tienen nada que ver entre sí).
+const SECTORES_COCINA = [
+  'Supervisores','Comis de Recepción','Panadería',
+  'Pastelería AM','Pastelería PM','Faro AM','Faro PM',
+  'Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D'
+];
+const DIAS_ALERTA_VENCIMIENTO_MOZO = 15;
+const MESES_LIMITE_MOZO_EVENTUAL = 6;
+
+// "Resumen rápido" de la home — antes esta pantalla terminaba en el
+// detalle del módulo seleccionado y dejaba un tramo grande de espacio en
+// blanco debajo. Estos números (activos, alertas, vencimientos) se
+// muestran como un renglón de tarjetas al pie, para que la home aporte
+// algo de un vistazo en vez de ser solo navegación al resto del sistema.
+async function resumenRapido(usuario) {
+  const rol = (usuario.rol || '').toLowerCase();
+  const depto = (usuario.departamento || '').toLowerCase();
+  const esAdmin = rol === 'admin';
+  const esGestorAyb = esAdmin || rol === 'supervisor';
+
+  if (depto === 'cocina' || (esAdmin && !depto)) {
+    const hoy = new Date().toISOString().split('T')[0];
+    const [{ activos }] = await db.all2(
+      `SELECT COUNT(*)::int AS activos FROM usuarios WHERE activo=1 AND LOWER(rol)!='admin' AND departamento = ANY($1)`,
+      [SECTORES_COCINA]
+    );
+    const conTurnoHoy = await db.all2(
+      `SELECT DISTINCT u.departamento FROM usuarios u
+       JOIN horarios_semanales h ON h.usuario_id = u.id AND h.fecha = $2
+       WHERE u.activo=1 AND u.departamento = ANY($1)
+         AND UPPER(h.valor) NOT IN ('OFF','VAC','RECOFF','LIBRE','ART','LICENCIA','CUMPLE','MUDANZA','FRANCO')
+         AND h.valor IS NOT NULL AND h.valor != ''`,
+      [SECTORES_COCINA, hoy]
+    );
+    const sectoresConGente = new Set(conTurnoHoy.map(r => r.departamento));
+    const sectoresConActivos = await db.all2(
+      `SELECT DISTINCT departamento FROM usuarios WHERE activo=1 AND departamento = ANY($1)`,
+      [SECTORES_COCINA]
+    );
+    const alertasHoy = sectoresConActivos.filter(s => !sectoresConGente.has(s.departamento)).length;
+    const [{ adeudado }] = await db.all2(
+      `SELECT COALESCE(SUM(recoff_adeudado),0)::int AS adeudado FROM usuarios WHERE activo=1 AND departamento = ANY($1)`,
+      [SECTORES_COCINA]
+    );
+    const [{ usados }] = await db.all2(
+      `SELECT COUNT(*)::int AS usados FROM horarios_semanales h JOIN usuarios u ON u.id=h.usuario_id
+       WHERE UPPER(h.valor)='RECOFF' AND u.activo=1 AND u.departamento = ANY($1)`,
+      [SECTORES_COCINA]
+    );
+    return {
+      tipo: 'cocina',
+      tarjetas: [
+        { icon: 'ti-users', valor: activos, etiqueta: 'Personal activo' },
+        { icon: 'ti-alert-triangle', valor: alertasHoy, etiqueta: 'Sectores sin cobertura hoy', alerta: alertasHoy > 0 },
+        { icon: 'ti-calendar-off', valor: Math.max(adeudado - usados, 0), etiqueta: 'RECOFF pendientes (total equipo)' },
+      ],
+    };
+  }
+
+  if (depto === 'ayb' && esGestorAyb) {
+    const hoy = new Date().toISOString().split('T')[0];
+    const [{ activos }] = await db.all2(
+      `SELECT COUNT(*)::int AS activos FROM usuarios WHERE activo=1 AND LOWER(rol)!='admin' AND departamento='ayb'`
+    );
+    const [{ proximos }] = await db.all2(
+      `SELECT COUNT(*)::int AS proximos FROM eventos_ayb WHERE fecha >= $1 AND (oculto IS NULL OR oculto = false)`,
+      [hoy]
+    );
+    const mozosEventual = await db.all2(
+      `SELECT fecha_alta::text FROM usuarios WHERE activo=1 AND departamento='ayb' AND modalidad='Eventual' AND fecha_alta IS NOT NULL`
+    );
+    const hoyMs = new Date(hoy + 'T00:00:00').getTime();
+    const porVencer = mozosEventual.filter(m => {
+      const venc = new Date(m.fecha_alta + 'T00:00:00');
+      venc.setMonth(venc.getMonth() + MESES_LIMITE_MOZO_EVENTUAL);
+      const dias = Math.round((venc.getTime() - hoyMs) / 86400000);
+      return dias <= DIAS_ALERTA_VENCIMIENTO_MOZO;
+    }).length;
+    return {
+      tipo: 'ayb',
+      tarjetas: [
+        { icon: 'ti-users', valor: activos, etiqueta: 'Mozos activos' },
+        { icon: 'ti-calendar-event', valor: proximos, etiqueta: 'Eventos próximos' },
+        { icon: 'ti-alert-triangle', valor: porVencer, etiqueta: 'Vencimientos en 15 días', alerta: porVencer > 0 },
+      ],
+    };
+  }
+
+  return null;
+}
+
+router.get('/inicio', async (req, res) => {
   if (!req.session.usuario) return res.redirect('/login');
   const mostrarBienvenida = !!req.session.mostrarBienvenida;
   delete req.session.mostrarBienvenida;
-  res.render('inicio', { usuario: req.session.usuario, mostrarBienvenida });
+  let resumen = null;
+  try {
+    resumen = await resumenRapido(req.session.usuario);
+  } catch (e) {
+    console.error('Error calculando resumen rápido de inicio:', e.message);
+  }
+  res.render('inicio', { usuario: req.session.usuario, mostrarBienvenida, resumen });
 });
 
 router.get('/registro', (req, res) => {

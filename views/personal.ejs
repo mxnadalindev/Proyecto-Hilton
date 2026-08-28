@@ -43,6 +43,16 @@
     </div>
     <% } %>
 
+    <% if (typeof mesFiltro !== 'undefined' && mesFiltro) {
+         const MESES_NOMBRE = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+         const [anioFiltro, mesNumFiltro] = mesFiltro.split('-');
+    %>
+    <div style="background:var(--azul-claro);border:1px solid var(--azul);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:var(--azul);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <span><i class="ti ti-filter"></i> Mostrando solo a los mozos con algo cargado en <%= MESES_NOMBRE[parseInt(mesNumFiltro,10)-1] %> de <%= anioFiltro %> (disponibilidad y/o eventos).</span>
+      <a href="/personal" style="color:var(--azul);text-decoration:underline;white-space:nowrap;">Ver a todo el equipo</a>
+    </div>
+    <% } %>
+
     <!-- Header -->
     <div class="seccion-header">
       <div class="seccion-header-left">
@@ -136,19 +146,27 @@
           <col style="width:16%"><col style="width:10%"><col style="width:11%"><col style="width:9%">
           <col style="width:46%"><col style="width:8%">
           <% } else { %>
-          <col style="width:20%"><col style="width:14%">
-          <col style="width:58%"><col style="width:8%">
+          <!-- "Horas del mes" es un concepto de AYB (seguimiento de horas de
+               eventos, sobre todo para mozos Eventual) — no aplica a Cocina,
+               esa columna no existe acá. En cambio sí van Puesto/Sector/
+               RECOFF, que son de Cocina — se habían perdido de esta tabla
+               en un cambio anterior y se restauran a pedido. -->
+          <col style="width:15%"><col style="width:10%"><col style="width:12%"><col style="width:8%">
+          <col style="width:47%"><col style="width:8%">
           <% } %>
         </colgroup>
         <thead>
           <tr>
             <th>Nombre</th>
-            <th>Horas del mes</th>
             <% if (misDepto === 'ayb') { %>
+            <th>Horas del mes</th>
             <th>Vencimiento <span style="font-weight:400;font-size:0.62rem;">(mozos Eventual)</span></th>
             <th>Días trabajados</th>
             <th>Disponibilidad <span style="font-weight:400;font-size:0.62rem;">(cargada por cada mozo en Horarios)</span></th>
             <% } else { %>
+            <th>Puesto</th>
+            <th>Sector</th>
+            <th>RECOFF</th>
             <th>Estados por día <span style="font-weight:400;font-size:0.62rem;">(clickeá cada día para cambiarlo — máx. 2 francos)</span></th>
             <% } %>
             <th></th>
@@ -186,10 +204,27 @@
                 </div>
               </td>
 
+              <% if (misDepto !== 'ayb') { %>
+              <td>
+                <span style="font-size:0.78rem;color:var(--negro);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= p.puesto || '—' %></span>
+              </td>
+              <td>
+                <span style="display:inline-block;font-size:0.68rem;font-weight:600;color:var(--azul);background:var(--azul-claro);padding:3px 9px;border-radius:999px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;"><%= p.departamento || '—' %></span>
+              </td>
+              <td>
+                <div style="display:flex;align-items:center;gap:4px;">
+                  <button type="button" onclick="ajustarRecoff(<%= p.id %>, -1)" style="width:22px;height:22px;border-radius:6px;border:1px solid var(--gris-borde);background:var(--blanco);color:var(--gris-texto);cursor:pointer;font-size:0.8rem;line-height:1;display:flex;align-items:center;justify-content:center;">−</button>
+                  <span id="recoff-<%= p.id %>" style="font-size:0.8rem;font-weight:700;color:var(--negro);min-width:16px;text-align:center;"><%= p.recoff_pendiente_real %></span>
+                  <button type="button" onclick="ajustarRecoff(<%= p.id %>, 1)" style="width:22px;height:22px;border-radius:6px;border:1px solid var(--gris-borde);background:var(--blanco);color:var(--gris-texto);cursor:pointer;font-size:0.8rem;line-height:1;display:flex;align-items:center;justify-content:center;">+</button>
+                </div>
+              </td>
+              <% } %>
+
+              <% if (misDepto === 'ayb') { %>
               <td>
                 <div style="font-size:0.85rem;font-weight:700;color:var(--negro);"><%= p.horas_mes_actual %>hs</div>
                 <div style="font-size:0.6rem;color:var(--gris-texto);margin-top:2px;">este mes</div>
-                <% if (p.departamento === 'ayb' && p.modalidad) { %>
+                <% if (p.modalidad) { %>
                 <div style="font-size:0.62rem;color:var(--gris-texto);margin-top:4px;white-space:nowrap;">
                   <a href="/personal/<%= p.id %>/horas" style="color:inherit;text-decoration:underline;">
                     <%= p.eventos_trabajados %> evento<%= p.eventos_trabajados !== 1 ? 's' : '' %> trabajado<%= p.eventos_trabajados !== 1 ? 's' : '' %>
@@ -197,8 +232,6 @@
                 </div>
                 <% } %>
               </td>
-
-              <% if (misDepto === 'ayb') { %>
               <td>
                 <% if (typeof p.dias_para_vencer_mozo === 'number') { %>
                   <span style="font-size:0.75rem;color:<%= p.dias_para_vencer_mozo < 0 ? '#dc2626' : (p.dias_para_vencer_mozo <= 15 ? '#b45309' : 'var(--negro)') %>;font-weight:<%= p.dias_para_vencer_mozo <= 15 ? '700' : '400' %>;white-space:nowrap;">

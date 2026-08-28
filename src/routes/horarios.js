@@ -82,11 +82,26 @@ function esSupervisorOAdmin(req) {
 // varios días del mes y ponerles un mismo horario de una sola vez. Lo que
 // se ve reflejado (la tabla de equipo armada con esto) vive en "Miembro de
 // equipo", no acá — así no queda todo mezclado en la misma pantalla.
-function renderMiCalendarioAyb(req, res) {
+async function renderMiCalendarioAyb(req, res) {
   // esGestor (admin/supervisor de AYB) también decide, del lado del
   // servidor, si se muestra el botón "Ver equipo" — un mozo común no debe
   // ver la sección de Miembro de equipo (ni sus vencimientos).
-  res.render('horarios_ayb', { path: 'horarios', usuario: req.session.usuario, esGestor: puedeGestionarEventosAyb(req) });
+  const esGestor = puedeGestionarEventosAyb(req);
+  // Las alertas de eventuales (bolsa de 200hs + topes de 12hs) solo tienen
+  // sentido para quien gestiona AYB — un mozo no necesita ver esto de sus
+  // compañeros. Se calculan acá, del lado del servidor, para que el bot
+  // las muestre apenas se carga la página (ver script al pie de
+  // horarios_ayb.ejs) sin depender de que nadie le pregunte nada.
+  let alertasEventuales = [];
+  if (esGestor) {
+    const mesActual = new Date().toISOString().slice(0, 7);
+    try {
+      alertasEventuales = await alertasEventualesAyb(mesActual);
+    } catch (e) {
+      console.error('Error calculando alertas de eventuales AYB:', e.message);
+    }
+  }
+  res.render('horarios_ayb', { path: 'horarios', usuario: req.session.usuario, esGestor, alertasEventuales });
 }
 
 // ── Eventos AYB: el encargado carga eventos (nombre, horario, cupo de
@@ -124,8 +139,9 @@ function rangoEvento(fecha, horaDesde, horaHasta) {
 // bloquea la anotación — solo devuelve un texto de aviso (o null) para
 // mostrarle antes de confirmar. Mira eventos del día anterior al
 // siguiente, para cubrir los que cruzan medianoche.
+const HORAS_DESCANSO_MIN = 12;
+
 async function chequearDescanso12hs(usuarioId, eventoId, fecha, horaDesde, horaHasta) {
-  const HORAS_DESCANSO_MIN = 12;
   const otros = await db.all2(`
     SELECT e.id, e.nombre, e.fecha::text, e.hora_desde, e.hora_hasta
     FROM eventos_ayb e
@@ -154,6 +170,105 @@ async function chequearDescanso12hs(usuarioId, eventoId, fecha, horaDesde, horaH
     }
   }
   return peorAviso;
+}
+
+// ── Alertas de eventuales de AYB: a pedido, "solo para los eventuales de
+// alimentos y bebidas" — no aplica a mozos Fijo/Agencia ni a Cocina.
+// Reglas (según lo que confirmó el encargado):
+//   1) Bolsa de trabajo mensual: no pueden superar 200hs en el mes.
+//   2) Ningún turno individual puede superar las 12hs.
+//   3) Entre el fin de un turno y el inicio del siguiente tiene que haber
+//      al menos 12hs de descanso.
+// A diferencia de chequearDescanso12hs (que solo mira el momento en que un
+// mozo se anota a UN evento puntual), esto barre TODO lo que cada eventual
+// tiene cargado en el mes, para poder avisarle al encargado apenas entra a
+// la sección — no hace falta que nadie se anote a nada para que salte.
+const BOLSA_HORAS_MENSUAL_EVENTUAL = 200;
+const HORAS_MAX_TURNO = 12;
+
+async function alertasEventualesAyb(mesYYYYMM) {
+  const mozos = await db.all2(`
+    SELECT id, nombre FROM usuarios
+    WHERE activo = 1 AND departamento = 'ayb' AND modalidad = 'Eventual'
+  `);
+  if (!mozos.length) return [];
+
+  // i.asistio IS DISTINCT FROM false: incluye lo ya confirmado (true) y lo
+  // todavía no marcado (null, es decir eventos futuros recién cargados) —
+  // solo se descarta lo que ya se marcó explícitamente como inasistencia.
+  const eventos = await db.all2(`
+    SELECT i.usuario_id, e.nombre AS etiqueta,
+           e.fecha::text AS fecha, e.hora_desde, e.hora_hasta
+    FROM eventos_ayb_inscripciones i
+    JOIN eventos_ayb e ON e.id = i.evento_id
+    WHERE i.asistio IS DISTINCT FROM false
+      AND to_char(e.fecha, 'YYYY-MM') = $1
+  `, [mesYYYYMM]);
+
+  // La disponibilidad que cada mozo carga en "Mi disponibilidad" (Horarios)
+  // también cuenta para estas reglas — no hace falta que llegue a
+  // convertirse en un evento anotado para que un rango de 6 a 23:59, por
+  // ejemplo, sea un problema. Se suma acá con la misma etiqueta genérica,
+  // igual que se hace con eventos reales.
+  const disponibilidad = await db.all2(`
+    SELECT usuario_id, fecha::text AS fecha, hora_desde, hora_hasta
+    FROM disponibilidad
+    WHERE disponible = true AND hora_desde IS NOT NULL
+      AND to_char(fecha, 'YYYY-MM') = $1
+  `, [mesYYYYMM]);
+
+  const porMozo = {};
+  eventos.forEach(ev => {
+    if (!porMozo[ev.usuario_id]) porMozo[ev.usuario_id] = [];
+    porMozo[ev.usuario_id].push(ev);
+  });
+  disponibilidad.forEach(d => {
+    if (!porMozo[d.usuario_id]) porMozo[d.usuario_id] = [];
+    porMozo[d.usuario_id].push({
+      usuario_id: d.usuario_id, etiqueta: 'Disponibilidad cargada',
+      fecha: d.fecha, hora_desde: d.hora_desde, hora_hasta: d.hora_hasta
+    });
+  });
+
+  const resultado = [];
+  mozos.forEach(m => {
+    const propios = porMozo[m.id] || [];
+    if (!propios.length) return;
+
+    const conRango = propios
+      .map(ev => ({ ...ev, ...rangoEvento(ev.fecha, ev.hora_desde, ev.hora_hasta) }))
+      .sort((a, b) => a.inicio - b.inicio);
+
+    const detalles = [];
+    let horasTotales = 0;
+
+    conRango.forEach(ev => {
+      const horas = (ev.fin - ev.inicio) / (60 * 60 * 1000);
+      horasTotales += horas;
+      if (horas > HORAS_MAX_TURNO) {
+        detalles.push(`Turno de ${horas.toFixed(1)}hs el ${ev.fecha} ("${ev.etiqueta}") — supera el máximo de ${HORAS_MAX_TURNO}hs por turno.`);
+      }
+    });
+
+    for (let i = 1; i < conRango.length; i++) {
+      const anterior = conRango[i - 1], actual = conRango[i];
+      const gapHoras = (actual.inicio - anterior.fin) / (60 * 60 * 1000);
+      if (gapHoras < HORAS_DESCANSO_MIN) {
+        detalles.push(gapHoras <= 0
+          ? `"${anterior.etiqueta}" (${anterior.fecha}) se superpone con "${actual.etiqueta}" (${actual.fecha}).`
+          : `Solo ${gapHoras.toFixed(1)}hs de descanso entre "${anterior.etiqueta}" (${anterior.fecha}) y "${actual.etiqueta}" (${actual.fecha}).`);
+      }
+    }
+
+    horasTotales = Math.round(horasTotales * 10) / 10;
+    if (horasTotales > BOLSA_HORAS_MENSUAL_EVENTUAL) {
+      detalles.push(`Lleva ${horasTotales}hs cargadas este mes — supera la bolsa mensual de ${BOLSA_HORAS_MENSUAL_EVENTUAL}hs.`);
+    }
+
+    if (detalles.length) resultado.push({ usuarioId: m.id, nombre: m.nombre, horasTotales, detalles });
+  });
+
+  return resultado;
 }
 
 function puedeVerEventosAyb(req) {
@@ -417,10 +532,17 @@ router.get('/', loginRequerido, async (req, res) => {
   const { inicio, fin } = resolverRango(req.query);
   const dias = getDiasRango(inicio, fin);
 
+  // departamento = ANY($1) con SECTORES: antes esta consulta traía TODOS
+  // los usuarios activos sin filtrar (incluidos los de AYB, Compras,
+  // Finanzas) — no se notaba en esta grilla porque el template de abajo
+  // solo recorre SECTORES, pero la misma consulta (sin este filtro) se
+  // usaba también en /horarios/excel, y ahí sí terminaban mezclados los
+  // mozos de AYB en el Excel de Cocina. Se filtra acá también por
+  // consistencia y para no repetir el bug si el template cambia.
   const empleados = await db.all2(`
     SELECT id, nombre, puesto, departamento, recoff_adeudado
     FROM usuarios
-    WHERE activo = 1
+    WHERE activo = 1 AND departamento = ANY($1)
     ORDER BY
       CASE departamento
         WHEN 'Supervisores'       THEN 1
@@ -437,7 +559,7 @@ router.get('/', loginRequerido, async (req, res) => {
         WHEN 'Cocina I+D'         THEN 12
         ELSE 99
       END, nombre
-  `);
+  `, [SECTORES]);
 
   // Cuántos RECOFF tiene puestos cada uno en TODA la grilla (no solo el rango visible)
   const usadosRaw = await db.all2(`
@@ -581,8 +703,11 @@ router.get('/excel', loginRequerido, async (req, res) => {
   const dias = getDiasRango(inicio, fin);
   const NOMBRES_DIA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
+  // Mismo filtro que en GET '/' — sin esto, el Excel exportado desde
+  // Cocina traía también a los mozos de AYB (y a Compras/Finanzas),
+  // mezclados como si fueran "otro sector" más al final de la planilla.
   const empleados = await db.all2(`
-    SELECT id, nombre, puesto, departamento FROM usuarios WHERE activo=1
+    SELECT id, nombre, puesto, departamento FROM usuarios WHERE activo=1 AND departamento = ANY($1)
     ORDER BY CASE departamento
       WHEN 'Supervisores' THEN 1 WHEN 'Comis de Recepción' THEN 2
       WHEN 'Panadería' THEN 3 WHEN 'Pastelería AM' THEN 4
@@ -591,7 +716,7 @@ router.get('/excel', loginRequerido, async (req, res) => {
       WHEN 'BQTs Fríos' THEN 9 WHEN 'BQTs Calientes' THEN 10
       WHEN 'Farolito' THEN 11 WHEN 'Cocina I+D' THEN 12
       ELSE 99 END, nombre
-  `);
+  `, [SECTORES]);
 
   const horariosRaw = await db.all2(`
     SELECT usuario_id, fecha::text, valor FROM horarios_semanales
