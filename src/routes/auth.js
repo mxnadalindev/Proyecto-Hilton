@@ -110,11 +110,15 @@ router.get('/registro', (req, res) => {
 router.post('/registro', async (req, res) => {
   const nombre    = (req.body.nombre    || '').trim();
   const email     = (req.body.email     || '').toLowerCase().trim();
+  const cuil      = (req.body.cuil      || '').trim();
   const password  = (req.body.password  || '');
   const password2 = (req.body.password2 || '');
 
-  if (!nombre || !email || !password) {
+  if (!nombre || !password) {
     return renderLogin(res, { errorReg: 'Completá todos los campos.' });
+  }
+  if (!email && !cuil) {
+    return renderLogin(res, { errorReg: 'Completá tu correo electrónico, o tu CUIL si sos de Alimentos y Bebidas.' });
   }
   if (password !== password2) {
     return renderLogin(res, { errorReg: 'Las contraseñas no coinciden.' });
@@ -124,14 +128,45 @@ router.post('/registro', async (req, res) => {
   }
 
   try {
+    const hash = bcrypt.hashSync(password, 12);
+
+    if (cuil) {
+      // Alimentos y Bebidas: los mozos ya están cargados de antes por el
+      // encargado (CUIL guardado en "legajo", con la contraseña por
+      // defecto "Hilton2026!" — ver importar-mozos y /nuevo en
+      // personal.js). Acá no se crea una cuenta nueva y desconectada: se
+      // "activa" esa misma ficha con la contraseña que elige el mozo, así
+      // queda relacionada con la persona correcta en vez de duplicarla.
+      // El email es opcional en este flujo, así que NO sirve como marca
+      // de "ya activada" — en cambio, se chequea si la contraseña
+      // guardada todavía es la de fábrica: si ya la cambiaron, la cuenta
+      // ya fue reclamada por otra persona y no se puede volver a activar.
+      const existente = await db.get2(
+        'SELECT id, password FROM usuarios WHERE legajo = $1 AND departamento = $2',
+        [cuil, 'ayb']
+      );
+      if (!existente) {
+        return renderLogin(res, {
+          errorReg: 'No encontramos ese CUIL cargado en el sistema. Pedile al encargado de Alimentos y Bebidas que te cargue primero en "Miembro de equipo".'
+        });
+      }
+      const esPasswordDeFabrica = bcrypt.compareSync('Hilton2026!', existente.password || '');
+      if (!esPasswordDeFabrica) {
+        return renderLogin(res, {
+          errorReg: 'Esa cuenta ya fue activada antes. Iniciá sesión, o pedile al encargado que te resetee la contraseña si la olvidaste.'
+        });
+      }
+      await db.run2('UPDATE usuarios SET password=$1, email=$2 WHERE id=$3', [hash, email || null, existente.id]);
+      return renderLogin(res, { success: 'Cuenta activada. Ya podés iniciar sesión con tu CUIL o tu email.' });
+    }
+
     const existe = await db.get2('SELECT id FROM usuarios WHERE email = $1', [email]);
     if (existe) return renderLogin(res, { errorReg: 'Ese email ya está registrado.' });
 
-    const hash = bcrypt.hashSync(password, 12);
     // departamento='sistema' → no aparece en Personal (que filtra por sectores de cocina)
     await db.run2(
      'INSERT INTO usuarios (nombre, email, password, rol, departamento) VALUES ($1, $2, $3, $4, $5)',
-      [nombre, email, hash, 'empleado', req.body.departamento || 'cocina'] 
+      [nombre, email, hash, 'empleado', req.body.departamento || 'cocina']
     );
     renderLogin(res, { success: `Cuenta creada para ${nombre}. Ya podés iniciar sesión.` });
   } catch(e) {

@@ -1,9 +1,10 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 const multer = require('multer');
 const path = require('path');
-const { loginRequerido } = require('./middleware');
+const { loginRequerido, requiereDepartamento } = require('./middleware');
+router.use(loginRequerido, requiereDepartamento('/recetas'));
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -14,7 +15,7 @@ const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 * 1024 } })
 // ── Permisos: solo admin/supervisor crean, editan o eliminan recetas ──
 // (esto ya estaba resuelto en tu código, no se toca)
 function esAdminOSupervisor(req) {
-  const rol = req.session?.usuario?.rol;
+  const rol = (req.session?.usuario?.rol || '').toLowerCase();
   return rol === 'admin' || rol === 'supervisor';
 }
 function requiereEdicion(req, res, next) {
@@ -27,21 +28,11 @@ function requiereEdicion(req, res, next) {
   next();
 }
 
-// Listas fijas de Áreas (secciones de cocina) y Categorías (tipo de plato).
-// El formulario también permite escribir "Otra" para casos que no estén acá,
-// y si una receta vieja tiene un valor que ya no está en esta lista, igual se
-// respeta y se muestra (no se pierde el dato).
-const AREAS = [
-  'Cocina I+D', 'Restaurante AM', 'Restaurante PM', 'Bar', 'Room Service',
-  'BQT Frío', 'BQT Caliente', 'Panadería', 'Pastelería', 'Comedor',
-];
-const CATEGORIAS = [
-  'Snack', 'Entrada', 'Principal', 'Corte', 'Postre', 'Tapa',
-  'Sandwich', 'Sopas', 'Desayuno', 'Aderezos', 'Salsas',
-];
-
-function getOpciones() {
-  return { categorias: CATEGORIAS, areas: AREAS };
+// Categorías/áreas ya usadas en recetas existentes, para poblar los <select>
+async function getOpciones() {
+  const cats = await db.all2("SELECT DISTINCT categoria FROM recetas WHERE categoria IS NOT NULL AND categoria <> '' ORDER BY categoria");
+  const areas = await db.all2("SELECT DISTINCT area FROM recetas WHERE area IS NOT NULL AND area <> '' ORDER BY area");
+  return { categorias: cats.map(c => c.categoria), areas: areas.map(a => a.area) };
 }
 
 // ── Ingredientes: ahora vienen de la tabla "insumos" (ing_insumo_id_N + ing_cantidad_N + ing_unidad_N) ──
@@ -144,15 +135,20 @@ const SQL_IMAGEN_LISTADO = `
 
 router.get('/', loginRequerido, async (req, res) => {
   const busqueda = req.query.q || '';
-  const recetas = busqueda
-    ? await db.all2(`
-        SELECT r.*, ${SQL_IMAGEN_LISTADO},
-               EXISTS(SELECT 1 FROM receta_videos v WHERE v.receta_id=r.id) AS tiene_video
-        FROM recetas r WHERE r.nombre ILIKE $1 OR r.categoria ILIKE $1 ORDER BY r.nombre`, [`%${busqueda}%`])
-    : await db.all2(`
-        SELECT r.*, ${SQL_IMAGEN_LISTADO},
-               EXISTS(SELECT 1 FROM receta_videos v WHERE v.receta_id=r.id) AS tiene_video
-        FROM recetas r ORDER BY r.nombre`);
+  let recetas = [];
+  try {
+    recetas = busqueda
+      ? await db.all2(`
+          SELECT r.*, ${SQL_IMAGEN_LISTADO},
+                 EXISTS(SELECT 1 FROM receta_videos v WHERE v.receta_id=r.id) AS tiene_video
+          FROM recetas r WHERE r.nombre ILIKE $1 OR r.categoria ILIKE $1 ORDER BY r.nombre`, [`%${busqueda}%`])
+      : await db.all2(`
+          SELECT r.*, ${SQL_IMAGEN_LISTADO},
+                 EXISTS(SELECT 1 FROM receta_videos v WHERE v.receta_id=r.id) AS tiene_video
+          FROM recetas r ORDER BY r.nombre`);
+  } catch (e) {
+    console.error('Error cargando recetas:', e.message);
+  }
   res.render('recetas', { recetas, busqueda, puedeEditar: esAdminOSupervisor(req) });
 });
 

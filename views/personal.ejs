@@ -23,6 +23,25 @@
       <i class="ti ti-check"></i> Se cargaron <%= cargadosMozos %> mozo<%= cargadosMozos != 1 ? 's' : '' %><% if (duplicadosMozos > 0) { %> (<%= duplicadosMozos %> ya existían por CUIL y se saltearon)<% } %>.
     </div>
     <% } %>
+    <% if (msg && msg !== 'empleado_editado' && msg !== 'mozos_importados') { %>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#dc2626;display:flex;align-items:center;gap:8px;">
+      <i class="ti ti-alert-circle"></i> <%= msg %>
+    </div>
+    <% } %>
+
+    <% if (typeof mozosVencidos !== 'undefined' && (mozosVencidos.length > 0 || mozosPorVencer.length > 0)) { %>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:0.82rem;color:#991b1b;">
+      <div style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:<%= (mozosVencidos.length + mozosPorVencer.length) ? '8px' : '0' %>;">
+        <i class="ti ti-alert-triangle"></i> Límite de 6 meses de mozos eventuales
+      </div>
+      <% mozosVencidos.forEach(p => { %>
+        <div style="padding:3px 0;">• <strong><%= p.nombre %></strong> superó su límite de 6 meses hace <%= Math.abs(p.dias_para_vencer_mozo) %> día<%= Math.abs(p.dias_para_vencer_mozo) !== 1 ? 's' : '' %> (venció el <%= new Date(p.fecha_vencimiento_mozo).toLocaleDateString('es-AR') %>).</div>
+      <% }) %>
+      <% mozosPorVencer.forEach(p => { %>
+        <div style="padding:3px 0;">• <strong><%= p.nombre %></strong> llega a los 6 meses en <%= p.dias_para_vencer_mozo %> día<%= p.dias_para_vencer_mozo !== 1 ? 's' : '' %> (<%= new Date(p.fecha_vencimiento_mozo).toLocaleDateString('es-AR') %>).</div>
+      <% }) %>
+    </div>
+    <% } %>
 
     <!-- Header -->
     <div class="seccion-header">
@@ -36,13 +55,15 @@
         <% if (esAdmin) { %>
         <% if (misDepto === 'ayb') { %>
         <button onclick="showModal('modal-importar-mozos')" class="btn-secondary"><i class="ti ti-file-upload"></i> Importar mozos (CSV)</button>
+        <button onclick="showModal('modal-importar-mozos-foto')" class="btn-secondary"><i class="ti ti-camera"></i> Cargar con foto</button>
         <% } %>
         <button onclick="showModal('modal-nuevo')" class="btn-primary"><i class="ti ti-plus"></i> Nuevo empleado</button>
         <% } %>
       </div>
     </div>
 
-    <!-- Selector de rango con calendario -->
+    <!-- Selector de rango con calendario (Cocina/admin general) -->
+    <% if (misDepto !== 'ayb') { %>
     <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:var(--sombra);display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
 
       <!-- Calendario -->
@@ -72,6 +93,26 @@
         </div>
       </div>
     </div>
+    <% } else { %>
+    <!-- AYB: sin selector de estados — solo navegación de período para ver la disponibilidad cargada -->
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:14px 20px;margin-bottom:20px;box-shadow:var(--sombra);">
+      <a href="/personal?inicio=<%= rangoAnterior.inicio %>&fin=<%= rangoAnterior.fin %>" class="btn-secondary" style="padding:6px 14px;">
+        <i class="ti ti-chevron-left"></i> Período anterior
+      </a>
+      <div style="text-align:center;">
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 2px;">Período</p>
+        <p style="font-size:0.95rem;font-weight:600;color:var(--negro);margin:0;">
+          <%= new Date(dias[0]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long'}) %> — <%= new Date(dias[dias.length-1]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}) %>
+        </p>
+      </div>
+      <a href="/personal?inicio=<%= rangoSiguiente.inicio %>&fin=<%= rangoSiguiente.fin %>" class="btn-secondary" style="padding:6px 14px;">
+        Período siguiente <i class="ti ti-chevron-right"></i>
+      </a>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#1d4ed8;display:flex;align-items:center;gap:8px;">
+      <i class="ti ti-info-circle"></i> Esto se arma solo con lo que cada mozo carga en Horarios — no se edita desde acá.
+    </div>
+    <% } %>
 
     <!-- Buscador -->
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
@@ -89,16 +130,27 @@
 
     <!-- Tabla -->
     <div class="tabla-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-      <table class="tabla" style="width:100%;min-width:1150px;table-layout:fixed;">
+      <table class="tabla" style="width:100%;min-width:<%= misDepto === 'ayb' ? '1250' : '1050' %>px;table-layout:fixed;">
         <colgroup>
-          <col style="width:17%"><col style="width:9%"><col style="width:11%">
-          <col style="width:8%"><col style="width:47%"><col style="width:8%">
+          <% if (misDepto === 'ayb') { %>
+          <col style="width:16%"><col style="width:10%"><col style="width:11%"><col style="width:9%">
+          <col style="width:46%"><col style="width:8%">
+          <% } else { %>
+          <col style="width:20%"><col style="width:14%">
+          <col style="width:58%"><col style="width:8%">
+          <% } %>
         </colgroup>
         <thead>
           <tr>
-            <th>Nombre</th><th>Puesto</th><th>Sector</th>
-            <th title="Francos compensatorios adeudados">RECOFF</th>
+            <th>Nombre</th>
+            <th>Horas del mes</th>
+            <% if (misDepto === 'ayb') { %>
+            <th>Vencimiento <span style="font-weight:400;font-size:0.62rem;">(mozos Eventual)</span></th>
+            <th>Días trabajados</th>
+            <th>Disponibilidad <span style="font-weight:400;font-size:0.62rem;">(cargada por cada mozo en Horarios)</span></th>
+            <% } else { %>
             <th>Estados por día <span style="font-weight:400;font-size:0.62rem;">(clickeá cada día para cambiarlo — máx. 2 francos)</span></th>
+            <% } %>
             <th></th>
           </tr>
         </thead>
@@ -134,32 +186,70 @@
                 </div>
               </td>
 
-              <td><span class="puesto-badge"><%= p.puesto||'—' %></span></td>
-
               <td>
-                <%
-                  // Cocina muestra su sector (guardado en "departamento"); AYB
-                  // muestra la modalidad (Eventual/Fijo/Agencia) — ya no tiene
-                  // sector, "departamento" para AYB es siempre 'ayb' a secas.
-                  const etiquetaSector = p.departamento === 'ayb' ? p.modalidad : p.departamento;
-                %>
-                <% if (etiquetaSector) { %>
-                <span style="font-size:0.67rem;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:2px 6px;border-radius:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;" title="<%= etiquetaSector %>">
-                  <%= etiquetaSector %>
-                </span>
-                <% } else { %><span style="font-size:0.72rem;color:var(--gris-texto);">—</span><% } %>
-              </td>
-
-              <td style="text-align:center;">
-                <div class="recoff-control" data-uid="<%= p.id %>">
-                  <button type="button" onclick="ajustarRecoff(<%= p.id %>, -1)" title="Restar un día">−</button>
-                  <span class="recoff-numero" id="recoff-<%= p.id %>"><%= p.recoff_pendiente_real ?? 0 %></span>
-                  <button type="button" onclick="ajustarRecoff(<%= p.id %>, 1)" title="Sumar un día adeudado">+</button>
+                <div style="font-size:0.85rem;font-weight:700;color:var(--negro);"><%= p.horas_mes_actual %>hs</div>
+                <div style="font-size:0.6rem;color:var(--gris-texto);margin-top:2px;">este mes</div>
+                <% if (p.departamento === 'ayb' && p.modalidad) { %>
+                <div style="font-size:0.62rem;color:var(--gris-texto);margin-top:4px;white-space:nowrap;">
+                  <a href="/personal/<%= p.id %>/horas" style="color:inherit;text-decoration:underline;">
+                    <%= p.eventos_trabajados %> evento<%= p.eventos_trabajados !== 1 ? 's' : '' %> trabajado<%= p.eventos_trabajados !== 1 ? 's' : '' %>
+                  </a>
                 </div>
+                <% } %>
               </td>
 
+              <% if (misDepto === 'ayb') { %>
               <td>
-                <% if (p.activo) { %>
+                <% if (typeof p.dias_para_vencer_mozo === 'number') { %>
+                  <span style="font-size:0.75rem;color:<%= p.dias_para_vencer_mozo < 0 ? '#dc2626' : (p.dias_para_vencer_mozo <= 15 ? '#b45309' : 'var(--negro)') %>;font-weight:<%= p.dias_para_vencer_mozo <= 15 ? '700' : '400' %>;white-space:nowrap;">
+                    <%= p.dias_para_vencer_mozo < 0 ? 'Venció hace ' + Math.abs(p.dias_para_vencer_mozo) + 'd' : 'Vence en ' + p.dias_para_vencer_mozo + 'd' %>
+                  </span>
+                  <div style="font-size:0.6rem;color:var(--gris-texto);margin-top:2px;"><%= new Date(p.fecha_vencimiento_mozo+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'}) %></div>
+                <% } else if (p.modalidad === 'Eventual') { %>
+                  <span style="font-size:0.7rem;font-style:italic;color:var(--gris-texto);">Sin fecha de alta</span>
+                <% } else { %>
+                  <span style="font-size:0.72rem;color:var(--gris-texto);">—</span>
+                <% } %>
+              </td>
+              <td>
+                <span style="font-size:0.85rem;font-weight:700;color:var(--negro);"><%= p.dias_trabajados_mes %></span>
+                <div style="font-size:0.6rem;color:var(--gris-texto);margin-top:2px;">día<%= p.dias_trabajados_mes !== 1 ? 's' : '' %> este mes</div>
+              </td>
+              <% } %>
+
+              <td>
+                <% if (p.departamento === 'ayb') { %>
+                <%
+                  // AYB no carga estados a mano acá — esto es de solo lectura,
+                  // arma lo que cada mozo cargó en Horarios (su propia
+                  // disponibilidad). La grilla de estados de arriba es un
+                  // concepto de Cocina, no aplica.
+                  const dispEmp = dispMap[p.id] || {};
+                %>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                  <% dias.forEach((dia) => { %>
+                  <%
+                    const _dow = new Date(dia + 'T00:00:00').getDay();
+                    const _numDia = new Date(dia + 'T00:00:00').getDate();
+                    const _d = dispEmp[dia];
+                    let _texto = 'Sin cargar', _bg = 'var(--gris-fondo)', _color = 'var(--gris-texto)', _border = 'var(--gris-borde)';
+                    if (_d) {
+                      if (_d.disponible) {
+                        _texto = _d.hora_hasta ? `${_d.hora_desde}-${_d.hora_hasta}` : `Desde ${_d.hora_desde}`;
+                        _bg = '#f0fdf4'; _color = '#16a34a'; _border = '#bbf7d0';
+                      } else {
+                        _texto = 'No disp.';
+                        _bg = '#fef2f2'; _color = '#dc2626'; _border = '#fecaca';
+                      }
+                    }
+                  %>
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                    <span style="font-size:0.56rem;color:var(--gris-texto);font-weight:600;white-space:nowrap;"><%= NOMBRES_DIA_CORTO[_dow] %> <%= _numDia %></span>
+                    <span style="width:64px;text-align:center;font-size:0.58rem;font-weight:600;background:<%= _bg %>;color:<%= _color %>;border:1px solid <%= _border %>;border-radius:5px;padding:3px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= _texto %></span>
+                  </div>
+                  <% }) %>
+                </div>
+                <% } else if (p.activo) { %>
                 <div style="display:flex;gap:4px;flex-wrap:wrap;">
                   <% dias.forEach((dia) => { %>
                   <%
@@ -198,7 +288,7 @@
               </td>
 
               <td style="text-align:center;position:relative;vertical-align:middle;">
-                <% if (p.activo) { %>
+                <% if (p.activo && p.departamento !== 'ayb') { %>
                 <button onclick="guardarEmpleado(<%= p.id %>)"
                         class="btn-asignar" title="Guardar rango" style="margin-bottom:4px;display:block;margin:0 auto 4px;">
                   <i class="ti ti-check"></i>
@@ -209,7 +299,7 @@
                   <i class="ti ti-dots-vertical"></i>
                 </button>
                 <div id="menu-<%= p.id %>" class="dropdown-menu" style="display:none;">
-                  <button onclick="abrirEditar(<%= p.id %>, '<%= p.nombre.replace(/'/g,'') %>', '<%= p.email||'' %>', '<%= p.legajo||'' %>', '<%= p.puesto||'' %>', '<%= p.rol||'' %>', '<%= p.departamento === 'ayb' ? '' : (p.departamento||'') %>', '<%= p.modalidad||'' %>')" class="dropdown-item">
+                  <button onclick="abrirEditar(<%= p.id %>, '<%= p.nombre.replace(/'/g,'') %>', '<%= p.email||'' %>', '<%= p.legajo||'' %>', '<%= p.puesto||'' %>', '<%= p.rol||'' %>', '<%= p.departamento === 'ayb' ? '' : (p.departamento||'') %>', '<%= p.modalidad||'' %>', '<%= p.fecha_alta||'' %>', '<%= p.celular||'' %>')" class="dropdown-item">
                     <i class="ti ti-pencil"></i> Editar
                   </button>
                   <button onclick="abrirDisponibilidad(<%= p.id %>, '<%= p.nombre.replace(/'/g,'') %>')" class="dropdown-item">
@@ -233,7 +323,7 @@
             </tr>
             <% }) %>
           <% } else { %>
-          <tr><td colspan="7" style="text-align:center;padding:48px;color:var(--gris-texto);font-style:italic;">No hay personal registrado.</td></tr>
+          <tr><td colspan="<%= misDepto === 'ayb' ? 6 : 4 %>" style="text-align:center;padding:48px;color:var(--gris-texto);font-style:italic;">No hay personal registrado.</td></tr>
           <% } %>
         </tbody>
       </table>
@@ -277,6 +367,9 @@
             <% modalidadesAyb.forEach(m => { %><option value="<%= m %>"><%= m %></option><% }) %>
           </select>
         </div>
+        <div class="field"><label>Fecha de alta</label><input type="date" name="fecha_alta" id="edit-fecha-alta"></div>
+        <p style="grid-column:1/-1;font-size:0.7rem;color:var(--gris-texto);margin-top:-8px;">Solo aplica a modalidad "Eventual": desde acá se cuenta el límite de 6 meses.</p>
+        <div class="field" style="grid-column:1/-1;"><label>Celular (para WhatsApp)</label><input type="text" name="celular" id="edit-celular" placeholder="Ej: 1122334455"></div>
         <% } else { %>
         <div class="field"><label>Legajo</label><input type="text" name="legajo" id="edit-legajo"></div>
         <div class="field"><label>Email (opcional)</label><input type="email" name="email" id="edit-email"></div>
@@ -324,11 +417,14 @@
           </select>
         </div>
         <div class="field" style="grid-column:1/-1;"><label>Email (opcional)</label><input type="email" name="email" placeholder="nombre@hilton.com"></div>
-        <div class="field" style="grid-column:1/-1;"><label>Rol</label>
+        <div class="field"><label>Rol</label>
           <select name="rol" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>
           </select>
         </div>
+        <div class="field"><label>Fecha de alta</label><input type="date" name="fecha_alta" value="<%= hoy %>"></div>
+        <p style="grid-column:1/-1;font-size:0.7rem;color:var(--gris-texto);margin-top:-8px;">Solo aplica a modalidad "Eventual": desde acá se cuenta el límite de 6 meses.</p>
+        <div class="field" style="grid-column:1/-1;"><label>Celular (para WhatsApp)</label><input type="text" name="celular" placeholder="Ej: 1122334455"></div>
         <% } else { %>
         <div class="field"><label>Legajo</label><input type="text" name="legajo" placeholder="Ej: 00123"></div>
         <div class="field"><label>Puesto</label>
@@ -404,6 +500,32 @@
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
         <button type="button" onclick="hideModal('modal-importar-mozos')" class="btn-secondary">Cancelar</button>
         <button type="submit" class="btn-primary"><i class="ti ti-file-upload"></i> Importar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal importar mozos con foto (planilla, lista escrita a mano, captura, etc.) -->
+<div id="modal-importar-mozos-foto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Cargar mozos con foto</h2>
+      <button onclick="hideModal('modal-importar-mozos-foto')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:0.8rem;color:var(--gris-texto);margin:0 0 16px;">
+      Sacale una foto a la planilla, lista o cuadro con los mozos (puede estar escrita a mano,
+      ser una captura de pantalla o una foto de una hoja impresa) y el sistema va a leer nombre,
+      CUIL y modalidad de cada uno. Después vas a poder revisar y corregir todo antes de cargarlo.
+      Contraseña inicial para todos: <strong>Hilton2026!</strong>
+    </p>
+    <form method="POST" action="/personal/importar-mozos-foto" enctype="multipart/form-data">
+      <div class="field">
+        <label>Foto de la planilla</label>
+        <input type="file" name="foto" accept="image/*" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);">
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
+        <button type="button" onclick="hideModal('modal-importar-mozos-foto')" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary" id="btn-foto-mozos"><i class="ti ti-camera"></i> Analizar foto</button>
       </div>
     </form>
   </div>
@@ -690,9 +812,14 @@ function actualizarEtiquetaRango() {
   btn.href = '/personal?inicio=' + rangoInicio + '&fin=' + rangoFin;
 }
 
-// Inicializar calendario en el rango actual
-renderCal();
-actualizarEtiquetaRango();
+// Inicializar calendario en el rango actual — este bloque (selector de
+// semana para Cocina) no se renderiza para AYB (misDepto === 'ayb'), así
+// que #cal-titulo no existe en ese caso; sin este chequeo renderCal()
+// tiraba un error y cortaba el resto del script para esos usuarios.
+if (document.getElementById('cal-titulo')) {
+  renderCal();
+  actualizarEtiquetaRango();
+}
 
 // ── Guardar empleado ──
 function onCambioSectorDia(sel) {
@@ -802,7 +929,7 @@ document.addEventListener('click', e => {
     document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
 });
 
-function abrirEditar(id, nombre, email, legajo, puesto, rol, sector, modalidad) {
+function abrirEditar(id, nombre, email, legajo, puesto, rol, sector, modalidad, fechaAlta, celular) {
   document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
   document.getElementById('edit-id').value     = id;
   document.getElementById('edit-nombre').value = nombre;
@@ -837,6 +964,12 @@ function abrirEditar(id, nombre, email, legajo, puesto, rol, sector, modalidad) 
 
   const selModalidad = document.getElementById('edit-modalidad');
   if (selModalidad) selModalidad.value = modalidad;
+
+  const elFechaAlta = document.getElementById('edit-fecha-alta');
+  if (elFechaAlta) elFechaAlta.value = fechaAlta || '';
+
+  const elCelular = document.getElementById('edit-celular');
+  if (elCelular) elCelular.value = celular || '';
 
   showModal('modal-editar');
 }

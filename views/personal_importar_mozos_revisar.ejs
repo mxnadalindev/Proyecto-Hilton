@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revisar mozos detectados — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: 'personal' }) %>
+
+  <main class="main-content">
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Miembro de equipo</p>
+        <h1 class="seccion-titulo">Revisar mozos detectados</h1>
+      </div>
+      <a href="/personal" class="btn-secondary"><i class="ti ti-arrow-left"></i> Cancelar y volver</a>
+    </div>
+
+    <% if (items.length === 0) { %>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;color:#dc2626;">
+        No hay ninguna foto pendiente de revisión. <a href="/personal">Volver a Miembro de equipo</a>.
+      </div>
+    <% } else { %>
+
+      <p style="font-size:0.85rem;color:var(--gris-texto);margin-bottom:16px;">
+        Se detectaron <%= items.length %> persona(s) en la imagen. Revisá y corregí nombre, CUIL y
+        modalidad si hace falta, y tildá los que querés cargar. Contraseña inicial para todos:
+        <strong>Hilton2026!</strong> Los que ya estén cargados (mismo CUIL) se saltean solos.
+      </p>
+
+      <form method="POST" action="/personal/importar-mozos-foto/aplicar">
+        <div class="tabla-wrap">
+          <table class="tabla" style="width:100%;">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Nombre</th>
+                <th>CUIL</th>
+                <th>Modalidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% items.forEach((item, i) => { %>
+              <tr>
+                <td style="text-align:center;">
+                  <input type="checkbox" name="aplicar" value="<%= i %>" checked
+                         style="accent-color:var(--azul);width:16px;height:16px;">
+                </td>
+                <td>
+                  <input type="text" name="nombre[<%= i %>]" value="<%= item.nombre %>" required
+                         style="width:100%;min-width:180px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:7px 9px;font-size:0.82rem;">
+                </td>
+                <td>
+                  <input type="text" name="cuil[<%= i %>]" value="<%= item.cuil || '' %>" placeholder="Sin dato"
+                         style="width:100%;min-width:130px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:7px 9px;font-size:0.82rem;">
+                </td>
+                <td>
+                  <select name="modalidad[<%= i %>]" style="background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:7px 9px;font-size:0.82rem;">
+                    <% modalidadesAyb.forEach(m => { %>
+                      <option value="<%= m %>" <%= item.modalidad === m ? 'selected' : '' %>><%= m %></option>
+                    <% }) %>
+                  </select>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:20px;display:flex;gap:12px;">
+          <button type="submit" class="btn-primary"><i class="ti ti-check"></i> Cargar mozos tildados</button>
+          <a href="/personal" class="btn-secondary">Descartar todo</a>
+        </div>
+      </form>
+    <% } %>
+  </main>
+</div>
+</body>
+</html>

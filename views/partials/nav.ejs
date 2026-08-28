@@ -5,7 +5,10 @@
     <a href="/inicio" class="nav-item <%= (typeof path !== 'undefined' && path === 'inicio') ? 'activo' : '' %>" title="Inicio">
       <i class="ti ti-home" aria-hidden="true"></i>
     </a>
-    <% const _d = usuario?.departamento; const _r = usuario?.rol; %>
+    <% // .toLowerCase(): departamento/rol pueden estar guardados con distinta
+       // capitalización según cómo se creó la cuenta — sin esto, un admin
+       // con rol "Admin" (en vez de "admin") se quedaba sin ver Configuración.
+       const _d = (usuario?.departamento || '').toLowerCase(); const _r = (usuario?.rol || '').toLowerCase(); %>
     <% if (_d === 'cocina' || (_r === 'admin' && _d !== 'ayb' && _d !== 'compras' && _d !== 'finanzas')) { %>
       <a href="/eventos" class="nav-item <%= (typeof path !== 'undefined' && path === 'eventos') ? 'activo' : '' %>" title="Eventos">
         <i class="ti ti-calendar-event" aria-hidden="true"></i><span class="nav-label">Eventos</span>
@@ -24,20 +27,26 @@
       </a>
     <% } %>
     <% if (_d === 'ayb') { %>
+      <% // Miembro de equipo y Croutons son solo para quien gestiona AYB
+         // (admin/supervisor) — un mozo común solo entra a Horarios. %>
+      <% if (_r === 'admin' || _r === 'supervisor') { %>
       <a href="/personal" class="nav-item <%= (typeof path !== 'undefined' && path === 'personal') ? 'activo' : '' %>" title="Miembro de equipo">
         <i class="ti ti-users" aria-hidden="true"></i><span class="nav-label">Miembro de equipo</span>
       </a>
+      <% } %>
       <a href="/horarios" class="nav-item <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>" title="Horarios">
         <i class="ti ti-clock" aria-hidden="true"></i><span class="nav-label">Horarios</span>
       </a>
+      <% if (_r === 'admin' || _r === 'supervisor') { %>
       <a href="/croutons" class="nav-item <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>" title="Croutons">
         <i class="ti ti-package" aria-hidden="true"></i><span class="nav-label">Croutons</span>
       </a>
+      <% } %>
       <a href="/personal/mi-disponibilidad" class="nav-item <%= (typeof path !== 'undefined' && path === 'mi-disponibilidad') ? 'activo' : '' %>" title="Mi disponibilidad">
         <i class="ti ti-calendar-event" aria-hidden="true"></i><span class="nav-label">Mi disponibilidad</span>
       </a>
     <% } %>
-    <% if (usuario?.rol === 'admin') { %>
+    <% if (_r === 'admin') { %>
       <a href="/configuracion" class="nav-item <%= (typeof path !== 'undefined' && path === 'configuracion') ? 'activo' : '' %>" title="Configuración">
         <i class="ti ti-settings" aria-hidden="true"></i><span class="nav-label">Configuración</span>
       </a>

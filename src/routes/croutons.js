@@ -6,7 +6,18 @@ const multer = require('multer');
 const path = require('path');
 const ExcelJS = require('exceljs');
 router.use(loginRequerido, requiereDepartamento('/croutons'));
-const { analizarRemitoCroutons } = require('../services/gemini');
+// Croutons (vencimientos de mercadería) es solo para quien gestiona AYB
+// (admin/supervisor) — un mozo común solo debe poder entrar a Horarios,
+// nada más de A&B (mismo criterio que "Miembro de equipo" en personal.js).
+router.use((req, res, next) => {
+  const departamento = (req.session.usuario.departamento || '').toLowerCase();
+  const rol = (req.session.usuario.rol || '').toLowerCase();
+  if (departamento === 'ayb' && rol !== 'admin' && rol !== 'supervisor') {
+    return res.redirect('/horarios');
+  }
+  next();
+});
+const { analizarRemitoCroutons, mensajeErrorGemini } = require('../services/gemini');
 const { parsearCsvCroutons, importarLotesCroutons } = require('../services/importadorCroutons');
 
 const storageRemito = multer.diskStorage({
@@ -371,14 +382,12 @@ router.post('/lote/nuevo', async (req, res) => {
 
   try {
     await db.run2(
-      `INSERT INTO croutons_lotes (producto, cantidad, unidad, peso, unidad_peso, proveedor, lote_proveedor, fecha_ingreso, fecha_vencimiento, notas, creado_por)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+      `INSERT INTO croutons_lotes (producto, cantidad, unidad, proveedor, lote_proveedor, fecha_ingreso, fecha_vencimiento, notas, creado_por)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [
         producto,
         parseFloat(req.body.cantidad) || 0,
-        (req.body.unidad || 'unidad').trim(),
-        req.body.peso ? parseFloat(req.body.peso) : null,
-        (req.body.unidad_peso || 'kg').trim(),
+        (req.body.unidad || 'kg').trim(),
         (req.body.proveedor || '').trim(),
         (req.body.lote_proveedor || '').trim(),
         fechaIngreso || new Date().toISOString().split('T')[0],
@@ -588,8 +597,8 @@ router.post('/remito', uploadRemito.single('remito'), async (req, res) => {
     req.session.croutonsRemitoPendiente = items;
     res.redirect('/croutons/remito/revisar');
   } catch (e) {
-    console.error('Error analizando remito de croutons con Gemini:', e.message);
-    res.redirect('/croutons?msg=' + encodeURIComponent('Error analizando la imagen: ' + e.message));
+    console.error('Error analizando remito de croutons con Gemini:', e.message, e.cause || '');
+    res.redirect('/croutons?msg=' + encodeURIComponent(mensajeErrorGemini(e)));
   }
 });
 

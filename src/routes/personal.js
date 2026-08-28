@@ -6,6 +6,8 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const { loginRequerido, requiereDepartamento } = require('./middleware');
+const { analizarPlanillaMozos, mensajeErrorGemini } = require('../services/gemini');
+const { horasDeEvento, horasDesdeTexto } = require('../services/horasTrabajadas');
 router.use(loginRequerido, requiereDepartamento('/personal'));
 
 const storageMozos = multer.diskStorage({
@@ -13,6 +15,12 @@ const storageMozos = multer.diskStorage({
   filename: (req, file, cb) => cb(null, 'mozos_' + Date.now() + path.extname(file.originalname))
 });
 const uploadMozos = multer({ storage: storageMozos, limits: { fileSize: 10 * 1024 * 1024 } });
+
+const storageMozosFoto = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, 'mozos_foto_' + Date.now() + path.extname(file.originalname))
+});
+const uploadMozosFoto = multer({ storage: storageMozosFoto, limits: { fileSize: 10 * 1024 * 1024 } });
 
 const PUESTOS = ['Chef','Subchef','Encargado de cocina','Cocinero','Ayudante de cocina','Pastelero','Panadero'];
 const ROLES   = ['empleado','supervisor','admin'];
@@ -24,11 +32,25 @@ const ESTADOS = ['OFF','VAC','RECOFF','LIBRE','ART','LICENCIA','CUMPLE','MUDANZA
 // que había antes (era una copia inventada del esquema de Cocina).
 const MODALIDADES_AYB = ['Eventual', 'Fijo', 'Agencia'];
 
+// Un mozo "Eventual" de AYB tiene un límite real de contrato de 6 meses
+// desde su fecha de alta. Avisamos al encargado con esta anticipación (en
+// días) antes de que se cumpla, mismo criterio que la alerta de
+// vencimientos de Croutons.
+const DIAS_ALERTA_VENCIMIENTO_MOZO = 15;
+const MESES_LIMITE_MOZO_EVENTUAL = 6;
+
+// horasDeEvento (AYB) y horasDesdeTexto (Cocina) viven en
+// services/horasTrabajadas.js, compartidas con el chatbot — así el mismo
+// mes reportado acá y por el asistente siempre da el mismo número.
+
 // El <select> de "cambiar sector solo este día" en la grilla es un concepto
 // de Cocina — AYB ya no lo usa (se organiza por modalidad, no por sector),
 // así que para AYB no se le ofrecen opciones.
 function sectoresPara(usuario) {
-  if (usuario.departamento === 'ayb') return [];
+  // .toLowerCase(): el departamento de la cuenta puede estar guardado con
+  // distinta capitalización según cómo se haya creado (mismo motivo que en
+  // obtenerPersonal()).
+  if ((usuario.departamento || '').toLowerCase() === 'ayb') return [];
   return SECTORES;
 }
 
@@ -38,14 +60,26 @@ function sectoresPara(usuario) {
 // departamento='ayb', diferenciadas por "modalidad" en vez de sector. Un
 // admin sin departamento propio ve ambos grupos juntos.
 async function obtenerPersonal(usuarioSesion) {
-  const cols = `id,nombre,email,legajo,puesto,rol,activo,departamento,modalidad,creado_en,recoff_adeudado`;
-  if (usuarioSesion.departamento === 'ayb') {
-    return db.all2(`SELECT ${cols} FROM usuarios WHERE departamento='ayb' ORDER BY modalidad NULLS LAST, nombre`);
+  const cols = `id,nombre,email,legajo,puesto,rol,activo,departamento,modalidad,creado_en,recoff_adeudado,fecha_alta::text,celular`;
+  // Se excluyen las cuentas con rol admin: son credenciales para entrar al
+  // sistema y gestionar, no personal a programar — antes se colaban acá
+  // (ej. la propia cuenta del encargado de AYB aparecía mezclada en la
+  // lista como si fuera un mozo más). LOWER() porque el rol puede estar
+  // guardado con distinta capitalización según cómo se haya creado la
+  // cuenta (mismo motivo que el chequeo de permisos en horarios.js).
+  const NO_ADMIN = `LOWER(rol) != 'admin'`;
+  // .toLowerCase(): el departamento de QUIEN MIRA (la cuenta logueada)
+  // puede estar guardado con distinta capitalización según cómo se haya
+  // creado esa cuenta — sin esto, un admin con departamento "Cocina" (en
+  // vez de "cocina") caía siempre en la rama genérica de abajo.
+  const miDepto = (usuarioSesion.departamento || '').toLowerCase();
+  if (miDepto === 'ayb') {
+    return db.all2(`SELECT ${cols} FROM usuarios WHERE departamento='ayb' AND ${NO_ADMIN} ORDER BY modalidad NULLS LAST, nombre`);
   }
-  if (usuarioSesion.departamento === 'cocina') {
-    return db.all2(`SELECT ${cols} FROM usuarios WHERE departamento = ANY($1) ORDER BY departamento, nombre`, [SECTORES]);
+  if (miDepto === 'cocina') {
+    return db.all2(`SELECT ${cols} FROM usuarios WHERE departamento = ANY($1) AND ${NO_ADMIN} ORDER BY departamento, nombre`, [SECTORES]);
   }
-  return db.all2(`SELECT ${cols} FROM usuarios WHERE departamento = ANY($1) OR departamento='ayb' ORDER BY departamento, nombre`, [SECTORES]);
+  return db.all2(`SELECT ${cols} FROM usuarios WHERE (departamento = ANY($1) OR departamento='ayb') AND ${NO_ADMIN} ORDER BY departamento, nombre`, [SECTORES]);
 }
 
 // ── Helpers de fecha ────────────────────────────────────
@@ -92,6 +126,16 @@ function getDiasRango(inicioStr, finStr) {
 
 // ── GET / ──────────────────────────────────────────────
 router.get('/', loginRequerido, async (req, res) => {
+  // "Miembro de equipo" (con Vencimientos) es solo para quien gestiona AYB
+  // (admin/supervisor) — un mozo común no debe entrar, ni siquiera
+  // escribiendo la URL directamente (el link ya está oculto para él, esto
+  // es el mismo chequeo del lado del servidor).
+  const miDeptoLower = (req.session.usuario.departamento || '').toLowerCase();
+  const miRolLower = (req.session.usuario.rol || '').toLowerCase();
+  if (miDeptoLower === 'ayb' && miRolLower !== 'admin' && miRolLower !== 'supervisor') {
+    return res.redirect('/horarios');
+  }
+
   const hoy = new Date().toISOString().split('T')[0];
 
   // Compatibilidad: si todavía llega ?semana=..., lo tratamos como el inicio
@@ -129,8 +173,91 @@ router.get('/', loginRequerido, async (req, res) => {
     p.recoff_pendiente_real = (p.recoff_adeudado || 0) - (recoffUsadosMap[p.id] || 0);
   });
 
+  // Límite de 6 meses de los mozos "Eventual" de AYB (desde fecha_alta) +
+  // cuántos eventos trabajó de verdad cada uno (asistio=true, no solo
+  // anotado). Ambos se calculan siempre que haya al menos un mozo AYB en
+  // la lista, no solo cuando quien mira es de AYB, para que un admin
+  // general también vea el aviso.
+  const idsAyb = personal.filter(p => p.departamento === 'ayb').map(p => p.id);
+  const trabajadosMap = {};
+  const horasMesMap = {};
+  const diasTrabajadosMap = {};
+  if (idsAyb.length) {
+    const trabajadosRaw = await db.all2(`
+      SELECT i.usuario_id, COUNT(*)::int AS trabajados
+      FROM eventos_ayb_inscripciones i
+      WHERE i.usuario_id = ANY($1) AND i.asistio = true
+      GROUP BY i.usuario_id
+    `, [idsAyb]);
+    trabajadosRaw.forEach(r => { trabajadosMap[r.usuario_id] = r.trabajados; });
+
+    // Horas trabajadas en lo que va del mes calendario actual, sumando la
+    // duración de cada evento al que el mozo realmente asistió (no solo
+    // anotado). La duración se calcula en JS con horasDeEvento porque hay
+    // que contemplar eventos que cruzan medianoche. De paso, de la misma
+    // consulta sacamos "días trabajados" — fechas distintas con al menos
+    // un evento asistido (si trabajó 2 eventos el mismo día, cuenta 1 día).
+    const mesActual = hoy.slice(0, 7); // 'YYYY-MM'
+    const eventosDelMesRaw = await db.all2(`
+      SELECT i.usuario_id, e.fecha::text AS fecha, e.hora_desde, e.hora_hasta
+      FROM eventos_ayb_inscripciones i
+      JOIN eventos_ayb e ON e.id = i.evento_id
+      WHERE i.usuario_id = ANY($1) AND i.asistio = true
+        AND to_char(e.fecha, 'YYYY-MM') = $2
+    `, [idsAyb, mesActual]);
+    const diasTrabajadosSets = {};
+    eventosDelMesRaw.forEach(ev => {
+      horasMesMap[ev.usuario_id] = (horasMesMap[ev.usuario_id] || 0) + horasDeEvento(ev.hora_desde, ev.hora_hasta);
+      if (!diasTrabajadosSets[ev.usuario_id]) diasTrabajadosSets[ev.usuario_id] = new Set();
+      diasTrabajadosSets[ev.usuario_id].add(ev.fecha);
+    });
+    Object.keys(diasTrabajadosSets).forEach(uid => {
+      diasTrabajadosMap[uid] = diasTrabajadosSets[uid].size;
+    });
+  }
+
+  // Mismo cálculo de "horas del mes" para Cocina, pero a partir de lo que
+  // cada admin tipeó en la grilla de horarios_semanales (texto libre por
+  // día) en vez de eventos con asistencia real. Los días con un ESTADO
+  // (OFF/VAC/RECOFF/etc.) no suman horas — no son horario trabajado.
+  const idsCocina = personal.filter(p => p.departamento !== 'ayb').map(p => p.id);
+  const horasMesCocinaMap = {};
+  if (idsCocina.length) {
+    const mesActual = hoy.slice(0, 7);
+    const semanalMesRaw = await db.all2(`
+      SELECT usuario_id, valor
+      FROM horarios_semanales
+      WHERE usuario_id = ANY($1) AND to_char(fecha, 'YYYY-MM') = $2
+    `, [idsCocina, mesActual]);
+    semanalMesRaw.forEach(h => {
+      if (ESTADOS.includes(String(h.valor).toUpperCase())) return; // día libre/ausencia, no suma
+      const horas = horasDesdeTexto(h.valor);
+      if (horas !== null) horasMesCocinaMap[h.usuario_id] = (horasMesCocinaMap[h.usuario_id] || 0) + horas;
+    });
+  }
+
+  const hoyMs = new Date(hoy + 'T00:00:00').getTime();
+  personal.forEach(p => {
+    p.eventos_trabajados = trabajadosMap[p.id] || 0;
+    p.dias_trabajados_mes = diasTrabajadosMap[p.id] || 0;
+    p.horas_mes_actual = p.departamento === 'ayb'
+      ? Math.round((horasMesMap[p.id] || 0) * 10) / 10
+      : Math.round((horasMesCocinaMap[p.id] || 0) * 10) / 10;
+    p.dias_para_vencer_mozo = null;
+    p.fecha_vencimiento_mozo = null;
+    if (p.departamento === 'ayb' && p.modalidad === 'Eventual' && p.fecha_alta) {
+      const alta = new Date(p.fecha_alta + 'T00:00:00');
+      const vencimiento = new Date(alta);
+      vencimiento.setMonth(vencimiento.getMonth() + MESES_LIMITE_MOZO_EVENTUAL);
+      p.fecha_vencimiento_mozo = vencimiento.toISOString().split('T')[0];
+      p.dias_para_vencer_mozo = Math.round((vencimiento.getTime() - hoyMs) / 86400000);
+    }
+  });
+  const mozosVencidos = personal.filter(p => p.dias_para_vencer_mozo !== null && p.dias_para_vencer_mozo < 0);
+  const mozosPorVencer = personal.filter(p => p.dias_para_vencer_mozo !== null && p.dias_para_vencer_mozo >= 0 && p.dias_para_vencer_mozo <= DIAS_ALERTA_VENCIMIENTO_MOZO);
+
   const msg     = req.query.msg || null;
-  const esAdmin = req.session.usuario.rol === 'admin';
+  const esAdmin = (req.session.usuario.rol || '').toLowerCase() === 'admin';
   const cargadosMozos    = parseInt(req.query.cargados) || 0;
   const duplicadosMozos  = parseInt(req.query.duplicados) || 0;
 
@@ -155,11 +282,33 @@ router.get('/', loginRequerido, async (req, res) => {
     }
   });
 
+  // Disponibilidad de los mozos de AYB para el mismo rango — de acá sale lo
+  // que se pinta en su columna de la tabla. Es de solo lectura en esta
+  // pantalla: cada mozo la carga desde Horarios, no se edita desde acá.
+  const dispRaw = await db.all2(`
+    SELECT usuario_id, fecha::text, disponible, hora_desde, hora_hasta
+    FROM disponibilidad
+    WHERE fecha >= $1 AND fecha <= $2
+  `, [dias[0], dias[dias.length - 1]]);
+  const dispMap = {};
+  dispRaw.forEach(d => {
+    if (!dispMap[d.usuario_id]) dispMap[d.usuario_id] = {};
+    dispMap[d.usuario_id][d.fecha] = d;
+  });
+
+  // Navegación de período — se usa en el header simplificado que ve AYB en
+  // vez del selector de calendario (ese es un concepto de Cocina: elegís
+  // un rango para cargar estados a mano, cosa que AYB ya no hace acá).
+  const duracionRango = dias.length;
+  const rangoAnterior = { inicio: sumarDias(inicio, -duracionRango), fin: sumarDias(fin, -duracionRango) };
+  const rangoSiguiente = { inicio: sumarDias(inicio, duracionRango), fin: sumarDias(fin, duracionRango) };
+
   res.render('personal', {
     personal, puestos: PUESTOS, roles: ROLES, sectores: sectoresVisibles,
     modalidadesAyb: MODALIDADES_AYB, misDepto,
     ESTADOS, msg, esAdmin, hoy, inicio, fin, dias, horarioSemanalMap, sectorDiaMap,
-    feriados, cargadosMozos, duplicadosMozos,
+    feriados, cargadosMozos, duplicadosMozos, dispMap, rangoAnterior, rangoSiguiente,
+    mozosVencidos, mozosPorVencer,
     // compatibilidad con campos viejos
     horarioMap: {}
   });
@@ -341,7 +490,7 @@ router.post('/importar-mozos', loginRequerido, uploadMozos.single('archivo'), as
       }
       const hash = bcrypt.hashSync('Hilton2026!', 10);
       await db.run2(
-        'INSERT INTO usuarios (nombre, legajo, puesto, rol, password, departamento, modalidad) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+        'INSERT INTO usuarios (nombre, legajo, puesto, rol, password, departamento, modalidad, fecha_alta) VALUES ($1,$2,$3,$4,$5,$6,$7,CURRENT_DATE)',
         [f.nombre, f.cuil || null, 'Mozo', 'empleado', hash, 'ayb', f.modalidad]
       );
       cargados++;
@@ -351,6 +500,84 @@ router.post('/importar-mozos', loginRequerido, uploadMozos.single('archivo'), as
   } catch (e) {
     console.error('Error importando mozos:', e.message);
     res.redirect('/personal?msg=' + encodeURIComponent('Error al importar: ' + e.message));
+  }
+});
+
+// ── Importar mozos con foto de planilla (Gemini) ────────
+// Mismo patrón que /croutons/remito: la foto nunca se carga directo a la
+// base — Gemini la lee, y el resultado queda pendiente en la sesión para
+// que el encargado lo revise y corrija en /importar-mozos-foto/revisar
+// antes de confirmar.
+router.post('/importar-mozos-foto', uploadMozosFoto.single('foto'), async (req, res) => {
+  if (!req.file) return res.redirect('/personal?msg=' + encodeURIComponent('No se recibió ninguna imagen.'));
+
+  try {
+    const { tipoDocumento, items } = await analizarPlanillaMozos(req.file.path);
+    fs.unlink(req.file.path, () => {});
+
+    if (tipoDocumento === 'otro') {
+      return res.redirect('/personal?msg=' + encodeURIComponent(
+        'No se reconoció la imagen como una planilla o lista de personal.'
+      ));
+    }
+    if (items.length === 0) {
+      return res.redirect('/personal?msg=' + encodeURIComponent(
+        'No se pudo leer ningún nombre en la imagen. Probá con otra foto o cargalos a mano.'
+      ));
+    }
+
+    req.session.mozosFotoPendiente = items;
+    res.redirect('/personal/importar-mozos-foto/revisar');
+  } catch (e) {
+    console.error('Error analizando planilla de mozos con Gemini:', e.message, e.cause || '');
+    res.redirect('/personal?msg=' + encodeURIComponent(mensajeErrorGemini(e)));
+  }
+});
+
+router.get('/importar-mozos-foto/revisar', async (req, res) => {
+  const items = req.session.mozosFotoPendiente || [];
+  res.render('personal_importar_mozos_revisar', { items, modalidadesAyb: MODALIDADES_AYB });
+});
+
+router.post('/importar-mozos-foto/aplicar', async (req, res) => {
+  const items = req.session.mozosFotoPendiente || [];
+  let seleccionados = req.body.aplicar || [];
+  if (!Array.isArray(seleccionados)) seleccionados = [seleccionados];
+  const idxsSeleccionados = seleccionados.map(s => parseInt(s));
+
+  const nombres = req.body.nombre || {};
+  const cuils = req.body.cuil || {};
+  const modalidades = req.body.modalidad || {};
+
+  let cargados = 0, duplicados = 0, omitidos = 0;
+
+  try {
+    for (const idx of idxsSeleccionados) {
+      if (!items[idx]) continue;
+
+      const nombre = (nombres[idx] || '').trim();
+      const cuil = (cuils[idx] || '').trim();
+      const modalidad = MODALIDADES_AYB.includes(modalidades[idx]) ? modalidades[idx] : 'Eventual';
+
+      if (!nombre) { omitidos++; continue; }
+
+      if (cuil) {
+        const existe = await db.get2('SELECT id FROM usuarios WHERE legajo=$1', [cuil]);
+        if (existe) { duplicados++; continue; }
+      }
+
+      const hash = bcrypt.hashSync('Hilton2026!', 10);
+      await db.run2(
+        'INSERT INTO usuarios (nombre, legajo, puesto, rol, password, departamento, modalidad, fecha_alta) VALUES ($1,$2,$3,$4,$5,$6,$7,CURRENT_DATE)',
+        [nombre, cuil || null, 'Mozo', 'empleado', hash, 'ayb', modalidad]
+      );
+      cargados++;
+    }
+    delete req.session.mozosFotoPendiente;
+    res.redirect(`/personal?msg=mozos_importados&cargados=${cargados}&duplicados=${duplicados}`);
+  } catch (e) {
+    console.error('Error aplicando mozos de foto:', e.message);
+    res.redirect('/personal?msg=' + encodeURIComponent('Error al cargar: ' + e.message));
   }
 });
 
@@ -365,22 +592,26 @@ router.post('/nuevo', loginRequerido, async (req, res) => {
     // El formulario de alta manda "sector" (Cocina) o "modalidad" (AYB —
     // mozos), nunca los dos. Un mozo se guarda con departamento='ayb' fijo,
     // el CUIL en "legajo" (así se puede loguear sin email) y su modalidad.
-    let legajo, puesto, departamento, modalidad;
+    let legajo, puesto, departamento, modalidad, fechaAlta;
     if (req.body.modalidad) {
       legajo       = req.body.cuil ? String(req.body.cuil).trim() : null;
       puesto       = 'Mozo';
       departamento = 'ayb';
       modalidad    = String(req.body.modalidad);
+      // Si no la especifican a mano, asumimos que el alta es hoy.
+      fechaAlta    = req.body.fecha_alta ? String(req.body.fecha_alta).trim() : new Date().toISOString().split('T')[0];
     } else {
       legajo       = req.body.legajo ? String(req.body.legajo).trim() : null;
       puesto       = String(req.body.puesto || 'Cocinero');
       departamento = req.body.sector || null;
       modalidad    = null;
+      fechaAlta    = null;
     }
+    const celular = req.body.celular ? String(req.body.celular).trim() : null;
 
     await db.run2(
-      'INSERT INTO usuarios (nombre, email, legajo, puesto, rol, password, departamento, modalidad) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
-      [nombre, email, legajo, puesto, rol, hash, departamento, modalidad]
+      'INSERT INTO usuarios (nombre, email, legajo, puesto, rol, password, departamento, modalidad, fecha_alta, celular) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
+      [nombre, email, legajo, puesto, rol, hash, departamento, modalidad, fechaAlta, celular]
     );
   } catch(e) {
     console.error('Error creando usuario:', e.message);
@@ -391,13 +622,13 @@ router.post('/nuevo', loginRequerido, async (req, res) => {
 // ── POST /editar ───────────────────────────────────────
 router.post('/editar', loginRequerido, async (req, res) => {
   try {
-    const { id, nombre, legajo, puesto, rol, sector, cuil, modalidad } = req.body;
+    const { id, nombre, legajo, puesto, rol, sector, cuil, modalidad, fecha_alta, celular } = req.body;
     const email = req.body.email ? String(req.body.email).toLowerCase().trim() : null;
 
     if (modalidad) {
       await db.run2(
-        'UPDATE usuarios SET nombre=$1, email=$2, legajo=$3, puesto=$4, rol=$5, departamento=$6, modalidad=$7 WHERE id=$8',
-        [String(nombre).trim(), email, cuil ? String(cuil).trim() : null, 'Mozo', rol, 'ayb', String(modalidad), parseInt(id)]
+        'UPDATE usuarios SET nombre=$1, email=$2, legajo=$3, puesto=$4, rol=$5, departamento=$6, modalidad=$7, fecha_alta=$8, celular=$9 WHERE id=$10',
+        [String(nombre).trim(), email, cuil ? String(cuil).trim() : null, 'Mozo', rol, 'ayb', String(modalidad), fecha_alta ? String(fecha_alta).trim() : null, celular ? String(celular).trim() : null, parseInt(id)]
       );
     } else {
       await db.run2(
@@ -410,6 +641,48 @@ router.post('/editar', loginRequerido, async (req, res) => {
     console.error('Error editando usuario:', e.message);
     res.redirect('/personal?msg=' + encodeURIComponent('Error al editar empleado.'));
   }
+});
+
+// Detalle de horas trabajadas de un mozo: en qué eventos estuvo presente
+// de verdad (asistio=true), cuántas horas hizo en cada uno, agrupado por
+// mes con subtotal, más el total general. Pensado para armar los pagos.
+router.get('/:id/horas', loginRequerido, async (req, res) => {
+  const usuarioId = parseInt(req.params.id);
+  const yo = req.session.usuario;
+  if ((yo.rol || '').toLowerCase() !== 'admin' && yo.id !== usuarioId) {
+    return res.status(403).send('No autorizado.');
+  }
+  const empleado = await db.get2('SELECT id, nombre, legajo, modalidad, fecha_alta::text FROM usuarios WHERE id=$1', [usuarioId]);
+  if (!empleado) return res.status(404).send('Empleado no encontrado.');
+
+  const eventosRaw = await db.all2(`
+    SELECT e.id, e.nombre, e.fecha::text, e.hora_desde, e.hora_hasta
+    FROM eventos_ayb_inscripciones i
+    JOIN eventos_ayb e ON e.id = i.evento_id
+    WHERE i.usuario_id = $1 AND i.asistio = true
+    ORDER BY e.fecha DESC, e.hora_desde DESC
+  `, [usuarioId]);
+
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const gruposPorMes = {};
+  let totalGeneral = 0;
+  eventosRaw.forEach(ev => {
+    const horas = Math.round(horasDeEvento(ev.hora_desde, ev.hora_hasta) * 10) / 10;
+    const [anio, mes] = ev.fecha.split('-');
+    const claveMes = `${anio}-${mes}`;
+    if (!gruposPorMes[claveMes]) {
+      gruposPorMes[claveMes] = { etiqueta: `${MESES[parseInt(mes, 10) - 1]} ${anio}`, eventos: [], subtotal: 0 };
+    }
+    gruposPorMes[claveMes].eventos.push({ ...ev, horas });
+    gruposPorMes[claveMes].subtotal += horas;
+    totalGeneral += horas;
+  });
+  const meses = Object.keys(gruposPorMes).sort().reverse().map(k => gruposPorMes[k]);
+  meses.forEach(m => { m.subtotal = Math.round(m.subtotal * 10) / 10; });
+
+  res.render('personal_horas', {
+    empleado, meses, totalGeneral: Math.round(totalGeneral * 10) / 10, path: 'personal'
+  });
 });
 
 router.post('/:id/eliminar', loginRequerido, async (req, res) => {
@@ -430,13 +703,6 @@ router.post('/:id/reset-password', loginRequerido, async (req, res) => {
   res.redirect('/personal?msg=password_reseteada');
 });
 
-// Página propia y liviana para que cada mozo cargue su disponibilidad —
-// a diferencia de /personal (el roster completo), esto no expone a nadie
-// más que a uno mismo, así que alcanza con estar logueado.
-router.get('/mi-disponibilidad', loginRequerido, (req, res) => {
-  res.render('mi_disponibilidad', { usuario: req.session.usuario });
-});
-
 // ── Disponibilidad: calendario mensual por empleado ────
 // GET trae el mapa {fecha: {disponible, hora_desde, hora_hasta}} de un mes
 // puntual; POST carga/borra un día. Guardado disperso, igual que feriados:
@@ -448,7 +714,7 @@ router.get('/mi-disponibilidad', loginRequerido, (req, res) => {
 // carga la suya con su propio login hace falta esta verificación).
 function puedeVerDisponibilidad(req) {
   const yo = req.session.usuario;
-  return yo.rol === 'admin' || yo.id === parseInt(req.params.id);
+  return (yo.rol || '').toLowerCase() === 'admin' || yo.id === parseInt(req.params.id);
 }
 
 router.get('/:id/disponibilidad', loginRequerido, async (req, res) => {
