@@ -413,10 +413,26 @@
 const MODULOS = <%- JSON.stringify(modulos) %>;
 let moduloActual = 0;
 
-const SPACING = 130;   // separación horizontal entre tarjetas
-const DEPTH   = 220;   // profundidad (eje Z) de las tarjetas no activas
-const ANGLE   = 32;    // ángulo de rotación en el abanico
+// Estos valores se recalculan según el ancho de pantalla — en mobile las
+// tarjetas ya son más chicas (ver @media arriba), pero antes esta separación
+// quedaba fija e igual que en escritorio, empujando la tarjeta vecina fuera
+// del borde visible. Ahora se ajustan juntos.
+let SPACING = 130;   // separación horizontal entre tarjetas
+let DEPTH   = 220;   // profundidad (eje Z) de las tarjetas no activas
+let ANGLE   = 32;    // ángulo de rotación en el abanico
 const MAX_VISIBLES = 3; // tarjetas visibles a cada lado antes de desvanecer
+
+function recalcularConstantesDeck() {
+  const ancho = window.innerWidth;
+  if (ancho <= 380) {
+    SPACING = 78; DEPTH = 140; ANGLE = 26;
+  } else if (ancho <= 600) {
+    SPACING = 92; DEPTH = 160; ANGLE = 28;
+  } else {
+    SPACING = 130; DEPTH = 220; ANGLE = 32;
+  }
+}
+recalcularConstantesDeck();
 
 function actualizarPosiciones() {
   const total = MODULOS.length;
@@ -490,6 +506,17 @@ function pasoModulo(dir) {
 }
 
 actualizarPosiciones();
+
+// Si cambia el ancho de pantalla (rotar el celular, cambiar de ventana),
+// recalculamos la separación de las tarjetas para que no queden cortadas.
+let _resizeTimeoutDeck;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimeoutDeck);
+  _resizeTimeoutDeck = setTimeout(() => {
+    recalcularConstantesDeck();
+    actualizarPosiciones();
+  }, 150);
+});
 
 // En esta página (Inicio), clickear un ícono del menú selecciona su tarjeta
 // en el carrusel en vez de navegar directo — un segundo click sobre la

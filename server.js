@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
@@ -57,6 +57,7 @@ app.use('/costos',   require('./src/routes/costos'));
 app.use('/compras',  require('./src/routes/compras'));   // ← NUEVO
 app.use('/finanzas', require('./src/routes/finanzas'));  // ← NUEVO
 app.use('/croutons', require('./src/routes/croutons'));  // ← NUEVO — AYB: carga de mercadería y vencimientos
+app.use('/push', require('./src/routes/push'));  // ← NUEVO — Notificaciones push de avisos de vencimiento
 app.use('/asistente', require('./src/routes/asistente'));
 
 // Mostrar IPs de acceso

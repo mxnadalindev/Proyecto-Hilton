@@ -26,10 +26,13 @@
     <a href="/croutons" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>"><i class="ti ti-package"></i><span>Croutons</span></a>
     <% } %>
   <% } %>
-  <% if (_dm === 'compras' || _rm === 'admin') { %>
+  <% if (_dm === 'compras' || (_rm === 'admin' && _dm !== 'ayb' && _dm !== 'compras' && _dm !== 'finanzas')) { %>
     <a href="/compras"  class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'compras')  ? 'activo' : '' %>"><i class="ti ti-shopping-cart"></i><span>Compras</span></a>
   <% } %>
-  <% if (_dm === 'finanzas' || _rm === 'admin') { %>
+  <% if (_dm === 'finanzas' || (_rm === 'admin' && _dm !== 'ayb' && _dm !== 'compras' && _dm !== 'finanzas')) { %>
     <a href="/finanzas" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'finanzas') ? 'activo' : '' %>"><i class="ti ti-report-money"></i><span>Finanzas</span></a>
+  <% } %>
+  <% if (usuario?.rol === 'admin') { %>
+    <a href="/configuracion" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'configuracion') ? 'activo' : '' %>"><i class="ti ti-settings"></i><span>Config</span></a>
   <% } %>
 </nav>
