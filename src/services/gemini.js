@@ -1,14 +1,19 @@
 ﻿const fs = require('fs');
 
-// Usamos el alias "gemini-flash-latest" en vez de un nombre de versión fijo
-// (como "gemini-2.5-flash") porque Google va dando de baja versiones puntuales
-// con el tiempo. El alias siempre apunta al modelo Flash vigente, así este
-// código no se rompe de nuevo la próxima vez que cambien de versión.
-const MODELO = 'gemini-flash-latest';
+// Antes usábamos "gemini-2.5-flash" (versión estable, para evitar los 503
+// de alta demanda del alias "-latest"). Pero Google empezó a bloquear ese
+// modelo específico para API keys NUEVAS (error 404: "no longer available
+// to new users"), aunque siga funcionando para keys viejas. Como se generó
+// una key nueva, hubo que pasar al modelo que el propio error de Google
+// recomendó: "gemini-3.6-flash". Si en el futuro este también queda
+// discontinuado, el error 404 de Gemini suele decir directamente a qué
+// modelo migrar — conviene mirar ese mensaje antes de adivinar un nombre.
+const MODELO = 'gemini-3.6-flash';
 const URL_BASE = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent`;
 
-const PROMPT = `Sos un asistente que lee documentos de compra de insumos gastronómicos (proveedores de un hotel).
-Te paso la imagen de un documento. Devolvé ÚNICAMENTE un JSON, sin texto adicional, sin explicación, sin markdown ni backticks, con este formato exacto:
+const PROMPT = `Sos un asistente que lee documentos y anotaciones de compra de insumos gastronómicos (proveedores de un hotel).
+Te paso la imagen. Puede ser una factura formal, un remito, o directamente un apunte/nota escrita a mano con el nombre de un producto y su precio (por ejemplo, alguien anotó en un cuaderno lo que le cotizó un proveedor por teléfono o WhatsApp) — cualquiera de esos casos cuenta como documento válido, no hace falta que sea un comprobante fiscal formal.
+Devolvé ÚNICAMENTE un JSON, sin texto adicional, sin explicación, sin markdown ni backticks, con este formato exacto:
 
 {"tipo_documento": "...", "items": [...]}
 
@@ -20,11 +25,11 @@ PASO 1 — Identificá "tipo_documento". Puede ser uno de estos 4 valores:
 
 PASO 2 — Armá "items":
 - Si "tipo_documento" NO es "factura", "items" tiene que ir SIEMPRE vacío: []. Nunca extraigas productos ni montos de una nota de crédito o de débito, aunque la imagen tenga una tabla con productos y números — esos montos son ajustes, no precios de compra, y no hay que usarlos para actualizar precios.
-- Si "tipo_documento" SÍ es "factura", cada elemento de "items" debe tener estos campos:
-  - "nombre": el nombre del producto tal como figura en la factura (string)
-  - "cantidad": la cantidad comprada (número, usá 1 si no está claro)
-  - "unidad": la unidad (ej: "kg", "lt", "unidad", "caja", "paquete")
-  - "precio_unitario": el precio unitario en pesos, SIN el símbolo $ y SIN separador de miles (número, ej: 18500.50). SIEMPRE tiene que ser un número POSITIVO mayor a cero. Si en la factura ese renglón aparece como negativo, como una bonificación, o como un descuento aplicado dentro de la misma factura, NO incluyas ese ítem en el array.
+- Si "tipo_documento" SÍ es "factura" (incluye los apuntes manuscritos), cada elemento de "items" debe tener estos campos:
+  - "nombre": el nombre del producto tal como figura en el documento (string)
+  - "cantidad": la cantidad comprada (número, usá 1 si no está claro o si el apunte no menciona cantidad)
+  - "unidad": la unidad (ej: "kg", "lt", "unidad", "caja", "paquete"). Si el apunte dice "precio x unidad" o no aclara, usá "unidad".
+  - "precio_unitario": el precio unitario en pesos, SIN el símbolo $ y SIN separador de miles (número, ej: 18500.50 — si en la imagen la coma se usa como separador decimal a la argentina, ej. "3922,65", convertilo a 3922.65). SIEMPRE tiene que ser un número POSITIVO mayor a cero. Si en el documento ese renglón aparece como negativo, como una bonificación, o como un descuento, NO incluyas ese ítem en el array.
 
 Si no podés leer algún campo con confianza, no incluyas ese ítem.
 
