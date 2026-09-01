@@ -486,6 +486,56 @@ const init = async () => {
     WHERE estado = 'activo'
   `);
 
+  // productos_ayb: catálogo de productos de A&B (usado por Croutons para
+  // guardar, por producto, su unidad por defecto, código de barras y stock
+  // mínimo de reposición). Esta tabla la usa src/routes/croutons.js desde
+  // hace rato pero nunca se había agregado su creación acá — sin esto, el
+  // servidor se cae apenas alguien entra a Croutons ("no existe la relación
+  // «productos_ayb»"). Se agrega ahora, vacía, para que se cree sola.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS productos_ayb (
+      id SERIAL PRIMARY KEY,
+      nombre TEXT NOT NULL,
+      unidad_default TEXT,
+      codigo_barras TEXT,
+      categoria TEXT,
+      stock_minimo REAL,
+      creado_en TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_productos_ayb_codigo_barras ON productos_ayb (codigo_barras)`);
+
+  // Actualización automática de precios desde facturas (con IA) — datos extra
+  // para saber CON QUÉ factura/proveedor/usuario se originó cada cambio de
+  // historial_precios, y qué tan seguro estaba el sistema del matching
+  // (para poder auto-aplicar solo lo que tiene alta confianza). No reemplaza
+  // ninguna columna existente, solo agrega información nueva.
+  await pool.query(`ALTER TABLE historial_precios ADD COLUMN IF NOT EXISTS proveedor TEXT`);
+  await pool.query(`ALTER TABLE historial_precios ADD COLUMN IF NOT EXISTS factura_referencia TEXT`);
+  await pool.query(`ALTER TABLE historial_precios ADD COLUMN IF NOT EXISTS usuario_id INTEGER REFERENCES usuarios(id)`);
+  await pool.query(`ALTER TABLE historial_precios ADD COLUMN IF NOT EXISTS usuario_nombre TEXT`);
+  await pool.query(`ALTER TABLE historial_precios ADD COLUMN IF NOT EXISTS confianza_match REAL`);
+  await pool.query(`ALTER TABLE historial_precios ADD COLUMN IF NOT EXISTS aplicado_automaticamente BOOLEAN DEFAULT false`);
+
+  // Registro de facturas ya procesadas, para poder avisar si se sube la
+  // misma factura dos veces (por hash del archivo de imagen).
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS facturas_procesadas (
+      id SERIAL PRIMARY KEY,
+      hash_archivo TEXT NOT NULL,
+      nombre_archivo TEXT,
+      proveedor TEXT,
+      cantidad_items INTEGER DEFAULT 0,
+      usuario_id INTEGER REFERENCES usuarios(id),
+      usuario_nombre TEXT,
+      procesado_en TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_facturas_procesadas_hash
+    ON facturas_procesadas (hash_archivo)
+  `);
+
   // Admin por defecto
   const admin = await db.get2(
     "SELECT id FROM usuarios WHERE email = $1", ['admin@hilton.com']

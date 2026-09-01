@@ -5,11 +5,16 @@ const { loginRequerido, requiereDepartamento } = require('./middleware');
 router.use(loginRequerido, requiereDepartamento('/horarios'));
 const ExcelJS = require('exceljs');
 
+// .normalize('NFC'): defensivo contra el caso en que estos literales con
+// tilde queden guardados en el archivo con una forma Unicode distinta
+// (NFD) a la que usa Postgres para comparar — sin esto, "departamento =
+// ANY($1)" puede fallar en silencio para los sectores con tilde aunque se
+// vean idénticos en pantalla.
 const SECTORES = [
   'Supervisores','Comis de Recepción','Panadería',
   'Pastelería AM','Pastelería PM','Faro AM','Faro PM',
   'Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D'
-];
+].map(s => s.normalize('NFC'));
 
 const ESTADOS = ['OFF','VAC','RECOFF','LIBRE','ART','LICENCIA','CUMPLE','MUDANZA'];
 
@@ -625,6 +630,12 @@ router.get('/', loginRequerido, async (req, res) => {
     SECTORES, ESTADOS, alertas,
     rangoAnterior, rangoSiguiente,
     puedeReiniciar: esSupervisorOAdmin(req),
+    // El botón "Reiniciar período" y otras acciones redirigen acá con
+    // ?msg=... para mostrar el cartel de confirmación (o de error) — antes
+    // esta ruta nunca lo pasaba a la vista, así que el cartel nunca
+    // aparecía aunque la acción sí se hubiera hecho (por eso "no tenía
+    // funcionalidad": reiniciaba los horarios bien, pero no se veía).
+    msg: req.query.msg,
     // compatibilidad con la vista vieja, por si todavía queda alguna referencia a "lunes"
     lunes: inicio
   });

@@ -96,7 +96,7 @@
           <i class="ti ti-calendar-check"></i> Cargar este rango
         </a>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <% const leyenda = [{v:'OFF',c:'#fbbf24'},{v:'VAC',c:'#dc2626'},{v:'RECOFF',c:'#22c55e'},{v:'LIBRE',c:'#dc2626'},{v:'ART',c:'#dc2626'},{v:'LICENCIA',c:'#dc2626'},{v:'CUMPLE',c:'#dc2626'},{v:'MUDANZA',c:'#dc2626'},{v:'FRANCO',c:'#64748b'}]; %>
+          <% const leyenda = [{v:'OFF',c:'#fbbf24'},{v:'VAC',c:'#dc2626'},{v:'RECOFF',c:'#22c55e'},{v:'LIBRE',c:'#dc2626'},{v:'ART',c:'#dc2626'},{v:'LICENCIA',c:'#dc2626'},{v:'CUMPLE',c:'#dc2626'},{v:'MUDANZA',c:'#dc2626'}]; %>
           <% leyenda.forEach(l => { %>
           <span style="font-size:0.65rem;font-weight:700;background:<%= l.c %>;border:1px solid <%= l.c %>;color:#fff;padding:3px 11px;border-radius:20px;"><%= l.v %></span>
           <% }) %>
@@ -167,7 +167,7 @@
             <th>Puesto</th>
             <th>Sector</th>
             <th>RECOFF</th>
-            <th>Estados por día <span style="font-weight:400;font-size:0.62rem;">(clickeá cada día para cambiarlo — máx. 2 francos)</span></th>
+            <th>Estados por día <span style="font-weight:400;font-size:0.62rem;">(clickeá cada día para cambiarlo)</span></th>
             <% } %>
             <th></th>
           </tr>
@@ -301,7 +301,7 @@
                     <select class="sel-estado-<%= p.id %> sel-dia-estado" data-fecha="<%= dia %>" onchange="onCambioEstadoDia(this, <%= p.id %>)"
                             style="background-color:<%= _bgDia ? _bgDia : 'var(--gris-fondo)' %>;border:1px solid <%= _bgDia ? _bgDia : 'var(--gris-borde)' %>;color:<%= _bgDia ? '#fff' : 'var(--negro)' %>;font-weight:<%= _bgDia ? '700' : '400' %>;">
                       <option value="" style="background:var(--blanco);color:var(--negro);">Normal</option>
-                      <% ['OFF','VAC','RECOFF','LIBRE','ART','LICENCIA','CUMPLE','MUDANZA','FRANCO'].forEach(e => { %>
+                      <% ['OFF','VAC','RECOFF','LIBRE','ART','LICENCIA','CUMPLE','MUDANZA'].forEach(e => { %>
                       <option value="<%= e %>" <%= _valDia === e ? 'selected' : '' %>
                               style="background:<%= bgEstados[e] %>;color:#fff;font-weight:700;"><%= e %></option>
                       <% }) %>
@@ -508,6 +508,28 @@
       <div style="display:flex;justify-content:flex-end;gap:12px;">
         <button type="button" onclick="hideModal('modal-reset')" class="btn-secondary">Cancelar</button>
         <button type="submit" class="btn-primary"><i class="ti ti-key"></i> Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal marcar feriado (reemplaza al prompt() nativo del navegador, que se veía poco prolijo) -->
+<div id="modal-feriado" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;"><i class="ti ti-flag-filled" style="color:#dc2626;"></i> Marcar feriado</h2>
+      <button onclick="hideModal('modal-feriado')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:0.83rem;color:var(--gris-texto);margin-bottom:16px;">Fecha: <strong id="feriado-fecha-label"></strong></p>
+    <form id="form-feriado" onsubmit="return guardarFeriadoDesdeModal(event)">
+      <div class="field" style="margin-bottom:20px;">
+        <label style="display:block;font-size:0.68rem;font-weight:500;margin-bottom:6px;">Nombre del feriado</label>
+        <input type="text" id="input-feriado-nombre" placeholder="Ej: Día de la Independencia" required maxlength="80"
+               style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;outline:none;color:var(--negro);">
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:12px;">
+        <button type="button" onclick="hideModal('modal-feriado')" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-check"></i> Guardar</button>
       </div>
     </form>
   </div>
@@ -757,18 +779,44 @@ async function toggleFeriado(fechaStr) {
     return;
   }
 
-  const nombre = prompt('Nombre del feriado (ej: Día de la Independencia):');
-  if (!nombre || !nombre.trim()) return;
+  // En vez de un prompt() nativo del navegador (se veía como una alerta del
+  // sistema, poco prolijo), abrimos un modal propio con el mismo estilo que
+  // el resto de la pantalla.
+  abrirModalFeriado(fechaStr);
+}
+
+// Abre el modal para cargar el nombre del feriado de una fecha puntual
+function abrirModalFeriado(fechaStr) {
+  const fecha = new Date(fechaStr + 'T00:00:00');
+  document.getElementById('feriado-fecha-label').textContent =
+    fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('form-feriado').dataset.fecha = fechaStr;
+  document.getElementById('input-feriado-nombre').value = '';
+  showModal('modal-feriado');
+}
+
+// Guarda el feriado cargado en el modal (mismo pedido que antes hacía el prompt())
+async function guardarFeriadoDesdeModal(event) {
+  event.preventDefault();
+  const fechaStr = document.getElementById('form-feriado').dataset.fecha;
+  const nombre = document.getElementById('input-feriado-nombre').value.trim();
+  if (!nombre) return false;
   try {
     const resp = await fetch('/personal/feriados', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fecha: fechaStr, nombre: nombre.trim() })
+      body: JSON.stringify({ fecha: fechaStr, nombre })
     });
     const data = await resp.json();
-    if (data.ok) { FERIADOS_MAP[fechaStr] = data.nombre; renderCal(); }
-    else alert('Error: ' + data.error);
+    if (data.ok) {
+      FERIADOS_MAP[fechaStr] = data.nombre;
+      renderCal();
+      hideModal('modal-feriado');
+    } else {
+      alert('Error: ' + data.error);
+    }
   } catch (e) { alert('Error de conexión'); }
+  return false;
 }
 
 function seleccionarDia(fechaStr) {

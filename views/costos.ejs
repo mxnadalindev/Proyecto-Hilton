@@ -634,8 +634,25 @@ function prepararPlato() {
 
 const geminiConfigurado = <%= geminiConfigurado ? 'true' : 'false' %>;
 
-function esImagen(nombreArchivo) {
-  return /\.(jpe?g|png|gif|webp|heic|bmp)$/i.test(nombreArchivo);
+// Ojo: a pesar del nombre, esta función decide "¿es una factura (foto o PDF)
+// para mandarle a la IA, o es el catálogo CSV del proveedor?". Primero mira
+// el tipo real que el navegador ya detectó del archivo (archivo.type) — así
+// reconoce CUALQUIER tipo de imagen (incluidas las que no están en la lista
+// de extensiones de abajo, como .tif, .avif, fotos de celular con nombres
+// raros, etc.) sin tener que mantener una lista a mano. Si el navegador no
+// pudo determinar el tipo (pasa a veces con archivos de celular), cae al
+// respaldo de mirar la extensión del nombre. "pdf" está incluido a
+// propósito, aunque un PDF no sea técnicamente una imagen — antes no
+// estaba, así que un PDF de factura se mandaba por error al importador de
+// catálogos (que espera un CSV con columnas Code/Description/Precio#) y
+// tiraba ese error de "no se encontró la fila de encabezado".
+function esImagen(archivo) {
+  const nombreArchivo = typeof archivo === 'string' ? archivo : archivo.name;
+  const tipoReal = typeof archivo === 'string' ? '' : (archivo.type || '');
+  if (tipoReal) {
+    return tipoReal.startsWith('image/') || tipoReal === 'application/pdf';
+  }
+  return /\.(jpe?g|png|gif|webp|heic|heif|bmp|tiff?|avif|pdf)$/i.test(nombreArchivo);
 }
 
 // Al elegir el archivo, muestra u oculta el campo Categoría según sea foto o catálogo
@@ -655,7 +672,7 @@ function detectarTipoArchivo(input) {
   nombreSpan.textContent = archivo.name;
   label.classList.add('input-archivo-ok');
 
-  if (esImagen(archivo.name)) {
+  if (esImagen(archivo)) {
     catInput.style.display = 'none';
     catInput.required = false;
     textoBoton.textContent = 'Subir';
@@ -681,7 +698,7 @@ function prepararEnvioUnificado() {
   }
   const archivo = input.files[0];
 
-  if (esImagen(archivo.name)) {
+  if (esImagen(archivo)) {
     if (!geminiConfigurado) {
       alert('La lectura de fotos de factura todavía no está configurada. Usá el catálogo en su lugar.');
       return false;

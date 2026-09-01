@@ -3,6 +3,10 @@ const router = express.Router();
 const db = require('../db/database');
 const { loginRequerido } = require('./middleware');
 const { horasDelMes } = require('../services/horasTrabajadas');
+// Reutilizamos la misma función que ya usa la pantalla de Costos para el
+// modal de "Variación de precios" — así el bot informa exactamente lo mismo
+// que ve el usuario ahí, sin inventar ni recalcular nada por su cuenta.
+const { calcularVariacionPrecios } = require('./costos');
 
 const MODELO = 'gemini-2.5-flash';
 const URL_GEMINI = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent`;
@@ -37,6 +41,30 @@ const HERRAMIENTAS = [{
           mes: { type: 'STRING', description: 'Mes a consultar en formato YYYY-MM. Si no lo dice, usar el mes actual.' },
         },
         required: ['nombre_empleado'],
+      },
+    },
+    {
+      name: 'consultar_variacion_precios',
+      description: 'Devuelve qué insumos subieron o bajaron de precio (y en qué porcentaje) en un período reciente, usando el historial de cambios de precio real de la aplicación. Útil para preguntas como "qué precios aumentaron", "cuál fue el mayor aumento", "mostrame los aumentos superiores a X%".',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          dias: { type: 'NUMBER', description: 'Cantidad de días hacia atrás a considerar. Si no lo dice, usar 7.' },
+          tipo: { type: 'STRING', description: 'Uno de: "subieron" (default), "bajaron" o "iguales" (se mantuvieron).' },
+          porcentaje_minimo: { type: 'NUMBER', description: 'Si el usuario pide un piso (ej. "superiores al 20%"), filtrar solo variaciones con ese % o más en valor absoluto. Opcional.' },
+        },
+        required: [],
+      },
+    },
+    {
+      name: 'consultar_recetas_por_insumo',
+      description: 'Dado el nombre de un insumo/ingrediente, devuelve qué recetas/platos lo usan y su costo total actual. Útil para preguntas como "qué recetas usan el pollo" o "qué platos se ven afectados si sube tal ingrediente".',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          nombre_insumo: { type: 'STRING', description: 'Nombre (o parte del nombre) del insumo' },
+        },
+        required: ['nombre_insumo'],
       },
     },
     {
@@ -126,6 +154,40 @@ async function ejecutarConsulta(nombre, args) {
       horas_trabajadas: resultado.horas,
       dias_trabajados: resultado.dias,
       eventos_trabajados: resultado.eventos,
+    };
+  }
+
+  if (nombre === 'consultar_variacion_precios') {
+    const dias = [7, 14, 21, 28].includes(Number(args.dias)) ? Number(args.dias) : 7;
+    const tipo = ['subieron', 'bajaron', 'iguales'].includes(args.tipo) ? args.tipo : 'subieron';
+    let filas = await calcularVariacionPrecios(dias, tipo, 20);
+    if (args.porcentaje_minimo != null && !isNaN(Number(args.porcentaje_minimo))) {
+      const piso = Number(args.porcentaje_minimo);
+      filas = filas.filter(f => Math.abs(f.variacion_pct) >= piso);
+    }
+    return {
+      dias, tipo, total: filas.length,
+      insumos: filas.map(f => ({
+        nombre: f.nombre, precio_antes: f.precio_inicio, precio_actual: f.precio_actual,
+        variacion_pct: f.variacion_pct, variacion_abs: f.variacion_abs,
+      })),
+    };
+  }
+
+  if (nombre === 'consultar_recetas_por_insumo') {
+    const insumos = await buscarInsumoPorNombre(args.nombre_insumo);
+    if (insumos.length === 0) return { error: `No encontré ningún insumo que coincida con "${args.nombre_insumo}".` };
+    if (insumos.length > 1) return { error: `Encontré varios insumos que coinciden con "${args.nombre_insumo}": ${insumos.map(c => c.nombre).join(', ')}. Decime cuál exactamente.` };
+    const insumo = insumos[0];
+    const recetas = await db.all2(`
+      SELECT p.nombre, p.costo_total, pi.cantidad, pi.unidad
+      FROM plato_insumos pi JOIN platos_costo p ON p.id = pi.plato_id
+      WHERE pi.insumo_id = $1 ORDER BY p.nombre
+    `, [insumo.id]);
+    return {
+      insumo: insumo.nombre, precio_actual: insumo.precio_unitario,
+      total_recetas: recetas.length,
+      recetas: recetas.map(r => ({ nombre: r.nombre, costo_total_actual: r.costo_total, cantidad_usada: r.cantidad, unidad: r.unidad })),
     };
   }
 

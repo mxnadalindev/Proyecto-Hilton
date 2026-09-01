@@ -10,7 +10,9 @@ const URL_BASE = `https://generativelanguage.googleapis.com/v1beta/models/${MODE
 const PROMPT = `Sos un asistente que lee documentos de compra de insumos gastronómicos (proveedores de un hotel).
 Te paso la imagen de un documento. Devolvé ÚNICAMENTE un JSON, sin texto adicional, sin explicación, sin markdown ni backticks, con este formato exacto:
 
-{"tipo_documento": "...", "items": [...]}
+{"tipo_documento": "...", "proveedor": "...", "numero_factura": "...", "items": [...]}
+
+Los campos "proveedor" (nombre del proveedor/emisor si figura en el documento) y "numero_factura" (número o identificador del comprobante si figura) son adicionales al array de items — van UNA sola vez para todo el documento, no por ítem. Si no aparecen en la imagen, dejalos como "" (string vacío). Nunca inventes estos datos.
 
 PASO 1 — Identificá "tipo_documento". Puede ser uno de estos 4 valores:
 - "factura": es CUALQUIER documento o anotación que muestre uno o más productos con su precio de compra — un remito, una factura A/B/C, un ticket de compra, el catálogo/lista de precios de un proveedor, e incluso una nota o anotación escrita a mano en un papel suelto (por ejemplo, alguien anotó a mano "Chocolate x unidad $3922"). NO hace falta que sea un comprobante fiscal formal ni que tenga membrete, CUIT, fecha, etc. — alcanza con que se pueda leer con confianza al menos un nombre de producto junto a un precio. La imagen puede estar rotada o inclinada, leela igual.
@@ -29,14 +31,42 @@ PASO 2 — Armá "items":
 Si no podés leer algún campo con confianza, no incluyas ese ítem.
 
 Ejemplos de respuesta:
-{"tipo_documento":"factura","items":[{"nombre":"Harina 000 x 25kg","cantidad":2,"unidad":"unidad","precio_unitario":18500},{"nombre":"Aceite de girasol 5L","cantidad":4,"unidad":"unidad","precio_unitario":6200}]}
-{"tipo_documento":"factura","items":[{"nombre":"Chocolate Los Cuyanos","cantidad":1,"unidad":"unidad","precio_unitario":3922.65}]}
-{"tipo_documento":"nota_credito","items":[]}`;
+{"tipo_documento":"factura","proveedor":"Distribuidora ABC S.A.","numero_factura":"0001-00023456","items":[{"nombre":"Harina 000 x 25kg","cantidad":2,"unidad":"unidad","precio_unitario":18500},{"nombre":"Aceite de girasol 5L","cantidad":4,"unidad":"unidad","precio_unitario":6200}]}
+{"tipo_documento":"factura","proveedor":"","numero_factura":"","items":[{"nombre":"Chocolate Los Cuyanos","cantidad":1,"unidad":"unidad","precio_unitario":3922.65}]}
+{"tipo_documento":"nota_credito","proveedor":"","numero_factura":"","items":[]}`;
 
 function mimeDesdeExtension(rutaArchivo) {
   const ext = rutaArchivo.toLowerCase().split('.').pop();
-  const mapa = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
+  // Lista ampliada de extensiones de imagen que Gemini acepta directamente,
+  // más "pdf" (Costos ahora también acepta facturas en PDF). Esto es un
+  // RESPALDO — ver mimeParaGemini() más abajo, que primero intenta usar el
+  // tipo real que reportó el navegador al subir el archivo (más confiable
+  // que adivinar por la extensión, sobre todo en fotos de celular que a
+  // veces llegan con extensiones raras o sin extensión).
+  const mapa = {
+    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp',
+    gif: 'image/gif', bmp: 'image/bmp', heic: 'image/heic', heif: 'image/heif',
+    pdf: 'application/pdf',
+  };
   return mapa[ext] || 'image/jpeg';
+}
+
+// Tipos de imagen (+ PDF) que la API de Gemini acepta como inline_data.
+// Si el navegador nos dijo un mimetype real y es uno de estos, se usa ese
+// directamente — es más confiable que adivinar por la extensión del
+// archivo, que puede venir rara (sobre todo en fotos sacadas desde el
+// celular). Si no vino un mimetype reconocible, se cae al respaldo de
+// mimeDesdeExtension().
+const MIME_TYPES_ACEPTADOS_GEMINI = new Set([
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp',
+  'image/heic', 'image/heif', 'application/pdf',
+]);
+
+function mimeParaGemini(rutaImagen, mimeTypeReal) {
+  if (mimeTypeReal && MIME_TYPES_ACEPTADOS_GEMINI.has(mimeTypeReal.toLowerCase())) {
+    return mimeTypeReal.toLowerCase();
+  }
+  return mimeDesdeExtension(rutaImagen);
 }
 
 function esperar(ms) {
@@ -114,9 +144,14 @@ async function llamarGeminiConReintentos(url, opciones, intentos = 3) {
  * por si el modelo no respetara la instrucción del prompt.
  *
  * @param {string} rutaImagen - ruta absoluta o relativa al archivo de imagen ya subido
- * @returns {Promise<{tipoDocumento: string, items: Array<{nombre:string, cantidad:number, unidad:string, precio_unitario:number}>}>}
+ * @param {string} [mimeTypeReal] - el mimetype que reportó el navegador al subir el
+ *   archivo (req.file.mimetype de multer). Opcional — si no se pasa, se adivina por
+ *   la extensión del archivo como antes. Pasarlo hace el reconocimiento de "es una
+ *   imagen válida" más confiable, sobre todo con fotos de celular que a veces tienen
+ *   una extensión rara o poco común.
+ * @returns {Promise<{tipoDocumento: string, proveedor: string, numeroFactura: string, items: Array<{nombre:string, cantidad:number, unidad:string, precio_unitario:number}>}>}
  */
-async function analizarFactura(rutaImagen) {
+async function analizarFactura(rutaImagen, mimeTypeReal) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('Falta GEMINI_API_KEY en el archivo .env');
@@ -124,7 +159,7 @@ async function analizarFactura(rutaImagen) {
 
   const bytes = fs.readFileSync(rutaImagen);
   const base64 = bytes.toString('base64');
-  const mimeType = mimeDesdeExtension(rutaImagen);
+  const mimeType = mimeParaGemini(rutaImagen, mimeTypeReal);
 
   const body = {
     contents: [{
@@ -162,9 +197,11 @@ async function analizarFactura(rutaImagen) {
   // (un array suelto en vez de {tipo_documento, items}), lo tratamos como factura.
   const tipoDocumento = Array.isArray(respuesta) ? 'factura' : (respuesta?.tipo_documento || 'otro');
   const itemsCrudos = Array.isArray(respuesta) ? respuesta : (respuesta?.items || []);
+  const proveedor = Array.isArray(respuesta) ? '' : String(respuesta?.proveedor || '').trim();
+  const numeroFactura = Array.isArray(respuesta) ? '' : String(respuesta?.numero_factura || '').trim();
 
   if (!Array.isArray(itemsCrudos)) {
-    return { tipoDocumento, items: [] };
+    return { tipoDocumento, proveedor, numeroFactura, items: [] };
   }
 
   // Sanitizamos: descartamos ítems incompletos y, como capa de seguridad extra,
@@ -179,7 +216,7 @@ async function analizarFactura(rutaImagen) {
     }))
     .filter(it => it.precio_unitario > 0);
 
-  return { tipoDocumento, items };
+  return { tipoDocumento, proveedor, numeroFactura, items };
 }
 
 const PROMPT_REMITO_CROUTONS = `Sos un asistente que lee remitos, etiquetas de caja o fotos de mercadería de croutons recibida en la cocina de un hotel.

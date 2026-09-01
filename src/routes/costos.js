@@ -4,6 +4,8 @@ const db = require('../db/database');
 const { loginRequerido, requiereDepartamento } = require('./middleware');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
 const ExcelJS = require('exceljs');
 router.use(loginRequerido, requiereDepartamento('/costos'));
 const { analizarFactura, mensajeErrorGemini } = require('../services/gemini');
@@ -395,6 +397,17 @@ function similitud(nombreA, nombreB) {
 // Busca el insumo existente más parecido a un nombre detectado por Gemini.
 // Devuelve null si el mejor match está por debajo del umbral (probablemente es un insumo nuevo).
 function buscarInsumoMasParecido(nombreDetectado, insumos) {
+  const { insumo } = buscarMatchInsumo(nombreDetectado, insumos);
+  return insumo;
+}
+
+// Igual que buscarInsumoMasParecido, pero además devuelve el score de
+// confianza (0..1) del mejor candidato, se haya superado el umbral o no —
+// lo necesitamos para poder mostrarle al usuario "qué tan seguro" está el
+// sistema, y para decidir si conviene auto-aplicar el cambio o pedir
+// confirmación. No reemplaza a buscarInsumoMasParecido (que sigue devolviendo
+// lo mismo que antes), solo agrega el detalle del score.
+function buscarMatchInsumo(nombreDetectado, insumos) {
   let mejor = null;
   let mejorScore = 0;
   for (const insumo of insumos) {
@@ -405,15 +418,44 @@ function buscarInsumoMasParecido(nombreDetectado, insumos) {
     }
   }
   const UMBRAL = 0.55;
-  return mejorScore >= UMBRAL ? mejor : null;
+  return { insumo: mejorScore >= UMBRAL ? mejor : null, score: mejorScore };
 }
 
-// 1) Sube la foto, la manda a Gemini, arma la comparación y la deja pendiente en sesión
+// A partir de qué confianza el sistema aplica el precio solo, sin pedirle
+// confirmación al usuario. Por debajo de esto (pero por encima del umbral de
+// "hay match" de arriba) se le muestra al usuario para que confirme a mano.
+const UMBRAL_AUTO_APLICAR = 0.90;
+
+// Aplica UN cambio de precio ya decidido (auto o confirmado a mano), dejando
+// registro completo en historial_precios y recalculando los platos afectados.
+// Centralizado acá para que la auto-aplicación y la confirmación manual
+// graben exactamente los mismos datos, sin duplicar la lógica.
+async function aplicarCambioPrecio({ insumoId, precioAnterior, precioNuevo, proveedor, facturaReferencia, usuario, confianza, automatico }) {
+  await db.run2(
+    `INSERT INTO historial_precios
+      (insumo_id, precio_anterior, precio_nuevo, origen, proveedor, factura_referencia, usuario_id, usuario_nombre, confianza_match, aplicado_automaticamente)
+     VALUES ($1,$2,$3,'gemini',$4,$5,$6,$7,$8,$9)`,
+    [insumoId, precioAnterior, precioNuevo, proveedor || null, facturaReferencia || null,
+     usuario?.id || null, usuario?.nombre || null, confianza != null ? confianza : null, !!automatico]
+  );
+  await db.run2("UPDATE insumos SET precio_unitario=$1,actualizado_en=NOW() WHERE id=$2", [precioNuevo, insumoId]);
+  await recalcularPlatos(insumoId);
+}
+
+// 1) Sube la foto, la manda a Gemini, matchea contra los insumos existentes,
+//    auto-aplica lo que tiene confianza alta y deja el resto pendiente de revisión.
 router.post('/factura', loginRequerido, upload.single('factura'), async (req, res) => {
   if (!req.file) return res.redirect('/costos?msg=' + encodeURIComponent('No se recibió ninguna imagen.'));
 
   try {
-    const { tipoDocumento, items: itemsDetectados } = await analizarFactura(req.file.path);
+    // Hash del archivo, para detectar si esta misma factura ya se procesó antes.
+    const hashArchivo = crypto.createHash('sha256').update(fs.readFileSync(req.file.path)).digest('hex');
+    const yaProcesada = await db.get2(
+      "SELECT id, procesado_en, usuario_nombre FROM facturas_procesadas WHERE hash_archivo=$1 ORDER BY procesado_en DESC LIMIT 1",
+      [hashArchivo]
+    );
+
+    const { tipoDocumento, proveedor, numeroFactura, items: itemsDetectados } = await analizarFactura(req.file.path, req.file.mimetype);
 
     if (tipoDocumento === 'nota_credito' || tipoDocumento === 'nota_debito') {
       const nombreTipo = tipoDocumento === 'nota_credito' ? 'Nota de Crédito' : 'Nota de Débito';
@@ -429,10 +471,17 @@ router.post('/factura', loginRequerido, upload.single('factura'), async (req, re
     }
 
     const insumos = await db.all2("SELECT * FROM insumos");
+    const usuario = req.session.usuario;
+    const facturaReferencia = numeroFactura || null;
 
-    const comparacion = itemsDetectados.map((item, i) => {
-      const match = buscarInsumoMasParecido(item.nombre, insumos);
-      return {
+    let autoAplicados = 0;
+    const pendientes = [];
+
+    for (let i = 0; i < itemsDetectados.length; i++) {
+      const item = itemsDetectados[i];
+      const { insumo: match, score } = buscarMatchInsumo(item.nombre, insumos);
+
+      const fila = {
         idx: i,
         nombre_detectado: item.nombre,
         cantidad: item.cantidad,
@@ -441,29 +490,77 @@ router.post('/factura', loginRequerido, upload.single('factura'), async (req, re
         insumo_id: match ? match.id : null,
         insumo_nombre: match ? match.nombre : null,
         precio_actual: match ? match.precio_unitario : null,
-        sube: match ? item.precio_unitario > match.precio_unitario : null
+        sube: match ? item.precio_unitario > match.precio_unitario : null,
+        confianza: match ? Math.round(score * 100) : null
       };
-    });
 
-    // Guardamos la comparación en sesión para la pantalla de confirmación
-    req.session.facturaPendiente = comparacion;
+      const precioActual = match ? (parseFloat(match.precio_unitario) || 0) : null;
+      const precioDetectado = parseFloat(item.precio_unitario);
 
-    res.redirect('/costos/factura/revisar');
+      // Auto-aplicar solo si: hay match, la confianza es alta, el precio sube
+      // o se mantiene (nunca baja precios solo), y esta factura NO es una
+      // que ya procesamos antes (si es repetida, todo pasa a revisión manual
+      // como capa extra de seguridad, aunque el match sea perfecto).
+      const puedeAutoAplicar = match && score >= UMBRAL_AUTO_APLICAR && precioDetectado >= precioActual && !yaProcesada;
+
+      if (puedeAutoAplicar) {
+        if (Math.abs(precioDetectado - precioActual) > 0.001) {
+          await aplicarCambioPrecio({
+            insumoId: match.id, precioAnterior: precioActual, precioNuevo: precioDetectado,
+            proveedor, facturaReferencia, usuario, confianza: score, automatico: true
+          });
+        }
+        autoAplicados++;
+      } else {
+        pendientes.push(fila);
+      }
+    }
+
+    // Registramos que esta factura (por su hash) ya fue procesada, para
+    // poder avisar si alguien la vuelve a subir sin querer.
+    await db.run2(
+      `INSERT INTO facturas_procesadas (hash_archivo, nombre_archivo, proveedor, cantidad_items, usuario_id, usuario_nombre)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+      [hashArchivo, req.file.originalname || null, proveedor || null, itemsDetectados.length, usuario?.id || null, usuario?.nombre || null]
+    );
+
+    // Guardamos lo pendiente de revisar en sesión para la pantalla de confirmación
+    req.session.facturaPendiente = { proveedor, facturaReferencia, items: pendientes };
+
+    let avisoDuplicada = null;
+    if (yaProcesada) {
+      const fecha = new Date(yaProcesada.procesado_en).toLocaleString('es-AR');
+      avisoDuplicada = `Esta imagen ya se había procesado antes (${fecha}${yaProcesada.usuario_nombre ? ' por ' + yaProcesada.usuario_nombre : ''}). Por las dudas, ningún precio se aplicó solo esta vez — revisá cada ítem antes de confirmar para no duplicar el aumento.`;
+    }
+    req.session.avisoFacturaDuplicada = avisoDuplicada;
+
+    if (pendientes.length === 0) {
+      let mensaje = autoAplicados > 0
+        ? `${autoAplicados} precio(s) actualizados automáticamente desde la factura (coincidencia de alta confianza).`
+        : 'No hubo cambios de precio para aplicar (los precios detectados no eran mayores a los actuales).';
+      return res.redirect('/costos?msg=' + encodeURIComponent(mensaje));
+    }
+
+    res.redirect('/costos/factura/revisar' + (autoAplicados > 0 ? ('?autoAplicados=' + autoAplicados) : ''));
   } catch (e) {
     console.error('Error analizando factura con Gemini:', e.message, e.cause || '');
     res.redirect('/costos?msg=' + encodeURIComponent(mensajeErrorGemini(e)));
   }
 });
 
-// 2) Muestra la pantalla de confirmación con lo que Gemini detectó
+// 2) Muestra la pantalla de confirmación con lo que Gemini detectó y no se auto-aplicó
 router.get('/factura/revisar', loginRequerido, async (req, res) => {
-  const comparacion = req.session.facturaPendiente || [];
-  res.render('factura_revisar', { comparacion });
+  const pendiente = req.session.facturaPendiente || { items: [] };
+  const comparacion = pendiente.items || [];
+  const autoAplicados = parseInt(req.query.autoAplicados) || 0;
+  const avisoDuplicada = req.session.avisoFacturaDuplicada || null;
+  res.render('factura_revisar', { comparacion, autoAplicados, avisoDuplicada, umbralAuto: Math.round(UMBRAL_AUTO_APLICAR * 100) });
 });
 
-// 3) Aplica los cambios que el usuario tildó y confirmó
+// 3) Aplica los cambios que el usuario tildó y confirmó a mano
 router.post('/factura/aplicar', loginRequerido, async (req, res) => {
-  const comparacion = req.session.facturaPendiente || [];
+  const pendiente = req.session.facturaPendiente || { items: [] };
+  const comparacion = pendiente.items || [];
   let seleccionados = req.body.aplicar || [];
   if (!Array.isArray(seleccionados)) seleccionados = [seleccionados];
   const idxsSeleccionados = seleccionados.map(s => parseInt(s));
@@ -471,9 +568,10 @@ router.post('/factura/aplicar', loginRequerido, async (req, res) => {
   try {
     let aplicados = 0;
     let menoresIgnorados = 0;
+    const usuario = req.session.usuario;
 
     for (const idx of idxsSeleccionados) {
-      const item = comparacion[idx];
+      const item = comparacion.find(c => c.idx === idx);
       if (!item || !item.insumo_id) continue; // sin match a insumo existente, no tocamos nada
       if (!(parseFloat(item.precio_detectado) > 0)) continue; // nunca aplicar precio en 0 o negativo
 
@@ -486,19 +584,18 @@ router.post('/factura/aplicar', loginRequerido, async (req, res) => {
         continue;
       }
 
-      await db.run2(
-        "INSERT INTO historial_precios (insumo_id,precio_anterior,precio_nuevo,origen) VALUES ($1,$2,$3,'gemini')",
-        [item.insumo_id, item.precio_actual, item.precio_detectado]
-      );
-      await db.run2(
-        "UPDATE insumos SET precio_unitario=$1,actualizado_en=NOW() WHERE id=$2",
-        [item.precio_detectado, item.insumo_id]
-      );
-      await recalcularPlatos(item.insumo_id);
+      if (Math.abs(precioDetectado - precioActual) > 0.001) {
+        await aplicarCambioPrecio({
+          insumoId: item.insumo_id, precioAnterior: precioActual, precioNuevo: precioDetectado,
+          proveedor: pendiente.proveedor, facturaReferencia: pendiente.facturaReferencia,
+          usuario, confianza: item.confianza != null ? item.confianza / 100 : null, automatico: false
+        });
+      }
       aplicados++;
     }
 
     delete req.session.facturaPendiente;
+    delete req.session.avisoFacturaDuplicada;
     let mensaje = `${aplicados} precio(s) actualizados desde factura.`;
     if (menoresIgnorados > 0) {
       mensaje += ` ${menoresIgnorados} se ignoraron por tener un precio menor al actual (se mantiene el más alto).`;
@@ -593,4 +690,8 @@ async function recalcularPlatos(insumo_id) {
   }
 }
 
+// Se exporta además del router mismo (sin cambiar cómo se usa en server.js)
+// para que el asistente/bot pueda reutilizar la misma lógica de variación de
+// precios que ya usa esta pantalla, en vez de duplicarla.
 module.exports = router;
+module.exports.calcularVariacionPrecios = calcularVariacionPrecios;

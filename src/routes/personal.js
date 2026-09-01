@@ -24,7 +24,13 @@ const uploadMozosFoto = multer({ storage: storageMozosFoto, limits: { fileSize: 
 
 const PUESTOS = ['Chef','Subchef','Encargado de cocina','Cocinero','Ayudante de cocina','Pastelero','Panadero'];
 const ROLES   = ['empleado','supervisor','admin'];
-const SECTORES = ['Supervisores','Comis de Recepción','Panadería','Pastelería AM','Pastelería PM','Faro AM','Faro PM','Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D'];
+// .normalize('NFC'): defensivo contra el caso en que estos literales con
+// tilde queden guardados en el archivo con una forma Unicode distinta
+// (NFD) a la que usa Postgres para comparar — sin esto, "departamento =
+// ANY($1)" puede fallar en silencio para los sectores con tilde aunque se
+// vean idénticos en pantalla (pasó: Comis de Recepción, Panadería,
+// Pastelería AM/PM, BQTs Fríos quedaban afuera de las listas).
+const SECTORES = ['Supervisores','Comis de Recepción','Panadería','Pastelería AM','Pastelería PM','Faro AM','Faro PM','Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D'].map(s => s.normalize('NFC'));
 const ESTADOS = ['OFF','VAC','RECOFF','LIBRE','ART','LICENCIA','CUMPLE','MUDANZA','FRANCO'];
 
 // AYB (mozos) no se organiza por "sector" como Cocina — se divide en
