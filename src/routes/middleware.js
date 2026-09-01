@@ -8,7 +8,6 @@ const RUTAS_POR_DEPARTAMENTO = {
   cocina:   ['/eventos', '/personal', '/recetas', '/horarios', '/costos'],
   compras:  ['/compras'],
   ayb:      ['/personal', '/horarios', '/croutons'],
-  finanzas: ['/finanzas'],
 };
 
 function requiereDepartamento(prefijo) {

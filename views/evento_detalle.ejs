@@ -201,6 +201,20 @@
 .btn-danger { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all var(--tr); }
 .btn-danger:hover { background: #dc2626; color: #fff; }
 @media (max-width: 900px) { .detalle-grid { grid-template-columns: 1fr; } }
+
+@media (max-width: 600px) {
+  .detalle-card { padding: 16px; }
+  /* La fila para agregar plato (select + 2 inputs numéricos + botón) no
+     tenía flex-wrap: en una pantalla angosta el <select> con nombres
+     largos de plato no se achica (los flex-item no se encogen por debajo
+     de su contenido salvo que se lo indique) y la fila se salía del
+     recuadro. Se envuelve y cada campo pasa a ocupar el ancho completo. */
+  .add-plato-row { flex-wrap: wrap; }
+  .add-plato-row select { flex: 1 1 100%; min-width: 0; }
+  .add-plato-row input[type="text"],
+  .add-plato-row input[type="number"] { flex: 1 1 auto; min-width: 0; }
+  .tabla-interna { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
 </style>
 
 
@@ -216,6 +230,7 @@ function elegirPlatoCargadoDetalle() {
 </script>
 
   </main>
+  <%- include('partials/mobile-nav', { path: path }) %>
 </div>
 </body>
 </html>

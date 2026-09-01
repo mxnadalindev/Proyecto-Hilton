@@ -39,7 +39,7 @@
     </div>
     <% } %>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="costos-grid-principal" style="display:grid;gap:20px;">
       <!-- INSUMOS -->
       <div>
         <!-- Actualización de precios: un solo selector, detecta foto vs. catálogo solo -->
@@ -524,6 +524,7 @@
 
 <style>
 .main-content-ancho{max-width:1600px;}
+.costos-grid-principal{grid-template-columns:1fr 1fr;}
 .puesto-badge{font-size:0.68rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:2px 8px;border-radius:20px;}
 .field{margin-bottom:0;}
 .field label{display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;}
@@ -563,7 +564,12 @@
   .modal-lista{padding:0;}
   .modal-lista-caja{max-width:100%;max-height:100vh;height:100vh;border-radius:0;}
 }
-@media (max-width:600px){.opcion-divisor{display:none;}}
+@media (max-width:600px){
+  .opcion-divisor{display:none;}
+  /* Insumos/Platos en 2 columnas no entran en un celular sin achicarse
+     demasiado — se apilan en una sola columna. */
+  .costos-grid-principal{grid-template-columns:1fr !important;}
+}
 .precio-card-input-categoria{padding:9px 10px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.8rem;outline:none;background:var(--gris-fondo);color:var(--negro);}
 .precio-card-input-categoria:focus{border-color:var(--azul);background:var(--blanco);}
 

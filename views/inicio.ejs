@@ -24,7 +24,6 @@
           cocina: 'Cocina',
           ayb: 'Alimentos y Bebidas',
           compras: 'Compras',
-          finanzas: 'Finanzas',
         };
         // .toLowerCase() porque departamento/rol pueden estar guardados con
         // distinta capitalización según cómo se haya creado la cuenta (el
@@ -48,7 +47,7 @@
           modulos = [
             { href: '/eventos',  icon: 'ti-calendar-event', nombre: 'Eventos',  desc: 'Gestión y presupuestos', g1:'#002f61', g2:'#007293',
               detalle: 'Planificá banquetes y eventos del hotel: armá el menú con platos ya costeados (o menús completos), asigná personal y vajilla, y calculá el costo total y las horas de producción antes de confirmar.' },
-            { href: '/personal', icon: 'ti-users',          nombre: 'Miembro de equipo', desc: 'Equipo interno', g1:'#007293', g2:'#06937e',
+            { href: '/miembros-de-equipo', icon: 'ti-users',          nombre: 'Miembro de equipo', desc: 'Equipo interno', g1:'#007293', g2:'#06937e',
               detalle: 'Gestioná el equipo de cocina: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
             { href: '/horarios', icon: 'ti-clock',          nombre: 'Horarios', desc: 'Turnos automáticos', g1:'#06937e', g2:'#6bb030',
               detalle: 'Visualizá la grilla completa de turnos de todos los sectores, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
@@ -64,7 +63,7 @@
         } else if (depto === 'ayb') {
           if (esGestorAyb) {
             modulos = [
-              { href: '/personal', icon: 'ti-users', nombre: 'Miembro de equipo', desc: 'Equipo interno', g1:'#007293', g2:'#06937e',
+              { href: '/miembros-de-equipo', icon: 'ti-users', nombre: 'Miembro de equipo', desc: 'Equipo interno', g1:'#007293', g2:'#06937e',
                 detalle: 'Gestioná el equipo de Alimentos y Bebidas: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
               { href: '/horarios', icon: 'ti-clock', nombre: 'Horarios', desc: 'Turnos del sector', g1:'#06937e', g2:'#6bb030',
                 detalle: 'Visualizá la grilla completa de turnos de Alimentos y Bebidas, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
@@ -94,13 +93,6 @@
           ];
           if (esAdmin) modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', g1:'#007293', g2:'#6bb030',
             detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
-        } else if (depto === 'finanzas') {
-          modulos = [
-            { href: '/finanzas', icon: 'ti-report-money', nombre: 'Finanzas', desc: 'Reportes y presupuestos', g1:'#007293', g2:'#06937e',
-              detalle: 'Reportes financieros y seguimiento de presupuestos del hotel.' },
-          ];
-          if (esAdmin) modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', g1:'#007293', g2:'#6bb030',
-            detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
         } else if (esAdmin) {
           // Admin general (sin departamento — cuenta "Administrador"): no
           // matcheaba ninguna rama de arriba, así que modulos quedaba
@@ -111,7 +103,7 @@
           modulos = [
             { href: '/eventos',  icon: 'ti-calendar-event', nombre: 'Eventos',  desc: 'Gestión y presupuestos', g1:'#002f61', g2:'#007293',
               detalle: 'Planificá banquetes y eventos del hotel: armá el menú con platos ya costeados (o menús completos), asigná personal y vajilla, y calculá el costo total y las horas de producción antes de confirmar.' },
-            { href: '/personal', icon: 'ti-users',          nombre: 'Miembro de equipo', desc: 'Equipo interno', g1:'#007293', g2:'#06937e',
+            { href: '/miembros-de-equipo', icon: 'ti-users',          nombre: 'Miembro de equipo', desc: 'Equipo interno', g1:'#007293', g2:'#06937e',
               detalle: 'Gestioná el equipo del hotel: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
             { href: '/horarios', icon: 'ti-clock',          nombre: 'Horarios', desc: 'Turnos automáticos', g1:'#06937e', g2:'#6bb030',
               detalle: 'Visualizá la grilla completa de turnos de todos los sectores, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
@@ -121,8 +113,6 @@
               detalle: 'Cargá insumos y sus precios, costeá platos automáticamente, y actualizá precios subiendo una foto de factura o el catálogo del proveedor — con historial completo de cada cambio.' },
             { href: '/compras',  icon: 'ti-shopping-cart',  nombre: 'Compras',  desc: 'Órdenes y proveedores', g1:'#002f61', g2:'#007293',
               detalle: 'Gestión de órdenes de compra y proveedores del hotel.' },
-            { href: '/finanzas', icon: 'ti-report-money',   nombre: 'Finanzas', desc: 'Reportes y presupuestos', g1:'#007293', g2:'#06937e',
-              detalle: 'Reportes financieros y seguimiento de presupuestos del hotel.' },
             { href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', g1:'#007293', g2:'#6bb030',
               detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' },
           ];
@@ -284,7 +274,7 @@
   <nav class="mobile-nav">
     <% if (depto === 'cocina') { %>
       <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
-      <a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i><span>Miembro de equipo</span></a>
+      <a href="/miembros-de-equipo" class="mobile-nav-link"><i class="ti ti-users"></i><span>Miembro de equipo</span></a>
       <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
       <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
       <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span>Costos</span></a>
@@ -293,16 +283,13 @@
     <% if (depto === 'ayb') { %>
       <% // Miembro de equipo y Croutons son solo para quien gestiona AYB
          // (admin/supervisor) — un mozo común solo entra a Horarios. %>
-      <% if (esGestorAyb) { %><a href="/personal" class="mobile-nav-link"><i class="ti ti-users"></i><span>Miembro de equipo</span></a><% } %>
+      <% if (esGestorAyb) { %><a href="/miembros-de-equipo" class="mobile-nav-link"><i class="ti ti-users"></i><span>Miembro de equipo</span></a><% } %>
       <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
       <% if (esGestorAyb) { %><a href="/croutons" class="mobile-nav-link"><i class="ti ti-package"></i><span>Croutons</span></a><% } %>
       <% if (esAdmin) { %><a href="/configuracion" class="mobile-nav-link"><i class="ti ti-settings"></i><span>Config</span></a><% } %>
     <% } %>
     <% if (depto === 'compras') { %>
       <a href="/compras" class="mobile-nav-link"><i class="ti ti-shopping-cart"></i><span>Compras</span></a>
-    <% } %>
-    <% if (depto === 'finanzas') { %>
-      <a href="/finanzas" class="mobile-nav-link"><i class="ti ti-report-money"></i><span>Finanzas</span></a>
     <% } %>
   </nav>
 
@@ -413,26 +400,10 @@
 const MODULOS = <%- JSON.stringify(modulos) %>;
 let moduloActual = 0;
 
-// Estos valores se recalculan según el ancho de pantalla — en mobile las
-// tarjetas ya son más chicas (ver @media arriba), pero antes esta separación
-// quedaba fija e igual que en escritorio, empujando la tarjeta vecina fuera
-// del borde visible. Ahora se ajustan juntos.
-let SPACING = 130;   // separación horizontal entre tarjetas
-let DEPTH   = 220;   // profundidad (eje Z) de las tarjetas no activas
-let ANGLE   = 32;    // ángulo de rotación en el abanico
+const SPACING = 130;   // separación horizontal entre tarjetas
+const DEPTH   = 220;   // profundidad (eje Z) de las tarjetas no activas
+const ANGLE   = 32;    // ángulo de rotación en el abanico
 const MAX_VISIBLES = 3; // tarjetas visibles a cada lado antes de desvanecer
-
-function recalcularConstantesDeck() {
-  const ancho = window.innerWidth;
-  if (ancho <= 380) {
-    SPACING = 78; DEPTH = 140; ANGLE = 26;
-  } else if (ancho <= 600) {
-    SPACING = 92; DEPTH = 160; ANGLE = 28;
-  } else {
-    SPACING = 130; DEPTH = 220; ANGLE = 32;
-  }
-}
-recalcularConstantesDeck();
 
 function actualizarPosiciones() {
   const total = MODULOS.length;
@@ -506,17 +477,6 @@ function pasoModulo(dir) {
 }
 
 actualizarPosiciones();
-
-// Si cambia el ancho de pantalla (rotar el celular, cambiar de ventana),
-// recalculamos la separación de las tarjetas para que no queden cortadas.
-let _resizeTimeoutDeck;
-window.addEventListener('resize', () => {
-  clearTimeout(_resizeTimeoutDeck);
-  _resizeTimeoutDeck = setTimeout(() => {
-    recalcularConstantesDeck();
-    actualizarPosiciones();
-  }, 150);
-});
 
 // En esta página (Inicio), clickear un ícono del menú selecciona su tarjeta
 // en el carrusel en vez de navegar directo — un segundo click sobre la

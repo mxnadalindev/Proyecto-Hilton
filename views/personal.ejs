@@ -49,7 +49,7 @@
     %>
     <div style="background:var(--azul-claro);border:1px solid var(--azul);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:var(--azul);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
       <span><i class="ti ti-filter"></i> Mostrando solo a los mozos con algo cargado en <%= MESES_NOMBRE[parseInt(mesNumFiltro,10)-1] %> de <%= anioFiltro %> (disponibilidad y/o eventos).</span>
-      <a href="/personal" style="color:var(--azul);text-decoration:underline;white-space:nowrap;">Ver a todo el equipo</a>
+      <a href="/miembros-de-equipo" style="color:var(--azul);text-decoration:underline;white-space:nowrap;">Ver a todo el equipo</a>
     </div>
     <% } %>
 
@@ -74,10 +74,10 @@
 
     <!-- Selector de rango con calendario (Cocina/admin general) -->
     <% if (misDepto !== 'ayb') { %>
-    <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:var(--sombra);display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
+    <div class="card-selector-rango" style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;margin-bottom:20px;box-shadow:var(--sombra);display:flex;align-items:flex-start;flex-wrap:wrap;">
 
       <!-- Calendario -->
-      <div id="cal-container" style="min-width:280px;">
+      <div id="cal-container">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <button onclick="calMes(-1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:16px;">&#8249;</button>
           <span id="cal-titulo" style="font-size:0.9rem;font-weight:600;color:var(--negro);"></span>
@@ -88,7 +88,7 @@
       </div>
 
       <!-- Rango seleccionado -->
-      <div style="flex:1;">
+      <div class="panel-rango-sel" style="flex:1;">
         <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 8px;">Rango seleccionado</p>
         <p id="semana-label" style="font-size:1.1rem;font-weight:600;color:var(--negro);margin:0 0 12px;"></p>
         <div id="semana-dias" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
@@ -105,7 +105,7 @@
     </div>
     <% } else { %>
     <!-- AYB: sin selector de estados — solo navegación de período para ver la disponibilidad cargada -->
-    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:14px 20px;margin-bottom:20px;box-shadow:var(--sombra);">
+    <div class="card-periodo-ayb" style="display:flex;align-items:center;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;margin-bottom:20px;box-shadow:var(--sombra);flex-wrap:wrap;gap:10px;">
       <a href="/personal?inicio=<%= rangoAnterior.inicio %>&fin=<%= rangoAnterior.fin %>" class="btn-secondary" style="padding:6px 14px;">
         <i class="ti ti-chevron-left"></i> Período anterior
       </a>
@@ -139,6 +139,7 @@
     </div>
 
     <!-- Tabla -->
+    <p class="aviso-scroll-tabla"><i class="ti ti-arrows-horizontal"></i> Deslizá hacia los costados para ver toda la tabla</p>
     <div class="tabla-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
       <table class="tabla" style="width:100%;min-width:<%= misDepto === 'ayb' ? '1250' : '1050' %>px;table-layout:fixed;">
         <colgroup>
@@ -369,7 +370,7 @@
 
   <nav class="mobile-nav">
     <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
-    <a href="/personal" class="mobile-nav-link activo"><i class="ti ti-users"></i><span>Miembro de equipo</span></a>
+    <a href="/miembros-de-equipo" class="mobile-nav-link activo"><i class="ti ti-users"></i><span>Miembro de equipo</span></a>
     <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
     <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
     <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span>Costos</span></a>
@@ -673,7 +674,106 @@
 .cal-dia-flag{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:var(--blanco);border:1px solid var(--gris-borde);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--gris-borde);cursor:pointer;transition:all 0.15s;line-height:1;z-index:2;}
 .cal-dia-flag:hover{border-color:#dc2626;color:#dc2626;transform:scale(1.25);}
 .cal-dia.es-feriado .cal-dia-flag{background:#dc2626;border-color:#dc2626;color:#fff;}
+
+/* ── Aviso "deslizá" arriba de la tabla: solo se ve en pantallas chicas,
+   donde la tabla necesariamente hay que scrollearla al costado (tiene
+   muchas columnas fijas — RECOFF, SECTOR, un día por columna, etc. — así
+   que "apilarla" en tarjetas la haría perder la vista de todos los días
+   juntos, que es el uso principal de esta pantalla). ── */
+.aviso-scroll-tabla{display:none;}
+
+/* Valores "de escritorio" para las propiedades que antes estaban puestas
+   como estilo inline directo en el HTML — se movieron acá (con el mismo
+   valor de siempre) porque un estilo inline SIEMPRE le gana a una regla
+   de este bloque <style>, aunque la regla esté dentro de un @media que
+   sí aplica: eso es lo que hacía que el ajuste mobile pareciera no
+   tener ningún efecto por más que la pantalla fuera angosta. */
+.card-selector-rango{padding:20px;gap:24px;}
+#cal-container{min-width:280px;}
+.card-periodo-ayb{padding:14px 20px;justify-content:space-between;}
+
+/* ── Responsive: celulares chicos (hasta 600px, cubre los 320-428px típicos) ── */
+@media (max-width: 600px) {
+  /* La tarjeta del selector de rango (calendario + "Rango seleccionado")
+     dejaba el calendario con un ancho mínimo de 280px que no entraba en
+     pantallas de 320-360px de ancho (sumado al padding de la tarjeta),
+     provocando que se corte el último día de la semana (Sáb). En mobile
+     el calendario pasa a ocupar todo el ancho disponible y las dos
+     columnas se apilan una debajo de la otra. */
+  .card-selector-rango{padding:14px !important;gap:16px !important;}
+  .card-selector-rango #cal-container{min-width:0 !important;width:100%;}
+  .card-selector-rango .panel-rango-sel{width:100%;min-width:0;}
+  #cal-grid{gap:3px;}
+  .cal-dia{padding:8px 2px;font-size:0.75rem;}
+  #semana-dias span, .card-selector-rango span{white-space:normal;}
+
+  .card-periodo-ayb{padding:12px 14px !important;justify-content:center !important;text-align:center;}
+  .card-periodo-ayb > a{flex:1 1 auto;justify-content:center;}
+
+  /* La tabla de empleados tiene demasiadas columnas (nombre, puesto,
+     sector, RECOFF y un estado por día) para entrar en una pantalla de
+     celular sin perder legibilidad — se deja el scroll horizontal que ya
+     tenía (funciona bien con el dedo), pero se avisa que existe, porque
+     en una pantalla angosta no se nota a simple vista que hay más
+     columnas a la derecha. */
+  .aviso-scroll-tabla{
+    display:flex;align-items:center;gap:6px;
+    font-size:0.72rem;color:var(--gris-texto);
+    background:var(--gris-fondo);border:1px solid var(--gris-borde);
+    border-radius:8px;padding:7px 10px;margin:0 0 8px;
+  }
+}
 .cal-nombre-dia{font-size:0.6rem;font-weight:600;color:var(--gris-texto);padding:4px 0;text-align:center;}
+
+/* Cartel "Horario cargado correctamente" con cocinerito animado */
+#cartel-horario-guardado{
+  position:fixed;
+  left:50%;
+  bottom:28px;
+  transform:translate(-50%, 20px);
+  z-index:2000;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:#16a34a;
+  color:#fff;
+  font-family:var(--font-sans);
+  font-size:0.85rem;
+  font-weight:600;
+  padding:12px 20px;
+  border-radius:999px;
+  box-shadow:0 10px 30px rgba(22,163,74,0.35);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.25s ease, transform 0.25s ease;
+  max-width:90vw;
+}
+#cartel-horario-guardado.mostrar{
+  opacity:1;
+  transform:translate(-50%, 0);
+}
+.cartel-cocinerito{
+  font-size:1.4rem;
+  line-height:1;
+  display:inline-block;
+  animation:cocinerito-salto 0.6s ease-in-out infinite;
+}
+@keyframes cocinerito-salto{
+  0%, 100%{ transform:translateY(0) rotate(0deg); }
+  30%{ transform:translateY(-7px) rotate(-8deg); }
+  60%{ transform:translateY(0) rotate(6deg); }
+}
+@media (max-width: 480px){
+  #cartel-horario-guardado{
+    left:12px;
+    right:12px;
+    bottom:76px; /* arriba del mobile-nav para no taparse */
+    transform:translateY(20px);
+    max-width:none;
+    justify-content:center;
+  }
+  #cartel-horario-guardado.mostrar{ transform:translateY(0); }
+}
 </style>
 
 <script>
@@ -949,10 +1049,35 @@ async function guardarEmpleado(uid) {
       actualizarColorFila(uid);
       const recoffSpan = document.getElementById('recoff-' + uid);
       if (recoffSpan && data.recoff_pendiente !== undefined) recoffSpan.textContent = data.recoff_pendiente;
+      mostrarCartelHorarioGuardado();
     } else {
       alert('Error: ' + data.error);
     }
   } catch(e) { alert('Error de conexión'); }
+}
+
+// Cartelito de confirmación con un cocinerito animado, al guardar el
+// horario de un empleado desde el tilde. Se arma y se destruye solo (no
+// necesita HTML fijo en la página) para no interferir con nada más.
+let _timeoutCartelHorario = null;
+function mostrarCartelHorarioGuardado() {
+  let cartel = document.getElementById('cartel-horario-guardado');
+  if (!cartel) {
+    cartel = document.createElement('div');
+    cartel.id = 'cartel-horario-guardado';
+    cartel.innerHTML = `
+      <span class="cartel-cocinerito">👨‍🍳</span>
+      <span>Horario cargado correctamente</span>
+    `;
+    document.body.appendChild(cartel);
+  }
+  // Reinicia la animación aunque ya esté visible (por si se guardan varios seguidos)
+  cartel.classList.remove('mostrar');
+  void cartel.offsetWidth; // fuerza reflow para poder re-disparar la animación
+  cartel.classList.add('mostrar');
+
+  clearTimeout(_timeoutCartelHorario);
+  _timeoutCartelHorario = setTimeout(() => cartel.classList.remove('mostrar'), 2200);
 }
 
 // Colorea el fondo de la fila según el primer estado (no-franco) encontrado entre los días

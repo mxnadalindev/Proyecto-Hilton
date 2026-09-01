@@ -90,12 +90,14 @@
             <p style="font-size:0.72rem;color:var(--gris-texto);margin:-10px 0 14px;">
               Se eligen de la lista de insumos cargada en Costos — el precio se toma en vivo de ahí.
             </p>
+            <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
             <table class="tabla-ingredientes">
               <thead>
                 <tr><th>Insumo</th><th>Cantidad</th><th>Unidad</th><th>Subtotal</th><th></th></tr>
               </thead>
               <tbody id="ingredientes-body"></tbody>
             </table>
+            </div>
             <button type="button" class="btn-secondary" onclick="agregarFilaIngrediente()" style="margin-top:10px;">
               <i class="ti ti-plus"></i> Agregar ingrediente
             </button>
@@ -122,6 +124,7 @@
     </form>
 
   </main>
+  <%- include('partials/mobile-nav', { path: 'recetas' }) %>
 </div>
 
 <style>
@@ -153,7 +156,7 @@
 @media (max-width: 900px) { .form-grid { grid-template-columns: 1fr; } }
 
 /* Tabla de ingredientes */
-.tabla-ingredientes { width: 100%; border-collapse: collapse; }
+.tabla-ingredientes { width: 100%; min-width: 480px; border-collapse: collapse; }
 .tabla-ingredientes th { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gris-texto); text-align: left; padding: 0 6px 8px; }
 .tabla-ingredientes td { padding: 4px 6px 4px 0; vertical-align: middle; }
 .tabla-ingredientes input, .tabla-ingredientes select { width: 100%; background: var(--gris-fondo); border: 1px solid var(--gris-borde); border-radius: 7px; padding: 7px 9px; font-family: var(--font-sans); font-size: 0.8rem; color: var(--negro); outline: none; }
@@ -167,6 +170,10 @@
 .fila-video select, .fila-video input[type="text"], .fila-foto select { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 7px; padding: 7px 9px; font-family: var(--font-sans); font-size: 0.78rem; color: var(--negro); outline: none; }
 .fila-video input[type="file"], .fila-foto input[type="file"] { font-size: 0.75rem; max-width: 180px; }
 .fila-foto-preview { font-size: 0.7rem; color: var(--gris-texto); font-style: italic; }
+
+@media (max-width: 600px) {
+  .form-card { padding: 16px; }
+}
 </style>
 
 <script>

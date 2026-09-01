@@ -169,6 +169,18 @@ input::placeholder, textarea::placeholder {
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+  /* .app-layout es un grid y .main-content es su celda: por default una
+     celda de grid/flex tiene min-width:auto, o sea que NUNCA se achica
+     más allá de lo que necesite su contenido más ancho — así que
+     cualquier tabla grande adentro (Miembro de equipo, Horarios, Costos,
+     etc., todas con min-width de 1000px+ para que las columnas no se
+     aprieten) empujaba TODA la página a ese ancho en vez de quedarse
+     quieta y dejar que solo esa tabla scrollee para el costado adentro
+     de su propio contenedor (.tabla-wrap, que ya tenía overflow-x:auto
+     puesto pero nunca llegaba a activarse por esto). Con min-width:0 acá,
+     la página se queda del ancho de la pantalla y cada tabla ancha
+     scrollea por separado, como estaba pensado desde el principio. */
+  min-width: 0;
 }
 
 /* ── Inicio ── */
@@ -188,8 +200,39 @@ input::placeholder, textarea::placeholder {
   color: var(--negro);
   line-height: 1.2;
   margin-bottom: 56px;
+  /* Entrada suave al cargar Inicio — mismo espíritu que el resto de los
+     retoques de esta sesión (glow del logo, botones AM/PM), pero acá bien
+     sutil: el fondo es claro y esto se ve todos los días, así que nada de
+     efectos grandes — un fade + un leve desplazamiento hacia arriba. */
+  opacity: 0;
+  transform: translateY(14px);
+  animation: inicioTituloEntrada 0.7s cubic-bezier(.22,1,.36,1) 0.1s forwards;
 }
-.inicio-titulo span { color: var(--azul); font-style: italic; }
+@keyframes inicioTituloEntrada {
+  to { opacity: 1; transform: translateY(0); }
+}
+.inicio-titulo span {
+  color: var(--azul);
+  font-style: italic;
+  position: relative;
+  display: inline-block;
+  /* Glow bien tenue en el mismo verde-azulado de marca que el logo del
+     login — acá casi no se nota a simple vista (fondo claro), es más un
+     "aura" que un efecto neón. */
+  text-shadow: 0 0 26px rgba(6, 147, 126, 0.22);
+}
+.inicio-titulo span::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 100%; bottom: -6px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--azul), transparent);
+  animation: inicioSubrayado 0.7s cubic-bezier(.22,1,.36,1) 0.7s forwards;
+}
+@keyframes inicioSubrayado {
+  to { right: 0; }
+}
 
 .inicio-grid {
   display: grid;
@@ -541,14 +584,6 @@ input::placeholder, textarea::placeholder {
   input, select, textarea {
     font-size: 16px !important;
     padding: 12px !important;
-  }
-
-  /* ── Modales: más ancho de pantalla disponible, en cualquier módulo ──
-     Aplica a TODO modal que siga la convención id="modal-xxx" ya usada
-     en toda la app (Personal, Costos, Recetas, Croutons, etc.) ── */
-  div[id^="modal-"] > div {
-    max-width: 94vw !important;
-    padding: 20px !important;
   }
 
   /* ── Clases utilitarias ── */

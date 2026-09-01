@@ -23,13 +23,13 @@
       </form>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="costos-plato-grid" style="display:grid;gap:20px;">
 
       <!-- Resumen del plato -->
       <div class="form-card">
         <p class="form-card-title"><i class="ti ti-chart-pie"></i> Resumen de costos</p>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div class="costos-plato-stats" style="display:grid;gap:12px;margin-bottom:20px;">
           <div style="background:var(--gris-fondo);border-radius:10px;padding:16px;text-align:center;">
             <p style="font-size:0.65rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px;">Costo total</p>
             <p style="font-size:1.5rem;font-weight:700;color:var(--azul);margin:0;">$<%= parseFloat(plato.costo_total).toFixed(2) %></p>
@@ -75,7 +75,7 @@
               <% }) %>
             </select>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div class="costos-plato-stats" style="display:grid;gap:10px;margin-bottom:12px;">
             <div class="field">
               <label>Cantidad</label>
               <input type="number" name="cantidad" placeholder="0" step="0.01" min="0" required>
@@ -101,6 +101,7 @@
       <div class="form-card" style="grid-column:1/-1;">
         <p class="form-card-title"><i class="ti ti-list"></i> Ingredientes del plato</p>
         <% if (ingredientes.length > 0) { %>
+        <div class="tabla-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
         <table class="tabla">
           <thead>
             <tr>
@@ -141,6 +142,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
         <% } else { %>
           <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;padding:16px 0;">Sin ingredientes todavía. Agregá el primero.</p>
         <% } %>
@@ -149,6 +151,7 @@
     </div>
 
   </main>
+  <%- include('partials/mobile-nav', { path: 'costos' }) %>
 </div>
 
 <style>
@@ -160,6 +163,20 @@
 .field input:focus { border-color:var(--azul);background:var(--blanco); }
 .btn-danger { background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-family:var(--font-sans);font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s; }
 .btn-danger:hover { background:#dc2626;color:#fff; }
+
+.costos-plato-grid{grid-template-columns:1fr 1fr;}
+.costos-plato-stats{grid-template-columns:1fr 1fr;}
+
+/* ── Responsive: celulares chicos (320-428px típicos) ── */
+@media (max-width: 600px) {
+  .costos-plato-grid{grid-template-columns:1fr !important;}
+}
+@media (max-width: 374px) {
+  /* Las 4 tarjetas de estadísticas (costo total, precio venta, margen,
+     porciones) quedan muy apretadas en 2 columnas en el celular más
+     angosto — pasan a una sola columna solo ahí. */
+  .costos-plato-stats{grid-template-columns:1fr !important;}
+}
 </style>
 
 </body>

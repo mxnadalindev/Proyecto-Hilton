@@ -55,6 +55,7 @@
       </div>
     </form>
   </main>
+  <%- include('partials/mobile-nav', { path: path }) %>
 </div>
 
 <style>
@@ -70,6 +71,10 @@
 .plato-item input{width:16px;height:16px;accent-color:var(--azul);flex-shrink:0;}
 .plato-nombre{flex:1;font-size:0.8rem;color:var(--negro);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .plato-costo{font-size:0.7rem;color:var(--gris-texto);flex-shrink:0;}
+
+@media (max-width: 600px) {
+  .form-card{padding:16px;}
+}
 </style>
 
 <script>

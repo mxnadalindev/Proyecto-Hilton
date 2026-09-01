@@ -28,36 +28,51 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+        <a href="/miembros-de-equipo" class="btn-secondary"><i class="ti ti-users"></i> Miembro de equipo</a>
 
-        <button type="button" class="btn-whatsapp" id="btn-enviar-whatsapp" onclick="enviarExcelPorWhatsapp()">
-          <i class="ti ti-brand-whatsapp" id="icon-whatsapp"></i> <span id="texto-whatsapp">Enviar</span>
-        </button>
-
-        <a href="/horarios/excel?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-excel">
-          <i class="ti ti-file-spreadsheet"></i> Excel
-        </a>
-        <form method="POST" action="/horarios/copiar-semana" style="margin:0;">
-          <input type="hidden" name="inicio_destino" value="<%= inicio %>">
-          <input type="hidden" name="fin_destino" value="<%= fin %>">
-          <button type="submit" class="btn-secondary" onclick="return confirm('¿Copiar los horarios del período anterior (misma duración) a este período?')">
-            <i class="ti ti-copy"></i> Copiar período anterior
+        <!-- "Otras opciones": agrupa Enviar / Excel / Copiar período anterior /
+             Reiniciar período en un desplegable — antes eran 4 botones sueltos
+             más "Menú principal", 5 en total, que en pantallas chicas se
+             amontonaban o se cortaban. Con esto quedan siempre 3 botones fijos
+             arriba (Menú principal, Miembro de equipo, Otras opciones). -->
+        <div class="menu-otras-opciones" style="position:relative;">
+          <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
+            <i class="ti ti-dots"></i> Otras opciones <i class="ti ti-chevron-down" style="font-size:12px;"></i>
           </button>
-        </form>
-        <% if (puedeReiniciar) { %>
-        <form method="POST" action="/horarios/reiniciar-semana" style="margin:0;">
-          <input type="hidden" name="inicio" value="<%= inicio %>">
-          <input type="hidden" name="fin" value="<%= fin %>">
-          <button type="submit" class="btn-secondary" style="color:#dc2626;border-color:#fecaca;"
-                  onclick="return confirm('¿Reiniciar todos los horarios de este período? Esta acción no se puede deshacer.')">
-            <i class="ti ti-trash"></i> Reiniciar período
-          </button>
-        </form>
-        <% } %>
+          <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
+            <button type="button" class="dropdown-otras-item dropdown-otras-item-whatsapp" id="btn-enviar-whatsapp" onclick="enviarExcelPorWhatsapp()">
+              <i class="ti ti-brand-whatsapp" id="icon-whatsapp"></i> <span id="texto-whatsapp">Enviar</span>
+            </button>
+            <a href="/horarios/excel?inicio=<%= inicio %>&fin=<%= fin %>" class="dropdown-otras-item dropdown-otras-item-excel">
+              <i class="ti ti-file-spreadsheet"></i> Excel (este período)
+            </a>
+            <a href="/horarios/excel-historial" class="dropdown-otras-item dropdown-otras-item-excel">
+              <i class="ti ti-history"></i> Descargar historial completo
+            </a>
+            <form method="POST" action="/horarios/copiar-semana" style="margin:0;">
+              <input type="hidden" name="inicio_destino" value="<%= inicio %>">
+              <input type="hidden" name="fin_destino" value="<%= fin %>">
+              <button type="submit" class="dropdown-otras-item" onclick="return confirm('¿Copiar los horarios del período anterior (misma duración) a este período?')">
+                <i class="ti ti-copy"></i> Copiar período anterior
+              </button>
+            </form>
+            <% if (puedeReiniciar) { %>
+            <form method="POST" action="/horarios/reiniciar-semana" style="margin:0;" id="form-reiniciar-periodo">
+              <input type="hidden" name="inicio" value="<%= inicio %>">
+              <input type="hidden" name="fin" value="<%= fin %>">
+              <button type="button" class="dropdown-otras-item dropdown-otras-item-danger"
+                      onclick="abrirModalReinicio()">
+                <i class="ti ti-trash"></i> Reiniciar período
+              </button>
+            </form>
+            <% } %>
+          </div>
+        </div>
       </div>
     </div>
 
     <%# Navegación %>
-    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:14px 20px;margin-bottom:20px;box-shadow:var(--sombra);">
+    <div class="horarios-periodo-nav" style="display:flex;align-items:center;justify-content:space-between;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:14px 20px;margin-bottom:20px;box-shadow:var(--sombra);">
       <a href="/horarios?inicio=<%= rangoAnterior.inicio %>&fin=<%= rangoAnterior.fin %>" class="btn-secondary" style="padding:6px 14px;">
         <i class="ti ti-chevron-left"></i> Período anterior
       </a>
@@ -100,8 +115,13 @@
     </div>
     <% } %>
 
-    <%# Grilla %>
-    <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--gris-borde);box-shadow:var(--sombra);">
+    <%# Grilla — tiene una columna fija por día del período (7 normalmente) más
+        Empleado/RECOFF, así que a lo ancho no entra en un celular sin perder
+        legibilidad. Se deja el scroll horizontal (ya lo tenía) y se agrega el
+        mismo aviso "deslizá" que usa Miembro de equipo, porque en una pantalla
+        angosta no se nota a simple vista que hay más días a la derecha. %>
+    <p class="aviso-scroll-tabla"><i class="ti ti-arrows-horizontal"></i> Deslizá hacia los costados para ver toda la semana</p>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:1px solid var(--gris-borde);box-shadow:var(--sombra);">
       <table id="tabla-horarios" style="width:100%;border-collapse:collapse;min-width:<%= 270 + dias.length * 120 %>px;">
         <thead>
           <tr style="background:#1e3a5f;">
@@ -180,6 +200,25 @@
   <%- include('partials/mobile-nav', { path: 'horarios' }) %>
 </div>
 
+<!-- Modal de confirmación (3 pasos) para "Reiniciar período" — reemplaza
+     los confirm() nativos del navegador (esos carteles grises feos que
+     dicen "localhost:5000 dice") por uno propio de la app, con el mismo
+     estilo que el resto de los modales del portal. -->
+<div id="modal-reiniciar-periodo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.2);text-align:center;">
+    <div style="width:64px;height:64px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <i class="ti ti-alert-triangle" style="font-size:32px;color:#dc2626;"></i>
+    </div>
+    <p id="modal-reinicio-titulo" style="font-size:1.05rem;font-weight:700;color:var(--negro);margin:0 0 8px;">Reiniciar período</p>
+    <p id="modal-reinicio-texto" style="font-size:0.85rem;color:var(--gris-texto);line-height:1.5;margin:0 0 4px;"></p>
+    <p id="modal-reinicio-paso" style="font-size:0.68rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#dc2626;margin:12px 0 20px;"></p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button type="button" class="btn-secondary" onclick="cerrarModalReinicio()">Cancelar</button>
+      <button type="button" id="btn-modal-reinicio-siguiente" class="btn-secondary" style="color:#dc2626;border-color:#fecaca;" onclick="pasoSiguienteReinicio()"></button>
+    </div>
+  </div>
+</div>
+
 <style>
 .btn-excel{display:inline-flex;align-items:center;gap:6px;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-sans);font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background 0.2s;}
 .btn-excel:hover{background:#15803d;}
@@ -190,6 +229,58 @@
 .celda-horario:hover{box-shadow:0 0 0 1px var(--azul) inset;}
 .celda-horario:focus{outline:none;}
 .recoff-solo-lectura{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;padding:0 8px;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:20px;font-size:0.75rem;font-weight:700;color:var(--negro);}
+
+/* ── "Otras opciones": desplegable con Enviar / Excel / Copiar período
+   anterior / Reiniciar período ── */
+.dropdown-otras-opciones{
+  display:none;
+  position:absolute; right:0; top:calc(100% + 6px); z-index:200;
+  background:var(--blanco); border:1px solid var(--gris-borde); border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.15);
+  min-width:230px; padding:6px;
+}
+.dropdown-otras-opciones.abierto{ display:flex; flex-direction:column; gap:2px; }
+.dropdown-otras-item{
+  display:flex; align-items:center; gap:8px; width:100%;
+  background:none; border:none; padding:9px 12px;
+  font-family:var(--font-sans); font-size:0.78rem; font-weight:500;
+  color:var(--negro); text-decoration:none; cursor:pointer;
+  border-radius:6px; text-align:left;
+}
+.dropdown-otras-item:hover{ background:var(--gris-fondo); }
+.dropdown-otras-item i{ font-size:15px; color:var(--gris-texto); flex-shrink:0; }
+.dropdown-otras-item-danger{ color:#dc2626; }
+.dropdown-otras-item-danger i{ color:#dc2626; }
+.dropdown-otras-item-danger:hover{ background:#fef2f2; }
+/* Mismos colores que tenían los botones sueltos de Enviar (WhatsApp) y
+   Excel antes de agruparse en este desplegable — para que se sigan
+   distinguiendo de un vistazo, no quedar todos iguales. */
+.dropdown-otras-item-whatsapp{ color:#128c53; }
+.dropdown-otras-item-whatsapp i{ color:#25D366; }
+.dropdown-otras-item-whatsapp:hover{ background:#f0fdf4; }
+.dropdown-otras-item-excel{ color:#15803d; }
+.dropdown-otras-item-excel i{ color:#16a34a; }
+.dropdown-otras-item-excel:hover{ background:#f0fdf4; }
+
+/* Aviso "deslizá" arriba de la grilla — solo se ve en pantallas chicas,
+   mismo patrón que en Miembro de equipo (personal.ejs). */
+.aviso-scroll-tabla{display:none;}
+
+/* ── Responsive: celulares chicos (320-428px típicos) ── */
+@media (max-width: 600px) {
+  /* La navegación de período (Anterior / fecha / Siguiente) no tenía
+     flex-wrap: en una pantalla angosta los dos botones + el texto del
+     medio no entran en una sola fila y se salen del contenedor. */
+  .horarios-periodo-nav{flex-wrap:wrap;justify-content:center;gap:10px;text-align:center;}
+  .horarios-periodo-nav > a{flex:1 1 auto;justify-content:center;}
+
+  .aviso-scroll-tabla{
+    display:flex;align-items:center;gap:6px;
+    font-size:0.72rem;color:var(--gris-texto);
+    background:var(--gris-fondo);border:1px solid var(--gris-borde);
+    border-radius:8px;padding:7px 10px;margin:0 0 8px;
+  }
+}
 </style>
 
 <script>
@@ -234,6 +325,55 @@ function moverFoco(input, dir) {
 document.querySelectorAll('.celda-horario').forEach(input => {
   aplicarColorCelda(input, input.value.toUpperCase());
   input.addEventListener('focus', function() { this.select(); });
+});
+
+// ── "Reiniciar período" borra datos y no se puede deshacer, así que pide
+// confirmar TRES VECES (con textos distintos en cada paso, para que no se
+// conteste todo con el mismo reflejo de "sí, sí, sí" sin leer) — con un
+// modal propio de la app en vez de los confirm() nativos del navegador.
+// Solo al llegar al paso 3 y tocar el botón final se manda el formulario.
+const PASOS_REINICIO = [
+  { texto: '¿Reiniciar todos los horarios de este período? Esta acción no se puede deshacer.', boton: 'Sí, continuar' },
+  { texto: 'Confirmá de nuevo: se van a BORRAR todos los horarios cargados en este período, para todos los empleados.', boton: 'Sí, entiendo' },
+  { texto: 'Última confirmación: esto no tiene vuelta atrás.', boton: 'Reiniciar ahora' },
+];
+let pasoReinicioActual = 0;
+
+function abrirModalReinicio() {
+  pasoReinicioActual = 0;
+  actualizarModalReinicio();
+  document.getElementById('modal-reiniciar-periodo').style.display = 'flex';
+}
+function cerrarModalReinicio() {
+  document.getElementById('modal-reiniciar-periodo').style.display = 'none';
+}
+function actualizarModalReinicio() {
+  const p = PASOS_REINICIO[pasoReinicioActual];
+  document.getElementById('modal-reinicio-texto').textContent = p.texto;
+  document.getElementById('modal-reinicio-paso').textContent = `Paso ${pasoReinicioActual + 1} de ${PASOS_REINICIO.length}`;
+  document.getElementById('btn-modal-reinicio-siguiente').textContent = p.boton;
+}
+function pasoSiguienteReinicio() {
+  pasoReinicioActual++;
+  if (pasoReinicioActual >= PASOS_REINICIO.length) {
+    document.getElementById('form-reiniciar-periodo').submit();
+    return;
+  }
+  actualizarModalReinicio();
+}
+
+// ── Desplegable "Otras opciones" ──
+function toggleOtrasOpciones(ev) {
+  ev.stopPropagation();
+  document.getElementById('dropdown-otras-opciones').classList.toggle('abierto');
+}
+// Cerrar el desplegable al tocar en cualquier otro lado de la página.
+document.addEventListener('click', (ev) => {
+  const dropdown = document.getElementById('dropdown-otras-opciones');
+  const boton = document.getElementById('btn-otras-opciones');
+  if (dropdown && dropdown.classList.contains('abierto') && !dropdown.contains(ev.target) && ev.target !== boton && !boton.contains(ev.target)) {
+    dropdown.classList.remove('abierto');
+  }
 });
 
 // ── Enviar por WhatsApp en formato Excel ──

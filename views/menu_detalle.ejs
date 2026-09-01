@@ -58,6 +58,7 @@
       <% } %>
     </div>
   </main>
+  <%- include('partials/mobile-nav', { path: path }) %>
 </div>
 
 <style>
@@ -71,6 +72,10 @@
 .btn-remove:hover{color:#991b1b;}
 .btn-danger{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-family:var(--font-sans);font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;}
 .btn-danger:hover{background:#dc2626;color:#fff;}
+
+@media (max-width: 600px) {
+  .form-card{padding:16px;}
+}
 </style>
 </body>
 </html>

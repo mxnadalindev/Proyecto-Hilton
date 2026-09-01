@@ -16,7 +16,7 @@
         <p class="seccion-label">Miembro de equipo</p>
         <h1 class="seccion-titulo">Horas de <%= empleado.nombre %></h1>
       </div>
-      <a href="/personal" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al equipo</a>
+      <a href="/miembros-de-equipo" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al equipo</a>
     </div>
 
     <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:24px 28px;margin-bottom:24px;box-shadow:var(--sombra);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
@@ -69,6 +69,7 @@
     </div>
     <% }) %>
   </main>
+  <%- include('partials/mobile-nav', { path: 'personal' }) %>
 </div>
 </body>
 </html>

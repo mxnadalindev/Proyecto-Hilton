@@ -253,6 +253,17 @@
   .form-grid { grid-template-columns: 1fr; }
   .field-row { grid-template-columns: 1fr 1fr; }
 }
+
+@media (max-width: 600px) {
+  .form-card { padding: 16px; }
+  /* Fila de "agregar plato/vajilla" (3 inputs + botón, sin flex-wrap):
+     en un celular angosto los inputs no se achican lo suficiente y la
+     fila se corta — se envuelve para que cada campo pase a su propia
+     línea si hace falta. */
+  .add-row { flex-wrap: wrap; }
+  .add-row input { flex: 1 1 100%; min-width: 0; }
+  .item-row { flex-wrap: wrap; }
+}
 </style>
 
 <script>
@@ -450,6 +461,7 @@ document.getElementById('vajilla-cantidad').addEventListener('keydown', e => { i
 </script>
 
   </main>
+  <%- include('partials/mobile-nav', { path: path }) %>
 </div>
 </body>
 </html>

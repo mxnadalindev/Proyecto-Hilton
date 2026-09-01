@@ -50,8 +50,8 @@ const init = async () => {
   `);
 
   // La columna "departamento" se usa para DOS cosas distintas: el código de
-  // departamento de acceso al portal ('cocina'/'ayb'/'compras'/'finanzas')
-  // en cuentas de login, y el SECTOR puntual (p.ej. 'Panadería', 'Bar') en
+  // departamento de acceso al portal ('cocina'/'ayb'/'compras') en cuentas
+  // de login, y el SECTOR puntual (p.ej. 'Panadería', 'Bar') en
   // los empleados cargados desde Personal. La migración vieja
   // (001_add_departamento.sql) le puso un CHECK que solo permitía los 4
   // códigos de departamento — eso rompe silenciosamente el alta de

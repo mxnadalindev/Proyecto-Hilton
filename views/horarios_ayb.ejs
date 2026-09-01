@@ -22,7 +22,7 @@
         <% // "Miembro de equipo" (con Vencimientos) es solo para quien gestiona
            // AYB (admin/supervisor) — un mozo común no debe verlo. %>
         <% if (esGestor) { %>
-        <a href="/personal" id="ayb-btn-ver-equipo" class="btn-secondary"><i class="ti ti-users"></i> Ver equipo</a>
+        <a href="/miembros-de-equipo" id="ayb-btn-ver-equipo" class="btn-secondary"><i class="ti ti-users"></i> Ver equipo</a>
         <% } %>
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
       </div>
@@ -59,10 +59,10 @@
       <i class="ti ti-info-circle"></i> Los días con eventos muestran cuántos mozos ya están anotados. Tocá cualquier día para cargar un evento nuevo en esa fecha.
     </div>
 
-    <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:28px;box-shadow:var(--sombra);display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap;">
+    <div class="ayb-panel-principal" style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;box-shadow:var(--sombra);display:flex;align-items:flex-start;flex-wrap:wrap;">
 
       <!-- Calendario -->
-      <div style="min-width:360px;flex:1.1;">
+      <div class="ayb-calendario" style="flex:1.1;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
           <button onclick="cMes(-1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:18px;">&#8249;</button>
           <span id="c-titulo" style="font-size:1.15rem;font-weight:600;color:var(--negro);"></span>
@@ -89,7 +89,7 @@
       </div>
 
       <!-- Formulario -->
-      <div id="ayb-form-mozo" style="flex:1;min-width:280px;padding-top:2px;">
+      <div id="ayb-form-mozo" class="ayb-form-mozo-wrap" style="flex:1;padding-top:2px;">
         <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 8px;">Días elegidos</p>
         <p style="font-size:1.3rem;font-weight:600;color:var(--negro);margin:0 0 20px;">
           <span id="c-cant-sel">0</span> día<span id="c-plural-sel">s</span>
@@ -194,6 +194,27 @@
 .c-nombre-dia{font-size:0.75rem;font-weight:600;color:var(--gris-texto);padding:6px 0;}
 .btn-whatsapp{display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-sans);font-size:0.68rem;font-weight:600;text-decoration:none;cursor:pointer;transition:background 0.2s;}
 .btn-whatsapp:hover{background:#1ea952;}
+
+/* Valores "de escritorio" para propiedades que antes estaban puestas como
+   estilo inline directo en el HTML — se movieron acá (mismo valor de
+   siempre) porque un estilo inline SIEMPRE le gana a una regla de este
+   bloque <style>, aunque la regla esté dentro de un @media que sí aplica
+   (ver el mismo comentario, más largo, en personal.ejs). */
+.ayb-panel-principal{padding:28px;gap:36px;}
+.ayb-calendario{min-width:360px;}
+.ayb-form-mozo-wrap{min-width:280px;}
+
+/* ── Responsive: celulares chicos (320-428px típicos) ── */
+@media (max-width: 600px) {
+  /* El calendario y el formulario de "días elegidos" tenían un ancho
+     mínimo (360px y 280px) que ya no entra en una pantalla de 320-375px
+     de ancho — sumados, ni siquiera entraban uno debajo del otro. En
+     mobile pasan a ocupar todo el ancho disponible, apilados. */
+  .ayb-panel-principal{padding:16px !important;gap:20px !important;}
+  .ayb-calendario{min-width:0 !important;width:100%;}
+  .ayb-form-mozo-wrap{min-width:0 !important;width:100%;}
+  .c-dia{padding:10px 2px;font-size:0.85rem;}
+}
 </style>
 
 <script>

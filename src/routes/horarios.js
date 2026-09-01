@@ -814,6 +814,106 @@ router.get('/excel', loginRequerido, async (req, res) => {
   res.end();
 });
 
+// ── GET /excel-historial ────────────────────────────
+// A diferencia de /excel (que baja solo el período que se está viendo en
+// pantalla), esto baja TODO lo que se cargó alguna vez en
+// horarios_semanales, sin importar el rango de fechas. Se armó como un
+// listado (una fila por cada empleado+día+valor cargado) en vez de la
+// grilla de /excel, a propósito: la grilla pone una columna por día, y con
+// meses o años de historial esa planilla terminaría siendo enorme e
+// imposible de leer. Un listado, en cambio, se puede ordenar y filtrar
+// en Excel (por nombre, por fecha, por tipo de estado) sin importar
+// cuántos años de datos tenga.
+router.get('/excel-historial', loginRequerido, async (req, res) => {
+  const empleados = await db.all2(`
+    SELECT id, nombre, puesto, departamento FROM usuarios WHERE departamento = ANY($1)
+    ORDER BY CASE departamento
+      WHEN 'Supervisores' THEN 1 WHEN 'Comis de Recepción' THEN 2
+      WHEN 'Panadería' THEN 3 WHEN 'Pastelería AM' THEN 4
+      WHEN 'Pastelería PM' THEN 5 WHEN 'Faro AM' THEN 6
+      WHEN 'Faro PM' THEN 7 WHEN 'Nocturno' THEN 8
+      WHEN 'BQTs Fríos' THEN 9 WHEN 'BQTs Calientes' THEN 10
+      WHEN 'Farolito' THEN 11 WHEN 'Cocina I+D' THEN 12
+      ELSE 99 END, nombre
+  `, [SECTORES]);
+  const empleadosMap = {};
+  empleados.forEach(e => { empleadosMap[e.id] = e; });
+
+  // Trae todo lo cargado para esta gente, sin filtro de fecha — es "todo
+  // el historial". Se hace en un solo pedido y se ordena en JS por
+  // sector/nombre/fecha, más simple que armar el mismo CASE de arriba
+  // otra vez dentro del ORDER BY de esta consulta.
+  const idsEmpleados = empleados.map(e => e.id);
+  const historialRaw = idsEmpleados.length
+    ? await db.all2(
+        `SELECT usuario_id, fecha::text, valor FROM horarios_semanales WHERE usuario_id = ANY($1)`,
+        [idsEmpleados]
+      )
+    : [];
+
+  const ordenSector = {};
+  SECTORES.forEach((s, i) => { ordenSector[s] = i; });
+  historialRaw.sort((a, b) => {
+    const ea = empleadosMap[a.usuario_id], eb = empleadosMap[b.usuario_id];
+    const oa = ordenSector[ea?.departamento] ?? 99, ob = ordenSector[eb?.departamento] ?? 99;
+    if (oa !== ob) return oa - ob;
+    if (ea?.nombre !== eb?.nombre) return (ea?.nombre || '').localeCompare(eb?.nombre || '');
+    return a.fecha.localeCompare(b.fecha);
+  });
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Historial');
+
+  ws.mergeCells('A1:E1');
+  const titulo = ws.getCell('A1');
+  titulo.value = `HISTORIAL COMPLETO DE HORARIOS — HILTON BUENOS AIRES — generado ${new Date().toLocaleDateString('es-AR')}`;
+  titulo.font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
+  titulo.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
+  titulo.alignment = { horizontal: 'center', vertical: 'middle' };
+  ws.getRow(1).height = 28;
+
+  const encRow = ws.addRow(['FECHA', 'SECTOR', 'NOMBRE', 'PUESTO', 'VALOR CARGADO']);
+  encRow.eachCell(c => {
+    c.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+    c.alignment = { horizontal: 'center', vertical: 'middle' };
+  });
+  ws.getRow(2).height = 22;
+
+  const colores = {
+    OFF:'FFFBBF24', VAC:'FFDC2626', RECOFF:'FF22C55E',
+    LIBRE:'FFDC2626', FERIADO:'FFDC2626', ART:'FFDC2626',
+    LICENCIA:'FFDC2626', CUMPLE:'FFDC2626', MUDANZA:'FFDC2626'
+  };
+
+  historialRaw.forEach(h => {
+    const emp = empleadosMap[h.usuario_id];
+    const row = ws.addRow([h.fecha, emp?.departamento || '', emp?.nombre || '', emp?.puesto || '', h.valor || '']);
+    row.eachCell((c, col) => {
+      c.font = { size: 10 };
+      c.alignment = { horizontal: col === 3 ? 'left' : 'center', vertical: 'middle' };
+      c.border = { bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+    });
+    const valCell = row.getCell(5);
+    const valUp = (h.valor || '').toString().toUpperCase();
+    if (colores[valUp]) {
+      valCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colores[valUp] } };
+      valCell.font = { bold: true, size: 10 };
+    }
+  });
+
+  ws.columns = [{ width: 13 }, { width: 20 }, { width: 26 }, { width: 18 }, { width: 16 }];
+  // Filtros en los encabezados, para que en Excel puedan filtrar por
+  // nombre, sector o tipo de estado sin tener que armar nada ellos.
+  ws.autoFilter = { from: 'A2', to: 'E2' };
+  ws.views = [{ state: 'frozen', ySplit: 2 }];
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename=historial_horarios_completo.xlsx`);
+  await wb.xlsx.write(res);
+  res.end();
+});
+
 // ── POST /reiniciar-semana ────────────────────────────
 // Solo supervisores y admins pueden borrar horarios ya cargados
 router.post('/reiniciar-semana', loginRequerido, async (req, res) => {

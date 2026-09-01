@@ -48,7 +48,7 @@ async function puedeGestionar(req) {
   return !!destino && destino.departamento === req.session.usuario.departamento;
 }
 
-const DEPTOS = ['cocina','ayb','compras','finanzas','sistema'];
+const DEPTOS = ['cocina','ayb','compras','sistema'];
 const SECTORES = ['Supervisores','Comis de Recepción','Panadería','Pastelería AM','Pastelería PM','Faro AM','Faro PM','Nocturno','BQTs Fríos','BQTs Calientes','Farolito','Cocina I+D'];
 const BACKUPS_DIR = path.join(__dirname, '../../backups');
 

@@ -16,12 +16,12 @@
         <p class="seccion-label">Miembro de equipo</p>
         <h1 class="seccion-titulo">Revisar mozos detectados</h1>
       </div>
-      <a href="/personal" class="btn-secondary"><i class="ti ti-arrow-left"></i> Cancelar y volver</a>
+      <a href="/miembros-de-equipo" class="btn-secondary"><i class="ti ti-arrow-left"></i> Cancelar y volver</a>
     </div>
 
     <% if (items.length === 0) { %>
       <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;color:#dc2626;">
-        No hay ninguna foto pendiente de revisión. <a href="/personal">Volver a Miembro de equipo</a>.
+        No hay ninguna foto pendiente de revisión. <a href="/miembros-de-equipo">Volver a Miembro de equipo</a>.
       </div>
     <% } else { %>
 
@@ -72,11 +72,12 @@
 
         <div style="margin-top:20px;display:flex;gap:12px;">
           <button type="submit" class="btn-primary"><i class="ti ti-check"></i> Cargar mozos tildados</button>
-          <a href="/personal" class="btn-secondary">Descartar todo</a>
+          <a href="/miembros-de-equipo" class="btn-secondary">Descartar todo</a>
         </div>
       </form>
     <% } %>
   </main>
+  <%- include('partials/mobile-nav', { path: 'personal' }) %>
 </div>
 </body>
 </html>
