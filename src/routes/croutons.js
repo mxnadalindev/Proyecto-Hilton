@@ -19,6 +19,7 @@ router.use((req, res, next) => {
 });
 const { analizarRemitoCroutons, mensajeErrorGemini } = require('../services/gemini');
 const { parsearCsvCroutons, importarLotesCroutons } = require('../services/importadorCroutons');
+const { registrar } = require('./auditoria');
 
 const storageRemito = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -398,6 +399,7 @@ router.post('/lote/nuevo', async (req, res) => {
     );
 
     await sincronizarCatalogoDesdeLote(producto, (req.body.unidad || 'unidad').trim(), codigoBarras, categoria);
+    await registrar(req, 'crear_lote_croutons', `${producto} — vence ${fechaVencimiento}`);
 
     res.redirect('/croutons?msg=' + encodeURIComponent('Lote agregado.'));
   } catch (e) {
@@ -439,6 +441,7 @@ router.post('/lote/:id/editar', async (req, res) => {
     );
 
     await sincronizarCatalogoDesdeLote(producto, (req.body.unidad || 'unidad').trim(), codigoBarras, categoria);
+    await registrar(req, 'editar_lote_croutons', `${producto} (lote #${req.params.id})`);
 
     res.redirect('/croutons?msg=' + encodeURIComponent('Lote actualizado.'));
   } catch (e) {
@@ -461,11 +464,15 @@ router.post('/lote/:id/cantidad', async (req, res) => {
 });
 
 // ── Marcar un lote como consumido (sale de la lista sin borrar el historial) ──
+// No pasa por auditoría a propósito (a diferencia de crear/editar) — el
+// motivo queda guardado en el propio lote, que ya se puede ver en el panel
+// de Consumidos.
 router.post('/lote/:id/consumir', async (req, res) => {
+  const motivo = (req.body.motivo || '').trim() || 'Sin especificar';
   try {
     await db.run2(
-      `UPDATE croutons_lotes SET estado='consumido', consumido_en=NOW(), actualizado_en=NOW() WHERE id=$1`,
-      [req.params.id]
+      `UPDATE croutons_lotes SET estado='consumido', consumido_en=NOW(), motivo_consumo=$2, actualizado_en=NOW() WHERE id=$1`,
+      [req.params.id, motivo]
     );
     res.redirect('/croutons?msg=' + encodeURIComponent('Lote marcado como consumido.'));
   } catch (e) {
@@ -653,6 +660,10 @@ router.post('/remito/aplicar', async (req, res) => {
 
     delete req.session.croutonsRemitoPendiente;
 
+    if (cargados > 0) {
+      await registrar(req, 'crear_lote_croutons', `${cargados} lote(s) desde remito (foto)`);
+    }
+
     let mensaje = `${cargados} lote(s) cargados desde la imagen.`;
     if (omitidos > 0) mensaje += ` ${omitidos} se omitieron por falta de producto o fecha de vencimiento.`;
     res.redirect('/croutons?msg=' + encodeURIComponent(mensaje));
@@ -677,6 +688,7 @@ router.post('/importar', uploadCsv.single('archivo_croutons'), async (req, res) 
     const resumen = await importarLotesCroutons(productos, proveedorPorDefecto, req.session.usuario.id);
 
     req.session.croutonsImportacionResumen = { ...resumen, totalProcesados: productos.length };
+    await registrar(req, 'crear_lote_croutons', `Importación CSV: ${productos.length} fila(s) procesadas${proveedorPorDefecto ? ' — ' + proveedorPorDefecto : ''}`);
     res.redirect('/croutons/importar/resultado');
   } catch (e) {
     console.error('Error importando croutons:', e.message);
