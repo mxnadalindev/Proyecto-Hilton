@@ -86,13 +86,6 @@
     </script>
     <% } %>
 
-    <!-- Buscador -->
-    <div style="position:relative;margin-bottom:16px;max-width:360px;">
-      <i class="ti ti-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
-      <input type="text" id="buscador-productos" oninput="filtrarProductos()" placeholder="Buscar producto..."
-             style="width:100%;padding:9px 12px 9px 34px;border:1px solid var(--gris-borde);border-radius:9px;font-family:var(--font-sans);font-size:0.83rem;outline:none;background:var(--blanco);color:var(--negro);">
-    </div>
-
     <!-- Resumen: tarjetas clickeables que filtran el listado de abajo -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:14px;">
       <a href="/croutons" style="text-decoration:none;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:12px;padding:16px;text-align:center;display:block;">
@@ -124,6 +117,15 @@
       </a>
     </div>
     <% } %>
+
+    <!-- Buscador: pegado al listado que filtra, no a las tarjetas — en el
+         celular, con el teclado abierto, así el resultado queda a la vista
+         en vez de quedar tapado más abajo de las tarjetas. -->
+    <div style="position:relative;margin-bottom:16px;max-width:360px;">
+      <i class="ti ti-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
+      <input type="text" id="buscador-productos" oninput="filtrarProductos()" placeholder="Buscar producto..."
+             style="width:100%;padding:9px 12px 9px 34px;border:1px solid var(--gris-borde);border-radius:9px;font-family:var(--font-sans);font-size:0.83rem;outline:none;background:var(--blanco);color:var(--negro);">
+    </div>
 
     <div class="panel-productos">
       <% if (productos.length === 0) { %>
@@ -195,7 +197,14 @@
 </div>
 
 <!-- Modal: detalle de lotes por producto (uno por cada producto del listado) -->
-<% productos.forEach((p, i) => { %>
+<% productos.forEach((p, i) => {
+  // Si TODOS los lotes de este producto están vencidos, no tiene sentido
+  // mostrar edición de stock mínimo/categoría (son config para la próxima
+  // reposición) ni el lápiz de editar un lote muerto — solo importa
+  // resolverlo (consumir/eliminar). Si tiene al menos un lote vigente o
+  // por vencer, se ve todo normal.
+  const productoVencido = !p.lotes.some(l => l.dias_para_vencer >= 0);
+%>
 <div id="modal-producto-<%= i %>" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:28px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:88vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
@@ -206,15 +215,22 @@
       Total: <%= p.totalLotes %> lote<%= p.totalLotes !== 1 ? 's' : '' %><% if (p.pesoTotalKg > 0) { %> · <%= p.pesoTotalKg.toFixed(2) %> kg<% } %>
     </p>
 
+    <% if (!productoVencido) { %>
     <!-- Stock mínimo para alerta de reposición — se guarda solo, sin recargar -->
     <div style="background:var(--azul-claro);border:1px solid var(--azul-borde);border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <i class="ti ti-shopping-cart" style="color:var(--azul);font-size:16px;flex-shrink:0;"></i>
       <label style="font-size:0.76rem;color:var(--azul);font-weight:600;white-space:nowrap;">Stock mínimo:</label>
-      <input type="number" min="0" step="1" placeholder="Sin definir"
-             value="<%= p.stockMinimo !== null ? p.stockMinimo : '' %>"
-             id="input-stock-minimo-<%= i %>"
-             onchange="guardarStockMinimo('<%= p.producto.replace(/'/g, "\\'") %>', this.value, <%= i %>)"
-             style="width:80px;border:1px solid var(--azul-borde);border-radius:7px;padding:6px 9px;font-size:0.82rem;outline:none;background:var(--blanco);color:var(--negro);">
+      <div style="display:flex;align-items:center;gap:4px;">
+        <button type="button" onclick="ajustarStockMinimo('<%= p.producto.replace(/'/g, "\\'") %>', <%= i %>, -1)"
+                style="width:28px;height:28px;border:1px solid var(--azul-borde);border-radius:7px;background:var(--blanco);color:var(--azul);font-size:1rem;font-weight:700;cursor:pointer;line-height:1;">−</button>
+        <input type="number" min="0" step="1" placeholder="Sin definir"
+               value="<%= p.stockMinimo !== null ? p.stockMinimo : '' %>"
+               id="input-stock-minimo-<%= i %>"
+               oninput="const est=document.getElementById('estado-guardado-minimo-<%= i %>'); if(est) est.textContent=''; clearTimeout(timersStockMinimo[<%= i %>]); const v=this.value; timersStockMinimo[<%= i %>]=setTimeout(()=>guardarStockMinimo('<%= p.producto.replace(/'/g, "\\'") %>', v, <%= i %>), 700);"
+               style="width:56px;text-align:center;border:1px solid var(--azul-borde);border-radius:7px;padding:6px 4px;font-size:0.82rem;outline:none;background:var(--blanco);color:var(--negro);">
+        <button type="button" onclick="ajustarStockMinimo('<%= p.producto.replace(/'/g, "\\'") %>', <%= i %>, 1)"
+                style="width:28px;height:28px;border:1px solid var(--azul-borde);border-radius:7px;background:var(--blanco);color:var(--azul);font-size:1rem;font-weight:700;cursor:pointer;line-height:1;">+</button>
+      </div>
       <span style="font-size:0.72rem;color:var(--azul);">(hoy: <%= p.stockActual %> <%= p.lotes[0] ? p.lotes[0].unidad : '' %>)</span>
       <span id="estado-guardado-minimo-<%= i %>" style="font-size:0.72rem;color:var(--azul);"></span>
     </div>
@@ -223,13 +239,20 @@
     <div style="background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <i class="ti ti-category" style="color:var(--gris-texto);font-size:16px;flex-shrink:0;"></i>
       <label style="font-size:0.76rem;color:var(--gris-texto);font-weight:600;white-space:nowrap;">Categoría:</label>
-      <input type="text" placeholder="General"
-             value="<%= p.categoria !== 'General' ? p.categoria : '' %>"
-             id="input-categoria-<%= i %>"
-             onchange="guardarCategoria('<%= p.producto.replace(/'/g, "\\'") %>', this.value, <%= i %>)"
-             style="width:140px;border:1px solid var(--gris-borde);border-radius:7px;padding:6px 9px;font-size:0.82rem;outline:none;background:var(--blanco);color:var(--negro);">
+      <select id="input-categoria-<%= i %>"
+              onchange="if (this.value === '__nueva__') { this.style.display='none'; document.getElementById('input-categoria-nueva-<%= i %>').style.display='inline-block'; document.getElementById('input-categoria-nueva-<%= i %>').focus(); } else { guardarCategoria('<%= p.producto.replace(/'/g, "\\'") %>', this.value, <%= i %>) }"
+              style="width:150px;border:1px solid var(--gris-borde);border-radius:7px;padding:6px 9px;font-size:0.82rem;outline:none;background:var(--blanco);color:var(--negro);">
+        <option value="" <%= (p.categoria === 'General' || !p.categoria) ? 'selected' : '' %>>General</option>
+        <% categoriasDisponibles.forEach(cat => { if (cat !== 'General') { %>
+        <option value="<%= cat %>" <%= p.categoria === cat ? 'selected' : '' %>><%= cat %></option>
+        <% } }) %>
+        <option value="__nueva__">+ Nueva categoría...</option>
+      </select>
+      <input type="text" placeholder="Nombre de la categoría" id="input-categoria-nueva-<%= i %>" style="display:none;width:140px;border:1px solid var(--gris-borde);border-radius:7px;padding:6px 9px;font-size:0.82rem;outline:none;background:var(--blanco);color:var(--negro);"
+             onchange="guardarCategoria('<%= p.producto.replace(/'/g, "\\'") %>', this.value, <%= i %>)">
       <span id="estado-guardado-categoria-<%= i %>" style="font-size:0.72rem;color:var(--gris-texto);"></span>
     </div>
+    <% } %>
 
     <p style="font-size:0.66rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--gris-texto);margin:0 0 8px;font-weight:600;">Lotes cargados</p>
 
@@ -259,6 +282,7 @@
         </p>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
+        <% if (!productoVencido) { %>
         <button type="button" class="btn-icono" title="Editar" onclick='abrirEditarLote(<%- JSON.stringify({
           id: l.id, producto: l.producto, cantidad: l.cantidad, unidad: l.unidad,
           peso: l.peso, unidad_peso: l.unidad_peso,
@@ -267,9 +291,8 @@
           proveedor: l.proveedor, lote_proveedor: l.lote_proveedor, notas: l.notas,
           categoria: p.categoria && p.categoria !== 'General' ? p.categoria : ''
         }) %>)'><i class="ti ti-pencil"></i></button>
-        <form method="POST" action="/croutons/lote/<%= l.id %>/consumir" style="display:inline;" onsubmit="return confirm('¿Marcar este lote como consumido?');">
-          <button type="submit" class="btn-icono" title="Marcar como consumido"><i class="ti ti-check"></i></button>
-        </form>
+        <% } %>
+        <button type="button" class="btn-icono" title="Marcar como consumido" onclick='abrirConsumirLote(<%= l.id %>, <%- JSON.stringify(l.producto) %>)'><i class="ti ti-check"></i></button>
         <form method="POST" action="/croutons/lote/<%= l.id %>/eliminar" style="display:inline;" onsubmit="return confirm('¿Eliminar este lote? Esta acción no se puede deshacer.');">
           <button type="submit" class="btn-icono" title="Eliminar" style="color:#dc2626;"><i class="ti ti-trash"></i></button>
         </form>
@@ -281,6 +304,28 @@
   </div>
 </div>
 <% }) %>
+
+<!-- Modal: Motivo de consumo (aparece antes de marcar un lote como consumido) -->
+<div id="modal-motivo-consumo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1100;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:28px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <h2 style="font-family:var(--font-serif);font-size:1.2rem;font-weight:400;margin:0 0 4px;">Marcar como consumido</h2>
+    <p id="texto-motivo-consumo" style="font-size:0.8rem;color:var(--gris-texto);margin:0 0 16px;"></p>
+    <form id="form-motivo-consumo" method="POST" action="">
+      <label style="font-size:0.78rem;font-weight:600;color:var(--gris-texto);display:block;margin-bottom:6px;">Motivo</label>
+      <select name="motivo" required style="width:100%;border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;background:var(--blanco);color:var(--negro);margin-bottom:18px;">
+        <option value="" disabled selected>Elegí un motivo</option>
+        <option value="Vencido">Vencido</option>
+        <option value="Rotura/daño">Rotura / daño</option>
+        <option value="Uso normal">Uso normal (consumido en servicio)</option>
+        <option value="Otro">Otro</option>
+      </select>
+      <div style="display:flex;gap:8px;">
+        <button type="button" onclick="hideModal('modal-motivo-consumo')" class="btn-secondary" style="flex:1;justify-content:center;">Cancelar</button>
+        <button type="submit" class="btn-primary" style="flex:1;justify-content:center;">Confirmar</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- Modal: Consumidos (papelera con restaurar) -->
 <div id="modal-consumidos" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
@@ -481,10 +526,12 @@
         </div>
         <div class="field">
           <label>Categoría (opcional)</label>
-          <input type="text" name="categoria" id="input-categoria-lote" list="lista-categorias" placeholder="Ej: Golosinas">
-          <datalist id="lista-categorias">
-            <% categoriasDisponibles.forEach(cat => { %><option value="<%= cat %>"><% }) %>
-          </datalist>
+          <select name="categoria" id="input-categoria-lote" onchange="manejarCategoriaLote(this)">
+            <option value="">General</option>
+            <% categoriasDisponibles.forEach(cat => { if (cat !== 'General') { %><option value="<%= cat %>"><%= cat %></option><% } }) %>
+            <option value="__nueva__">+ Nueva categoría...</option>
+          </select>
+          <input type="text" placeholder="Nombre de la categoría" id="input-categoria-lote-nueva" style="display:none;margin-top:6px;">
         </div>
         <div class="field" style="grid-column:1/-1;">
           <label>Notas (opcional)</label>
@@ -713,9 +760,38 @@ function filtrarProductos() {
 }
 
 // ── Modal Cargar/Editar lote: mismo formulario, dos modos ──
+function resetCategoriaLote() {
+  const select = document.getElementById('input-categoria-lote');
+  const nueva = document.getElementById('input-categoria-lote-nueva');
+  select.name = 'categoria';
+  select.style.display = '';
+  select.value = '';
+  nueva.name = '';
+  nueva.value = '';
+  nueva.style.display = 'none';
+}
+
+// Intercambia cuál de los dos campos (select o texto libre) es el que
+// realmente se manda en el POST como "categoria" — nunca los dos a la vez.
+function manejarCategoriaLote(select) {
+  const nueva = document.getElementById('input-categoria-lote-nueva');
+  if (select.value === '__nueva__') {
+    select.name = '';
+    nueva.name = 'categoria';
+    nueva.style.display = 'block';
+    nueva.focus();
+  } else {
+    select.name = 'categoria';
+    nueva.name = '';
+    nueva.value = '';
+    nueva.style.display = 'none';
+  }
+}
+
 function abrirNuevoLote() {
   const form = document.getElementById('form-lote');
   form.reset();
+  resetCategoriaLote();
   form.action = '/croutons/lote/nuevo';
   document.getElementById('titulo-modal-lote').textContent = 'Cargar lote';
   document.getElementById('btn-guardar-lote').innerHTML = '<i class="ti ti-plus"></i> Agregar lote';
@@ -728,6 +804,7 @@ function abrirNuevoLote() {
 function abrirEditarLote(datos) {
   const form = document.getElementById('form-lote');
   form.reset();
+  resetCategoriaLote();
   form.action = '/croutons/lote/' + datos.id + '/editar';
   document.getElementById('titulo-modal-lote').textContent = 'Editar lote';
   document.getElementById('btn-guardar-lote').innerHTML = '<i class="ti ti-device-floppy"></i> Guardar cambios';
@@ -752,6 +829,13 @@ function abrirEditarLote(datos) {
   showModal('modal-lote');
 }
 
+// ── Motivo de consumo (se pide antes de marcar un lote como consumido) ──
+function abrirConsumirLote(id, producto) {
+  document.getElementById('form-motivo-consumo').action = '/croutons/lote/' + id + '/consumir';
+  document.getElementById('texto-motivo-consumo').textContent = '¿Por qué se consumió "' + producto + '"?';
+  showModal('modal-motivo-consumo');
+}
+
 // ── Consumidos (papelera con restaurar) ──
 async function abrirConsumidos() {
   showModal('modal-consumidos');
@@ -772,7 +856,7 @@ async function abrirConsumidos() {
       <div style="background:var(--gris-fondo);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;" id="fila-consumido-${c.id}">
         <div style="min-width:0;">
           <p style="font-size:0.82rem;font-weight:600;color:var(--negro);margin:0 0 2px;">${c.producto} — ${c.cantidad} ${c.unidad}</p>
-          <p style="font-size:0.72rem;color:var(--gris-texto);margin:0;">Consumido hace ${c.dias_transcurridos} día${c.dias_transcurridos !== 1 ? 's' : ''} · se borra en ${c.dias_restantes} día${c.dias_restantes !== 1 ? 's' : ''}</p>
+          <p style="font-size:0.72rem;color:var(--gris-texto);margin:0;">Consumido hace ${c.dias_transcurridos} día${c.dias_transcurridos !== 1 ? 's' : ''} · se borra en ${c.dias_restantes} día${c.dias_restantes !== 1 ? 's' : ''}${c.motivo_consumo ? ' · ' + c.motivo_consumo : ''}</p>
         </div>
         <button type="button" class="btn-secondary" style="flex-shrink:0;padding:7px 11px;font-size:0.72rem;" onclick="restaurarLote(${c.id})">
           <i class="ti ti-arrow-back-up"></i> Restaurar
@@ -912,6 +996,25 @@ async function guardarCategoria(producto, valor, i) {
 }
 
 // ── Stock mínimo (alerta de reposición) ──
+const timersStockMinimo = {};
+function ajustarStockMinimo(producto, i, delta) {
+  const input = document.getElementById('input-stock-minimo-' + i);
+  const actual = input.value === '' ? 0 : (parseInt(input.value, 10) || 0);
+  const nuevo = Math.max(0, actual + delta);
+  input.value = nuevo;
+
+  // No guarda ni recarga en cada click — si no, con la recarga automática
+  // de guardarStockMinimo nunca se podría llegar al número deseado
+  // tocando varias veces seguidas. Espera una pausa de 700ms sin más
+  // clicks antes de guardar de verdad.
+  const estado = document.getElementById('estado-guardado-minimo-' + i);
+  if (estado) estado.textContent = '';
+  clearTimeout(timersStockMinimo[i]);
+  timersStockMinimo[i] = setTimeout(() => {
+    guardarStockMinimo(producto, nuevo, i);
+  }, 700);
+}
+
 async function guardarStockMinimo(producto, valor, i) {
   const estado = document.getElementById('estado-guardado-minimo-' + i);
   if (estado) estado.textContent = 'Guardando...';
