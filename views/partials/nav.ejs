@@ -68,6 +68,10 @@
   max-width:100%;
   overflow-x:auto;
   scrollbar-width:none;
+  /* .header ahora es una grilla de 3 columnas (logo | nav | usuario) para
+     que este pill quede realmente centrado en la pantalla, en vez de
+     depender de que el logo y el bloque de usuario midan lo mismo. */
+  justify-self:center;
 }
 .nav-pill::-webkit-scrollbar{ display:none; }
 .nav-item{

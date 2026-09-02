@@ -68,6 +68,17 @@ const HERRAMIENTAS = [{
       },
     },
     {
+      name: 'consultar_insumos_mas_usados',
+      description: 'Devuelve un ranking de los insumos que se usan en más platos del costeo (Costos → Platos). Útil para preguntas como "cuál es el producto que más se usa", "qué insumo aparece en más platos", "el ingrediente más usado en costeo de platos".',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          limite: { type: 'NUMBER', description: 'Cantidad de insumos a devolver en el ranking. Si no lo dice, usar 10.' },
+        },
+        required: [],
+      },
+    },
+    {
       name: 'actualizar_precio_insumo',
       description: 'ACCIÓN que modifica datos reales: actualiza el precio unitario de un insumo existente. Requiere confirmación del usuario antes de aplicarse.',
       parameters: {
@@ -188,6 +199,29 @@ async function ejecutarConsulta(nombre, args) {
       insumo: insumo.nombre, precio_actual: insumo.precio_unitario,
       total_recetas: recetas.length,
       recetas: recetas.map(r => ({ nombre: r.nombre, costo_total_actual: r.costo_total, cantidad_usada: r.cantidad, unidad: r.unidad })),
+    };
+  }
+
+  if (nombre === 'consultar_insumos_mas_usados') {
+    const limite = Number.isInteger(Number(args.limite)) && Number(args.limite) > 0
+      ? Math.min(Number(args.limite), 30) : 10;
+    const rows = await db.all2(`
+      SELECT i.nombre, i.precio_unitario,
+             COUNT(DISTINCT pi.plato_id)::int AS cantidad_platos,
+             SUM(pi.costo_parcial)::numeric AS costo_total_en_platos
+      FROM plato_insumos pi JOIN insumos i ON i.id = pi.insumo_id
+      GROUP BY i.nombre, i.precio_unitario
+      ORDER BY cantidad_platos DESC, costo_total_en_platos DESC
+      LIMIT $1
+    `, [limite]);
+    return {
+      total: rows.length,
+      ranking: rows.map(r => ({
+        insumo: r.nombre,
+        precio_actual: r.precio_unitario,
+        cantidad_platos_que_lo_usan: r.cantidad_platos,
+        costo_total_que_representa_en_esos_platos: r.costo_total_en_platos,
+      })),
     };
   }
 

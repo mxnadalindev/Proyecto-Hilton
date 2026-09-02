@@ -72,6 +72,24 @@ async function calcularVariacionPrecios(dias, tipo) {
   }
 }
 
+// Búsqueda en vivo de insumos (mientras el usuario escribe, sin Enter).
+// Existe por separado de GET '/' porque la pantalla principal solo carga
+// los primeros 200 insumos por defecto (para no traer toda la tabla de
+// una), así que filtrar en el navegador contra lo que ya está en pantalla
+// se quedaba corto: un insumo que no entrara en esos primeros 200 (por
+// orden de categoría/nombre) no aparecía nunca, aunque existiera. Esta
+// ruta sí consulta TODA la tabla, igual que la búsqueda con Enter de
+// siempre, solo que devuelve JSON en vez de renderizar la página entera.
+router.get('/insumos/buscar-vivo', loginRequerido, async (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (!q) return res.json({ insumos: [] });
+  const insumos = await db.all2(
+    "SELECT id, codigo, nombre, precio_unitario FROM insumos WHERE nombre ILIKE $1 OR codigo ILIKE $1 ORDER BY categoria, nombre LIMIT 200",
+    [`%${q}%`]
+  );
+  res.json({ insumos });
+});
+
 router.get('/', loginRequerido, async (req, res) => {
   const buscar = (req.query.buscar || '').trim();
   const letra  = (req.query.letra || '').trim().toUpperCase().slice(0, 1);
@@ -481,6 +499,21 @@ router.post('/factura', loginRequerido, upload.single('factura'), async (req, re
       const item = itemsDetectados[i];
       const { insumo: match, score } = buscarMatchInsumo(item.nombre, insumos);
 
+      // Si matcheó con un insumo existente, buscamos qué platos lo usan, para
+      // poder avisarle al usuario qué platos se verían afectados por este
+      // cambio de precio antes de que lo confirme (mismo dato que ya usa el
+      // bot en "consultar_recetas_por_insumo", reutilizado acá para que la
+      // pantalla de revisión muestre lo mismo sin tener que preguntarle al bot).
+      let platosAfectados = [];
+      if (match) {
+        const rows = await db.all2(`
+          SELECT p.nombre, p.costo_total
+          FROM plato_insumos pi JOIN platos_costo p ON p.id = pi.plato_id
+          WHERE pi.insumo_id = $1 ORDER BY p.nombre
+        `, [match.id]);
+        platosAfectados = rows.map(r => r.nombre);
+      }
+
       const fila = {
         idx: i,
         nombre_detectado: item.nombre,
@@ -491,7 +524,8 @@ router.post('/factura', loginRequerido, upload.single('factura'), async (req, re
         insumo_nombre: match ? match.nombre : null,
         precio_actual: match ? match.precio_unitario : null,
         sube: match ? item.precio_unitario > match.precio_unitario : null,
-        confianza: match ? Math.round(score * 100) : null
+        confianza: match ? Math.round(score * 100) : null,
+        platos_afectados: platosAfectados
       };
 
       const precioActual = match ? (parseFloat(match.precio_unitario) || 0) : null;

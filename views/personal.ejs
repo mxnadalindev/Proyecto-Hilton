@@ -725,54 +725,58 @@
 }
 .cal-nombre-dia{font-size:0.6rem;font-weight:600;color:var(--gris-texto);padding:4px 0;text-align:center;}
 
-/* Cartel "Horario cargado correctamente" con cocinerito animado */
+/* Cartel "Horario cargado correctamente" con cocinerito animado — ventana
+   centrada en el medio de la pantalla (antes era un cartelito abajo), con
+   el mismo verde que el botón "Cargar este rango" (var(--azul)). */
 #cartel-horario-guardado{
   position:fixed;
-  left:50%;
-  bottom:28px;
-  transform:translate(-50%, 20px);
+  inset:0;
   z-index:2000;
   display:flex;
   align-items:center;
-  gap:10px;
-  background:#16a34a;
-  color:#fff;
-  font-family:var(--font-sans);
-  font-size:0.85rem;
-  font-weight:600;
-  padding:12px 20px;
-  border-radius:999px;
-  box-shadow:0 10px 30px rgba(22,163,74,0.35);
+  justify-content:center;
+  padding:16px;
+  background:rgba(0,0,0,0);
   opacity:0;
   pointer-events:none;
-  transition:opacity 0.25s ease, transform 0.25s ease;
-  max-width:90vw;
+  transition:opacity 0.25s ease, background 0.25s ease;
 }
 #cartel-horario-guardado.mostrar{
   opacity:1;
-  transform:translate(-50%, 0);
+  pointer-events:auto;
+  background:rgba(0,0,0,0.35);
+}
+#cartel-horario-guardado .cartel-caja{
+  background:var(--azul);
+  color:#fff;
+  font-family:var(--font-sans);
+  font-size:0.95rem;
+  font-weight:600;
+  padding:30px 40px;
+  border-radius:18px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  text-align:center;
+  max-width:min(90vw, 340px);
+  transform:scale(0.85);
+  transition:transform 0.25s cubic-bezier(.22,1,.36,1);
+}
+#cartel-horario-guardado.mostrar .cartel-caja{
+  transform:scale(1);
 }
 .cartel-cocinerito{
-  font-size:1.4rem;
+  font-size:2.4rem;
   line-height:1;
   display:inline-block;
   animation:cocinerito-salto 0.6s ease-in-out infinite;
 }
 @keyframes cocinerito-salto{
   0%, 100%{ transform:translateY(0) rotate(0deg); }
-  30%{ transform:translateY(-7px) rotate(-8deg); }
+  30%{ transform:translateY(-9px) rotate(-8deg); }
   60%{ transform:translateY(0) rotate(6deg); }
-}
-@media (max-width: 480px){
-  #cartel-horario-guardado{
-    left:12px;
-    right:12px;
-    bottom:76px; /* arriba del mobile-nav para no taparse */
-    transform:translateY(20px);
-    max-width:none;
-    justify-content:center;
-  }
-  #cartel-horario-guardado.mostrar{ transform:translateY(0); }
 }
 </style>
 
@@ -1066,9 +1070,18 @@ function mostrarCartelHorarioGuardado() {
     cartel = document.createElement('div');
     cartel.id = 'cartel-horario-guardado';
     cartel.innerHTML = `
-      <span class="cartel-cocinerito">👨‍🍳</span>
-      <span>Horario cargado correctamente</span>
+      <div class="cartel-caja">
+        <span class="cartel-cocinerito">👨‍🍳</span>
+        <span>Horario cargado correctamente</span>
+      </div>
     `;
+    // Tocar afuera de la ventana (el fondo oscuro) la cierra antes de tiempo
+    cartel.addEventListener('click', (ev) => {
+      if (ev.target === cartel) {
+        clearTimeout(_timeoutCartelHorario);
+        cartel.classList.remove('mostrar');
+      }
+    });
     document.body.appendChild(cartel);
   }
   // Reinicia la animación aunque ya esté visible (por si se guardan varios seguidos)

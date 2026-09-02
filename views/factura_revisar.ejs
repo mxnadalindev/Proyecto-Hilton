@@ -40,7 +40,46 @@
         Gemini detectó <%= comparacion.length %> ítem(s) que necesitan tu confirmación. Tildá los que querés aplicar — solo se van a actualizar los insumos que ya existen en tu lista (los que no matchearon con ninguno quedan sin tildar y no se tocan).
       </p>
 
-      <form method="POST" action="/costos/factura/aplicar">
+      <%
+        // Armamos un resumen de qué platos usan los insumos detectados, para
+        // mostrarlo como un cartel de advertencia bien visible antes de la
+        // tabla (además del detalle por fila). Ojo: NO filtramos por si el
+        // precio efectivamente subió — Gemini puede detectar el mismo precio
+        // (0% de diferencia, por ejemplo en una factura repetida o de
+        // prueba) y aun así el usuario quiere saber qué platos usan ese
+        // insumo, para no llevarse una sorpresa el día que sí suba.
+        const platosUnicos = new Map(); // nombre plato -> [{insumo, pct}]
+        comparacion.forEach((item) => {
+          const tieneMatch = !!item.insumo_id;
+          if (!tieneMatch) return;
+          const dif = item.precio_detectado - item.precio_actual;
+          const pct = item.precio_actual > 0 ? ((dif / item.precio_actual) * 100) : null;
+          (item.platos_afectados || []).forEach((nombrePlato) => {
+            if (!platosUnicos.has(nombrePlato)) platosUnicos.set(nombrePlato, []);
+            platosUnicos.get(nombrePlato).push({ insumo: item.insumo_nombre, pct });
+          });
+        });
+      %>
+      <% if (platosUnicos.size > 0) { %>
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;color:#92400e;margin-bottom:14px;font-size:0.85rem;">
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <i class="ti ti-alert-triangle" style="font-size:1.1rem;margin-top:1px;"></i>
+            <div>
+              <strong>Este aumento te afecta en <%= platosUnicos.size %> plato(s):</strong>
+              <ul style="margin:8px 0 0;padding-left:18px;">
+                <% [...platosUnicos.entries()].forEach(([nombrePlato, insumos]) => { %>
+                  <li style="margin-bottom:3px;">
+                    <strong><%= nombrePlato %></strong>
+                    — por <%= insumos.map(i => i.insumo + (i.pct != null ? ' (' + (i.pct > 0 ? '+' : '') + i.pct.toFixed(1) + '%)' : '')).join(', ') %>
+                  </li>
+                <% }) %>
+              </ul>
+            </div>
+          </div>
+        </div>
+      <% } %>
+
+      <form method="POST" action="/costos/factura/aplicar" id="form-factura">
         <div class="tabla-wrap">
           <table class="tabla" style="width:100%;">
             <thead>
@@ -75,6 +114,15 @@
                 <td style="font-size:0.82rem;">
                   <% if (tieneMatch) { %>
                     <%= item.insumo_nombre %>
+                    <% if (item.platos_afectados && item.platos_afectados.length > 0) { %>
+                      <div style="font-size:0.68rem;color:#b45309;margin-top:3px;display:flex;align-items:flex-start;gap:3px;">
+                        <i class="ti ti-tools-kitchen-2" style="margin-top:1px;"></i>
+                        <span>
+                          Usado en <%= item.platos_afectados.length %> plato(s):
+                          <%= item.platos_afectados.slice(0, 3).join(', ') %><% if (item.platos_afectados.length > 3) { %> y <%= item.platos_afectados.length - 3 %> más<% } %>
+                        </span>
+                      </div>
+                    <% } %>
                   <% } else { %>
                     <span style="color:var(--gris-texto);font-style:italic;">Sin coincidencia — revisar a mano</span>
                   <% } %>
@@ -103,10 +151,136 @@
         </div>
 
         <div style="margin-top:20px;display:flex;gap:12px;">
-          <button type="submit" class="btn-primary"><i class="ti ti-check"></i> Aplicar cambios tildados</button>
+          <button type="button" class="btn-primary" onclick="intentarAplicar()"><i class="ti ti-check"></i> Aplicar cambios tildados</button>
           <a href="/costos" class="btn-secondary">Descartar todo</a>
         </div>
       </form>
+
+      <!-- Ventana emergente: antes de aplicar, si algún ítem tildado afecta
+           platos, se lo mostramos acá con un cartel de advertencia, en vez
+           de solo dejarlo como texto en la tabla — mismo estilo que el
+           modal de "Reiniciar período" en Horarios. -->
+      <div id="modal-platos-afectados" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+        <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:460px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+          <div style="text-align:center;">
+            <div style="width:64px;height:64px;border-radius:50%;background:#fffbeb;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+              <i class="ti ti-alert-triangle" style="font-size:32px;color:#b45309;"></i>
+            </div>
+            <p style="font-family:var(--font-serif);font-size:1.2rem;font-weight:600;margin-bottom:8px;">
+              Este aumento afecta <span id="modal-platos-titulo-cant">0</span> plato(s)
+            </p>
+            <p style="font-size:0.82rem;color:var(--gris-texto);margin-bottom:14px;">
+              Al confirmar, se va a recalcular el costo de estos platos:
+            </p>
+          </div>
+          <ul id="modal-platos-lista" style="text-align:left;font-size:0.82rem;margin:0 0 22px;padding-left:18px;color:var(--negro);"></ul>
+          <p id="modal-platos-texto-info" style="display:none;font-size:0.78rem;color:var(--gris-texto);margin:-14px 0 18px;">
+            Esto es solo un aviso — todavía no se aplicó ningún cambio. Revisá la tabla y confirmá cuando quieras.
+          </p>
+          <div style="display:flex;gap:10px;justify-content:center;">
+            <button type="button" id="btn-modal-platos-cancelar" class="btn-secondary" onclick="cerrarModalPlatos()">Cancelar</button>
+            <button type="button" id="btn-modal-platos-entendido" class="btn-secondary" style="display:none;" onclick="cerrarModalPlatos()">Entendido</button>
+            <button type="button" id="btn-modal-platos-confirmar" class="btn-primary" onclick="confirmarAplicarConPlatos()"><i class="ti ti-check"></i> Sí, aplicar cambios</button>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        // Mismos datos que ya calculamos en el servidor (idx, insumo,
+        // platos afectados, % de diferencia, si sube o no), pero en JSON
+        // para poder armar el cartel tanto apenas se carga la pantalla
+        // (con lo que Gemini detectó) como de nuevo, filtrado, justo antes
+        // de aplicar (con lo que el usuario efectivamente tildó).
+        const ITEMS_FACTURA = <%- JSON.stringify(comparacion.map((item) => {
+          const tieneMatch = !!item.insumo_id;
+          const diferencia = tieneMatch ? (item.precio_detectado - item.precio_actual) : null;
+          const porcentaje = tieneMatch && item.precio_actual > 0
+            ? Number(((diferencia / item.precio_actual) * 100).toFixed(1)) : null;
+          return {
+            idx: item.idx,
+            insumo_nombre: item.insumo_nombre,
+            platos_afectados: item.platos_afectados || [],
+            porcentaje,
+            sube: !!item.sube,
+          };
+        })).replace(/</g, '\\u003c') %>;
+
+        function calcularPlatosAfectados(idxsPermitidos) {
+          const platosMap = new Map(); // nombre del plato -> [{insumo, porcentaje}]
+          ITEMS_FACTURA.forEach((item) => {
+            if (idxsPermitidos && !idxsPermitidos.has(item.idx)) return;
+            (item.platos_afectados || []).forEach((nombrePlato) => {
+              if (!platosMap.has(nombrePlato)) platosMap.set(nombrePlato, []);
+              platosMap.get(nombrePlato).push({ insumo: item.insumo_nombre, porcentaje: item.porcentaje });
+            });
+          });
+          return platosMap;
+        }
+
+        function pintarListaPlatos(platosMap) {
+          const lista = document.getElementById('modal-platos-lista');
+          lista.innerHTML = '';
+          platosMap.forEach((insumos, nombrePlato) => {
+            const li = document.createElement('li');
+            li.style.marginBottom = '5px';
+            const strong = document.createElement('strong');
+            strong.textContent = nombrePlato;
+            li.appendChild(strong);
+            const detalle = insumos
+              .map((i) => i.insumo + (i.porcentaje != null ? ' (+' + i.porcentaje + '%)' : ''))
+              .join(', ');
+            li.appendChild(document.createTextNode(' — por ' + detalle));
+            lista.appendChild(li);
+          });
+          document.getElementById('modal-platos-titulo-cant').textContent = platosMap.size;
+        }
+
+        // modo 'info' = solo aviso apenas se detecta (botón "Entendido", no manda el form).
+        // modo 'confirm' = paso previo a aplicar (botones "Cancelar" / "Sí, aplicar cambios").
+        function mostrarModalPlatos(platosMap, modo) {
+          pintarListaPlatos(platosMap);
+          document.getElementById('btn-modal-platos-entendido').style.display = modo === 'info' ? 'inline-flex' : 'none';
+          document.getElementById('btn-modal-platos-cancelar').style.display = modo === 'confirm' ? 'inline-flex' : 'none';
+          document.getElementById('btn-modal-platos-confirmar').style.display = modo === 'confirm' ? 'inline-flex' : 'none';
+          document.getElementById('modal-platos-texto-info').style.display = modo === 'info' ? 'block' : 'none';
+          document.getElementById('modal-platos-afectados').style.display = 'flex';
+        }
+
+        function intentarAplicar() {
+          const marcados = new Set(
+            [...document.querySelectorAll('input[name="aplicar"]:checked')].map((cb) => parseInt(cb.value, 10))
+          );
+          const platosMap = calcularPlatosAfectados(marcados);
+          if (platosMap.size === 0) {
+            document.getElementById('form-factura').submit();
+            return;
+          }
+          mostrarModalPlatos(platosMap, 'confirm');
+        }
+
+        function cerrarModalPlatos() {
+          document.getElementById('modal-platos-afectados').style.display = 'none';
+        }
+
+        function confirmarAplicarConPlatos() {
+          cerrarModalPlatos();
+          document.getElementById('form-factura').submit();
+        }
+
+        // Apenas se carga la pantalla (recién detectado por Gemini), si algún
+        // insumo detectado se usa en algún plato, mostramos el cartel de una
+        // vez, sin esperar a que el usuario apriete "Aplicar cambios
+        // tildados". No filtramos por si el precio subió o no: incluso con
+        // 0% de diferencia (factura repetida, o una de prueba) sirve saber
+        // qué platos usan ese insumo.
+        window.addEventListener('DOMContentLoaded', () => {
+          const todosLosDetectados = new Set(ITEMS_FACTURA.map((item) => item.idx));
+          const platosMap = calcularPlatosAfectados(todosLosDetectados);
+          if (platosMap.size > 0) {
+            mostrarModalPlatos(platosMap, 'info');
+          }
+        });
+      </script>
     <% } %>
   </main>
   <%- include('partials/mobile-nav', { path: 'costos' }) %>

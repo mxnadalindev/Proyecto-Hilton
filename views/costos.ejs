@@ -155,7 +155,8 @@
       <div style="position:relative;margin-bottom:12px;">
         <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
         <form method="GET" action="/costos">
-          <input type="text" name="buscar" value="<%= buscar %>" placeholder="Buscar insumo por nombre o código..."
+          <input type="text" name="buscar" id="buscar-insumos-input" value="<%= buscar %>" placeholder="Buscar insumo por nombre o código..."
+                 oninput="filtrarInsumosEnVivo()"
                  style="width:100%;padding:8px 32px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
           <% if (buscar) { %>
           <a href="/costos#modal-lista-insumos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
@@ -163,20 +164,16 @@
         </form>
       </div>
 
-      <% if (buscar) { %>
-        <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;">
-          <%= totalInsumos %> resultado<%= totalInsumos !== 1 ? 's' : '' %> para "<%= buscar %>"
-        </p>
-      <% } %>
+      <p id="contador-resultados-insumos" style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;<%= buscar ? '' : 'display:none;' %>">
+        <%= totalInsumos %> resultado<%= totalInsumos !== 1 ? 's' : '' %> para "<%= buscar %>"
+      </p>
 
-      <% if (!buscar) { %>
-      <div class="solapas-letras">
+      <div id="solapas-letras-insumos" class="solapas-letras" style="<%= buscar ? 'display:none;' : '' %>">
         <a href="/costos" class="solapa-letra <%= !letra ? 'activa' : '' %>">Todos</a>
         <% 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => { %>
         <a href="/costos?letra=<%= l %>" class="solapa-letra <%= letra === l ? 'activa' : '' %>"><%= l %></a>
         <% }) %>
       </div>
-      <% } %>
 
       <div class="tabla-wrap">
         <table class="tabla" style="table-layout:fixed;">
@@ -191,10 +188,10 @@
               <th></th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="tabla-insumos-body">
             <% if (insumos.length > 0) { %>
               <% insumos.forEach(ins => { %>
-              <tr>
+              <tr data-nombre="<%= (ins.nombre || '').toLowerCase() %>" data-codigo="<%= (ins.codigo || '').toLowerCase() %>">
                 <td style="font-size:0.72rem;color:var(--gris-texto);font-family:monospace;"><%= ins.codigo || '—' %></td>
                 <td style="font-weight:500;">
                   <%= ins.nombre %>
@@ -239,6 +236,11 @@
                 <% } %>
               </td></tr>
             <% } %>
+            <tr id="fila-sin-resultados-js" style="display:none;">
+              <td colspan="4" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
+                No se encontraron insumos para "<span id="fila-sin-resultados-js-texto"></span>".
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -610,6 +612,110 @@ function showModal(id){
   setTimeout(()=>{const f=document.querySelector('#'+id+' input:not([type=hidden])');if(f)f.focus();},100);
 }
 function hideModal(id){ document.getElementById(id).style.display='none'; }
+
+// Búsqueda de insumos en vivo (sin esperar Enter ni recargar la página).
+// OJO: la pantalla principal solo trae los primeros 200 insumos por
+// defecto (para no cargar toda la tabla de una) — así que filtrar nomás
+// lo que ya está en el DOM se queda corto: un insumo fuera de esos
+// primeros 200 (por orden de categoría/nombre) no aparecía nunca, aunque
+// existiera de verdad. Por eso esto le pregunta al servidor (ruta
+// /costos/insumos/buscar-vivo) contra TODA la tabla, igual que hacía
+// antes el buscador con Enter — solo que ahora se dispara solo, con un
+// pequeño debounce para no mandar un pedido por cada letra tipeada.
+
+function escaparHtml(t) {
+  const div = document.createElement('div');
+  div.textContent = t == null ? '' : String(t);
+  return div.innerHTML;
+}
+
+function filaInsumoHtml(ins) {
+  const sinPrecio = !ins.precio_unitario || parseFloat(ins.precio_unitario) === 0;
+  return `
+    <tr>
+      <td style="font-size:0.72rem;color:var(--gris-texto);font-family:monospace;">${ins.codigo ? escaparHtml(ins.codigo) : '—'}</td>
+      <td style="font-weight:500;">
+        ${escaparHtml(ins.nombre)}
+        ${sinPrecio ? '<span style="display:inline-block;margin-left:6px;font-size:0.6rem;font-weight:700;background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:20px;">SIN PRECIO</span>' : ''}
+      </td>
+      <td>
+        <form method="POST" action="/costos/insumo/${ins.id}/precio" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+          <span style="font-size:0.78rem;color:var(--gris-texto);">$</span>
+          <input type="number" name="precio_nuevo" value="${ins.precio_unitario != null ? ins.precio_unitario : ''}" placeholder="Ej: 4500" step="0.01" min="0"
+                 style="width:80px;padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.82rem;outline:none;">
+          <button type="submit" class="btn-sm" style="padding:4px 8px;">✓</button>
+          <label title="El precio no baja solo — tildá esto solo si es una corrección real y querés bajarlo igual" style="display:flex;align-items:center;gap:3px;font-size:0.62rem;color:var(--gris-texto);cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" name="forzar_menor" value="1" style="width:11px;height:11px;accent-color:var(--rojo);">
+            Forzar
+          </label>
+        </form>
+      </td>
+      <td>
+        <form method="POST" action="/costos/insumo/${ins.id}/eliminar"
+              onsubmit="return confirm('¿Eliminar este insumo?')" style="margin:0;">
+          <button type="submit"
+                  style="background:var(--azul-claro);border:none;color:var(--azul);cursor:pointer;font-size:15px;padding:5px 8px;border-radius:6px;transition:all 0.2s;"
+                  title="Eliminar"
+                  onmouseover="this.style.background='#dc2626';this.style.color='#fff';"
+                  onmouseout="this.style.background='var(--azul-claro)';this.style.color='var(--azul)';">
+            <i class="ti ti-trash"></i>
+          </button>
+        </form>
+      </td>
+    </tr>
+  `;
+}
+
+// Guardamos el contenido original de la tabla (los primeros 200) para
+// restaurarlo tal cual cuando el usuario borra la búsqueda.
+let TBODY_INSUMOS_ORIGINAL = null;
+let _debounceInsumos = null;
+let _pedidoInsumosEnCurso = 0;
+
+function filtrarInsumosEnVivo() {
+  const input = document.getElementById('buscar-insumos-input');
+  const tbody = document.getElementById('tabla-insumos-body');
+  if (TBODY_INSUMOS_ORIGINAL === null) TBODY_INSUMOS_ORIGINAL = tbody.innerHTML;
+
+  const texto = input.value.trim();
+  const solapas = document.getElementById('solapas-letras-insumos');
+  const contador = document.getElementById('contador-resultados-insumos');
+
+  clearTimeout(_debounceInsumos);
+
+  if (!texto) {
+    // Buscador vacío: volvemos a mostrar la tabla como estaba al cargar la página.
+    tbody.innerHTML = TBODY_INSUMOS_ORIGINAL;
+    if (solapas) solapas.style.display = '';
+    if (contador) contador.style.display = 'none';
+    return;
+  }
+
+  if (solapas) solapas.style.display = 'none';
+
+  _debounceInsumos = setTimeout(async () => {
+    const idPedido = ++_pedidoInsumosEnCurso;
+    let data;
+    try {
+      const resp = await fetch('/costos/insumos/buscar-vivo?q=' + encodeURIComponent(texto));
+      data = await resp.json();
+    } catch (e) {
+      return; // sin conexión momentánea: dejamos lo último que había en pantalla
+    }
+    // Si mientras esperábamos la respuesta el usuario ya tipeó algo nuevo
+    // (y disparó otro pedido más reciente), descartamos esta respuesta vieja.
+    if (idPedido !== _pedidoInsumosEnCurso) return;
+
+    const insumos = data.insumos || [];
+    if (contador) {
+      contador.style.display = '';
+      contador.textContent = insumos.length + ' resultado' + (insumos.length !== 1 ? 's' : '') + ' para "' + texto + '"';
+    }
+    tbody.innerHTML = insumos.length > 0
+      ? insumos.map(filaInsumoHtml).join('')
+      : `<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">No se encontraron insumos para "${escaparHtml(texto)}".</td></tr>`;
+  }, 300);
+}
 
 // Si venimos de buscar o filtrar por letra, reabrir el modal correspondiente
 <% if (buscar || letra) { %>

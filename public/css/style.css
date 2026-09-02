@@ -84,9 +84,20 @@ input::placeholder, textarea::placeholder {
    HEADER — DESKTOP
    ══════════════════════════════ */
 .header {
-  display: flex;
+  /* Antes era "display:flex; justify-content:space-between" con 3 hijos
+     (logo, nav-pill, header-user). Eso solo centra el del medio (el nav)
+     cuando el bloque de la izquierda y el de la derecha miden exactamente
+     lo mismo de ancho — acá el logo "Hilton" es más angosto que el bloque
+     de la derecha (nombre de usuario + botón salir), así que el nav
+     quedaba corrido hacia la izquierda respecto del contenido de abajo
+     (que sí está centrado de verdad con margin:0 auto). Con una grilla de
+     3 columnas donde la del medio es "auto" y las de los costados son
+     "1fr" iguales, el nav queda centrado en la pantalla sin importar
+     cuánto midan el logo o el bloque de usuario. */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
   padding: 0 40px;
   height: var(--header-h);
   background: var(--blanco);
@@ -104,8 +115,9 @@ input::placeholder, textarea::placeholder {
   color: var(--azul);
   text-decoration: none;
   flex-shrink: 0;
+  justify-self: start;
 }
-.header-nav { display: flex; align-items: center; gap: 4px; }
+.header-nav { display: flex; align-items: center; gap: 4px; justify-self: center; }
 
 .nav-link {
   font-size: 0.65rem;
@@ -122,7 +134,7 @@ input::placeholder, textarea::placeholder {
 .nav-link:hover { background: var(--azul-claro); color: var(--azul); }
 .nav-link.activo { background: var(--azul); color: #ffffff; }
 
-.header-user { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.header-user { display: flex; align-items: center; gap: 10px; flex-shrink: 0; justify-self: end; }
 .user-name {
   font-size: 0.72rem;
   font-weight: 500;
