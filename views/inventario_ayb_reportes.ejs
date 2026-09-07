@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reportes de consumo — Inventario AYB — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <%- include('partials/nav', { path: 'inventario-ayb' }) %>
+
+  <main class="main-content main-content-ancho">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Alimentos y Bebidas</p>
+        <h1 class="seccion-titulo">Reportes de consumo</h1>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="/inventario-ayb" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al inventario</a>
+      </div>
+    </div>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:#dc2626;display:flex;align-items:center;gap:10px;">
+      <i class="ti ti-alert-circle" style="font-size:18px;"></i> <%= error %>
+    </div>
+    <% } %>
+
+    <!-- Navegación de mes — mismo patrón que el selector de período de Miembro de equipo -->
+    <div style="display:flex;align-items:center;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;margin-bottom:20px;box-shadow:var(--sombra);flex-wrap:wrap;gap:10px;padding:4px;">
+      <a href="/inventario-ayb/reportes?mes=<%= mesAnterior %>" class="btn-secondary" style="padding:6px 14px;">
+        <i class="ti ti-chevron-left"></i> Mes anterior
+      </a>
+      <div style="text-align:center;flex:1;">
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 2px;">Mes</p>
+        <p style="font-size:0.95rem;font-weight:600;color:var(--negro);margin:0;text-transform:capitalize;">
+          <%= new Date(mes+'-01T00:00:00').toLocaleDateString('es-AR',{month:'long',year:'numeric'}) %>
+        </p>
+      </div>
+      <a href="/inventario-ayb/reportes?mes=<%= mesSiguiente %>" class="btn-secondary" style="padding:6px 14px;<%= esMesActual ? 'opacity:0.4;pointer-events:none;' : '' %>">
+        Mes siguiente <i class="ti ti-chevron-right"></i>
+      </a>
+    </div>
+
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.8rem;color:#1d4ed8;display:flex;align-items:center;gap:8px;">
+      <i class="ti ti-info-circle"></i>
+      "Consumido" es todo lo que se restó del stock en el mes. "Repuesto" es todo lo que se sumó (mercadería recibida). Las correcciones por "Fijar" (recuentos manuales) se muestran aparte — no son ni consumo ni reposición.
+    </div>
+
+    <!-- Resumen del mes -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;">
+      <div style="background:rgba(6,147,126,0.12);border:1px solid rgba(6,147,126,0.3);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+        <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= filas.length %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Producto<%= filas.length !== 1 ? 's' : '' %> con movimiento</p>
+      </div>
+      <div style="background:rgba(0,47,97,0.10);border:1px solid rgba(0,47,97,0.26);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+        <p style="font-size:1.8rem;font-weight:700;color:#dc2626;margin:0;"><%= totales.consumido.toLocaleString('es-AR',{maximumFractionDigits:2}) %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Total consumido</p>
+      </div>
+      <div style="background:rgba(6,147,126,0.12);border:1px solid rgba(6,147,126,0.3);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+        <p style="font-size:1.8rem;font-weight:700;color:#16a34a;margin:0;"><%= totales.repuesto.toLocaleString('es-AR',{maximumFractionDigits:2}) %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Total repuesto</p>
+      </div>
+      <div style="background:rgba(0,47,97,0.10);border:1px solid rgba(0,47,97,0.26);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+        <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= totales.movimientos %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Movimiento<%= totales.movimientos !== 1 ? 's' : '' %> cargados</p>
+      </div>
+    </div>
+
+    <% if (filas.length === 0) { %>
+    <div style="text-align:center;padding:60px 20px;color:var(--gris-texto);">
+      <i class="ti ti-clipboard-off" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+      No hubo ningún ajuste de stock cargado este mes.
+    </div>
+    <% } else { %>
+    <div class="tabla-wrap">
+      <table class="tabla" style="width:100%;">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Consumido</th>
+            <th>Repuesto</th>
+            <th>Corrección (Fijar)</th>
+            <th>Movimientos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% filas.forEach(f => { %>
+          <tr>
+            <td style="font-weight:600;"><%= f.nombre %></td>
+            <td><%= f.categoria || '—' %></td>
+            <td style="color:#dc2626;font-weight:600;"><%= Number(f.consumido).toLocaleString('es-AR',{maximumFractionDigits:2}) %> <span style="font-weight:400;color:var(--gris-texto);font-size:0.75em;"><%= f.unidad_default || '' %></span></td>
+            <td style="color:#16a34a;font-weight:600;"><%= Number(f.repuesto).toLocaleString('es-AR',{maximumFractionDigits:2}) %> <span style="font-weight:400;color:var(--gris-texto);font-size:0.75em;"><%= f.unidad_default || '' %></span></td>
+            <td style="<%= Number(f.correccion_neta) !== 0 ? 'color:#b45309;font-weight:600;' : 'color:var(--gris-texto);' %>">
+              <%= Number(f.correccion_neta) > 0 ? '+' : '' %><%= Number(f.correccion_neta).toLocaleString('es-AR',{maximumFractionDigits:2}) %>
+            </td>
+            <td><%= f.movimientos %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+
+  </main>
+</div>
+</body>
+</html>

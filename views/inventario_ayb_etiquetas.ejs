@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Etiquetas QR — Inventario AYB</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    body{background:var(--gris-fondo);}
+    .etiquetas-barra{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:var(--blanco);border-bottom:1px solid var(--gris-borde);}
+    .etiquetas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;padding:24px;}
+    .etiqueta{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:14px;text-align:center;break-inside:avoid;}
+    .etiqueta img{width:100%;max-width:150px;height:auto;margin:0 auto 8px;display:block;}
+    .etiqueta p{margin:0;font-size:0.78rem;font-weight:600;color:var(--negro);}
+    .etiqueta span{font-size:0.66rem;color:var(--gris-texto);}
+    @media print {
+      .etiquetas-barra{display:none;}
+      .etiquetas-grid{padding:0;}
+      .etiqueta{border:1px dashed #999;}
+    }
+  </style>
+</head>
+<body>
+  <div class="etiquetas-barra">
+    <div>
+      <p style="font-family:var(--font-serif);font-size:1.2rem;font-weight:400;margin:0;">Etiquetas QR — Inventario AYB</p>
+      <p style="font-size:0.75rem;color:var(--gris-texto);margin:2px 0 0;">Escaneá una con el celular para ajustar rápido el stock de ese producto.</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <a href="/inventario-ayb" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver</a>
+      <button onclick="window.print()" class="btn-primary"><i class="ti ti-printer"></i> Imprimir</button>
+    </div>
+  </div>
+
+  <% if (productos.length === 0) { %>
+  <div style="padding:40px;text-align:center;color:var(--gris-texto);">No hay productos activos todavía.</div>
+  <% } else { %>
+  <div class="etiquetas-grid">
+    <% productos.forEach(p => {
+      const url = origen + '/inventario-ayb/producto/' + p.id + '/ajustar';
+      const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+    %>
+    <div class="etiqueta">
+      <img src="<%= qrSrc %>" alt="QR <%= p.nombre %>" loading="lazy">
+      <p><%= p.nombre %></p>
+      <% if (p.categoria) { %><span><%= p.categoria %></span><% } %>
+    </div>
+    <% }) %>
+  </div>
+  <% } %>
+</body>
+</html>

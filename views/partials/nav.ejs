@@ -25,6 +25,14 @@
       <a href="/costos" class="nav-item <%= (typeof path !== 'undefined' && path === 'costos') ? 'activo' : '' %>" title="Costos">
         <i class="ti ti-coin" aria-hidden="true"></i><span class="nav-label">Costos</span>
       </a>
+      <% // Horas extra es solo para admin (carga de datos sensibles pensados
+         // para liquidación) — a diferencia del resto de los ítems de acá
+         // arriba, que ve cualquier persona de Cocina. %>
+      <% if (_r === 'admin') { %>
+      <a href="/horas-extra" class="nav-item <%= (typeof path !== 'undefined' && path === 'horas-extra') ? 'activo' : '' %>" title="Horas extra">
+        <i class="ti ti-clock-plus" aria-hidden="true"></i><span class="nav-label">Horas extra</span>
+      </a>
+      <% } %>
     <% } %>
     <% if (_d === 'ayb') { %>
       <% // Miembro de equipo y Croutons son solo para quien gestiona AYB
@@ -40,6 +48,12 @@
       <% if (_r === 'admin' || _r === 'supervisor') { %>
       <a href="/croutons" class="nav-item <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>" title="Croutons">
         <i class="ti ti-package" aria-hidden="true"></i><span class="nav-label">Croutons</span>
+      </a>
+      <a href="/inventario-ayb" class="nav-item <%= (typeof path !== 'undefined' && path === 'inventario-ayb') ? 'activo' : '' %>" title="Inventario">
+        <i class="ti ti-bottle" aria-hidden="true"></i><span class="nav-label">Inventario</span>
+      </a>
+      <a href="/costos" class="nav-item <%= (typeof path !== 'undefined' && path === 'costos') ? 'activo' : '' %>" title="Costos">
+        <i class="ti ti-coin" aria-hidden="true"></i><span class="nav-label">Costos</span>
       </a>
       <% } %>
     <% } %>
@@ -60,11 +74,15 @@
 /* ── Barra de navegación tipo "pill", navy sobre fondo claro, resaltado verde ── */
 .nav-pill{
   display:flex; align-items:center; gap:5px;
-  background:var(--blanco);
-  border:1px solid var(--gris-borde);
+  /* Vidrio verde translúcido a juego con el nuevo fondo del header (mismo
+     verde de marca que el login), en vez del blanco liso de antes. */
+  background:rgba(255,255,255,0.55);
+  border:1px solid rgba(6,147,126,0.3);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
   border-radius:999px;
   padding:5px;
-  box-shadow:var(--sombra);
+  box-shadow:0 4px 16px rgba(6,147,126,0.14);
   max-width:100%;
   overflow-x:auto;
   scrollbar-width:none;
@@ -86,8 +104,19 @@
 .nav-item i{ font-size:17px; }
 .nav-item:hover,
 .nav-item.activo{
-  background:var(--azul);
+  /* Antes usaba var(--azul) a pleno (#06937e) y después un verde sólido
+     más claro (#1fab8f) — a pedido, ahora también translúcido/vidrio como
+     el resto de la barra, en vez de un color sólido posado encima. */
+  background:rgba(6,147,126,0.68);
+  -webkit-backdrop-filter:blur(4px);
+  backdrop-filter:blur(4px);
   color:#fff;
+}
+.nav-item.activo{
+  /* Brillito extra en el ícono de la sección activa, mismo verde-teal que
+     el resto del retoque — para que se note más cuál es la pantalla en la
+     que estás parado. */
+  box-shadow:0 0 0 3px rgba(6,147,126,0.22), 0 0 16px rgba(63,224,190,0.6);
 }
 .nav-item-salir:hover{
   background:var(--rojo);
@@ -216,7 +245,7 @@
     <button class="asistente-cerrar" onclick="toggleAsistente()"><i class="ti ti-x"></i></button>
   </div>
   <div class="asistente-mensajes" id="asistenteMensajes">
-    <div class="asistente-msg bot">Hola 👋 Puedo consultar insumos sin precio, quién trabaja tal día, actualizar precios o asignar/quitar RECOFF. ¿En qué te ayudo?</div>
+    <div class="asistente-msg bot">Hola 👋 Puedo consultar insumos sin precio, quién trabaja tal día, stock de Inventario AYB, horas extra de Cocina (admin), actualizar precios o asignar/quitar RECOFF. ¿En qué te ayudo?</div>
   </div>
   <div class="asistente-input-row">
     <input type="text" id="asistenteInput" placeholder="Escribí tu consulta..." onkeydown="if(event.key==='Enter')enviarMensajeAsistente()">
@@ -293,4 +322,22 @@ async function enviarMensajeAsistente(textoForzado) {
     agregarMensajeAsistente('No pude conectarme. Probá de nuevo.', 'bot');
   }
 }
+
+// Abrir el asistente solo (sin apretar la burbuja) para admin, una vez por
+// sesión del navegador — pensado para que se abra apenas entra al iniciar
+// sesión, sin forzarlo de nuevo en cada página si ya lo cerró a mano.
+(function () {
+  const esAdmin = <%= (typeof usuario !== 'undefined' && usuario && (usuario.rol || '').toLowerCase() === 'admin') ? 'true' : 'false' %>;
+  if (!esAdmin) return;
+  try {
+    if (sessionStorage.getItem('asistente_auto_abierto')) return;
+    sessionStorage.setItem('asistente_auto_abierto', '1');
+  } catch (e) { /* si el navegador bloquea sessionStorage, simplemente no se auto-abre */ }
+  const panel = document.getElementById('asistentePanel');
+  const burbuja = document.getElementById('asistenteBurbuja');
+  if (panel && burbuja && !panel.classList.contains('abierto')) {
+    panel.classList.add('abierto');
+    burbuja.classList.add('oculta-pulso');
+  }
+})();
 </script>

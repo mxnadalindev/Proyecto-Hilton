@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Importación de productos — Inventario AYB — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <%- include('partials/nav', { path: 'inventario-ayb' }) %>
+
+  <main class="main-content main-content-ancho">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Alimentos y Bebidas</p>
+        <h1 class="seccion-titulo">Resultado de la importación</h1>
+      </div>
+      <a href="/inventario-ayb" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al inventario</a>
+    </div>
+
+    <% if (!resumen) { %>
+      <div style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.28);border-radius:10px;padding:16px;color:#dc2626;">
+        No hay ninguna importación reciente para mostrar. <a href="/inventario-ayb">Volver al inventario</a>.
+      </div>
+    <% } else { %>
+
+      <p style="font-size:0.85rem;color:var(--gris-texto);margin-bottom:20px;">
+        <%= resumen.totalProcesados %> fila(s) procesadas del archivo.
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;">
+        <div style="background:rgba(6,147,126,0.12);border:1px solid rgba(6,147,126,0.3);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= resumen.nuevos %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Producto<%= resumen.nuevos !== 1 ? 's' : '' %> nuevo<%= resumen.nuevos !== 1 ? 's' : '' %></p>
+        </div>
+        <div style="background:rgba(0,47,97,0.10);border:1px solid rgba(0,47,97,0.26);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= resumen.yaExistian %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Ya existían (sin tocar)</p>
+        </div>
+        <% if (resumen.combinadosDeVariasHojas > 0) { %>
+        <div style="background:rgba(0,47,97,0.10);border:1px solid rgba(0,47,97,0.26);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= resumen.combinadosDeVariasHojas %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">En más de una hoja (stock sumado)</p>
+        </div>
+        <% } %>
+        <% if (resumen.sinNombre > 0) { %>
+        <div style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:#dc2626;margin:0;"><%= resumen.sinNombre %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#dc2626;margin:4px 0 0;">Fila<%= resumen.sinNombre !== 1 ? 's' : '' %> sin nombre (omitidas)</p>
+        </div>
+        <% } %>
+      </div>
+
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:0.8rem;color:#1d4ed8;display:flex;align-items:center;gap:8px;">
+        <i class="ti ti-info-circle"></i>
+        Los productos nuevos se cargaron con el stock y el mínimo que traía el archivo (0 si no traía ninguno) — revisalos y ajustalos si hace falta desde "Ajustar" en cada uno.
+      </div>
+
+      <% if (resumen.hojasOmitidas && resumen.hojasOmitidas.length > 0) { %>
+      <div style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.28);border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:0.8rem;color:#dc2626;display:flex;align-items:center;gap:8px;">
+        <i class="ti ti-alert-circle"></i>
+        No se pudo reconocer una columna de nombre de producto en <%= resumen.hojasOmitidas.length %> hoja(s) del archivo, así que no se leyeron: <strong><%= resumen.hojasOmitidas.join(', ') %></strong>.
+      </div>
+      <% } %>
+
+      <% if (resumen.nuevos > 0) { %>
+      <p style="margin-top:20px;">
+        <a href="/inventario-ayb" class="btn-primary"><i class="ti ti-list"></i> Ver el inventario actualizado</a>
+      </p>
+      <% } %>
+
+    <% } %>
+  </main>
+</div>
+</body>
+</html>

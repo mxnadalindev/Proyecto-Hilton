@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Necesidad semanal — Inventario AYB — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <%- include('partials/nav', { path: 'inventario-ayb' }) %>
+
+  <main class="main-content main-content-ancho">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Alimentos y Bebidas</p>
+        <h1 class="seccion-titulo">Necesidad semanal</h1>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="/inventario-ayb" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al inventario</a>
+        <a href="/inventario-ayb/necesidad-semanal/excel" class="btn-primary"><i class="ti ti-file-spreadsheet"></i> Descargar Excel</a>
+      </div>
+    </div>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:#dc2626;display:flex;align-items:center;gap:10px;">
+      <i class="ti ti-alert-circle" style="font-size:18px;"></i> <%= error %>
+    </div>
+    <% } %>
+
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.8rem;color:#1d4ed8;display:flex;align-items:center;gap:8px;">
+      <i class="ti ti-info-circle"></i>
+      Lista sugerida, no un pedido formal: para cada producto suma lo que falta para volver al mínimo, más el promedio de lo consumido por semana en las últimas 4 semanas — así alcanza para cubrir también la semana que viene. Los productos en rojo ya están en o por debajo del mínimo cargado.
+    </div>
+
+    <% if (necesidad.length === 0) { %>
+    <div style="text-align:center;padding:60px 20px;color:var(--gris-texto);">
+      <i class="ti ti-clipboard-check" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+      No hay ningún producto con necesidad de reposición esta semana.
+    </div>
+    <% } else { %>
+    <div class="tabla-wrap">
+      <table class="tabla" style="width:100%;">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Stock actual</th>
+            <th>Mínimo</th>
+            <th>Consumo semanal (prom.)</th>
+            <th>Cantidad sugerida</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% necesidad.forEach(f => { %>
+          <tr style="<%= f.urgente ? 'background:rgba(220,38,38,0.08);' : '' %>">
+            <td style="font-weight:600;">
+              <%= f.nombre %>
+              <% if (f.urgente) { %><span style="margin-left:6px;font-size:0.68rem;font-weight:700;color:#dc2626;letter-spacing:0.04em;">URGENTE</span><% } %>
+            </td>
+            <td><%= f.categoria || '—' %></td>
+            <td><%= f.stockActual.toLocaleString('es-AR',{maximumFractionDigits:2}) %> <span style="color:var(--gris-texto);font-size:0.75em;"><%= f.unidad || '' %></span></td>
+            <td><%= f.stockMinimo != null ? f.stockMinimo.toLocaleString('es-AR',{maximumFractionDigits:2}) : '—' %></td>
+            <td><%= f.consumoSemanal.toLocaleString('es-AR',{maximumFractionDigits:2}) %> <span style="color:var(--gris-texto);font-size:0.75em;"><%= f.unidad || '' %></span></td>
+            <td style="font-weight:700;color:<%= f.urgente ? '#dc2626' : 'var(--azul)' %>;">
+              <%= f.cantidadSugerida.toLocaleString('es-AR',{maximumFractionDigits:2}) %> <span style="font-weight:400;color:var(--gris-texto);font-size:0.75em;"><%= f.unidad || '' %></span>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+
+  </main>
+</div>
+</body>
+</html>

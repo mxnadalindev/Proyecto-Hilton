@@ -9,6 +9,22 @@ const crypto = require('crypto');
 const ExcelJS = require('exceljs');
 router.use(loginRequerido, requiereDepartamento('/costos'));
 const { analizarFactura, mensajeErrorGemini } = require('../services/gemini');
+
+// Costos ahora es compartido entre Cocina y AYB (antes era solo de Cocina):
+// cada departamento ve y carga sus propios platos/tragos/menús, sin
+// mezclarse con los del otro — pero los dos usan la MISMA lista de
+// insumos/precios, a propósito (ver comentario en database.js).
+//
+// Una cuenta de departamento (usuario.departamento === 'cocina' o 'ayb')
+// siempre ve lo suyo. Un admin general (sin departamento, o "sistema") no
+// tiene uno propio — por default ve Cocina, igual que se comportaba esta
+// pantalla antes de este cambio, y puede pasar a ver AYB agregando
+// "?depto=ayb" a la URL (la vista le muestra un link para cambiar).
+function departamentoEfectivo(req) {
+  const d = (req.session.usuario?.departamento || '').toLowerCase();
+  if (d === 'cocina' || d === 'ayb') return d;
+  return req.query.depto === 'ayb' ? 'ayb' : 'cocina';
+}
 const { parsearCsvInsumos, importarInsumos } = require('../services/importadorInsumos');
 const { parsearCsvPlatos, importarPlatos } = require('../services/importadorPlatos');
 
@@ -117,19 +133,22 @@ router.get('/', loginRequerido, async (req, res) => {
     );
   }
 
+  const depto = departamentoEfectivo(req);
+  const esAdminGeneral = !['cocina', 'ayb'].includes((req.session.usuario?.departamento || '').toLowerCase());
+
   const buscarPlato = (req.query.buscarPlato || '').trim();
   const letraPlato  = (req.query.letraPlato || '').trim().toUpperCase().slice(0, 1);
   let platos, totalPlatos;
   if (buscarPlato) {
-    platos = await db.all2("SELECT * FROM platos_costo WHERE nombre ILIKE $1 ORDER BY nombre LIMIT 300", [`%${buscarPlato}%`]);
+    platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 AND nombre ILIKE $2 ORDER BY nombre LIMIT 300", [depto, `%${buscarPlato}%`]);
     totalPlatos = platos.length;
   } else if (letraPlato) {
-    platos = await db.all2("SELECT * FROM platos_costo WHERE nombre ILIKE $1 ORDER BY nombre LIMIT 300", [`${letraPlato}%`]);
+    platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 AND nombre ILIKE $2 ORDER BY nombre LIMIT 300", [depto, `${letraPlato}%`]);
     totalPlatos = platos.length;
   } else {
-    const totalPlatosRow = await db.get2("SELECT COUNT(*)::int AS total FROM platos_costo");
+    const totalPlatosRow = await db.get2("SELECT COUNT(*)::int AS total FROM platos_costo WHERE departamento=$1", [depto]);
     totalPlatos = totalPlatosRow?.total || 0;
-    platos = await db.all2("SELECT * FROM platos_costo ORDER BY nombre LIMIT 300");
+    platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 ORDER BY nombre LIMIT 300", [depto]);
   }
   const categorias = [...new Set(insumos.map(i=>i.categoria))];
   const msg = req.query.msg || null;
@@ -153,7 +172,8 @@ router.get('/', loginRequerido, async (req, res) => {
     mostrandoLimitado: !buscar && totalInsumos > LIMITE_SIN_BUSQUEDA,
     limiteSinBusqueda: LIMITE_SIN_BUSQUEDA,
     variacionPrecios, diasVariacion, tipoVariacion,
-    mostrarModalVariacion: req.query.dias !== undefined || req.query.tipoVariacion !== undefined
+    mostrarModalVariacion: req.query.dias !== undefined || req.query.tipoVariacion !== undefined,
+    depto, esAdminGeneral
   });
 });
 
@@ -294,11 +314,12 @@ router.post('/insumo/:id/eliminar', loginRequerido, async (req, res) => {
 
 router.post('/plato/nuevo', loginRequerido, async (req, res) => {
   const { nombre, categoria, porciones, precio_venta, margen_ganancia } = req.body;
+  const depto = departamentoEfectivo(req);
   await db.run2(
-    "INSERT INTO platos_costo (nombre,categoria,porciones,precio_venta,margen_ganancia) VALUES ($1,$2,$3,$4,$5)",
-    [nombre, categoria||'', parseInt(porciones)||1, parseFloat(precio_venta)||0, parseFloat(margen_ganancia)||30]
+    "INSERT INTO platos_costo (nombre,categoria,porciones,precio_venta,margen_ganancia,departamento) VALUES ($1,$2,$3,$4,$5,$6)",
+    [nombre, categoria||'', parseInt(porciones)||1, parseFloat(precio_venta)||0, parseFloat(margen_ganancia)||30, depto]
   );
-  res.redirect('/costos');
+  res.redirect('/costos' + (depto === 'ayb' ? '?depto=ayb' : ''));
 });
 
 router.get('/plato/:id', loginRequerido, async (req, res) => {

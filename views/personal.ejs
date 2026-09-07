@@ -61,12 +61,33 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
-        <a href="/horarios?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-secondary"><i class="ti ti-clock"></i> Ver en Horarios</a>
-        <% if (esAdmin) { %>
         <% if (misDepto === 'ayb') { %>
-        <button onclick="showModal('modal-importar-mozos')" class="btn-secondary"><i class="ti ti-file-upload"></i> Importar mozos (CSV)</button>
-        <button onclick="showModal('modal-importar-mozos-foto')" class="btn-secondary"><i class="ti ti-camera"></i> Cargar con foto</button>
+        <!-- AYB: "Ver en Horarios" + Importar mozos + Cargar con foto agrupados
+             en un desplegable "Otras opciones", mismo patrón/clases que usa
+             Horarios (horarios.ejs) para su propio menú de "Otras opciones" —
+             así no se amontonan tantos botones sueltos en el header. -->
+        <div class="menu-otras-opciones" style="position:relative;">
+          <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
+            <i class="ti ti-dots"></i> Otras opciones <i class="ti ti-chevron-down" style="font-size:12px;"></i>
+          </button>
+          <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
+            <a id="btn-ver-horarios" href="/horarios?inicio=<%= inicio %>&fin=<%= fin %>" class="dropdown-otras-item">
+              <i class="ti ti-clock"></i> Ver en Horarios
+            </a>
+            <% if (esAdmin) { %>
+            <button type="button" class="dropdown-otras-item" onclick="showModal('modal-importar-mozos')">
+              <i class="ti ti-file-upload"></i> Importar mozos (CSV)
+            </button>
+            <button type="button" class="dropdown-otras-item" onclick="showModal('modal-importar-mozos-foto')">
+              <i class="ti ti-camera"></i> Cargar con foto
+            </button>
+            <% } %>
+          </div>
+        </div>
+        <% } else { %>
+        <a id="btn-ver-horarios" href="/horarios?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-secondary"><i class="ti ti-clock"></i> Ver en Horarios</a>
         <% } %>
+        <% if (esAdmin) { %>
         <button onclick="showModal('modal-nuevo')" class="btn-primary"><i class="ti ti-plus"></i> Nuevo empleado</button>
         <% } %>
       </div>
@@ -260,7 +281,7 @@
                   // concepto de Cocina, no aplica.
                   const dispEmp = dispMap[p.id] || {};
                 %>
-                <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <div style="display:flex;gap:4px;flex-wrap:nowrap;">
                   <% dias.forEach((dia) => { %>
                   <%
                     const _dow = new Date(dia + 'T00:00:00').getDay();
@@ -277,14 +298,14 @@
                       }
                     }
                   %>
-                  <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;">
                     <span style="font-size:0.56rem;color:var(--gris-texto);font-weight:600;white-space:nowrap;"><%= NOMBRES_DIA_CORTO[_dow] %> <%= _numDia %></span>
                     <span style="width:64px;text-align:center;font-size:0.58rem;font-weight:600;background:<%= _bg %>;color:<%= _color %>;border:1px solid <%= _border %>;border-radius:5px;padding:3px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= _texto %></span>
                   </div>
                   <% }) %>
                 </div>
                 <% } else if (p.activo) { %>
-                <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <div style="display:flex;gap:4px;flex-wrap:nowrap;">
                   <% dias.forEach((dia) => { %>
                   <%
                     const _dow = new Date(dia + 'T00:00:00').getDay();
@@ -294,7 +315,7 @@
                     const _bgDia = _esEstadoDia ? bgEstados[_valDia] : '';
                     const _horaDia = (!_esEstadoDia && horariosEmp[dia]) ? horariosEmp[dia] : '';
                   %>
-                  <label style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                  <label style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;">
                     <span style="font-size:0.56rem;color:var(--gris-texto);font-weight:600;white-space:nowrap;"><%= NOMBRES_DIA_CORTO[_dow] %> <%= _numDia %></span>
                     <input type="text" class="hora-dia-<%= p.id %> hora-dia-input" data-fecha="<%= dia %>"
                            value="<%= _horaDia %>" placeholder="Hs" maxlength="6" <%= _esEstadoDia ? 'disabled' : '' %>
@@ -617,6 +638,27 @@
 </div>
 
 <style>
+/* ── Header "Otras opciones" (AYB): agrupa Ver en Horarios / Importar mozos /
+   Cargar con foto — mismas clases y estilos que el desplegable "Otras
+   opciones" de Horarios (horarios.ejs), para mantener la misma apariencia. */
+.dropdown-otras-opciones{
+  display:none;
+  position:absolute; right:0; top:calc(100% + 6px); z-index:200;
+  background:var(--blanco); border:1px solid var(--gris-borde); border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.15);
+  min-width:220px; padding:6px;
+}
+.dropdown-otras-opciones.abierto{ display:flex; flex-direction:column; gap:2px; }
+.dropdown-otras-item{
+  display:flex; align-items:center; gap:8px; width:100%;
+  background:none; border:none; padding:9px 12px;
+  font-family:var(--font-sans); font-size:0.78rem; font-weight:500;
+  color:var(--negro); text-decoration:none; cursor:pointer;
+  border-radius:6px; text-align:left;
+}
+.dropdown-otras-item:hover{ background:var(--gris-fondo); }
+.dropdown-otras-item i{ font-size:15px; color:var(--gris-texto); flex-shrink:0; }
+
 .recoff-control{display:inline-flex;align-items:center;gap:6px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:20px;padding:2px 4px;}
 .recoff-control button{width:20px;height:20px;border-radius:50%;border:none;background:var(--blanco);color:var(--gris-texto);cursor:pointer;font-size:0.85rem;line-height:1;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;}
 .recoff-control button:hover{background:var(--azul);color:#fff;}
@@ -837,7 +879,12 @@ function renderCal() {
   const hoy = new Date().toISOString().split('T')[0];
 
   let html = DIAS_SEMANA.map(d => `<div class="cal-nombre-dia">${d}</div>`).join('');
-  for (let i = 0; i < primerDia; i++) html += `<div class="cal-dia vacio"></div>`;
+  // "&nbsp;" en vez de vacío del todo: una celda completamente sin texto no
+  // genera línea de texto y queda más baja que una con un número adentro —
+  // eso hacía que una fila entera de relleno (sin días reales) achicara el
+  // calendario entero al navegar a un mes donde esa última fila sí tiene
+  // días. Con el espacio invisible, todas las celdas miden siempre igual.
+  for (let i = 0; i < primerDia; i++) html += `<div class="cal-dia vacio">&nbsp;</div>`;
 
   for (let d = 1; d <= diasMes; d++) {
     const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -863,6 +910,15 @@ function renderCal() {
 
     html += `<div class="${cls}" onclick="seleccionarDia('${fechaStr}')"${titulo}>${d}<span class="cal-dia-flag" onclick="event.stopPropagation();toggleFeriado('${fechaStr}')"><i class="ti ti-flag-filled"></i></span></div>`;
   }
+
+  // Relleno al final para que el calendario siempre ocupe 6 filas de días,
+  // sin importar el mes — antes, un mes que entraba en 5 filas (ej.
+  // septiembre) quedaba con el recuadro más bajo que uno que necesitaba 6
+  // (ej. agosto), y el panel completo "saltaba" de tamaño al navegar entre
+  // meses. Son celdas vacías, no afectan nada de la selección.
+  const celdasUsadas = primerDia + diasMes;
+  const celdasFaltantes = (6 * 7) - celdasUsadas;
+  for (let i = 0; i < celdasFaltantes; i++) html += `<div class="cal-dia vacio">&nbsp;</div>`;
 
   document.getElementById('cal-grid').innerHTML = html;
 }
@@ -953,6 +1009,11 @@ function cancelarSeleccion() {
 }
 
 function calMes(dir) {
+  // .setDate(1) antes de cambiar el mes: si calFecha queda en un día que no
+  // existe en el mes siguiente (ej. 31 de agosto -> setMonth(+1) sin esto
+  // da "31 de septiembre", que no existe, y JS lo corrige solo saltando
+  // directo a octubre). Fijar el día en 1 primero evita ese salto de mes de más.
+  calFecha.setDate(1);
   calFecha.setMonth(calFecha.getMonth() + dir);
   renderCal();
 }
@@ -961,6 +1022,12 @@ function actualizarEtiquetaRango() {
   const label = document.getElementById('semana-label');
   const cont  = document.getElementById('semana-dias');
   const btn   = document.getElementById('btn-ir-semana');
+  // "Ver en Horarios" apuntaba siempre al rango con el que se cargó la
+  // página: si elegías un rango nuevo en el calendario y usabas ese link
+  // directo (sin pasar antes por "Cargar este rango"), te llevaba a
+  // Horarios mostrando la semana vieja — las fechas "no se actualizaban".
+  // Se corrige manteniéndolo en sync acá, igual que btn-ir-semana.
+  const btnVerHorarios = document.getElementById('btn-ver-horarios');
 
   if (!rangoInicio) {
     label.textContent = 'Elegí el día de inicio en el calendario';
@@ -995,6 +1062,7 @@ function actualizarEtiquetaRango() {
   btn.style.pointerEvents = '';
   btn.style.opacity = '';
   btn.href = '/personal?inicio=' + rangoInicio + '&fin=' + rangoFin;
+  if (btnVerHorarios) btnVerHorarios.href = '/horarios?inicio=' + rangoInicio + '&fin=' + rangoFin;
 }
 
 // Inicializar calendario en el rango actual — este bloque (selector de
@@ -1005,6 +1073,19 @@ if (document.getElementById('cal-titulo')) {
   renderCal();
   actualizarEtiquetaRango();
 }
+
+// Si volvés a esta página con el botón "Atrás" del navegador (ej.: apretás
+// "Ver en Horarios" y después volvés), algunos navegadores restauran la
+// página desde una caché ("bfcache") sin volver a correr los scripts de
+// carga inicial de arriba — el calendario y el rango elegido quedaban en
+// blanco (parecía que "se desaparecía todo"). Este listener los vuelve a
+// pintar en ese caso puntual, sin cambiar el comportamiento normal de carga.
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted && document.getElementById('cal-titulo')) {
+    renderCal();
+    actualizarEtiquetaRango();
+  }
+});
 
 // ── Guardar empleado ──
 function onCambioSectorDia(sel) {
@@ -1136,6 +1217,20 @@ function onCambioEstadoDia(sel, uid) {
 // ── Modales ──
 function showModal(id){ document.getElementById(id).style.display='flex'; setTimeout(()=>{ const p=document.querySelector('#'+id+' input:not([type=hidden])'); if(p) p.focus(); },100); }
 function hideModal(id){ document.getElementById(id).style.display='none'; }
+
+// ── Desplegable "Otras opciones" (header, solo AYB) ──
+function toggleOtrasOpciones(ev) {
+  ev.stopPropagation();
+  const dd = document.getElementById('dropdown-otras-opciones');
+  if (dd) dd.classList.toggle('abierto');
+}
+document.addEventListener('click', (ev) => {
+  const dropdown = document.getElementById('dropdown-otras-opciones');
+  const boton = document.getElementById('btn-otras-opciones');
+  if (dropdown && dropdown.classList.contains('abierto') && !dropdown.contains(ev.target) && ev.target !== boton && !boton.contains(ev.target)) {
+    dropdown.classList.remove('abierto');
+  }
+});
 
 function toggleMenu(id) {
   const menu = document.getElementById('menu-' + id);
@@ -1325,6 +1420,31 @@ window.addEventListener('DOMContentLoaded', () => {
   const el = document.getElementById('contadorActivos');
   if (el) el.textContent = activos + ' activo' + (activos!==1?'s':'') + (inactivos > 0 ? ' · ' + inactivos + ' dado'+(inactivos!==1?'s':'') + ' de baja' : '');
 });
+
+<% /* Mismo aviso automático del bot que ya se mostraba en Horarios de AYB
+      (descanso de 12hs, turnos largos, bolsa de 200hs) — se agrega acá
+      también porque el encargado entra directo a Miembro de equipo y antes
+      el aviso nunca llegaba a dispararse si no pasaba primero por
+      Horarios. Se arma en el servidor (personal.js, reusando
+      alertasEventualesAyb de horarios.js) y acá se empuja como mensaje del
+      bot con lo mismo que ya existe en nav.ejs. */ %>
+<% if (esGestorAyb && alertasAyb && alertasAyb.length) { %>
+(function () {
+  const alertas = <%- JSON.stringify(alertasAyb) %>;
+  const panel = document.getElementById('asistentePanel');
+  const burbuja = document.getElementById('asistenteBurbuja');
+  if (!panel || !burbuja || typeof agregarMensajeAsistente !== 'function') return;
+
+  const totalAvisos = alertas.reduce((n, a) => n + a.detalles.length, 0);
+  agregarMensajeAsistente(
+    `⚠️ Ojo con los mozos de AYB: encontré ${totalAvisos} aviso${totalAvisos === 1 ? '' : 's'} entre ${alertas.length} mozo${alertas.length === 1 ? '' : 's'} este mes (descanso de 12hs, turnos de más de 12hs y/o bolsa de 200hs para Eventuales).`,
+    'bot'
+  );
+  alertas.forEach(a => {
+    agregarMensajeAsistente(`${a.nombre} (${a.horasTotales}hs este mes):\n• ${a.detalles.join('\n• ')}`, 'bot');
+  });
+})();
+<% } %>
 </script>
 </body>
 </html>

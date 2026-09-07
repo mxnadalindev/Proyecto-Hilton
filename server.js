@@ -104,8 +104,10 @@ app.use('/personal', require('./src/routes/personal'));
 app.use('/recetas',  require('./src/routes/recetas'));
 app.use('/horarios', require('./src/routes/horarios'));
 app.use('/costos',   require('./src/routes/costos'));
+app.use('/horas-extra', require('./src/routes/horasExtra'));  // ← NUEVO — Cocina: carga y reporte de horas extra (solo admin)
 app.use('/compras',  require('./src/routes/compras'));   // ← NUEVO
 app.use('/croutons', require('./src/routes/croutons'));  // ← NUEVO — AYB: carga de mercadería y vencimientos
+app.use('/inventario-ayb', require('./src/routes/inventarioAyb'));  // ← NUEVO — AYB: stock de barra, separado de Croutons
 app.use('/asistente', require('./src/routes/asistente'));
 
 // 404 — ruta que no matcheó ninguna de las de arriba

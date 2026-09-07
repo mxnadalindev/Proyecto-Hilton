@@ -204,6 +204,20 @@
     .check-row input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
     .check-row label { font-size: 0.78rem; color: rgba(255,255,255,0.85); cursor: pointer; text-shadow: 0 1px 6px rgba(0,0,0,0.5); }
 
+    /* ── Cuentas guardadas EN ESTE NAVEGADOR (solo local, nunca viaja al
+       servidor) — atajo para no re-tipear usuario/contraseña en pruebas o
+       demos. Se guardan con localStorage, tildando "Recordar esta cuenta
+       acá" al loguearse; un clic en el chip completa (no envía solo) el
+       formulario de arriba. */
+    .cuentas-guardadas { margin-bottom: 18px; }
+    .cuentas-guardadas-titulo { font-size: 0.68rem; color: rgba(255,255,255,0.7); text-shadow: 0 1px 6px rgba(0,0,0,0.5); margin-bottom: 8px; letter-spacing: 0.03em; }
+    .cuentas-guardadas-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cuenta-chip { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.14); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1.5px solid rgba(255,255,255,0.32); border-radius: 999px; padding: 6px 8px 6px 12px; font-size: 0.74rem; color: #fff; cursor: pointer; transition: background var(--tr), border-color var(--tr); }
+    .cuenta-chip:hover { background: rgba(255,255,255,0.24); border-color: rgba(255,255,255,0.6); }
+    .cuenta-chip-email { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cuenta-chip-quitar { background: none; border: none; color: rgba(255,255,255,0.55); cursor: pointer; font-size: 13px; padding: 2px; display: flex; align-items: center; border-radius: 50%; }
+    .cuenta-chip-quitar:hover { color: #fca5a5; background: rgba(239,68,68,0.18); }
+
     .btn-submit { width: 100%; height: 45px; background: var(--accent); border: none; border-radius: 9px; color: #fff; font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background var(--tr), transform var(--tr); position: relative; overflow: hidden; }
     .btn-submit:hover { background: var(--accent-h); transform: translateY(-1px); }
     .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
@@ -295,6 +309,8 @@
       <div class="success-banner"><i class="ti ti-check"></i> <%= success %></div>
       <% } %>
 
+      <div id="cuentasGuardadas" class="cuentas-guardadas" style="display:none;"></div>
+
       <form method="POST" action="/login" id="loginForm" novalidate>
         <div class="field" id="field-email">
           <div class="field-label"><span>Correo electrónico o CUIL</span></div>
@@ -319,6 +335,10 @@
         <div class="check-row">
           <input type="checkbox" id="remember" name="remember">
           <label for="remember">Mantener sesión iniciada</label>
+        </div>
+        <div class="check-row">
+          <input type="checkbox" id="recordarCuenta">
+          <label for="recordarCuenta">Recordar esta cuenta en este navegador (hasta 3)</label>
         </div>
         <button type="submit" class="btn-submit" id="submitBtn">
           <div class="spinner"></div>
@@ -482,6 +502,93 @@ document.getElementById('loginForm').addEventListener('submit', () => {
   btn.classList.add('loading');
   btn.disabled = true;
 });
+
+// ── Cuentas guardadas EN ESTE NAVEGADOR (localStorage, nunca se manda al
+// servidor) — un atajo para no re-tipear usuario/contraseña en pruebas.
+// Ojo: localStorage no es un lugar seguro para contraseñas en general
+// (cualquiera con acceso a este navegador/perfil de Windows podría verlas
+// en las herramientas de desarrollador) — para una cuenta compartida o de
+// producción real no se recomienda, pero para 2-3 cuentas propias en tu
+// propia PC, tildando "Recordar esta cuenta" a propósito, es un riesgo
+// razonable a cambio de la comodidad.
+(function () {
+  const LS_KEY_CUENTAS = 'hilton_cuentas_guardadas';
+  const MAX_CUENTAS = 3;
+
+  function escaparHtmlLogin(t) {
+    const div = document.createElement('div');
+    div.textContent = t == null ? '' : String(t);
+    return div.innerHTML;
+  }
+
+  function leerCuentasGuardadas() {
+    try {
+      const arr = JSON.parse(localStorage.getItem(LS_KEY_CUENTAS) || '[]');
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+
+  function guardarCuentasGuardadas(arr) {
+    try { localStorage.setItem(LS_KEY_CUENTAS, JSON.stringify(arr.slice(0, MAX_CUENTAS))); } catch (e) { /* localStorage no disponible: no rompe nada, solo no persiste */ }
+  }
+
+  window.quitarCuentaGuardada = function (idx) {
+    const cuentas = leerCuentasGuardadas();
+    cuentas.splice(idx, 1);
+    guardarCuentasGuardadas(cuentas);
+    pintarCuentasGuardadas();
+  };
+
+  function pintarCuentasGuardadas() {
+    const cont = document.getElementById('cuentasGuardadas');
+    if (!cont) return;
+    const cuentas = leerCuentasGuardadas();
+    if (cuentas.length === 0) {
+      cont.style.display = 'none';
+      cont.innerHTML = '';
+      return;
+    }
+    cont.style.display = 'block';
+    cont.innerHTML = '<p class="cuentas-guardadas-titulo"><i class="ti ti-bookmark"></i> Cuentas guardadas acá:</p>'
+      + '<div class="cuentas-guardadas-chips">'
+      + cuentas.map((c, i) => `
+          <span class="cuenta-chip" data-idx="${i}">
+            <i class="ti ti-user-circle"></i>
+            <span class="cuenta-chip-email">${escaparHtmlLogin(c.email)}</span>
+            <button type="button" class="cuenta-chip-quitar" title="Quitar de guardadas" onclick="event.stopPropagation(); quitarCuentaGuardada(${i})"><i class="ti ti-x"></i></button>
+          </span>
+        `).join('')
+      + '</div>';
+
+    cont.querySelectorAll('.cuenta-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const idx = parseInt(chip.dataset.idx, 10);
+        const c = leerCuentasGuardadas()[idx];
+        if (!c) return;
+        document.getElementById('email').value = c.email;
+        document.getElementById('password').value = c.password;
+        const field = document.getElementById('field-email');
+        if (field) field.className = 'field field-valid';
+      });
+    });
+  }
+
+  // Al enviar el login, si tildó "Recordar esta cuenta", la guardamos
+  // (reemplazando cualquier entrada previa con el mismo email, y dejando
+  // como máximo 3 — la más nueva primero).
+  document.getElementById('loginForm').addEventListener('submit', () => {
+    const chk = document.getElementById('recordarCuenta');
+    if (!chk || !chk.checked) return;
+    const email = (document.getElementById('email').value || '').trim();
+    const password = document.getElementById('password').value || '';
+    if (!email || !password) return;
+    let cuentas = leerCuentasGuardadas().filter((c) => (c.email || '').toLowerCase() !== email.toLowerCase());
+    cuentas.unshift({ email, password });
+    guardarCuentasGuardadas(cuentas);
+  });
+
+  pintarCuentasGuardadas();
+})();
 
 // ── Select custom de Departamento (vidrio esmerilado) ──
 // El <select> real (#deptoSelectReal) queda oculto pero vive en el DOM y

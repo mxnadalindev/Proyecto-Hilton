@@ -8,6 +8,11 @@ const multer = require('multer');
 const { loginRequerido, requiereDepartamento } = require('./middleware');
 const { analizarPlanillaMozos, mensajeErrorGemini } = require('../services/gemini');
 const { horasDeEvento, horasDesdeTexto } = require('../services/horasTrabajadas');
+// Reusa el mismo cálculo de alertas de AYB (descanso de 12hs, turnos largos,
+// bolsa de 200hs) que ya se usaba en Horarios — así el aviso automático en
+// el chat del asistente también aparece acá, que es donde el encargado
+// entra habitualmente a mirar al equipo.
+const { alertasEventualesAyb, puedeGestionarEventosAyb } = require('./horarios');
 router.use(loginRequerido, requiereDepartamento('/personal'));
 
 const storageMozos = multer.diskStorage({
@@ -115,6 +120,29 @@ function sumarDias(fechaStr, n) {
   return d.toISOString().split('T')[0];
 }
 
+// Recordar el último rango elegido en Miembro de equipo (cookie, sin
+// depender de ninguna librería nueva) — antes, apenas navegabas a
+// cualquier otra pantalla (Horarios, Costos, Menú principal, etc.) y
+// volvías sin fecha en el link, esta pantalla siempre caía de nuevo en la
+// semana actual, pisando el rango que habías elegido. Ahora, cuando no
+// llega fecha por la URL, se restaura la última vista en vez de la semana
+// actual. Si no hay cookie (primera vez, o el navegador las bloquea), el
+// comportamiento de siempre (semana actual) sigue igual.
+const COOKIE_RANGO_EQUIPO = 'hilton_rango_equipo';
+function leerCookieRango(req) {
+  const header = req.headers.cookie || '';
+  const parte = header.split(';').map(s => s.trim()).find(s => s.startsWith(COOKIE_RANGO_EQUIPO + '='));
+  if (!parte) return null;
+  const valor = decodeURIComponent(parte.slice(COOKIE_RANGO_EQUIPO.length + 1) || '');
+  const [ini, f] = valor.split(',');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ini || '') || !/^\d{4}-\d{2}-\d{2}$/.test(f || '')) return null;
+  return { inicio: ini, fin: f };
+}
+function guardarCookieRango(res, inicio, fin) {
+  const valor = encodeURIComponent(`${inicio},${fin}`);
+  res.setHeader('Set-Cookie', `${COOKIE_RANGO_EQUIPO}=${valor}; Path=/; Max-Age=${60 * 60 * 24 * 60}; SameSite=Lax`);
+}
+
 // Nuevo: rango libre entre dos fechas (inclusive), cualquier cantidad de días
 function getDiasRango(inicioStr, finStr) {
   const dias = [];
@@ -153,10 +181,31 @@ router.get('/', loginRequerido, async (req, res) => {
   } else if (req.query.semana) {
     inicio = getLunes(req.query.semana);
     fin    = sumarDias(inicio, 6);
-  } else {
+  } else if (req.query.mes) {
+    // Entrada puntual desde "Ver equipo" en el calendario de AYB
+    // (horarios_ayb.ejs manda ?mes=YYYY-MM con el mes que se está mirando
+    // ahí, solo para filtrar la lista — ver mesFiltro más abajo). Este
+    // acceso siempre mostró la semana actual, nunca el último rango
+    // recordado; si acá usáramos la cookie, "Ver equipo" podía terminar
+    // mostrando un rango viejo de semanas/meses atrás (con la lista
+    // filtrada encima), pareciendo una pantalla totalmente distinta. Se
+    // mantiene el comportamiento de siempre para no romperlo.
     inicio = getLunes(hoy);
     fin    = sumarDias(inicio, 6);
+  } else {
+    // Sin fecha en la URL: restaura el último rango que se estaba mirando
+    // (ver comentario de leerCookieRango más arriba) en vez de la semana
+    // actual siempre.
+    const recordado = leerCookieRango(req);
+    if (recordado) {
+      inicio = recordado.inicio;
+      fin    = recordado.fin;
+    } else {
+      inicio = getLunes(hoy);
+      fin    = sumarDias(inicio, 6);
+    }
   }
+  guardarCookieRango(res, inicio, fin);
 
   const dias = getDiasRango(inicio, fin);
 
@@ -332,12 +381,28 @@ router.get('/', loginRequerido, async (req, res) => {
   const rangoAnterior = { inicio: sumarDias(inicio, -duracionRango), fin: sumarDias(fin, -duracionRango) };
   const rangoSiguiente = { inicio: sumarDias(inicio, duracionRango), fin: sumarDias(fin, duracionRango) };
 
+  // Mismo aviso automático en el chat del asistente que ya se mostraba en
+  // Horarios de AYB (descanso de 12hs, turnos largos, bolsa de 200hs) —
+  // acá también, porque es la pantalla a la que el encargado entra
+  // habitualmente para mirar al equipo, y antes el aviso nunca se
+  // disparaba si no pasaba primero por Horarios.
+  const esGestorAyb = puedeGestionarEventosAyb(req);
+  let alertasAyb = [];
+  if (esGestorAyb) {
+    const mesActual = hoy.slice(0, 7);
+    try {
+      alertasAyb = await alertasEventualesAyb(mesActual);
+    } catch (e) {
+      console.error('Error calculando alertas de eventuales AYB (Miembro de equipo):', e.message);
+    }
+  }
+
   res.render('personal', {
     personal, puestos: PUESTOS, roles: ROLES, sectores: sectoresVisibles,
     modalidadesAyb: MODALIDADES_AYB, misDepto,
     ESTADOS, msg, esAdmin, hoy, inicio, fin, dias, horarioSemanalMap, sectorDiaMap,
     feriados, cargadosMozos, duplicadosMozos, dispMap, rangoAnterior, rangoSiguiente,
-    mozosVencidos, mozosPorVencer, mesFiltro,
+    mozosVencidos, mozosPorVencer, mesFiltro, esGestorAyb, alertasAyb,
     // compatibilidad con campos viejos
     horarioMap: {}
   });
@@ -803,3 +868,8 @@ router.post('/:id/disponibilidad', loginRequerido, async (req, res) => {
 });
 
 module.exports = router;
+// Se reexporta para que otros módulos (ej. horasExtra.js) puedan filtrar
+// "empleados de Cocina" con exactamente el mismo criterio que usa esta
+// pantalla de Miembro de equipo, en vez de reescribir la lista de sectores
+// por su cuenta y arriesgarse a que se desincronicen con el tiempo.
+module.exports.SECTORES = SECTORES;

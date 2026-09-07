@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
 
 :root {
   --blanco:      #ffffff;
@@ -18,6 +18,11 @@
   --rojo-borde:  #fecaca;
   --font-serif:  'Cormorant Garamond', Georgia, serif;
   --font-sans:   'Montserrat', sans-serif;
+  /* Para textos de descripción/párrafo largo (ej. el detalle del módulo
+     en Inicio) — Cormorant Garamond es una serif decorativa, pierde
+     legibilidad en texto corrido; Lora está pensada justo para eso y
+     acompaña el clima del resto sin competir con Montserrat. */
+  --font-desc:   'Lora', Georgia, serif;
   --tr:          0.25s ease;
   --sombra:      0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
   --sombra-md:   0 4px 10px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
@@ -29,6 +34,20 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; scroll-behavior: smooth; }
+
+/* ── Texto descriptivo (párrafo explicativo debajo de un título, ej. el
+   detalle de un módulo) — convención de estilo para todo el programa: Lora
+   en mayúscula, a pedido, en vez de la Montserrat en minúscula de antes.
+   Se usa como clase (.texto-descripcion) para que cualquier pantalla nueva
+   que tenga este tipo de texto lo aplique con solo agregar la clase. */
+.texto-descripcion {
+  font-family: var(--font-desc);
+  font-size: 0.8rem;
+  line-height: 1.9;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--gris-texto);
+}
 body {
   background: var(--gris-fondo);
   color: var(--negro);
@@ -100,7 +119,15 @@ input::placeholder, textarea::placeholder {
   gap: 16px;
   padding: 0 40px;
   height: var(--header-h);
-  background: var(--blanco);
+  /* Antes era un fondo blanco liso (var(--blanco)) — a pedido, se le suma
+     el mismo tinte verde translúcido de marca que ya tiene el login,
+     mucho más sutil acá porque el resto de la pantalla sigue siendo
+     clara. Se probaron 3 variantes con capturas antes de aplicar esta.
+     Ajuste posterior a pedido: antes el centro tocaba blanco puro (1) a
+     los 55%, así que el verde "no llegaba" hasta la píldora de iconos —
+     ahora nunca baja de un verde tenue en el medio, y los extremos son
+     un poco más intensos. */
+  background: linear-gradient(120deg, rgba(6,147,126,0.22) 0%, rgba(6,147,126,0.09) 50%, rgba(6,147,126,0.22) 100%);
   border-bottom: 1px solid var(--gris-borde);
   box-shadow: var(--sombra);
   position: sticky;
@@ -116,6 +143,9 @@ input::placeholder, textarea::placeholder {
   text-decoration: none;
   flex-shrink: 0;
   justify-self: start;
+  /* Mismo brillo verde-teal sutil que tiene el wordmark "Hilton" en el
+     login (ahí es sobre fondo oscuro; acá, más tenue, sobre fondo claro). */
+  text-shadow: 0 0 6px rgba(63,224,190,0.35), 0 0 16px rgba(6,147,126,0.2);
 }
 .header-nav { display: flex; align-items: center; gap: 4px; justify-self: center; }
 

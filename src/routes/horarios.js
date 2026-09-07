@@ -177,15 +177,21 @@ async function chequearDescanso12hs(usuarioId, eventoId, fecha, horaDesde, horaH
   return peorAviso;
 }
 
-// ── Alertas de eventuales de AYB: a pedido, "solo para los eventuales de
-// alimentos y bebidas" — no aplica a mozos Fijo/Agencia ni a Cocina.
-// Reglas (según lo que confirmó el encargado):
-//   1) Bolsa de trabajo mensual: no pueden superar 200hs en el mes.
-//   2) Ningún turno individual puede superar las 12hs.
+// ── Alertas de mozos de AYB (no aplica a Cocina). Reglas:
+//   1) Bolsa de trabajo mensual de 200hs — SOLO para modalidad "Eventual"
+//      (a pedido puntual de una conversación anterior: Fijo/Agencia no
+//      tienen ese concepto de "bolsa mensual").
+//   2) Ningún turno individual puede superar las 12hs — para CUALQUIER
+//      mozo de AYB, sin importar la modalidad.
 //   3) Entre el fin de un turno y el inicio del siguiente tiene que haber
-//      al menos 12hs de descanso.
+//      al menos 12hs de descanso — ídem, para cualquier modalidad.
+// Antes esta función solo miraba mozos "Eventual" (el filtro de la query
+// de abajo los dejaba afuera a todos los demás desde el vamos, así que el
+// descanso de 12hs nunca se llegaba a chequear para un Fijo/Agencia). Se
+// amplió a pedido: el descanso de 12hs y el tope por turno tienen que
+// avisar sin importar la modalidad del mozo.
 // A diferencia de chequearDescanso12hs (que solo mira el momento en que un
-// mozo se anota a UN evento puntual), esto barre TODO lo que cada eventual
+// mozo se anota a UN evento puntual), esto barre TODO lo que cada mozo
 // tiene cargado en el mes, para poder avisarle al encargado apenas entra a
 // la sección — no hace falta que nadie se anote a nada para que salte.
 const BOLSA_HORAS_MENSUAL_EVENTUAL = 200;
@@ -193,10 +199,23 @@ const HORAS_MAX_TURNO = 12;
 
 async function alertasEventualesAyb(mesYYYYMM) {
   const mozos = await db.all2(`
-    SELECT id, nombre FROM usuarios
-    WHERE activo = 1 AND departamento = 'ayb' AND modalidad = 'Eventual'
+    SELECT id, nombre, modalidad FROM usuarios
+    WHERE activo = 1 AND departamento = 'ayb'
   `);
   if (!mozos.length) return [];
+
+  // OJO: antes esto filtraba con "to_char(fecha,'YYYY-MM') = $1" (mes
+  // calendario exacto). Eso rompía justo el caso más importante a
+  // detectar: un turno que termina el último día de un mes y el
+  // siguiente que arranca al día siguiente (ya en el mes que viene) —
+  // como el primer turno quedaba totalmente afuera de la consulta, no
+  // había con qué comparar el segundo, y el descanso corto entre ambos
+  // nunca se llegaba a chequear. Por eso ahora se trae un día extra antes
+  // del 1° y un día extra después del último día del mes: alcanza para
+  // poder comparar el turno "frontera" contra el primero/último del mes
+  // sin traer de más.
+  const rangoDesde = `(to_date($1 || '-01', 'YYYY-MM-DD') - interval '1 day')`;
+  const rangoHasta = `(to_date($1 || '-01', 'YYYY-MM-DD') + interval '1 month' + interval '1 day')`;
 
   // i.asistio IS DISTINCT FROM false: incluye lo ya confirmado (true) y lo
   // todavía no marcado (null, es decir eventos futuros recién cargados) —
@@ -207,7 +226,7 @@ async function alertasEventualesAyb(mesYYYYMM) {
     FROM eventos_ayb_inscripciones i
     JOIN eventos_ayb e ON e.id = i.evento_id
     WHERE i.asistio IS DISTINCT FROM false
-      AND to_char(e.fecha, 'YYYY-MM') = $1
+      AND e.fecha >= ${rangoDesde} AND e.fecha < ${rangoHasta}
   `, [mesYYYYMM]);
 
   // La disponibilidad que cada mozo carga en "Mi disponibilidad" (Horarios)
@@ -219,7 +238,7 @@ async function alertasEventualesAyb(mesYYYYMM) {
     SELECT usuario_id, fecha::text AS fecha, hora_desde, hora_hasta
     FROM disponibilidad
     WHERE disponible = true AND hora_desde IS NOT NULL
-      AND to_char(fecha, 'YYYY-MM') = $1
+      AND fecha >= ${rangoDesde} AND fecha < ${rangoHasta}
   `, [mesYYYYMM]);
 
   const porMozo = {};
@@ -246,17 +265,29 @@ async function alertasEventualesAyb(mesYYYYMM) {
 
     const detalles = [];
     let horasTotales = 0;
+    // "Es del mes" = para no contar de más en la bolsa mensual ni repetir
+    // el aviso de "turno largo" el día que se calculen las alertas del mes
+    // vecino (ese día límite ya se cuenta ahí, con su propio mes).
+    const esDelMes = (fecha) => fecha.slice(0, 7) === mesYYYYMM;
 
     conRango.forEach(ev => {
       const horas = (ev.fin - ev.inicio) / (60 * 60 * 1000);
-      horasTotales += horas;
-      if (horas > HORAS_MAX_TURNO) {
-        detalles.push(`Turno de ${horas.toFixed(1)}hs el ${ev.fecha} ("${ev.etiqueta}") — supera el máximo de ${HORAS_MAX_TURNO}hs por turno.`);
+      if (esDelMes(ev.fecha)) {
+        horasTotales += horas;
+        if (horas > HORAS_MAX_TURNO) {
+          detalles.push(`Turno de ${horas.toFixed(1)}hs el ${ev.fecha} ("${ev.etiqueta}") — supera el máximo de ${HORAS_MAX_TURNO}hs por turno.`);
+        }
       }
     });
 
     for (let i = 1; i < conRango.length; i++) {
       const anterior = conRango[i - 1], actual = conRango[i];
+      // El día "frontera" (el único motivo por el que se trajo un día de
+      // margen antes/después) solo importa acá para poder calcular ESTE
+      // gap — si ninguno de los dos turnos es del mes que se está
+      // calculando, no tiene sentido avisarlo en este mes (ya se avisó, o
+      // se va a avisar, al calcular el mes al que sí pertenece).
+      if (!esDelMes(anterior.fecha) && !esDelMes(actual.fecha)) continue;
       const gapHoras = (actual.inicio - anterior.fin) / (60 * 60 * 1000);
       if (gapHoras < HORAS_DESCANSO_MIN) {
         detalles.push(gapHoras <= 0
@@ -266,7 +297,10 @@ async function alertasEventualesAyb(mesYYYYMM) {
     }
 
     horasTotales = Math.round(horasTotales * 10) / 10;
-    if (horasTotales > BOLSA_HORAS_MENSUAL_EVENTUAL) {
+    // La bolsa de 200hs mensuales sigue siendo solo para "Eventual" — un
+    // Fijo/Agencia no tiene ese tope, así que no le marcamos esto a ellos
+    // aunque acumulen más de 200hs (es esperable en su caso).
+    if (m.modalidad === 'Eventual' && horasTotales > BOLSA_HORAS_MENSUAL_EVENTUAL) {
       detalles.push(`Lleva ${horasTotales}hs cargadas este mes — supera la bolsa mensual de ${BOLSA_HORAS_MENSUAL_EVENTUAL}hs.`);
     }
 
@@ -938,3 +972,11 @@ router.post('/reiniciar-semana', loginRequerido, async (req, res) => {
 });
 
 module.exports = router;
+// Se exportan además (sin cambiar el export por defecto de arriba, que
+// sigue siendo el router de siempre) para poder reusar el mismo cálculo de
+// alertas de AYB desde otra pantalla (Miembro de equipo, en personal.js) —
+// antes el aviso automático en el chat del asistente solo se disparaba
+// entrando a Horarios de AYB, así que si el encargado entraba directo a
+// Miembro de equipo (como hace habitualmente) nunca lo veía.
+module.exports.alertasEventualesAyb = alertasEventualesAyb;
+module.exports.puedeGestionarEventosAyb = puedeGestionarEventosAyb;

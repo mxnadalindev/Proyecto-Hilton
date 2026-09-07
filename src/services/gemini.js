@@ -1,19 +1,14 @@
 ﻿const fs = require('fs');
 
-// Antes usábamos "gemini-2.5-flash" (versión estable, para evitar los 503
-// de alta demanda del alias "-latest"). Pero Google empezó a bloquear ese
-// modelo específico para API keys NUEVAS (error 404: "no longer available
-// to new users"), aunque siga funcionando para keys viejas. Como se generó
-// una key nueva, hubo que pasar al modelo que el propio error de Google
-// recomendó: "gemini-3.6-flash". Si en el futuro este también queda
-// discontinuado, el error 404 de Gemini suele decir directamente a qué
-// modelo migrar — conviene mirar ese mensaje antes de adivinar un nombre.
-const MODELO = 'gemini-3.6-flash';
+// Usamos el alias "gemini-flash-latest" en vez de un nombre de versión fijo
+// (como "gemini-2.5-flash") porque Google va dando de baja versiones puntuales
+// con el tiempo. El alias siempre apunta al modelo Flash vigente, así este
+// código no se rompe de nuevo la próxima vez que cambien de versión.
+const MODELO = 'gemini-flash-latest';
 const URL_BASE = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent`;
 
-const PROMPT = `Sos un asistente que lee documentos y anotaciones de compra de insumos gastronómicos (proveedores de un hotel).
-Te paso la imagen. Puede ser una factura formal, un remito, o directamente un apunte/nota escrita a mano con el nombre de un producto y su precio (por ejemplo, alguien anotó en un cuaderno lo que le cotizó un proveedor por teléfono o WhatsApp) — cualquiera de esos casos cuenta como documento válido, no hace falta que sea un comprobante fiscal formal.
-Devolvé ÚNICAMENTE un JSON, sin texto adicional, sin explicación, sin markdown ni backticks, con este formato exacto:
+const PROMPT = `Sos un asistente que lee documentos de compra de insumos gastronómicos (proveedores de un hotel).
+Te paso la imagen de un documento. Devolvé ÚNICAMENTE un JSON, sin texto adicional, sin explicación, sin markdown ni backticks, con este formato exacto:
 
 {"tipo_documento": "...", "proveedor": "...", "numero_factura": "...", "items": [...]}
 
@@ -27,11 +22,11 @@ PASO 1 — Identificá "tipo_documento". Puede ser uno de estos 4 valores:
 
 PASO 2 — Armá "items":
 - Si "tipo_documento" NO es "factura", "items" tiene que ir SIEMPRE vacío: []. Nunca extraigas productos ni montos de una nota de crédito o de débito, aunque la imagen tenga una tabla con productos y números — esos montos son ajustes, no precios de compra, y no hay que usarlos para actualizar precios.
-- Si "tipo_documento" SÍ es "factura" (incluye los apuntes manuscritos), cada elemento de "items" debe tener estos campos:
-  - "nombre": el nombre del producto tal como figura en el documento (string)
-  - "cantidad": la cantidad comprada (número, usá 1 si no está claro o si el apunte no menciona cantidad)
-  - "unidad": la unidad (ej: "kg", "lt", "unidad", "caja", "paquete"). Si el apunte dice "precio x unidad" o no aclara, usá "unidad".
-  - "precio_unitario": el precio unitario en pesos, SIN el símbolo $ y SIN separador de miles (número, ej: 18500.50 — si en la imagen la coma se usa como separador decimal a la argentina, ej. "3922,65", convertilo a 3922.65). SIEMPRE tiene que ser un número POSITIVO mayor a cero. Si en el documento ese renglón aparece como negativo, como una bonificación, o como un descuento, NO incluyas ese ítem en el array.
+- Si "tipo_documento" SÍ es "factura", cada elemento de "items" debe tener estos campos:
+  - "nombre": el nombre del producto tal como figura en la factura (string)
+  - "cantidad": la cantidad comprada (número, usá 1 si no está claro)
+  - "unidad": la unidad (ej: "kg", "lt", "unidad", "caja", "paquete")
+  - "precio_unitario": el precio unitario en pesos, SIN el símbolo $ y SIN separador de miles (número, ej: 18500.50). SIEMPRE tiene que ser un número POSITIVO mayor a cero. Si en la factura ese renglón aparece como negativo, como una bonificación, o como un descuento aplicado dentro de la misma factura, NO incluyas ese ítem en el array.
 
 Si no podés leer algún campo con confianza, no incluyas ese ítem.
 
@@ -404,6 +399,99 @@ async function analizarPlanillaMozos(rutaImagen) {
   return { tipoDocumento, items };
 }
 
+const PROMPT_BOTELLA_AYB = `Sos un asistente que reconoce botellas de bebidas (alcohólicas y no alcohólicas) para el inventario de bar de un hotel.
+Te paso una foto de una botella — puede estar en la mano de alguien, parada en una estantería, sobre una mesa, etc.
+Devolvé ÚNICAMENTE un JSON, sin texto adicional, sin explicación, sin markdown ni backticks, con este formato exacto:
+
+{"reconocida": true/false, "nombre": "...", "categoria": "...", "nivel_estimado_pct": 0, "nivel_descripcion": "..."}
+
+- "reconocida": true si se puede identificar con razonable confianza la marca/tipo de la botella en la foto; false si la imagen no muestra una botella reconocible (está borrosa, no es una botella, no hay nada, etc.).
+- "nombre": el nombre del producto tal como lo reconocés (marca + tipo, ej: "Fernet Branca", "Absolut Vodka", "Coca-Cola"). Si "reconocida" es false, dejalo como "" (string vacío).
+- "categoria": una categoría general breve (ej: "Fernet", "Vodka", "Gaseosa", "Vino", "Cerveza", "Whisky"). Si no podés determinarla, dejala como "".
+- "nivel_estimado_pct": tu mejor estimación VISUAL de qué porcentaje de líquido le queda a la botella, mirando el nivel del líquido en la imagen (número entero de 0 a 100). Es una estimación a ojo, no una medición exacta — igual hacé la mejor estimación posible. Si la botella está cerrada/sin abrir, usá 100. Si NO se puede ver el nivel de líquido en la foto (botella de espaldas, tapada por la mano, lata, o "reconocida" es false), usá null (sin comillas, el valor JSON null).
+- "nivel_descripcion": una frase corta en español describiendo el nivel (ej: "llena", "casi llena", "más de la mitad", "por la mitad", "menos de la mitad", "casi vacía", "vacía"). Si "nivel_estimado_pct" es null, dejalo como "".
+
+Ejemplos de respuesta:
+{"reconocida":true,"nombre":"Fernet Branca","categoria":"Fernet","nivel_estimado_pct":40,"nivel_descripcion":"menos de la mitad"}
+{"reconocida":true,"nombre":"Absolut Vodka","categoria":"Vodka","nivel_estimado_pct":100,"nivel_descripcion":"llena"}
+{"reconocida":false,"nombre":"","categoria":"","nivel_estimado_pct":null,"nivel_descripcion":""}`;
+
+/**
+ * Reconoce una botella a partir de una foto (nombre/marca + una estimación
+ * VISUAL aproximada de cuánto líquido le queda) para el módulo Inventario
+ * AYB. Mismo patrón que analizarRemitoCroutons/analizarPlanillaMozos: nunca
+ * escribe nada solo en la base — devuelve el dato leído para que la
+ * pantalla de ajuste lo muestre como ayuda y el encargado confirme la
+ * cantidad a mano.
+ *
+ * OJO con "nivel_estimado_pct": es una estimación de la IA mirando la foto,
+ * no una medición exacta (no hay balanza ni sensor de por medio) — se
+ * muestra siempre como referencia, nunca se guarda solo en el stock.
+ *
+ * @param {string} rutaImagen - ruta al archivo de imagen ya subido
+ * @param {string} [mimeTypeReal] - mimetype real reportado por el navegador (multer)
+ * @returns {Promise<{reconocida: boolean, nombre: string, categoria: string, nivelPct: number|null, nivelDescripcion: string}>}
+ */
+async function analizarBotellaAyb(rutaImagen, mimeTypeReal) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Falta GEMINI_API_KEY en el archivo .env');
+  }
+
+  const bytes = fs.readFileSync(rutaImagen);
+  const base64 = bytes.toString('base64');
+  const mimeType = mimeParaGemini(rutaImagen, mimeTypeReal);
+
+  const body = {
+    contents: [{
+      parts: [
+        { text: PROMPT_BOTELLA_AYB },
+        { inline_data: { mime_type: mimeType, data: base64 } }
+      ]
+    }],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      temperature: 0.1
+    }
+  };
+
+  const resp = await llamarGeminiConReintentos(`${URL_BASE}?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  const data = await resp.json();
+  const textoRespuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!textoRespuesta) {
+    throw new Error('Gemini no devolvió contenido legible.');
+  }
+
+  let respuesta;
+  try {
+    respuesta = JSON.parse(textoRespuesta);
+  } catch (e) {
+    throw new Error('No se pudo interpretar la respuesta de Gemini como JSON: ' + textoRespuesta.slice(0, 200));
+  }
+
+  const reconocida = !!respuesta?.reconocida && !!String(respuesta?.nombre || '').trim();
+  if (!reconocida) {
+    return { reconocida: false, nombre: '', categoria: '', nivelPct: null, nivelDescripcion: '' };
+  }
+
+  let nivelPct = respuesta?.nivel_estimado_pct;
+  nivelPct = (nivelPct === null || nivelPct === undefined || nivelPct === '') ? null : Math.max(0, Math.min(100, Math.round(parseFloat(nivelPct))));
+  if (nivelPct !== null && isNaN(nivelPct)) nivelPct = null;
+
+  return {
+    reconocida: true,
+    nombre: String(respuesta.nombre).trim(),
+    categoria: respuesta.categoria ? String(respuesta.categoria).trim() : '',
+    nivelPct,
+    nivelDescripcion: nivelPct !== null ? String(respuesta.nivel_descripcion || '').trim() : '',
+  };
+}
+
 // Traduce cualquier error que puedan tirar analizarFactura /
 // analizarRemitoCroutons / analizarPlanillaMozos a un mensaje en criollo
 // para mostrarle al usuario. Centralizado acá para que las tres pantallas
@@ -424,4 +512,8 @@ function mensajeErrorGemini(e) {
   return 'Error analizando la imagen: ' + msg;
 }
 
-module.exports = { analizarFactura, analizarRemitoCroutons, analizarPlanillaMozos, mensajeErrorGemini };
+// llamarGeminiConReintentos también se exporta: el asistente/chatbot
+// (src/routes/asistente.js) la reusa para sus propias llamadas a Gemini,
+// en vez de reimplementar el reintento con 503 por su cuenta y arriesgarse
+// a que las dos versiones se desincronicen con el tiempo.
+module.exports = { analizarFactura, analizarRemitoCroutons, analizarPlanillaMozos, analizarBotellaAyb, mensajeErrorGemini, llamarGeminiConReintentos };

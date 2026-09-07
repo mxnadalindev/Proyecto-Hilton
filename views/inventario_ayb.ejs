@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario AYB — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <%- include('partials/nav', { path: 'inventario-ayb' }) %>
+
+  <main class="main-content main-content-ancho">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Alimentos y Bebidas</p>
+        <h1 class="seccion-titulo">Inventario</h1>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+        <div class="menu-otras-opciones" style="position:relative;">
+          <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
+            <i class="ti ti-dots"></i> Otras opciones <i class="ti ti-chevron-down" style="font-size:12px;"></i>
+          </button>
+          <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
+            <a href="#" onclick="hideOtrasOpciones();showModal('modal-importar');return false;" class="dropdown-otras-item"><i class="ti ti-file-spreadsheet"></i> Importar productos (Excel)</a>
+            <a href="/inventario-ayb/necesidad-semanal" class="dropdown-otras-item"><i class="ti ti-clipboard-list"></i> Necesidad semanal</a>
+            <a href="/inventario-ayb/reportes" class="dropdown-otras-item"><i class="ti ti-chart-bar"></i> Reportes de consumo</a>
+            <a href="/inventario-ayb/etiquetas" class="dropdown-otras-item"><i class="ti ti-qrcode"></i> Imprimir etiquetas QR</a>
+            <% if (typeof geminiConfigurado !== 'undefined' && geminiConfigurado) { %>
+            <a href="/inventario-ayb/reconocer" class="dropdown-otras-item"><i class="ti ti-camera"></i> Reconocer con foto</a>
+            <% } %>
+          </div>
+        </div>
+        <button onclick="showModal('modal-producto')" class="btn-primary">
+          <i class="ti ti-plus"></i> Nuevo producto
+        </button>
+      </div>
+    </div>
+
+    <% if (typeof msg !== 'undefined' && msg) {
+      // Ver comentario en inventario_ayb_ajustar.ejs: si el mensaje trae un
+      // "%" que no forma parte de un %XX válido, decodificarlo de nuevo acá
+      // tira "URI malformed" — con el try/catch se muestra tal cual llegó.
+      let msgTexto;
+      try { msgTexto = decodeURIComponent(msg); } catch (e) { msgTexto = msg; }
+      const esError  = /error/i.test(msgTexto);
+    %>
+    <div style="background:<%= esError ? '#fef2f2' : 'var(--azul-claro)' %>;border:1px solid <%= esError ? '#fecaca' : 'var(--azul-borde)' %>;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:<%= esError ? '#dc2626' : 'var(--azul)' %>;display:flex;align-items:center;gap:10px;">
+      <i class="ti <%= esError ? 'ti-alert-circle' : 'ti-check' %>" style="font-size:18px;"></i>
+      <%= msgTexto %>
+    </div>
+    <% } %>
+
+    <!-- Resumen -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;">
+      <div style="background:rgba(6,147,126,0.12);border:1px solid rgba(6,147,126,0.3);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+        <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= totalProductos %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Producto<%= totalProductos !== 1 ? 's' : '' %> activo<%= totalProductos !== 1 ? 's' : '' %></p>
+      </div>
+      <div style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+        <p style="font-size:1.8rem;font-weight:700;color:#dc2626;margin:0;"><%= bajoStock.length %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#dc2626;margin:4px 0 0;">Con stock bajo el mínimo</p>
+      </div>
+    </div>
+
+    <% if (bajoStock.length > 0) { %>
+    <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin-bottom:20px;">
+      <p style="font-size:0.75rem;font-weight:600;color:#854d0e;margin:0 0 6px;display:flex;align-items:center;gap:6px;">
+        <i class="ti ti-alert-triangle"></i> Por debajo del mínimo
+      </p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <% bajoStock.forEach(p => { %>
+        <span style="font-size:0.72rem;background:#fef08a;color:#713f12;padding:2px 8px;border-radius:20px;border:1px solid #fde047;">
+          <%= p.nombre %> (<%= p.stock_actual || 0 %>/<%= p.stock_minimo %> <%= p.unidad_default || '' %>)
+        </span>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Buscador -->
+    <form method="GET" action="/inventario-ayb" style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+      <div style="position:relative;flex:1;min-width:200px;max-width:320px;">
+        <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
+        <input type="text" name="buscar" value="<%= buscar %>" placeholder="Buscar por nombre, categoría o código..."
+               style="width:100%;padding:8px 12px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
+      </div>
+      <button type="submit" class="btn-secondary" style="padding:8px 14px;">Buscar</button>
+      <% if (buscar) { %><a href="/inventario-ayb" class="btn-secondary" style="padding:8px 14px;">Limpiar</a><% } %>
+    </form>
+
+    <!-- Listado -->
+    <% if (productos.length === 0) { %>
+      <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:32px;text-align:center;color:var(--gris-texto);">
+        <i class="ti ti-bottle-off" style="font-size:32px;display:block;margin-bottom:10px;"></i>
+        <% if (buscar) { %>
+          No se encontró ningún producto para "<%= buscar %>".
+        <% } else { %>
+          Todavía no hay ningún producto cargado. Usá "Nuevo producto" para empezar.
+        <% } %>
+      </div>
+    <% } else { %>
+    <div class="tabla-wrap">
+      <table class="tabla" style="width:100%;">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Stock actual</th>
+            <th>Mínimo</th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% productos.forEach(p => {
+            const bajo = p.stock_minimo != null && (p.stock_actual || 0) <= p.stock_minimo;
+          %>
+          <tr>
+            <td style="font-size:0.82rem;font-weight:500;">
+              <%= p.nombre %>
+              <% if (p.codigo_barras) { %><span style="display:block;font-size:0.68rem;color:var(--gris-texto);">Cód: <%= p.codigo_barras %></span><% } %>
+            </td>
+            <td style="font-size:0.8rem;color:var(--gris-texto);"><%= p.categoria || '—' %></td>
+            <td>
+              <form method="POST" action="/inventario-ayb/producto/<%= p.id %>/ajustar" style="display:flex;gap:4px;align-items:center;">
+                <input type="hidden" name="modo" value="establecer">
+                <input type="number" name="cantidad" value="<%= p.stock_actual || 0 %>" step="0.01" min="0"
+                       style="width:70px;background:<%= bajo ? '#fef3c7' : 'var(--gris-fondo)' %>;border:1px solid <%= bajo ? '#fde68a' : 'var(--gris-borde)' %>;border-radius:6px;padding:5px 7px;font-size:0.8rem;">
+                <span style="color:var(--gris-texto);"><%= p.unidad_default || '' %></span>
+                <button type="submit" class="btn-icono" title="Guardar cantidad"><i class="ti ti-device-floppy"></i></button>
+              </form>
+            </td>
+            <td style="font-size:0.8rem;color:var(--gris-texto);"><%= p.stock_minimo != null ? p.stock_minimo : '—' %></td>
+            <td style="white-space:nowrap;">
+              <a href="/inventario-ayb/producto/<%= p.id %>/ajustar" class="btn-icono" title="Ver QR / ajuste rápido"><i class="ti ti-qrcode"></i></a>
+            </td>
+            <td style="white-space:nowrap;">
+              <button type="button" class="btn-icono" title="Editar" onclick='abrirModalEditar(<%- JSON.stringify({id:p.id,nombre:p.nombre,categoria:p.categoria||"",unidad_default:p.unidad_default||"",stock_minimo:p.stock_minimo,codigo_barras:p.codigo_barras||""}) %>)'><i class="ti ti-pencil"></i></button>
+              <form method="POST" action="/inventario-ayb/producto/<%= p.id %>/eliminar" style="display:inline;" onsubmit="return confirm('¿Dar de baja este producto? No se borra el historial.');">
+                <button type="submit" class="btn-icono" title="Dar de baja" style="color:#dc2626;"><i class="ti ti-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+
+  </main>
+
+  <%- include('partials/mobile-nav', { path: 'inventario-ayb' }) %>
+</div>
+
+<!-- Modal nuevo producto -->
+<div id="modal-producto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Nuevo producto</h2>
+      <button onclick="hideModal('modal-producto')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <form method="POST" action="/inventario-ayb/producto/nuevo">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="field" style="grid-column:1/-1;">
+          <label>Producto</label>
+          <input type="text" name="nombre" placeholder="Ej: Vodka Absolut 750ml" required>
+        </div>
+        <div class="field">
+          <label>Categoría (opcional)</label>
+          <input type="text" name="categoria" placeholder="Ej: Destilados">
+        </div>
+        <div class="field">
+          <label>Unidad</label>
+          <select name="unidad_default" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
+            <option value="unidad">unidad</option>
+            <option value="botella">botella</option>
+            <option value="litro">litro</option>
+            <option value="kg">kg</option>
+            <option value="caja">caja</option>
+            <option value="paquete">paquete</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Stock actual</label>
+          <input type="number" name="stock_actual" placeholder="Ej: 12" step="0.01" min="0">
+        </div>
+        <div class="field">
+          <label>Stock mínimo (opcional)</label>
+          <input type="number" name="stock_minimo" placeholder="Ej: 3" step="0.01" min="0">
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Código de barras (opcional)</label>
+          <input type="text" name="codigo_barras" placeholder="Si lo tiene">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
+        <button type="button" onclick="hideModal('modal-producto')" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> Agregar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal importar productos desde Excel/CSV -->
+<div id="modal-importar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Importar productos</h2>
+      <button onclick="hideModal('modal-importar')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:0.82rem;color:var(--gris-texto);line-height:1.6;margin-bottom:16px;">
+      Subí un Excel o CSV con la lista de productos y se cargan todos de una — no hace falta que tenga un formato exacto, alcanza con que tenga una columna con el nombre del producto (y opcionalmente categoría, unidad, stock actual, stock mínimo o código de barras). Si el archivo tiene varias hojas (por ejemplo una por sector), se leen todas. Los productos que ya existan no se tocan.
+    </p>
+    <p style="margin-bottom:16px;">
+      <a href="/inventario-ayb/importar/plantilla" style="font-size:0.8rem;color:var(--azul);text-decoration:underline;"><i class="ti ti-download"></i> Descargar una plantilla de ejemplo</a>
+    </p>
+    <form method="POST" action="/inventario-ayb/importar" enctype="multipart/form-data">
+      <div class="field">
+        <label>Archivo (.xlsx o .csv)</label>
+        <input type="file" name="archivo_productos" accept=".xlsx,.xls,.csv" required>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
+        <button type="button" onclick="hideModal('modal-importar')" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-upload"></i> Importar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal editar producto -->
+<div id="modal-editar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Editar producto</h2>
+      <button onclick="hideModal('modal-editar')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <form method="POST" id="form-editar-producto" action="">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="field" style="grid-column:1/-1;">
+          <label>Producto</label>
+          <input type="text" name="nombre" id="edit-nombre" required>
+        </div>
+        <div class="field">
+          <label>Categoría (opcional)</label>
+          <input type="text" name="categoria" id="edit-categoria">
+        </div>
+        <div class="field">
+          <label>Unidad</label>
+          <select name="unidad_default" id="edit-unidad" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
+            <option value="unidad">unidad</option>
+            <option value="botella">botella</option>
+            <option value="litro">litro</option>
+            <option value="kg">kg</option>
+            <option value="caja">caja</option>
+            <option value="paquete">paquete</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Stock mínimo (opcional)</label>
+          <input type="number" name="stock_minimo" id="edit-stock-minimo" step="0.01" min="0">
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Código de barras (opcional)</label>
+          <input type="text" name="codigo_barras" id="edit-codigo-barras">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
+        <button type="button" onclick="hideModal('modal-editar')" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-device-floppy"></i> Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.btn-icono{background:none;border:1px solid var(--gris-borde);border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gris-texto);transition:border-color .2s,color .2s;text-decoration:none;}
+.btn-icono:hover{border-color:var(--azul);color:var(--azul);}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:0.72rem;font-weight:600;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.04em;}
+.field input,.field select{border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;background:var(--gris-fondo);}
+.field input:focus,.field select:focus{border-color:var(--azul);background:var(--blanco);}
+
+/* "Otras opciones" — mismo patrón que ya usan Horarios y Horas extra:
+   agrupa acá los botones secundarios (antes eran 4-5 botones sueltos que
+   no entraban en una sola fila y se amontonaban en pantallas chicas). */
+.dropdown-otras-opciones{position:absolute;right:0;top:calc(100% + 6px);background:var(--blanco);border:1px solid var(--gris-borde);border-radius:10px;box-shadow:var(--sombra-md);padding:6px;min-width:220px;display:none;flex-direction:column;gap:2px;z-index:50;}
+.dropdown-otras-opciones.abierto{display:flex;}
+.dropdown-otras-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;font-size:0.83rem;color:var(--negro);text-decoration:none;transition:background .15s;}
+.dropdown-otras-item:hover{background:var(--gris-fondo);}
+.dropdown-otras-item i{font-size:15px;color:var(--gris-texto);flex-shrink:0;}
+</style>
+
+<script>
+function showModal(id){
+  document.getElementById(id).style.display='flex';
+  setTimeout(()=>{const f=document.querySelector('#'+id+' input:not([type=hidden])');if(f)f.focus();},100);
+}
+function hideModal(id){ document.getElementById(id).style.display='none'; }
+
+function toggleOtrasOpciones(ev) {
+  ev.stopPropagation();
+  document.getElementById('dropdown-otras-opciones').classList.toggle('abierto');
+}
+function hideOtrasOpciones() {
+  document.getElementById('dropdown-otras-opciones').classList.remove('abierto');
+}
+document.addEventListener('click', (ev) => {
+  const dropdown = document.getElementById('dropdown-otras-opciones');
+  const boton = document.getElementById('btn-otras-opciones');
+  if (dropdown && dropdown.classList.contains('abierto') && !dropdown.contains(ev.target) && ev.target !== boton && !boton.contains(ev.target)) {
+    dropdown.classList.remove('abierto');
+  }
+});
+
+function abrirModalEditar(p) {
+  document.getElementById('form-editar-producto').action = '/inventario-ayb/producto/' + p.id + '/editar';
+  document.getElementById('edit-nombre').value = p.nombre || '';
+  document.getElementById('edit-categoria').value = p.categoria || '';
+  document.getElementById('edit-unidad').value = p.unidad_default || 'unidad';
+  document.getElementById('edit-stock-minimo').value = p.stock_minimo != null ? p.stock_minimo : '';
+  document.getElementById('edit-codigo-barras').value = p.codigo_barras || '';
+  showModal('modal-editar');
+}
+</script>
+
+<% /* Alerta de stock bajo empujada al asistente — mismo patrón que las
+      alertas de eventuales de AYB en horarios_ayb.ejs (agregarMensajeAsistente,
+      ya definido en nav.ejs). Esta pantalla ya solo la ve un gestor de AYB
+      (el router la filtra antes de llegar acá), así que no hace falta
+      repetir ese chequeo del lado de la vista. */ %>
+<% if (bajoStock.length > 0) { %>
+<script>
+(function () {
+  const productosBajoStock = <%- JSON.stringify(bajoStock.map(p => ({ nombre: p.nombre, stock_actual: p.stock_actual || 0, stock_minimo: p.stock_minimo, unidad: p.unidad_default || '' }))) %>;
+  const panel = document.getElementById('asistentePanel');
+  const burbuja = document.getElementById('asistenteBurbuja');
+  if (!panel || !burbuja || typeof agregarMensajeAsistente !== 'function') return;
+
+  agregarMensajeAsistente(
+    `⚠️ Hay ${productosBajoStock.length} producto${productosBajoStock.length === 1 ? '' : 's'} de Inventario AYB por debajo del stock mínimo:`,
+    'bot'
+  );
+  agregarMensajeAsistente(
+    productosBajoStock.map(p => `• ${p.nombre}: ${p.stock_actual} ${p.unidad} (mínimo ${p.stock_minimo})`).join('\n'),
+    'bot'
+  );
+
+  // Igual que en Horarios AYB: abre el panel solo para que la alerta se
+  // vea apenas se entra a la pantalla, no hace falta abrir el chat a mano.
+  panel.classList.add('abierto');
+  burbuja.classList.add('oculta-pulso');
+})();
+</script>
+<% } %>
+</body>
+</html>

@@ -30,18 +30,18 @@
       </p>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;">
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:1.8rem;font-weight:700;color:#16a34a;margin:0;"><%= resumen.cargados %></p>
-          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#166534;margin:4px 0 0;">Lotes cargados</p>
+        <div style="background:rgba(6,147,126,0.12);border:1px solid rgba(6,147,126,0.3);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= resumen.cargados %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Lotes cargados</p>
         </div>
         <% if (resumen.sinProducto > 0) { %>
-        <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:1.8rem;font-weight:700;color:#92400e;margin:0;"><%= resumen.sinProducto %></p>
-          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#92400e;margin:4px 0 0;">Sin nombre de producto</p>
+        <div style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:#dc2626;margin:0;"><%= resumen.sinProducto %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#dc2626;margin:4px 0 0;">Sin nombre de producto</p>
         </div>
         <% } %>
         <% if (resumen.sinVencimiento > 0) { %>
-        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;text-align:center;">
+        <div style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
           <p style="font-size:1.8rem;font-weight:700;color:#dc2626;margin:0;"><%= resumen.sinVencimiento %></p>
           <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#dc2626;margin:4px 0 0;">Sin fecha de vencimiento válida</p>
         </div>

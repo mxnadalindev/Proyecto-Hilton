@@ -190,6 +190,17 @@ const init = async () => {
       creado_en TIMESTAMP DEFAULT NOW()
     )
   `);
+  // Costos se habilita ahora también para AYB (antes era solo de Cocina) —
+  // sin esta columna, la lista de platos mostraba mezclados los platos de
+  // Cocina y los tragos/menús de AYB a cualquiera de los dos. Los platos
+  // que ya existían de antes (todos cargados por Cocina) se marcan acá
+  // como 'cocina' para no perder ni desordenar nada de lo ya cargado. La
+  // tabla de insumos (con sus precios) queda a propósito SIN esta
+  // separación: es una sola lista de precios compartida entre departamentos,
+  // porque el hotel compra un mismo insumo a un mismo precio sin importar
+  // qué sector lo vaya a usar.
+  await pool.query(`ALTER TABLE platos_costo ADD COLUMN IF NOT EXISTS departamento TEXT`);
+  await pool.query(`UPDATE platos_costo SET departamento='cocina' WHERE departamento IS NULL`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS plato_insumos (
@@ -505,6 +516,33 @@ const init = async () => {
   `);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_productos_ayb_codigo_barras ON productos_ayb (codigo_barras)`);
 
+  // Inventario AYB — módulo nuevo, separado de Croutons (ese sigue siendo
+  // solo vencimientos). Este maneja STOCK: cuánto hay de cada producto de
+  // barra ahora mismo, y avisa cuando queda por debajo del mínimo. Suma dos
+  // columnas a productos_ayb (que ya existía pero no se usaba en ningún
+  // lado) en vez de crear un catálogo de productos paralelo.
+  await pool.query(`ALTER TABLE productos_ayb ADD COLUMN IF NOT EXISTS stock_actual REAL DEFAULT 0`);
+  await pool.query(`ALTER TABLE productos_ayb ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT true`);
+
+  // Historial de movimientos de stock (ingreso/ajuste/consumo) — no se pisa
+  // el número, queda registrado quién y cuándo lo cambió. Base para poder
+  // armar reportes de consumo/mermas más adelante sin tener que rehacer nada.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS inventario_ayb_movimientos (
+      id SERIAL PRIMARY KEY,
+      producto_id INTEGER NOT NULL REFERENCES productos_ayb(id) ON DELETE CASCADE,
+      tipo TEXT NOT NULL,
+      cantidad REAL NOT NULL,
+      cantidad_anterior REAL,
+      cantidad_nueva REAL,
+      nota TEXT,
+      usuario_id INTEGER REFERENCES usuarios(id),
+      usuario_nombre TEXT,
+      creado_en TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_inventario_ayb_mov_producto ON inventario_ayb_movimientos (producto_id, creado_en DESC)`);
+
   // Actualización automática de precios desde facturas (con IA) — datos extra
   // para saber CON QUÉ factura/proveedor/usuario se originó cada cambio de
   // historial_precios, y qué tan seguro estaba el sistema del matching
@@ -535,6 +573,25 @@ const init = async () => {
     CREATE INDEX IF NOT EXISTS idx_facturas_procesadas_hash
     ON facturas_procesadas (hash_archivo)
   `);
+
+  // Horas extra de Cocina — carga puntual por día (no un total suelto),
+  // para que quede historial de cuándo y por qué, y se pueda armar un
+  // informe acumulado por empleado y por mes. Sin unique constraint en
+  // (usuario_id, fecha): un mismo día puede tener más de un tramo de horas
+  // extra cargado por separado.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS horas_extra (
+      id SERIAL PRIMARY KEY,
+      usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      fecha DATE NOT NULL,
+      horas REAL NOT NULL,
+      nota TEXT,
+      creado_por INTEGER REFERENCES usuarios(id),
+      creado_por_nombre TEXT,
+      creado_en TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_horas_extra_usuario ON horas_extra (usuario_id, fecha DESC)`);
 
   // Admin por defecto
   const admin = await db.get2(

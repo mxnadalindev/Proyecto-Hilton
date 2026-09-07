@@ -187,6 +187,21 @@
   </div>
 </div>
 
+<!-- Ventana de aviso genérica (reemplaza los alert() del navegador de esta
+     pantalla, ej. "Falta el horario Desde de...") — mismo estilo de cartel
+     con ícono de warning que ya se usa en Horarios de Cocina. Es solo un
+     "Aceptar" para cerrar, ningún cambio de comportamiento respecto de
+     los alert() que reemplaza. -->
+<div id="modal-aviso-ayb" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1200;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.2);text-align:center;">
+    <div style="width:64px;height:64px;border-radius:50%;background:#fffbeb;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <i class="ti ti-alert-triangle" style="font-size:32px;color:#b45309;"></i>
+    </div>
+    <p id="aviso-ayb-texto" style="font-size:0.88rem;color:var(--negro);margin-bottom:22px;line-height:1.5;"></p>
+    <button type="button" class="btn-primary" onclick="hideModal('modal-aviso-ayb')" style="min-width:120px;">Aceptar</button>
+  </div>
+</div>
+
 <style>
 .c-dia{padding:14px 6px;border-radius:8px;cursor:pointer;font-size:1rem;font-weight:600;color:var(--negro);transition:all 0.12s;border:1px solid transparent;background:var(--gris-fondo);}
 .c-dia:hover{box-shadow:0 0 0 1px var(--azul) inset;}
@@ -325,7 +340,17 @@ function renderGridGestor() {
 // igual a todos los días tildados.
 let horariosPorDia = {};
 
+// En celular a veces el navegador dispara el toque como dos eventos
+// seguidos (touch + click sintético) para el mismo dedo — sin esto, tildar
+// o destildar un día podía terminar alternando dos veces y quedando como
+// si no hubiera pasado nada. Se ignora un segundo toggle del mismo día si
+// llega a menos de 250ms del anterior.
+let _ultimoToggleDia = null;
 function toggleDia(fechaStr) {
+  const ahora = Date.now();
+  if (_ultimoToggleDia && _ultimoToggleDia.fecha === fechaStr && (ahora - _ultimoToggleDia.ts) < 250) return;
+  _ultimoToggleDia = { fecha: fechaStr, ts: ahora };
+
   if (seleccionados.has(fechaStr)) {
     seleccionados.delete(fechaStr);
     delete horariosPorDia[fechaStr];
@@ -408,13 +433,18 @@ function copiarPrimerHorarioATodos() {
 }
 
 function cMes(dir) {
+  // .setDate(1) antes de cambiar el mes: si cFecha queda en un día que no
+  // existe en el mes siguiente (ej. 31 de agosto -> setMonth(+1) sin esto
+  // da "31 de septiembre", que no existe, y JS lo corrige solo saltando
+  // directo a octubre). Fijar el día en 1 primero evita ese salto de mes de más.
+  cFecha.setDate(1);
   cFecha.setMonth(cFecha.getMonth() + dir);
   cargarMes();
   cargarEventos();
 }
 
 async function confirmarSeleccion(estado) {
-  if (seleccionados.size === 0) { alert('Elegí al menos un día en el calendario.'); return; }
+  if (seleccionados.size === 0) { mostrarAvisoAyb('Elegí al menos un día en el calendario.'); return; }
 
   const dias = [...seleccionados];
   // Para "disponible" cada día lleva su propio horario (pueden ser
@@ -422,7 +452,7 @@ async function confirmarSeleccion(estado) {
   if (estado === 'disponible') {
     const sinHorario = dias.filter(f => !(horariosPorDia[f] && horariosPorDia[f].desde));
     if (sinHorario.length) {
-      alert(`Falta el horario "Desde" de: ${sinHorario.map(fmtFechaCorta).join(', ')}.`);
+      mostrarAvisoAyb(`Falta el horario "Desde" de: ${sinHorario.map(fmtFechaCorta).join(', ')}.`);
       return;
     }
   }
@@ -444,7 +474,7 @@ async function confirmarSeleccion(estado) {
   horariosPorDia = {};
   renderDiasLista();
   await cargarMes();
-  if (errores > 0) alert(`Se guardaron ${dias.length - errores} de ${dias.length} días. Hubo un error con el resto.`);
+  if (errores > 0) mostrarAvisoAyb(`Se guardaron ${dias.length - errores} de ${dias.length} días. Hubo un error con el resto.`);
 }
 
 // ── Eventos AYB (nombre, horario, cupo de mozos) ────
@@ -493,7 +523,7 @@ async function cargarDisponibilidadResumen(mesStr) {
 // encargado/admin — se decide una sola vez por carga, según lo que
 // devuelva /horarios/eventos (esGestor).
 function aplicarModoVista() {
-  document.getElementById('ayb-titulo').textContent = esGestorEventos ? 'Eventos de Alimentos y Bebidas' : 'Mi disponibilidad';
+  document.getElementById('ayb-titulo').textContent = esGestorEventos ? 'Horarios' : 'Mi disponibilidad';
   document.getElementById('ayb-info-mozo').style.display = esGestorEventos ? 'none' : 'flex';
   document.getElementById('ayb-info-gestor').style.display = esGestorEventos ? 'flex' : 'none';
   document.getElementById('c-leyenda-mozo').style.display = esGestorEventos ? 'none' : 'flex';
@@ -591,6 +621,13 @@ function showModal(id) {
 }
 function hideModal(id) {
   document.getElementById(id).style.display = 'none';
+}
+
+// Reemplaza los alert() nativos de esta pantalla por la ventana con cartel
+// de warning (mismo comportamiento: solo informa y se cierra con Aceptar).
+function mostrarAvisoAyb(texto) {
+  document.getElementById('aviso-ayb-texto').textContent = texto;
+  showModal('modal-aviso-ayb');
 }
 
 function fmtFechaCorta(fechaStr) {
@@ -827,7 +864,7 @@ renderDiasLista();
 
   const totalAvisos = alertas.reduce((n, a) => n + a.detalles.length, 0);
   agregarMensajeAsistente(
-    `⚠️ Ojo con los eventuales de AYB: encontré ${totalAvisos} aviso${totalAvisos === 1 ? '' : 's'} entre ${alertas.length} mozo${alertas.length === 1 ? '' : 's'} este mes (bolsa de 200hs y/o descanso de 12hs).`,
+    `⚠️ Ojo con los mozos de AYB: encontré ${totalAvisos} aviso${totalAvisos === 1 ? '' : 's'} entre ${alertas.length} mozo${alertas.length === 1 ? '' : 's'} este mes (descanso de 12hs, turnos de más de 12hs y/o bolsa de 200hs para Eventuales).`,
     'bot'
   );
   alertas.forEach(a => {

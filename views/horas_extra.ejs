@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horas extra — Cocina — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <%- include('partials/nav', { path: 'horas-extra' }) %>
+
+  <main class="main-content main-content-ancho">
+
+    <%
+      // Nombre del mes en texto, para el mensaje de WhatsApp — mismo dato
+      // que ya se muestra en el selector de mes de acá abajo.
+      const nombreMesTexto = new Date(mes+'-01T00:00:00').toLocaleDateString('es-AR',{month:'long',year:'numeric'});
+      const msgHorasExtra = `Hola! Te envío el informe de horas extra de Cocina correspondiente a ${nombreMesTexto}.`;
+    %>
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Cocina</p>
+        <h1 class="seccion-titulo">Horas extra</h1>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+
+        <!-- "Otras opciones": mismo patrón (y mismas clases) que ya usa
+             Horarios — Enviar por WhatsApp / Excel del mes / historial
+             completo. La carga de horas extra ya no necesita un botón acá
+             arriba: se hace tocando la ficha de cada empleado, abajo. -->
+        <div class="menu-otras-opciones" style="position:relative;">
+          <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
+            <i class="ti ti-dots"></i> Otras opciones <i class="ti ti-chevron-down" style="font-size:12px;"></i>
+          </button>
+          <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
+            <button type="button" class="dropdown-otras-item dropdown-otras-item-whatsapp" onclick="enviarExcelPorWhatsapp()">
+              <i class="ti ti-brand-whatsapp"></i> Enviar
+            </button>
+            <a href="/horas-extra/excel?mes=<%= mes %>" class="dropdown-otras-item dropdown-otras-item-excel">
+              <i class="ti ti-file-spreadsheet"></i> Excel (este mes)
+            </a>
+            <a href="/horas-extra/excel-historial" class="dropdown-otras-item dropdown-otras-item-excel">
+              <i class="ti ti-history"></i> Descargar historial completo
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <% if (typeof msg !== 'undefined' && msg) {
+      // Mismo cuidado que en el resto del proyecto: si el mensaje trae un
+      // "%" que no forma parte de un %XX válido, decodificarlo de nuevo acá
+      // tira "URI malformed" — con el try/catch se muestra tal cual llegó.
+      let msgTexto;
+      try { msgTexto = decodeURIComponent(msg); } catch (e) { msgTexto = msg; }
+      const esError = /error/i.test(msgTexto);
+    %>
+    <div style="background:<%= esError ? '#fef2f2' : 'var(--azul-claro)' %>;border:1px solid <%= esError ? '#fecaca' : 'var(--azul-borde)' %>;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:<%= esError ? '#dc2626' : 'var(--azul)' %>;display:flex;align-items:center;gap:10px;">
+      <i class="ti <%= esError ? 'ti-alert-circle' : 'ti-check' %>" style="font-size:18px;"></i>
+      <%= msgTexto %>
+    </div>
+    <% } %>
+
+    <!-- Navegación de mes -->
+    <div style="display:flex;align-items:center;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;margin-bottom:20px;box-shadow:var(--sombra);flex-wrap:wrap;gap:10px;padding:4px;">
+      <a href="/horas-extra?mes=<%= mesAnterior %>" class="btn-secondary" style="padding:6px 14px;">
+        <i class="ti ti-chevron-left"></i> Mes anterior
+      </a>
+      <div style="text-align:center;flex:1;">
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 2px;">Mes</p>
+        <p style="font-size:0.95rem;font-weight:600;color:var(--negro);margin:0;text-transform:capitalize;">
+          <%= new Date(mes+'-01T00:00:00').toLocaleDateString('es-AR',{month:'long',year:'numeric'}) %>
+        </p>
+      </div>
+      <a href="/horas-extra?mes=<%= mesSiguiente %>" class="btn-secondary" style="padding:6px 14px;<%= esMesActual ? 'opacity:0.4;pointer-events:none;' : '' %>">
+        Mes siguiente <i class="ti ti-chevron-right"></i>
+      </a>
+    </div>
+
+    <!-- Resumen -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;">
+      <!-- Antes las dos tarjetas eran beige lisas (var(--gris-fondo)) — a
+           pedido, cada una ahora es vidrio translúcido: la de horas
+           extra con el mismo verde de la barra de arriba, y la de
+           empleados con el navy de marca (#002f61), mismo estilo. -->
+      <div style="background:rgba(6,147,126,0.12);border:1px solid rgba(6,147,126,0.3);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+        <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= totalGeneral.toLocaleString('es-AR',{maximumFractionDigits:1}) %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Horas extra totales del mes</p>
+      </div>
+      <div style="background:rgba(0,47,97,0.10);border:1px solid rgba(0,47,97,0.26);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+        <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= filas.filter(f => f.totalHoras > 0).length %></p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Empleado<%= filas.filter(f => f.totalHoras > 0).length !== 1 ? 's' : '' %> con horas cargadas</p>
+      </div>
+    </div>
+
+    <!-- Informe por empleado -->
+    <% if (filas.length === 0) { %>
+    <div style="text-align:center;padding:60px 20px;color:var(--gris-texto);">
+      <i class="ti ti-clock-off" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+      No hay empleados activos de Cocina para mostrar.
+    </div>
+    <% } else { %>
+
+    <!-- Buscador — filtra las tarjetas de acá abajo al toque, sin recargar
+         la página (a diferencia del buscador de Inventario, que sí manda el
+         formulario: acá conviene que sea instantáneo porque además hay que
+         recalcular el carrusel al filtrar). Mismo estilo visual que el resto. -->
+    <div style="position:relative;max-width:320px;margin-bottom:16px;">
+      <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
+      <input type="text" id="buscarEmpleadoHoras" oninput="filtrarFichas()" placeholder="Buscar empleado por nombre o puesto..."
+             style="width:100%;box-sizing:border-box;padding:8px 12px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
+    </div>
+
+    <%
+      // Avatar con iniciales en vez de foto (no hay fotos de empleados en
+      // el sistema todavía) — un color estable por empleado (según su id,
+      // no al azar) tomado de la misma paleta de gradientes que ya se usa
+      // en las tarjetas del carrusel de Inicio, para que se sienta parte
+      // del mismo sistema visual.
+      const PALETA_AVATAR = ['#002f61', '#007293', '#06937e', '#6bb030'];
+      function inicialesDe(nombre) {
+        const partes = String(nombre).trim().split(/\s+/).filter(Boolean);
+        if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
+        if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+        return '?';
+      }
+    %>
+    <div class="he-carousel-outer">
+      <button class="carousel-arrow he-flecha he-flecha-izq" onclick="pasoFichas(-1)" aria-label="Anterior"><i class="ti ti-chevron-left"></i></button>
+      <button class="carousel-arrow he-flecha he-flecha-der" onclick="pasoFichas(1)" aria-label="Siguiente"><i class="ti ti-chevron-right"></i></button>
+      <div class="he-carousel" id="fichasCarousel">
+      <% filas.forEach(f => { %>
+      <div class="he-card" data-nombre="<%= String(f.nombre).toLowerCase() %>" data-puesto="<%= String(f.puesto || '').toLowerCase() %>" style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;overflow:hidden;">
+        <div class="ficha-empleado-fila" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px 16px 16px;cursor:pointer;"
+             title="Tocar para cargar horas extra de <%= f.nombre %>"
+             onclick="abrirCargaParaEmpleado(<%= f.id %>, '<%= String(f.nombre).replace(/\\/g,'\\\\').replace(/'/g,"\\'") %>')">
+          <div style="width:64px;height:64px;border-radius:50%;background:<%= PALETA_AVATAR[f.id % PALETA_AVATAR.length] %>;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;font-family:var(--font-sans);margin-bottom:10px;">
+            <%= inicialesDe(f.nombre) %>
+          </div>
+          <p style="font-weight:600;color:var(--negro);margin:0;text-transform:uppercase;letter-spacing:0.02em;font-size:0.85rem;"><%= f.nombre %></p>
+          <% if (f.puesto) { %><p style="font-size:0.75rem;color:var(--azul);margin:2px 0 0;"><%= f.puesto %></p><% } %>
+          <p style="font-size:1.3rem;font-weight:700;color:<%= f.totalHoras > 0 ? 'var(--azul)' : 'var(--gris-texto)' %>;margin:10px 0 0;"><%= f.totalHoras.toLocaleString('es-AR',{maximumFractionDigits:1}) %>hs</p>
+          <p style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:2px 0 0;">este mes</p>
+        </div>
+        <div style="display:flex;border-top:1px solid var(--gris-borde);">
+          <button type="button" style="flex:1;background:none;border:none;border-right:1px solid var(--gris-borde);padding:10px;cursor:pointer;color:var(--azul);font-size:0.78rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;"
+                  onclick="abrirCargaParaEmpleado(<%= f.id %>, '<%= String(f.nombre).replace(/\\/g,'\\\\').replace(/'/g,"\\'") %>')">
+            <i class="ti ti-plus"></i> Cargar
+          </button>
+          <button type="button" style="flex:1;background:none;border:none;padding:10px;cursor:<%= f.registros.length > 0 ? 'pointer' : 'default' %>;color:<%= f.registros.length > 0 ? 'var(--gris-texto)' : '#d1d5db' %>;font-size:0.78rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;"
+                  <% if (f.registros.length > 0) { %>onclick="toggleDetalle('detalle-<%= f.id %>')"<% } %> <%= f.registros.length === 0 ? 'disabled' : '' %>>
+            Detalle <i class="ti ti-chevron-down" id="chevron-<%= f.id %>"></i>
+          </button>
+        </div>
+        <% if (f.registros.length > 0) { %>
+        <div id="detalle-<%= f.id %>" style="display:none;border-top:1px solid var(--gris-borde);overflow-x:auto;">
+          <table class="tabla" style="width:100%;">
+            <thead><tr><th>Fecha</th><th>Horas</th><th>Nota</th><th>Cargado por</th><th></th></tr></thead>
+            <tbody>
+              <% f.registros.forEach(r => { %>
+              <tr>
+                <td><%= new Date(r.fecha+'T00:00:00').toLocaleDateString('es-AR') %></td>
+                <td style="font-weight:600;"><%= Number(r.horas).toLocaleString('es-AR',{maximumFractionDigits:1}) %>hs</td>
+                <td><%= r.nota || '—' %></td>
+                <td style="color:var(--gris-texto);font-size:0.8rem;"><%= r.creado_por_nombre || '—' %></td>
+                <td>
+                  <form method="POST" action="/horas-extra/<%= r.id %>/eliminar" onsubmit="return confirm('¿Eliminar este registro de horas extra?')" style="margin:0;">
+                    <input type="hidden" name="mes" value="<%= mes %>">
+                    <button type="submit" class="btn-icono" title="Eliminar"><i class="ti ti-trash"></i></button>
+                  </form>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } %>
+      </div>
+      <% }) %>
+      </div>
+    </div>
+
+    <!-- Puntitos debajo — las flechas ahora están pegadas a los costados de
+         las tarjetas (arriba), a pedido. Misma clase carousel-dots/dot que
+         ya usa el resto del sistema. -->
+    <div class="deck-controls" style="margin-top:14px;">
+      <div class="carousel-dots" id="fichasDots"></div>
+    </div>
+    <p id="sinResultadosFichas" style="display:none;text-align:center;padding:40px 20px;color:var(--gris-texto);">
+      <i class="ti ti-search-off" style="font-size:28px;display:block;margin-bottom:8px;"></i>
+      No encontré ningún empleado con ese nombre o puesto.
+    </p>
+
+    <% } %>
+
+  </main>
+</div>
+
+<!-- Modal: cargar horas extra -->
+<div id="modal-agregar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 id="modal-agregar-titulo" style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Cargar horas extra</h2>
+      <button onclick="hideModal('modal-agregar')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
+    </div>
+    <form method="POST" action="/horas-extra/agregar">
+      <input type="hidden" name="mes" value="<%= mes %>">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="field">
+          <label>Empleado</label>
+          <select name="usuario_id" id="select-empleado" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
+            <option value="">Elegí un empleado…</option>
+            <% empleadosActivos.forEach(e => { %>
+            <option value="<%= e.id %>"><%= e.nombre %><%= e.puesto ? ' — ' + e.puesto : '' %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="field">
+            <label>Fecha</label>
+            <input type="date" name="fecha" required>
+          </div>
+          <div class="field">
+            <label>Horas extra</label>
+            <input type="number" name="horas" placeholder="Ej: 2.5" step="0.5" min="0.5" max="24" required>
+          </div>
+        </div>
+        <div class="field">
+          <label>Nota (opcional)</label>
+          <input type="text" name="nota" placeholder="Ej: se quedó cubriendo un evento">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
+        <button type="button" onclick="hideModal('modal-agregar')" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> Cargar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:0.72rem;font-weight:600;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.04em;}
+.field input,.field select{border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;background:var(--gris-fondo);}
+.field input:focus,.field select:focus{border-color:var(--azul);background:var(--blanco);}
+.btn-icono{background:none;border:1px solid var(--gris-borde);border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gris-texto);transition:border-color .2s,color .2s;}
+.btn-icono:hover{border-color:#dc2626;color:#dc2626;}
+.ficha-empleado-fila:hover{background:var(--gris-fondo);}
+
+/* Carrusel de fichas de empleados — scroll horizontal con "snap" en vez de
+   una grilla larga, para que en pantallas chicas se navegue de a una o dos
+   tarjetas por vez con flechas/puntitos, en vez de tener que scrollear
+   una lista larga verticalmente. */
+/* padding lateral: deja lugar para las flechas (position:absolute más
+   abajo) sin que tapen la primera/última tarjeta. */
+.he-carousel-outer{position:relative;padding:0 44px;}
+.he-carousel{display:flex;align-items:flex-start;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:2px 2px 10px;-ms-overflow-style:none;scrollbar-width:none;}
+.he-carousel::-webkit-scrollbar{display:none;}
+.he-card{flex:0 0 220px;scroll-snap-align:start;}
+@media (max-width:480px){
+  .he-card{flex-basis:80vw;}
+  .he-carousel-outer{padding:0 36px;}
+}
+/* Flechas a los costados de las tarjetas, no debajo — se apoyan sobre el
+   padding lateral del contenedor, centradas verticalmente sobre la fila. */
+.he-flecha{position:absolute;top:80px;z-index:2;background:var(--blanco);box-shadow:var(--sombra);}
+.he-flecha-izq{left:0;}
+.he-flecha-der{right:0;}
+@media (max-width:480px){ .he-flecha{top:70px;} }
+
+/* Flechas y puntitos — mismas reglas que ya usa el carrusel de Inicio
+   (ahí viven en su propio <style>, no en style.css global, así que se
+   repiten acá para que se vean y se sientan igual). */
+.deck-controls { display: flex; align-items: center; justify-content: center; gap: 16px; }
+.carousel-arrow {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--gris-fondo); border: 1px solid var(--gris-borde);
+  color: var(--gris-texto); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: background 0.2s, color 0.2s;
+}
+.carousel-arrow:hover { background: var(--azul-claro); color: var(--azul); }
+.carousel-dots { display: flex; gap: 7px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gris-borde); cursor: pointer; transition: background 0.2s, transform 0.2s; }
+.dot.activa { background: var(--azul); transform: scale(1.3); }
+
+/* "Otras opciones" — mismas clases que ya usa Horarios (viven en su propio
+   <style> ahí también, no en style.css global). */
+.dropdown-otras-opciones{
+  display:none;
+  position:absolute; right:0; top:calc(100% + 6px); z-index:200;
+  background:var(--blanco); border:1px solid var(--gris-borde); border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.15);
+  min-width:230px; padding:6px;
+}
+.dropdown-otras-opciones.abierto{ display:flex; flex-direction:column; gap:2px; }
+.dropdown-otras-item{
+  display:flex; align-items:center; gap:8px; width:100%;
+  background:none; border:none; padding:9px 12px;
+  font-family:var(--font-sans); font-size:0.78rem; font-weight:500;
+  color:var(--negro); text-decoration:none; cursor:pointer;
+  border-radius:6px; text-align:left;
+}
+.dropdown-otras-item:hover{ background:var(--gris-fondo); }
+.dropdown-otras-item i{ font-size:15px; color:var(--gris-texto); flex-shrink:0; }
+.dropdown-otras-item-whatsapp{ color:#128c53; }
+.dropdown-otras-item-whatsapp i{ color:#25D366; }
+.dropdown-otras-item-whatsapp:hover{ background:#f0fdf4; }
+.dropdown-otras-item-excel{ color:#15803d; }
+.dropdown-otras-item-excel i{ color:#16a34a; }
+.dropdown-otras-item-excel:hover{ background:#f0fdf4; }
+</style>
+
+<script>
+function showModal(id){
+  document.getElementById(id).style.display='flex';
+  setTimeout(()=>{const f=document.querySelector('#'+id+' input:not([type=hidden]),#'+id+' select');if(f)f.focus();},100);
+}
+function hideModal(id){ document.getElementById(id).style.display='none'; }
+
+// Menú "Otras opciones" (mismo patrón que Horarios): WhatsApp / Excel del
+// mes / historial completo.
+function toggleOtrasOpciones(ev) {
+  ev.stopPropagation();
+  document.getElementById('dropdown-otras-opciones').classList.toggle('abierto');
+}
+document.addEventListener('click', (ev) => {
+  const dropdown = document.getElementById('dropdown-otras-opciones');
+  const boton = document.getElementById('btn-otras-opciones');
+  if (dropdown && dropdown.classList.contains('abierto') && !dropdown.contains(ev.target) && ev.target !== boton && !boton.contains(ev.target)) {
+    dropdown.classList.remove('abierto');
+  }
+});
+function enviarExcelPorWhatsapp() {
+  // 100% síncrona a propósito: window.open debe dispararse sin ningún
+  // await antes, si no los navegadores de escritorio lo bloquean como
+  // popup no originado por un gesto del usuario.
+  const mensaje = <%- JSON.stringify(msgHorasExtra) %>;
+  window.open('https://wa.me/?text=' + encodeURIComponent(mensaje), '_blank');
+}
+
+// Tocar la ficha de un empleado: abre la misma carga pero con ese
+// empleado ya elegido — a pedido explícito, para no tener que buscarlo de
+// nuevo en el desplegable. Sigue siendo editable por si tocaste la ficha
+// equivocada.
+function abrirCargaParaEmpleado(usuarioId, nombre) {
+  document.getElementById('modal-agregar-titulo').textContent = 'Cargar horas extra — ' + nombre;
+  showModal('modal-agregar');
+  document.getElementById('select-empleado').value = usuarioId;
+}
+
+function toggleDetalle(id) {
+  const el = document.getElementById(id);
+  const abierto = el.style.display === 'block';
+  el.style.display = abierto ? 'none' : 'block';
+  const chevron = document.getElementById('chevron-' + id.replace('detalle-', ''));
+  if (chevron) chevron.style.transform = abierto ? '' : 'rotate(180deg)';
+}
+
+// ── Carrusel de fichas de empleados ──────────────────────────────────────
+// No es un carrusel de "una tarjeta a la vez" como el de Inicio: acá
+// conviene mostrar todas las que entren en el ancho de pantalla disponible
+// (2, 3, 4... según el dispositivo) y paginar de a una "pantalla" por vez.
+let fichasPaginaActual = 0;
+
+function tarjetasFichasVisibles() {
+  return [...document.querySelectorAll('#fichasCarousel .he-card')].filter(c => c.style.display !== 'none');
+}
+
+// Cuántas tarjetas entran juntas en el ancho visible ahora mismo (cambia
+// según el tamaño de pantalla, por eso se recalcula en vez de ser fijo).
+function fichasPorPagina() {
+  const cont = document.getElementById('fichasCarousel');
+  const primera = tarjetasFichasVisibles()[0];
+  if (!cont || !primera) return 1;
+  const ancho = primera.getBoundingClientRect().width + 14; // + gap
+  return Math.max(1, Math.floor(cont.clientWidth / ancho));
+}
+
+function actualizarDotsFichas() {
+  const visibles = tarjetasFichasVisibles();
+  const dotsEl = document.getElementById('fichasDots');
+  if (!dotsEl) return;
+  const totalPaginas = Math.max(1, Math.ceil(visibles.length / fichasPorPagina()));
+  dotsEl.innerHTML = '';
+  for (let i = 0; i < totalPaginas; i++) {
+    const d = document.createElement('span');
+    d.className = 'dot' + (i === 0 ? ' activa' : '');
+    d.onclick = () => irAPaginaFichas(i);
+    dotsEl.appendChild(d);
+  }
+}
+
+function irAPaginaFichas(i) {
+  const visibles = tarjetasFichasVisibles();
+  const cont = document.getElementById('fichasCarousel');
+  const objetivo = visibles[i * fichasPorPagina()];
+  if (!cont || !objetivo) return;
+  cont.scrollTo({ left: objetivo.offsetLeft - cont.offsetLeft, behavior: 'smooth' });
+  document.querySelectorAll('#fichasDots .dot').forEach((d, di) => d.classList.toggle('activa', di === i));
+  fichasPaginaActual = i;
+}
+
+function pasoFichas(dir) {
+  const totalPaginas = document.querySelectorAll('#fichasDots .dot').length;
+  const nueva = Math.min(Math.max(fichasPaginaActual + dir, 0), totalPaginas - 1);
+  irAPaginaFichas(nueva);
+}
+
+// Búsqueda: filtra por nombre o puesto (los mismos datos que ya se ven en
+// la tarjeta) y recalcula el carrusel, porque al ocultar tarjetas cambia
+// cuántas páginas quedan.
+function filtrarFichas() {
+  const campo = document.getElementById('buscarEmpleadoHoras');
+  const cont = document.getElementById('fichasCarousel');
+  if (!campo || !cont) return;
+  const q = campo.value.trim().toLowerCase();
+  let visiblesCount = 0;
+  document.querySelectorAll('#fichasCarousel .he-card').forEach(c => {
+    const coincide = !q || c.dataset.nombre.includes(q) || c.dataset.puesto.includes(q);
+    c.style.display = coincide ? '' : 'none';
+    if (coincide) visiblesCount++;
+  });
+  document.getElementById('sinResultadosFichas').style.display = visiblesCount === 0 ? 'block' : 'none';
+  document.querySelector('.he-carousel-outer').style.display = visiblesCount === 0 ? 'none' : 'block';
+  document.querySelector('.deck-controls').style.display = visiblesCount === 0 ? 'none' : 'flex';
+  cont.scrollTo({ left: 0 });
+  fichasPaginaActual = 0;
+  actualizarDotsFichas();
+}
+
+// Recalcular al cargar y al cambiar el tamaño de pantalla (rotar el
+// celular, achicar la ventana) — con un pequeño debounce para no
+// recalcular en cada pixel mientras se arrastra el borde de la ventana.
+document.addEventListener('DOMContentLoaded', actualizarDotsFichas);
+let _resizeFichasTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeFichasTimer);
+  _resizeFichasTimer = setTimeout(actualizarDotsFichas, 200);
+});
+
+// Si el usuario arrastra el carrusel a mano (swipe táctil) en vez de usar
+// las flechas/puntitos, igual mantenemos el puntito activo sincronizado.
+(function () {
+  const cont = document.getElementById('fichasCarousel');
+  if (!cont) return;
+  let timer;
+  cont.addEventListener('scroll', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const visibles = tarjetasFichasVisibles();
+      if (!visibles.length) return;
+      const porPagina = fichasPorPagina();
+      let idx = 0;
+      for (let i = 0; i < visibles.length; i++) {
+        if (visibles[i].offsetLeft - cont.offsetLeft >= cont.scrollLeft - 10) { idx = i; break; }
+      }
+      const pagina = Math.round(idx / porPagina);
+      document.querySelectorAll('#fichasDots .dot').forEach((d, di) => d.classList.toggle('activa', di === pagina));
+      fichasPaginaActual = pagina;
+    }, 120);
+  });
+})();
+</script>
+</body>
+</html>

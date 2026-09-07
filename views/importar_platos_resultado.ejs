@@ -31,18 +31,18 @@
       </p>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px;">
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:1.8rem;font-weight:700;color:#16a34a;margin:0;"><%= resumen.platosNuevos %></p>
-          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#166534;margin:4px 0 0;">Platos nuevos</p>
+        <div style="background:rgba(6,147,126,0.12);border:1px solid rgba(6,147,126,0.3);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= resumen.platosNuevos %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Platos nuevos</p>
         </div>
-        <div style="background:var(--azul-claro);border:1px solid var(--azul-borde);border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:1.8rem;font-weight:700;color:var(--azul);margin:0;"><%= resumen.platosActualizados %></p>
-          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--azul);margin:4px 0 0;">Platos actualizados</p>
+        <div style="background:rgba(0,47,97,0.10);border:1px solid rgba(0,47,97,0.26);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= resumen.platosActualizados %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Platos actualizados</p>
         </div>
         <% const totalFaltantes = resumen.detallePlatos.reduce((s,p)=>s+p.ingredientesFaltantes.length,0); %>
-        <div style="background:<%= totalFaltantes > 0 ? '#fef3c7' : 'var(--gris-fondo)' %>;border:1px solid <%= totalFaltantes > 0 ? '#fde68a' : 'var(--gris-borde)' %>;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:1.8rem;font-weight:700;color:<%= totalFaltantes > 0 ? '#92400e' : 'var(--gris-texto)' %>;margin:0;"><%= totalFaltantes %></p>
-          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:<%= totalFaltantes > 0 ? '#92400e' : 'var(--gris-texto)' %>;margin:4px 0 0;">Ingredientes sin insumo</p>
+        <div style="background:<%= totalFaltantes > 0 ? 'rgba(220,38,38,0.10)' : 'rgba(6,147,126,0.12)' %>;border:1px solid <%= totalFaltantes > 0 ? 'rgba(220,38,38,0.28)' : 'rgba(6,147,126,0.3)' %>;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:1.8rem;font-weight:700;color:<%= totalFaltantes > 0 ? '#dc2626' : 'var(--negro)' %>;margin:0;"><%= totalFaltantes %></p>
+          <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:<%= totalFaltantes > 0 ? '#dc2626' : 'var(--gris-texto)' %>;margin:4px 0 0;">Ingredientes sin insumo</p>
         </div>
       </div>
 

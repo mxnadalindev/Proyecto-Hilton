@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ajustar stock — Hilton</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    /* Página pensada para abrirse desde el celular al escanear el QR de un
+       producto — chica, sin el menú completo, botones grandes para tocar
+       fácil parado en el bar. */
+    body{background:var(--gris-fondo);margin:0;}
+    .ajustar-wrap{max-width:420px;margin:0 auto;padding:24px 16px 60px;}
+    .ajustar-card{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:24px;box-shadow:var(--sombra);}
+    .ajustar-btn-modo{flex:1;padding:14px 8px;border-radius:10px;border:1.5px solid var(--gris-borde);background:var(--gris-fondo);font-size:0.85rem;font-weight:600;color:var(--gris-texto);cursor:pointer;text-align:center;}
+    .ajustar-btn-modo.activo{border-color:var(--azul);background:var(--azul-claro);color:var(--azul);}
+    .ajustar-input{width:100%;text-align:center;font-size:1.4rem;font-weight:700;padding:14px;border-radius:10px;border:1px solid var(--gris-borde);background:var(--gris-fondo);outline:none;}
+    .ajustar-input:focus{border-color:var(--azul);background:var(--blanco);}
+  </style>
+</head>
+<body>
+<div class="ajustar-wrap">
+  <p style="text-align:center;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--gris-texto);margin:0 0 4px;">Portal interno · Inventario AYB</p>
+
+  <% if (typeof msg !== 'undefined' && msg) {
+    // Express ya llega con req.query.msg decodificado una vez — este
+    // decodeURIComponent es "por si" el mensaje se armó pegando el string
+    // ya codificado a mano en algún lado. Si el mensaje trae un "%" que no
+    // es parte de un %XX válido (ej. "100% de stock"), decodificarlo de
+    // nuevo tira "URI malformed" — con el try/catch, en ese caso se
+    // muestra el mensaje tal cual llegó en vez de romper la página.
+    let msgTexto;
+    try { msgTexto = decodeURIComponent(msg); } catch (e) { msgTexto = msg; }
+    const esError  = /error|inválid/i.test(msgTexto);
+  %>
+  <div style="background:<%= esError ? '#fef2f2' : '#f0fdf4' %>;border:1px solid <%= esError ? '#fecaca' : '#bbf7d0' %>;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:0.82rem;color:<%= esError ? '#dc2626' : '#16a34a' %>;text-align:center;">
+    <%= msgTexto %>
+  </div>
+  <% } %>
+
+  <% if (!producto && typeof mostrarReconocer !== 'undefined' && mostrarReconocer) { %>
+  <div class="ajustar-card">
+    <h1 style="font-family:var(--font-serif);font-size:1.2rem;font-weight:400;margin:0 0 6px;text-align:center;">Reconocer botella</h1>
+    <p style="text-align:center;font-size:0.78rem;color:var(--gris-texto);margin:0 0 18px;">
+      Sacale una foto a la botella (que se vea bien la etiqueta) — la IA la reconoce y te lleva directo a su pantalla de ajuste. También estima a ojo cuánto le queda, como referencia.
+    </p>
+    <% if (typeof geminiConfigurado !== 'undefined' && !geminiConfigurado) { %>
+    <p style="text-align:center;font-size:0.8rem;color:#dc2626;">El reconocimiento por foto no está disponible en este servidor todavía.</p>
+    <% } else { %>
+    <form method="POST" action="/inventario-ayb/reconocer-foto" enctype="multipart/form-data" id="form-reconocer" onsubmit="document.getElementById('btn-reconocer').disabled=true;document.getElementById('btn-reconocer').textContent='Reconociendo…';">
+      <input type="file" name="foto" accept="image/*" capture="environment" required
+             style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--gris-borde);border-radius:8px;font-size:0.8rem;background:var(--gris-fondo);margin-bottom:14px;"
+             onchange="document.getElementById('btn-reconocer').disabled=false;">
+      <button type="submit" id="btn-reconocer" class="btn-primary" style="width:100%;padding:14px;font-size:0.95rem;" disabled>
+        <i class="ti ti-camera"></i> Reconocer
+      </button>
+    </form>
+    <% } %>
+  </div>
+  <% } else if (!producto) { %>
+  <div class="ajustar-card" style="text-align:center;color:var(--gris-texto);">
+    <i class="ti ti-mood-confuzed" style="font-size:32px;display:block;margin-bottom:10px;"></i>
+    No se encontró este producto (puede estar dado de baja).
+  </div>
+  <% } else { %>
+  <div class="ajustar-card">
+    <h1 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:400;margin:0 0 2px;text-align:center;"><%= producto.nombre %></h1>
+    <% if (producto.categoria) { %><p style="text-align:center;font-size:0.75rem;color:var(--gris-texto);margin:0 0 18px;"><%= producto.categoria %></p><% } else { %><div style="margin-bottom:18px;"></div><% } %>
+
+    <p style="text-align:center;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:0 0 4px;">Stock actual</p>
+    <p style="text-align:center;font-size:2.2rem;font-weight:700;color:var(--negro);margin:0 0 20px;"><%= producto.stock_actual || 0 %> <span style="font-size:1rem;font-weight:400;color:var(--gris-texto);"><%= producto.unidad_default || '' %></span></p>
+
+    <form method="POST" action="/inventario-ayb/producto/<%= producto.id %>/ajustar" id="form-ajustar" onsubmit="return confirmarEnvioAjuste(event)">
+      <input type="hidden" name="volver_a_qr" value="1">
+      <input type="hidden" name="modo" id="ajustar-modo" value="sumar">
+
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button type="button" class="ajustar-btn-modo activo" id="btn-modo-sumar" onclick="elegirModo('sumar')"><i class="ti ti-plus"></i> Sumar</button>
+        <button type="button" class="ajustar-btn-modo" id="btn-modo-restar" onclick="elegirModo('restar')"><i class="ti ti-minus"></i> Restar</button>
+        <button type="button" class="ajustar-btn-modo" id="btn-modo-establecer" onclick="elegirModo('establecer')"><i class="ti ti-edit"></i> Fijar</button>
+      </div>
+
+      <input type="number" name="cantidad" id="ajustar-cantidad" class="ajustar-input" placeholder="0" step="0.01" min="0" style="margin-bottom:14px;">
+
+      <input type="text" name="nota" placeholder="Nota (opcional) — ej: conteo semanal"
+             style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--gris-borde);border-radius:8px;font-size:0.8rem;outline:none;background:var(--gris-fondo);margin-bottom:16px;">
+
+      <button type="submit" class="btn-primary" style="width:100%;padding:14px;font-size:0.95rem;">Guardar</button>
+    </form>
+  </div>
+  <% } %>
+
+</div>
+
+<script>
+function elegirModo(modo) {
+  document.getElementById('ajustar-modo').value = modo;
+  ['sumar','restar','establecer'].forEach(m => {
+    document.getElementById('btn-modo-' + m).classList.toggle('activo', m === modo);
+  });
+}
+
+// El formulario de Sumar/Restar/Fijar es un ajuste APARTE, opcional — por
+// ejemplo cuando esta pantalla se abrió reconociendo una botella con IA,
+// ese reconocimiento ya guardó solo, y este formulario de acá abajo es
+// solo por si además querés cargar otro ajuste manual. Si no escribiste
+// ninguna cantidad y apretás Guardar, no hace falta pedirte que completes
+// nada (no hay ningún ajuste manual que guardar) — pero tampoco te podés
+// quedar en una pantalla que no hace nada al tocar el botón: te manda de
+// vuelta al listado del inventario, como si hubieras dicho "ya terminé acá".
+function confirmarEnvioAjuste(event) {
+  const campo = document.getElementById('ajustar-cantidad');
+  if (!campo.value.trim()) {
+    event.preventDefault();
+    window.location.href = '/inventario-ayb';
+    return false;
+  }
+  return true;
+}
+</script>
+</body>
+</html>

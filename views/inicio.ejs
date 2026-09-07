@@ -57,6 +57,8 @@
               detalle: 'Cargá insumos y sus precios, costeá platos automáticamente, y actualizá precios subiendo una foto de factura o el catálogo del proveedor — con historial completo de cada cambio.' },
           ];
           if (esAdmin) {
+            modulos.push({ href: '/horas-extra', icon: 'ti-clock-plus', nombre: 'Horas extra', desc: 'Carga e informe por empleado', g1:'#6bb030', g2:'#002f61',
+              detalle: 'Cargá las horas extra de cada empleado de Cocina por fecha puntual, con una nota opcional, y mirá el informe con el total acumulado por persona en el mes.' });
             modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', g1:'#007293', g2:'#6bb030',
               detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
           }
@@ -69,6 +71,10 @@
                 detalle: 'Visualizá la grilla completa de turnos de Alimentos y Bebidas, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
               { href: '/croutons', icon: 'ti-package', nombre: 'Croutons', desc: 'Stock y vencimientos', g1:'#6bb030', g2:'#002f61',
                 detalle: 'Cargá cada ingreso de mercadería de croutons con su fecha de vencimiento — a mano, subiendo una foto del remito o el catálogo del proveedor — y recibí un aviso 15 días antes de que venza cada lote.' },
+              { href: '/inventario-ayb', icon: 'ti-bottle', nombre: 'Inventario', desc: 'Stock de bebidas', g1:'#002f61', g2:'#007293',
+                detalle: 'Controlá el stock de bebidas: ajustá cantidades a mano o sacándole una foto a la botella (la IA la reconoce y suma sola), imprimí etiquetas QR para ajuste rápido desde el celular, y mirá reportes mensuales de consumo por producto.' },
+              { href: '/costos', icon: 'ti-coin', nombre: 'Costos', desc: 'Tragos y menús costeados', g1:'#002f61', g2:'#06937e',
+                detalle: 'Cargá los insumos de barra/salón y sus precios, costeá tragos y menús automáticamente, y actualizá precios subiendo una foto de factura o el catálogo del proveedor — con historial completo de cada cambio.' },
             ];
             // Configuración es exclusiva de admin real — un supervisor de
             // AYB gestiona equipo/croutons pero no entra a Configuración.
@@ -208,6 +214,24 @@
                 <rect x="126" y="120" width="17" height="64" rx="3" fill="rgba(255,255,255,0.5)"/>
                 <polyline points="48,136 82,104 108,82 134,112" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>`;
+            case 'Inventario':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <path d="M84 60 h22 v22 l10 14 v88 q0 10 -10 10 h-22 q-10 0 -10 -10 v-88 l10 -14 z" fill="rgba(255,255,255,0.92)"/>
+                <rect x="82" y="56" width="26" height="10" rx="3" fill="rgba(255,255,255,0.55)"/>
+                <rect x="80" y="128" width="30" height="44" rx="2" fill="rgba(255,255,255,0.28)"/>
+                <circle cx="55" cy="150" r="4" fill="rgba(255,255,255,0.35)"/>
+                <circle cx="132" cy="140" r="3" fill="rgba(255,255,255,0.3)"/>
+              </svg>`;
+            case 'Horas extra':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="88" cy="128" r="48" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="4"/>
+                <line x1="88" y1="128" x2="88" y2="96" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+                <line x1="88" y1="128" x2="112" y2="138" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+                <circle cx="88" cy="128" r="5" fill="#fff"/>
+                <circle cx="140" cy="86" r="19" fill="rgba(255,255,255,0.92)"/>
+                <line x1="140" y1="78" x2="140" y2="94" stroke="#0b2540" stroke-width="4" stroke-linecap="round"/>
+                <line x1="132" y1="86" x2="148" y2="86" stroke="#0b2540" stroke-width="4" stroke-linecap="round"/>
+              </svg>`;
             default:
               return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="95" cy="122" r="46" fill="rgba(255,255,255,0.16)"/>
@@ -218,6 +242,7 @@
 
       <% if (modulos.length > 0) { %>
       <div class="deck" id="deck">
+        <button class="carousel-arrow deck-flecha deck-flecha-izq" onclick="pasoModulo(-1)" aria-label="Anterior"><i class="ti ti-chevron-left"></i></button>
         <% modulos.forEach((m, i) => { %>
         <div class="card" data-index="<%= i %>" onclick="clickCard(<%= i %>)">
           <div class="card__face" style="background:linear-gradient(150deg, <%= m.g1 %> 0%, <%= m.g2 %> 100%);">
@@ -227,22 +252,21 @@
           </div>
         </div>
         <% }) %>
+        <button class="carousel-arrow deck-flecha deck-flecha-der" onclick="pasoModulo(1)" aria-label="Siguiente"><i class="ti ti-chevron-right"></i></button>
       </div>
 
       <div class="deck-controls">
-        <button class="carousel-arrow" onclick="pasoModulo(-1)" aria-label="Anterior"><i class="ti ti-chevron-left"></i></button>
         <div class="carousel-dots" id="carouselDots">
           <% modulos.forEach((m, i) => { %>
           <span class="dot <%= i === 0 ? 'activa' : '' %>" data-index="<%= i %>" onclick="seleccionarModulo(<%= i %>)"></span>
           <% }) %>
         </div>
-        <button class="carousel-arrow" onclick="pasoModulo(1)" aria-label="Siguiente"><i class="ti ti-chevron-right"></i></button>
       </div>
 
       <div class="modulo-info">
         <p class="stage-eyebrow">Portal interno · Módulo</p>
         <h2 class="stage-nombre" id="slideNombre"><%= modulos[0].nombre %></h2>
-        <p class="stage-detalle" id="slideDetalle"><%= modulos[0].detalle %></p>
+        <p class="stage-detalle texto-descripcion" id="slideDetalle"><%= modulos[0].detalle %></p>
         <a href="<%= modulos[0].href %>" class="stage-btn" id="slideBtn">
           Entrar <i class="ti ti-arrow-right" aria-hidden="true"></i>
         </a>
@@ -345,7 +369,10 @@
 .modulo-info { text-align: center; max-width: 560px; margin: 0 auto; }
 .stage-eyebrow { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--azul); margin-bottom: 8px; }
 .stage-nombre { font-family: var(--font-serif); font-size: 1.8rem; font-weight: 400; margin-bottom: 12px; color: var(--negro); transition: opacity 0.3s ease; }
-.stage-detalle { font-size: 0.87rem; line-height: 1.7; color: var(--gris-texto); margin-bottom: 22px; transition: opacity 0.3s ease; }
+/* .stage-detalle ahora hereda tipografía/mayúscula de la clase global
+   .texto-descripcion (ver style.css) — acá solo quedan los ajustes
+   propios de este bloque (separación, animación de fade). */
+.stage-detalle { margin-bottom: 22px; transition: opacity 0.3s ease; }
 .stage-btn {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--azul); border: none; color: #fff;
@@ -389,10 +416,22 @@
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gris-borde); cursor: pointer; transition: background 0.2s, transform 0.2s; }
 .dot.activa { background: var(--azul); transform: scale(1.3); }
 
+/* Flechas al costado del deck (mismo criterio que ya usa Horas extra: a
+   la izquierda y a la derecha de las tarjetas, no abajo con los puntos).
+   z-index 200 porque las tarjetas del coverflow llegan hasta 100. */
+.deck-flecha{
+  position:absolute; top:50%; transform:translateY(-50%);
+  z-index:200; background:var(--blanco); box-shadow:var(--sombra);
+}
+.deck-flecha-izq{ left:6px; }
+.deck-flecha-der{ right:6px; }
+
 @media (max-width: 600px) {
   .deck { height: 280px; }
   .card { width: 140px; height: 200px; margin-left: -70px; margin-top: -100px; }
   .card__nombre { font-size: 0.95rem; }
+  .deck-flecha-izq{ left:0; }
+  .deck-flecha-der{ right:0; }
 }
 </style>
 

@@ -15,8 +15,18 @@
 
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label">Portal interno</p>
+        <p class="seccion-label"><%= typeof depto !== 'undefined' && depto === 'ayb' ? 'AYB' : 'Cocina' %></p>
         <h1 class="seccion-titulo">Costos</h1>
+        <% // Este selector solo lo ve un admin general (sin departamento propio) —
+           // una cuenta de Cocina o de AYB ya ve directo lo suyo, sin nada para
+           // elegir acá. La lista de insumos/precios es la misma para los dos;
+           // lo único que cambia con este link son los platos que se listan. %>
+        <% if (typeof esAdminGeneral !== 'undefined' && esAdminGeneral) { %>
+        <p style="font-size:0.75rem;color:var(--gris-texto);margin-top:4px;">
+          Viendo platos de <strong><%= depto === 'ayb' ? 'AYB' : 'Cocina' %></strong> ·
+          <a href="/costos<%= depto === 'ayb' ? '' : '?depto=ayb' %>" style="color:var(--azul);"><%= depto === 'ayb' ? 'ver Cocina' : 'ver AYB' %></a>
+        </p>
+        <% } %>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
@@ -260,10 +270,14 @@
       <div style="position:relative;margin-bottom:12px;">
         <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
         <form method="GET" action="/costos">
+          <% // Hidden para que un admin general que esté viendo AYB no "pierda"
+             // ese contexto al buscar — una cuenta de Cocina/AYB no lo necesita
+             // (departamentoEfectivo ignora este parámetro para ellas). %>
+          <% if (typeof depto !== 'undefined' && depto === 'ayb') { %><input type="hidden" name="depto" value="ayb"><% } %>
           <input type="text" name="buscarPlato" value="<%= buscarPlato %>" placeholder="Buscar plato por nombre..."
                  style="width:100%;padding:8px 32px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
           <% if (buscarPlato) { %>
-          <a href="/costos#modal-lista-platos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
+          <a href="/costos<%= depto === 'ayb' ? '?depto=ayb' : '' %>#modal-lista-platos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
           <% } %>
         </form>
       </div>
@@ -276,9 +290,9 @@
 
       <% if (!buscarPlato) { %>
       <div class="solapas-letras">
-        <a href="/costos" class="solapa-letra <%= !letraPlato ? 'activa' : '' %>">Todos</a>
+        <a href="/costos<%= depto === 'ayb' ? '?depto=ayb' : '' %>" class="solapa-letra <%= !letraPlato ? 'activa' : '' %>">Todos</a>
         <% 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => { %>
-        <a href="/costos?letraPlato=<%= l %>" class="solapa-letra <%= letraPlato === l ? 'activa' : '' %>"><%= l %></a>
+        <a href="/costos?letraPlato=<%= l %><%= depto === 'ayb' ? '&depto=ayb' : '' %>" class="solapa-letra <%= letraPlato === l ? 'activa' : '' %>"><%= l %></a>
         <% }) %>
       </div>
       <% } %>
@@ -483,7 +497,7 @@
       <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Nuevo plato</h2>
       <button onclick="hideModal('modal-plato')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
-    <form method="POST" action="/costos/plato/nuevo">
+    <form method="POST" action="/costos/plato/nuevo<%= typeof depto !== 'undefined' && depto === 'ayb' ? '?depto=ayb' : '' %>">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="field" style="grid-column:1/-1;">
           <label>Nombre del plato</label>

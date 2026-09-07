@@ -28,7 +28,13 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
-        <a href="/miembros-de-equipo" class="btn-secondary"><i class="ti ti-users"></i> Miembro de equipo</a>
+        <%# Antes este link no llevaba el período — volver acá desde Horarios
+            siempre te tiraba a la semana actual (31 ago—6 sep), pisando el
+            rango que habías elegido en el almanaque de Miembro de equipo.
+            Se le agrega el mismo inicio/fin que ya se usa en "Ver en
+            Horarios" (personal.ejs), en el mismo sentido, para que vuelva
+            al rango que se estaba mirando. %>
+        <a href="/miembros-de-equipo<%= dias.length ? ('?inicio=' + inicio + '&fin=' + fin) : '' %>" class="btn-secondary"><i class="ti ti-users"></i> Miembro de equipo</a>
 
         <!-- "Otras opciones": agrupa Enviar / Excel / Copiar período anterior /
              Reiniciar período en un desplegable — antes eran 4 botones sueltos
@@ -77,12 +83,16 @@
         <i class="ti ti-chevron-left"></i> Período anterior
       </a>
       <div style="text-align:center;">
+        <% if (dias.length === 0) { %>
+        <p style="font-size:0.95rem;font-weight:600;color:var(--negro);margin:0;">Seleccioná una fecha en Miembro de equipo</p>
+        <% } else { %>
         <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 2px;">
           Período <% if (dias.length !== 7) { %>(<%= dias.length %> día<%= dias.length !== 1 ? 's' : '' %>)<% } %>
         </p>
         <p style="font-size:0.95rem;font-weight:600;color:var(--negro);margin:0;">
           <%= new Date(dias[0]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long'}) %> — <%= new Date(dias[dias.length-1]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}) %>
         </p>
+        <% } %>
       </div>
       <a href="/horarios?inicio=<%= rangoSiguiente.inicio %>&fin=<%= rangoSiguiente.fin %>" class="btn-secondary" style="padding:6px 14px;">
         Período siguiente <i class="ti ti-chevron-right"></i>
