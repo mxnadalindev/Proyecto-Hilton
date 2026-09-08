@@ -5,6 +5,14 @@
   <title>Menús — Hilton</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+.menus-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+.menu-card{display:block;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:20px;text-decoration:none;box-shadow:var(--sombra);transition:border-color 0.2s;}
+.menu-card:hover{border-color:var(--azul-borde);}
+.menu-card-nombre{font-size:0.95rem;font-weight:600;color:var(--negro);margin:0 0 6px;}
+.menu-card-desc{font-size:0.75rem;color:var(--gris-texto);margin:0 0 14px;line-height:1.4;}
+.menu-card-footer{display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;color:var(--gris-texto);padding-top:12px;border-top:1px solid var(--gris-borde);}
+</style>
 </head>
 <body>
 <div class="app-layout">
@@ -48,13 +56,5 @@
   <%- include('partials/mobile-nav', { path: path }) %>
 </div>
 
-<style>
-.menus-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
-.menu-card{display:block;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:20px;text-decoration:none;box-shadow:var(--sombra);transition:border-color 0.2s;}
-.menu-card:hover{border-color:var(--azul-borde);}
-.menu-card-nombre{font-size:0.95rem;font-weight:600;color:var(--negro);margin:0 0 6px;}
-.menu-card-desc{font-size:0.75rem;color:var(--gris-texto);margin:0 0 14px;line-height:1.4;}
-.menu-card-footer{display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;color:var(--gris-texto);padding-top:12px;border-top:1px solid var(--gris-borde);}
-</style>
 </body>
 </html>

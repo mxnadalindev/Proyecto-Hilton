@@ -10,324 +10,6 @@
   <title>Inicio — Hilton</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-</head>
-<body>
-<div class="app-layout">
-
-  <%- include('partials/nav', { path: 'inicio' }) %>
-
-  <main class="main-content">
-    <div class="inicio-hero">
-      <p class="inicio-saludo">Portal interno · Hilton Buenos Aires</p>
-      <%
-        const NOMBRES_DEPTO = {
-          cocina: 'Cocina',
-          ayb: 'Alimentos y Bebidas',
-          compras: 'Compras',
-        };
-        // .toLowerCase() porque departamento/rol pueden estar guardados con
-        // distinta capitalización según cómo se haya creado la cuenta (el
-        // login no fuerza minúsculas) — sin esto, una cuenta admin con
-        // rol "Admin" o departamento "Cocina"/"AYB" (en vez de "admin"/
-        // "cocina"/"ayb") se quedaba sin ver sus módulos ni Configuración.
-        const depto = (usuario?.departamento || '').toLowerCase();
-        const nombreDepto = NOMBRES_DEPTO[depto] || '';
-      %>
-      <h1 class="inicio-titulo">Bienvenidos al portal<br><span><%= nombreDepto || usuario?.nombre %></span></h1>
-
-      <%
-        const rolLower = (usuario?.rol || '').toLowerCase();
-        const esAdmin = rolLower === 'admin';
-        // Para AYB, "gestiona" (ve Miembro de equipo y Croutons) es admin O
-        // supervisor — mismo criterio que nav.ejs, croutons.js y personal.js.
-        // Un mozo común (empleado) solo debe ver Horarios ahí abajo.
-        const esGestorAyb = esAdmin || rolLower === 'supervisor';
-        let modulos = [];
-        if (depto === 'cocina') {
-          modulos = [
-            { href: '/eventos',  icon: 'ti-calendar-event', nombre: 'Eventos',  desc: 'Gestión y presupuestos', g1:'#002f61', g2:'#007293',
-              detalle: 'Planificá banquetes y eventos del hotel: armá el menú con platos ya costeados (o menús completos), asigná personal y vajilla, y calculá el costo total y las horas de producción antes de confirmar.' },
-            { href: '/miembros-de-equipo', icon: 'ti-users',          nombre: 'Miembro de equipo', desc: 'Equipo interno', g1:'#007293', g2:'#06937e',
-              detalle: 'Gestioná el equipo de cocina: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
-            { href: '/horarios', icon: 'ti-clock',          nombre: 'Horarios', desc: 'Turnos automáticos', g1:'#06937e', g2:'#6bb030',
-              detalle: 'Visualizá la grilla completa de turnos de todos los sectores, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
-            { href: '/recetas',  icon: 'ti-chef-hat',       nombre: 'Recetas',  desc: 'Recetario y videos', g1:'#6bb030', g2:'#002f61',
-              detalle: 'Recetario digital del hotel, con ingredientes, pasos de preparación, imágenes y video — buscá por nombre o categoría desde cualquier dispositivo, en la cocina o desde tu casa.' },
-            { href: '/costos',   icon: 'ti-coin',           nombre: 'Costos',   desc: 'Insumos y precios', g1:'#002f61', g2:'#06937e',
-              detalle: 'Cargá insumos y sus precios, costeá platos automáticamente, y actualizá precios subiendo una foto de factura o el catálogo del proveedor — con historial completo de cada cambio.' },
-          ];
-          if (esAdmin) {
-            modulos.push({ href: '/horas-extra', icon: 'ti-clock-plus', nombre: 'Horas extra', desc: 'Carga e informe por empleado', g1:'#6bb030', g2:'#002f61',
-              detalle: 'Cargá las horas extra de cada empleado de Cocina por fecha puntual, con una nota opcional, y mirá el informe con el total acumulado por persona en el mes.' });
-            modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', g1:'#007293', g2:'#6bb030',
-              detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
-          }
-        } else if (depto === 'ayb') {
-          if (esGestorAyb) {
-            modulos = [
-              { href: '/miembros-de-equipo', icon: 'ti-users', nombre: 'Miembro de equipo', desc: 'Equipo interno', g1:'#007293', g2:'#06937e',
-                detalle: 'Gestioná el equipo de Alimentos y Bebidas: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
-              { href: '/horarios', icon: 'ti-clock', nombre: 'Horarios', desc: 'Turnos del sector', g1:'#06937e', g2:'#6bb030',
-                detalle: 'Visualizá la grilla completa de turnos de Alimentos y Bebidas, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
-              { href: '/croutons', icon: 'ti-package', nombre: 'Croutons', desc: 'Stock y vencimientos', g1:'#6bb030', g2:'#002f61',
-                detalle: 'Cargá cada ingreso de mercadería de croutons con su fecha de vencimiento — a mano, subiendo una foto del remito o el catálogo del proveedor — y recibí un aviso 15 días antes de que venza cada lote.' },
-              { href: '/inventario-ayb', icon: 'ti-bottle', nombre: 'Inventario', desc: 'Stock de bebidas', g1:'#002f61', g2:'#007293',
-                detalle: 'Controlá el stock de bebidas: ajustá cantidades a mano o sacándole una foto a la botella (la IA la reconoce y suma sola), imprimí etiquetas QR para ajuste rápido desde el celular, y mirá reportes mensuales de consumo por producto.' },
-              { href: '/costos', icon: 'ti-coin', nombre: 'Costos', desc: 'Tragos y menús costeados', g1:'#002f61', g2:'#06937e',
-                detalle: 'Cargá los insumos de barra/salón y sus precios, costeá tragos y menús automáticamente, y actualizá precios subiendo una foto de factura o el catálogo del proveedor — con historial completo de cada cambio.' },
-            ];
-            // Configuración es exclusiva de admin real — un supervisor de
-            // AYB gestiona equipo/croutons pero no entra a Configuración.
-            if (esAdmin) {
-              modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', g1:'#007293', g2:'#6bb030',
-                detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
-            }
-          } else {
-            // Por ahora, a un empleado de A&B (mozo) la pantalla de inicio
-            // solo le muestra Horarios — ahí carga su disponibilidad y ve
-            // los eventos para anotarse. El resto de los módulos de A&B
-            // quedan ocultos acá por el momento (a pedido explícito).
-            modulos = [
-              { href: '/horarios', icon: 'ti-clock', nombre: 'Horarios', desc: 'Tu disponibilidad', g1:'#06937e', g2:'#6bb030',
-                detalle: 'Cargá los días y horarios en los que podés trabajar, y anotate a los eventos que necesiten mozos.' },
-            ];
-          }
-        } else if (depto === 'compras') {
-          modulos = [
-            { href: '/compras', icon: 'ti-shopping-cart', nombre: 'Compras', desc: 'Órdenes y proveedores', g1:'#002f61', g2:'#007293',
-              detalle: 'Gestión de órdenes de compra y proveedores del hotel.' },
-          ];
-          if (esAdmin) modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', g1:'#007293', g2:'#6bb030',
-            detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
-        } else if (esAdmin) {
-          // Admin general (sin departamento — cuenta "Administrador"): no
-          // matcheaba ninguna rama de arriba, así que modulos quedaba
-          // vacío y el carrusel de inicio no aparecía. El admin general
-          // pasa igual todos los guards de requiereDepartamento() en
-          // middleware.js, así que acá le mostramos el set completo — los
-          // mismos módulos que ya ve en la barra de navegación (nav.ejs).
-          modulos = [
-            { href: '/eventos',  icon: 'ti-calendar-event', nombre: 'Eventos',  desc: 'Gestión y presupuestos', g1:'#002f61', g2:'#007293',
-              detalle: 'Planificá banquetes y eventos del hotel: armá el menú con platos ya costeados (o menús completos), asigná personal y vajilla, y calculá el costo total y las horas de producción antes de confirmar.' },
-            { href: '/miembros-de-equipo', icon: 'ti-users',          nombre: 'Miembro de equipo', desc: 'Equipo interno', g1:'#007293', g2:'#06937e',
-              detalle: 'Gestioná el equipo del hotel: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
-            { href: '/horarios', icon: 'ti-clock',          nombre: 'Horarios', desc: 'Turnos automáticos', g1:'#06937e', g2:'#6bb030',
-              detalle: 'Visualizá la grilla completa de turnos de todos los sectores, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
-            { href: '/recetas',  icon: 'ti-chef-hat',       nombre: 'Recetas',  desc: 'Recetario y videos', g1:'#6bb030', g2:'#002f61',
-              detalle: 'Recetario digital del hotel, con ingredientes, pasos de preparación, imágenes y video — buscá por nombre o categoría desde cualquier dispositivo, en la cocina o desde tu casa.' },
-            { href: '/costos',   icon: 'ti-coin',           nombre: 'Costos',   desc: 'Insumos y precios', g1:'#002f61', g2:'#06937e',
-              detalle: 'Cargá insumos y sus precios, costeá platos automáticamente, y actualizá precios subiendo una foto de factura o el catálogo del proveedor — con historial completo de cada cambio.' },
-            { href: '/compras',  icon: 'ti-shopping-cart',  nombre: 'Compras',  desc: 'Órdenes y proveedores', g1:'#002f61', g2:'#007293',
-              detalle: 'Gestión de órdenes de compra y proveedores del hotel.' },
-            { href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', g1:'#007293', g2:'#6bb030',
-              detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' },
-          ];
-        }
-      %>
-
-      <%
-        // Ilustración propia por módulo (SVG hecho a mano, sin depender de fotos externas)
-        function ilustracionCard(nombre) {
-          switch (nombre) {
-            case 'Eventos':
-              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
-                <rect x="35" y="58" width="120" height="112" rx="10" fill="rgba(255,255,255,0.14)"/>
-                <rect x="35" y="58" width="120" height="28" rx="10" fill="rgba(255,255,255,0.24)"/>
-                <rect x="55" y="42" width="8" height="26" rx="4" fill="rgba(255,255,255,0.55)"/>
-                <rect x="127" y="42" width="8" height="26" rx="4" fill="rgba(255,255,255,0.55)"/>
-                <circle cx="95" cy="128" r="27" fill="rgba(255,255,255,0.92)"/>
-                <path d="M95 112 l5.5 12.5 13.5 1.2 -10.2 9.3 3.2 13.4 -12-7.2-12 7.2 3.2-13.4-10.2-9.3 13.5-1.2z" fill="#0b2540"/>
-                <circle cx="52" cy="105" r="4" fill="rgba(255,255,255,0.35)"/>
-                <circle cx="140" cy="112" r="3" fill="rgba(255,255,255,0.35)"/>
-                <circle cx="58" cy="155" r="3" fill="rgba(255,255,255,0.3)"/>
-              </svg>`;
-            case 'Miembro de equipo':
-              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="55" cy="110" r="19" fill="rgba(255,255,255,0.5)"/>
-                <path d="M27 168 q28-36 56 0 z" fill="rgba(255,255,255,0.5)"/>
-                <circle cx="95" cy="98" r="25" fill="rgba(255,255,255,0.92)"/>
-                <path d="M57 170 q38-48 76 0 z" fill="rgba(255,255,255,0.92)"/>
-                <circle cx="136" cy="112" r="17" fill="rgba(255,255,255,0.38)"/>
-                <path d="M110 168 q26-32 52 0 z" fill="rgba(255,255,255,0.38)"/>
-              </svg>`;
-            case 'Horarios':
-              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="95" cy="122" r="56" fill="rgba(255,255,255,0.1)"/>
-                <circle cx="95" cy="122" r="52" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="4"/>
-                <line x1="95" y1="122" x2="95" y2="82" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
-                <line x1="95" y1="122" x2="124" y2="134" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
-                <circle cx="95" cy="122" r="5" fill="#fff"/>
-                <circle cx="95" cy="68" r="2.5" fill="rgba(255,255,255,0.55)"/>
-                <circle cx="95" cy="176" r="2.5" fill="rgba(255,255,255,0.55)"/>
-                <circle cx="41" cy="122" r="2.5" fill="rgba(255,255,255,0.55)"/>
-                <circle cx="149" cy="122" r="2.5" fill="rgba(255,255,255,0.55)"/>
-              </svg>`;
-            case 'Recetas':
-              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
-                <path d="M62 128 q-20-11-9-34 q6-17 26-15 q4-19 24-19 q20 0 24 19 q20-2 26 15 q11 23-9 34 z" fill="rgba(255,255,255,0.92)"/>
-                <rect x="66" y="126" width="56" height="15" fill="rgba(255,255,255,0.92)"/>
-                <rect x="87" y="150" width="15" height="48" rx="4" fill="rgba(255,255,255,0.32)"/>
-                <line x1="52" y1="150" x2="52" y2="198" stroke="rgba(255,255,255,0.5)" stroke-width="4" stroke-linecap="round"/>
-                <line x1="45" y1="150" x2="45" y2="170" stroke="rgba(255,255,255,0.5)" stroke-width="3" stroke-linecap="round"/>
-                <line x1="59" y1="150" x2="59" y2="170" stroke="rgba(255,255,255,0.5)" stroke-width="3" stroke-linecap="round"/>
-              </svg>`;
-            case 'Costos':
-              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
-                <ellipse cx="95" cy="168" rx="42" ry="12" fill="rgba(255,255,255,0.28)"/>
-                <ellipse cx="95" cy="152" rx="42" ry="12" fill="rgba(255,255,255,0.42)"/>
-                <ellipse cx="95" cy="136" rx="42" ry="12" fill="rgba(255,255,255,0.62)"/>
-                <ellipse cx="95" cy="120" rx="42" ry="12" fill="rgba(255,255,255,0.92)"/>
-                <text x="95" y="126" font-size="17" fill="#0b2540" text-anchor="middle" font-weight="700" font-family="Arial">$</text>
-                <polyline points="42,96 64,80 84,90 132,58" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>`;
-            case 'Configuración':
-              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="78" cy="112" r="30" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="9" stroke-dasharray="6 8"/>
-                <circle cx="78" cy="112" r="11" fill="rgba(255,255,255,0.85)"/>
-                <circle cx="130" cy="152" r="21" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="6" stroke-dasharray="4 6"/>
-                <circle cx="130" cy="152" r="7" fill="rgba(255,255,255,0.4)"/>
-              </svg>`;
-            case 'Croutons':
-              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
-                <rect x="50" y="96" width="26" height="26" rx="5" fill="rgba(255,255,255,0.92)" transform="rotate(-8 63 109)"/>
-                <rect x="84" y="86" width="26" height="26" rx="5" fill="rgba(255,255,255,0.6)" transform="rotate(6 97 99)"/>
-                <rect x="112" y="104" width="26" height="26" rx="5" fill="rgba(255,255,255,0.4)" transform="rotate(-4 125 117)"/>
-                <rect x="70" y="126" width="26" height="26" rx="5" fill="rgba(255,255,255,0.75)" transform="rotate(10 83 139)"/>
-                <rect x="102" y="140" width="26" height="26" rx="5" fill="rgba(255,255,255,0.5)" transform="rotate(-6 115 153)"/>
-                <circle cx="95" cy="70" r="4" fill="rgba(255,255,255,0.4)"/>
-                <circle cx="130" cy="80" r="3" fill="rgba(255,255,255,0.3)"/>
-              </svg>`;
-            case 'Compras':
-              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
-                <path d="M52 102 h84 l-13 48 h-58 z" fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="4.5"/>
-                <line x1="36" y1="90" x2="52" y2="102" stroke="rgba(255,255,255,0.88)" stroke-width="4.5" stroke-linecap="round"/>
-                <circle cx="74" cy="166" r="7.5" fill="rgba(255,255,255,0.88)"/>
-                <circle cx="118" cy="166" r="7.5" fill="rgba(255,255,255,0.88)"/>
-                <rect x="64" y="70" width="18" height="18" rx="3" fill="rgba(255,255,255,0.34)"/>
-                <rect x="90" y="64" width="21" height="21" rx="3" fill="rgba(255,255,255,0.5)"/>
-              </svg>`;
-            case 'Finanzas':
-              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
-                <rect x="48" y="142" width="17" height="42" rx="3" fill="rgba(255,255,255,0.4)"/>
-                <rect x="74" y="110" width="17" height="74" rx="3" fill="rgba(255,255,255,0.6)"/>
-                <rect x="100" y="88" width="17" height="96" rx="3" fill="rgba(255,255,255,0.92)"/>
-                <rect x="126" y="120" width="17" height="64" rx="3" fill="rgba(255,255,255,0.5)"/>
-                <polyline points="48,136 82,104 108,82 134,112" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>`;
-            case 'Inventario':
-              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
-                <path d="M84 60 h22 v22 l10 14 v88 q0 10 -10 10 h-22 q-10 0 -10 -10 v-88 l10 -14 z" fill="rgba(255,255,255,0.92)"/>
-                <rect x="82" y="56" width="26" height="10" rx="3" fill="rgba(255,255,255,0.55)"/>
-                <rect x="80" y="128" width="30" height="44" rx="2" fill="rgba(255,255,255,0.28)"/>
-                <circle cx="55" cy="150" r="4" fill="rgba(255,255,255,0.35)"/>
-                <circle cx="132" cy="140" r="3" fill="rgba(255,255,255,0.3)"/>
-              </svg>`;
-            case 'Horas extra':
-              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="88" cy="128" r="48" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="4"/>
-                <line x1="88" y1="128" x2="88" y2="96" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
-                <line x1="88" y1="128" x2="112" y2="138" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
-                <circle cx="88" cy="128" r="5" fill="#fff"/>
-                <circle cx="140" cy="86" r="19" fill="rgba(255,255,255,0.92)"/>
-                <line x1="140" y1="78" x2="140" y2="94" stroke="#0b2540" stroke-width="4" stroke-linecap="round"/>
-                <line x1="132" y1="86" x2="148" y2="86" stroke="#0b2540" stroke-width="4" stroke-linecap="round"/>
-              </svg>`;
-            default:
-              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="95" cy="122" r="46" fill="rgba(255,255,255,0.16)"/>
-              </svg>`;
-          }
-        }
-      %>
-
-      <% if (modulos.length > 0) { %>
-      <div class="deck" id="deck">
-        <button class="carousel-arrow deck-flecha deck-flecha-izq" onclick="pasoModulo(-1)" aria-label="Anterior"><i class="ti ti-chevron-left"></i></button>
-        <% modulos.forEach((m, i) => { %>
-        <div class="card" data-index="<%= i %>" onclick="clickCard(<%= i %>)">
-          <div class="card__face" style="background:linear-gradient(150deg, <%= m.g1 %> 0%, <%= m.g2 %> 100%);">
-            <%- ilustracionCard(m.nombre) %>
-            <div class="card__scrim"></div>
-            <span class="card__nombre"><%= m.nombre %></span>
-          </div>
-        </div>
-        <% }) %>
-        <button class="carousel-arrow deck-flecha deck-flecha-der" onclick="pasoModulo(1)" aria-label="Siguiente"><i class="ti ti-chevron-right"></i></button>
-      </div>
-
-      <div class="deck-controls">
-        <div class="carousel-dots" id="carouselDots">
-          <% modulos.forEach((m, i) => { %>
-          <span class="dot <%= i === 0 ? 'activa' : '' %>" data-index="<%= i %>" onclick="seleccionarModulo(<%= i %>)"></span>
-          <% }) %>
-        </div>
-      </div>
-
-      <div class="modulo-info">
-        <p class="stage-eyebrow">Portal interno · Módulo</p>
-        <h2 class="stage-nombre" id="slideNombre"><%= modulos[0].nombre %></h2>
-        <p class="stage-detalle texto-descripcion" id="slideDetalle"><%= modulos[0].detalle %></p>
-        <a href="<%= modulos[0].href %>" class="stage-btn" id="slideBtn">
-          Entrar <i class="ti ti-arrow-right" aria-hidden="true"></i>
-        </a>
-      </div>
-      <% } %>
-
-      <% if (typeof resumen !== 'undefined' && resumen && resumen.tarjetas) { %>
-      <!-- "Resumen rápido": antes la home terminaba en el botón "Entrar" y
-           dejaba un tramo grande de espacio en blanco debajo en pantallas
-           altas. Este renglón de tarjetas da un vistazo del estado del
-           sector (activos, alertas, vencimientos) sin tener que entrar a
-           ningún módulo — llena ese espacio con algo útil en vez de vacío. -->
-      <div class="resumen-rapido">
-        <% resumen.tarjetas.forEach(t => { %>
-        <div class="resumen-tarjeta <%= t.alerta ? 'resumen-tarjeta--alerta' : '' %>">
-          <div class="resumen-tarjeta-icono"><i class="ti <%= t.icon %>" aria-hidden="true"></i></div>
-          <div>
-            <div class="resumen-tarjeta-valor"><%= t.valor %></div>
-            <div class="resumen-tarjeta-etiqueta"><%= t.etiqueta %></div>
-          </div>
-        </div>
-        <% }) %>
-      </div>
-      <% } %>
-
-    </div>
-  </main>
-
-  <nav class="mobile-nav">
-    <% if (depto === 'cocina') { %>
-      <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
-      <a href="/miembros-de-equipo" class="mobile-nav-link"><i class="ti ti-users"></i><span>Miembro de equipo</span></a>
-      <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
-      <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
-      <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span>Costos</span></a>
-      <% if (esAdmin) { %><a href="/configuracion" class="mobile-nav-link"><i class="ti ti-settings"></i><span>Config</span></a><% } %>
-    <% } %>
-    <% if (depto === 'ayb') { %>
-      <% // Miembro de equipo y Croutons son solo para quien gestiona AYB
-         // (admin/supervisor) — un mozo común solo entra a Horarios. %>
-      <% if (esGestorAyb) { %><a href="/miembros-de-equipo" class="mobile-nav-link"><i class="ti ti-users"></i><span>Miembro de equipo</span></a><% } %>
-      <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
-      <% if (esGestorAyb) { %><a href="/croutons" class="mobile-nav-link"><i class="ti ti-package"></i><span>Croutons</span></a><% } %>
-      <% if (esAdmin) { %><a href="/configuracion" class="mobile-nav-link"><i class="ti ti-settings"></i><span>Config</span></a><% } %>
-    <% } %>
-    <% if (depto === 'compras') { %>
-      <a href="/compras" class="mobile-nav-link"><i class="ti ti-shopping-cart"></i><span>Compras</span></a>
-    <% } %>
-  </nav>
-
-</div>
-
-<% if (mostrarBienvenida) { %>
-<script src="/js/particulas.js"></script>
-<script>
-  window.addEventListener('DOMContentLoaded', () => {
-    mostrarParticulasBienvenida('BIENVENIDOS AL PORTAL HILTON');
-  });
-</script>
-<% } %>
-
 <style>
 /* ── Coverflow 3D: cartas en abanico con perspectiva, sin librerías externas ── */
 .deck {
@@ -354,16 +36,28 @@
   display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
   padding: 20px 16px;
   text-align: center;
-  box-shadow: 0 20px 45px rgba(0,0,0,0.22);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.16);
+  box-sizing: border-box;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
+/* Mismo "vidrio" verde/navy que ya usamos en botones (.btn-primary/.btn-secondary)
+   y en las tarjetas de otras pantallas — acá cada tarjeta del mazo alterna una
+   de las dos, en vez del degradé sólido que tenía antes. La clase se pone en
+   .card (no en .card__face) para que "color" (currentColor) también lo hereden
+   el nombre del módulo y los íconos de la ilustración, sin repetirlo a mano. */
+.card--verde { color: #06937e; }
+.card--verde .card__face { background: rgba(6,147,126,0.16); border: 1px solid rgba(6,147,126,0.34); }
+.card--navy { color: #002f61; }
+.card--navy .card__face { background: rgba(0,47,97,0.14); border: 1px solid rgba(0,47,97,0.3); }
 .card__ilustracion { position: absolute; inset: 0; width: 100%; height: 100%; }
 .card__scrim {
   position: absolute; left: 0; right: 0; bottom: 0; height: 45%;
-  background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 100%);
+  background: linear-gradient(to top, rgba(255,255,255,0.6) 0%, transparent 100%);
   pointer-events: none;
 }
-.card__nombre { font-family: var(--font-serif); font-size: 1.15rem; color: #fff; font-weight: 500; position: relative; z-index: 1; text-shadow: 0 2px 8px rgba(0,0,0,0.35); }
-.card.is-hero .card__face { box-shadow: 0 30px 60px rgba(0,47,97,0.3); }
+.card__nombre { font-family: var(--font-serif); font-size: 1.15rem; color: inherit; font-weight: 600; position: relative; z-index: 1; }
+.card.is-hero .card__face { box-shadow: 0 30px 60px rgba(0,47,97,0.22); }
 
 /* ── Info del módulo activo, debajo del deck ── */
 .modulo-info { text-align: center; max-width: 560px; margin: 0 auto; }
@@ -434,6 +128,324 @@
   .deck-flecha-der{ right:0; }
 }
 </style>
+</head>
+<body>
+<div class="app-layout">
+
+  <%- include('partials/nav', { path: 'inicio' }) %>
+
+  <main class="main-content">
+    <div class="inicio-hero">
+      <p class="inicio-saludo" data-i18n>Portal interno · Hilton Buenos Aires</p>
+      <%
+        const NOMBRES_DEPTO = {
+          cocina: 'Cocina',
+          ayb: 'Alimentos y Bebidas',
+          compras: 'Compras',
+        };
+        // .toLowerCase() porque departamento/rol pueden estar guardados con
+        // distinta capitalización según cómo se haya creado la cuenta (el
+        // login no fuerza minúsculas) — sin esto, una cuenta admin con
+        // rol "Admin" o departamento "Cocina"/"AYB" (en vez de "admin"/
+        // "cocina"/"ayb") se quedaba sin ver sus módulos ni Configuración.
+        const depto = (usuario?.departamento || '').toLowerCase();
+        const nombreDepto = NOMBRES_DEPTO[depto] || '';
+      %>
+      <h1 class="inicio-titulo"><span data-i18n>Bienvenidos al portal</span><br><span data-i18n><%= nombreDepto || usuario?.nombre %></span></h1>
+
+      <%
+        const rolLower = (usuario?.rol || '').toLowerCase();
+        const esAdmin = rolLower === 'admin';
+        // Para AYB, "gestiona" (ve Miembro de equipo y Croutons) es admin O
+        // supervisor — mismo criterio que nav.ejs, croutons.js y personal.js.
+        // Un mozo común (empleado) solo debe ver Horarios ahí abajo.
+        const esGestorAyb = esAdmin || rolLower === 'supervisor';
+        let modulos = [];
+        if (depto === 'cocina') {
+          modulos = [
+            { href: '/eventos',  icon: 'ti-calendar-event', nombre: 'Eventos',  desc: 'Gestión y presupuestos', tono:'navy',
+              detalle: 'Planificá banquetes y eventos del hotel: armá el menú con platos ya costeados (o menús completos), asigná personal y vajilla, y calculá el costo total y las horas de producción antes de confirmar.' },
+            { href: '/miembros-de-equipo', icon: 'ti-users',          nombre: 'Miembro de equipo', desc: 'Equipo interno', tono:'verde',
+              detalle: 'Gestioná el equipo de cocina: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
+            { href: '/horarios', icon: 'ti-clock',          nombre: 'Horarios', desc: 'Turnos automáticos', tono:'navy',
+              detalle: 'Visualizá la grilla completa de turnos de todos los sectores, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
+            { href: '/recetas',  icon: 'ti-chef-hat',       nombre: 'Recetas',  desc: 'Recetario y videos', tono:'verde',
+              detalle: 'Recetario digital del hotel, con ingredientes, pasos de preparación, imágenes y video — buscá por nombre o categoría desde cualquier dispositivo, en la cocina o desde tu casa.' },
+            { href: '/costos',   icon: 'ti-coin',           nombre: 'Costos',   desc: 'Insumos y precios', tono:'navy',
+              detalle: 'Cargá insumos y sus precios, costeá platos automáticamente, y actualizá precios subiendo una foto de factura o el catálogo del proveedor — con historial completo de cada cambio.' },
+          ];
+          if (esAdmin) {
+            modulos.push({ href: '/horas-extra', icon: 'ti-clock-plus', nombre: 'Horas extra', desc: 'Carga e informe por empleado', tono:'verde',
+              detalle: 'Cargá las horas extra de cada empleado de Cocina por fecha puntual, con una nota opcional, y mirá el informe con el total acumulado por persona en el mes.' });
+            modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', tono:'navy',
+              detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
+          }
+        } else if (depto === 'ayb') {
+          if (esGestorAyb) {
+            modulos = [
+              { href: '/miembros-de-equipo', icon: 'ti-users', nombre: 'Miembro de equipo', desc: 'Equipo interno', tono:'verde',
+                detalle: 'Gestioná el equipo de Alimentos y Bebidas: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
+              { href: '/horarios', icon: 'ti-clock', nombre: 'Horarios', desc: 'Turnos del sector', tono:'navy',
+                detalle: 'Visualizá la grilla completa de turnos de Alimentos y Bebidas, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
+              { href: '/croutons', icon: 'ti-package', nombre: 'Croutons', desc: 'Stock y vencimientos', tono:'verde',
+                detalle: 'Cargá cada ingreso de mercadería de croutons con su fecha de vencimiento — a mano, subiendo una foto del remito o el catálogo del proveedor — y recibí un aviso 15 días antes de que venza cada lote.' },
+              { href: '/inventario-ayb', icon: 'ti-bottle', nombre: 'Inventario', desc: 'Stock de bebidas', tono:'navy',
+                detalle: 'Controlá el stock de bebidas: ajustá cantidades a mano o sacándole una foto a la botella (la IA la reconoce y suma sola), imprimí etiquetas QR para ajuste rápido desde el celular, y mirá reportes mensuales de consumo por producto.' },
+              { href: '/costos', icon: 'ti-coin', nombre: 'Costos', desc: 'Tragos y menús costeados', tono:'verde',
+                detalle: 'Cargá los insumos de barra/salón y sus precios, costeá tragos y menús automáticamente, y actualizá precios subiendo una foto de factura o el catálogo del proveedor — con historial completo de cada cambio.' },
+            ];
+            // Configuración es exclusiva de admin real — un supervisor de
+            // AYB gestiona equipo/croutons pero no entra a Configuración.
+            if (esAdmin) {
+              modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', tono:'navy',
+                detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
+            }
+          } else {
+            // Por ahora, a un empleado de A&B (mozo) la pantalla de inicio
+            // solo le muestra Horarios — ahí carga su disponibilidad y ve
+            // los eventos para anotarse. El resto de los módulos de A&B
+            // quedan ocultos acá por el momento (a pedido explícito).
+            modulos = [
+              { href: '/horarios', icon: 'ti-clock', nombre: 'Horarios', desc: 'Tu disponibilidad', tono:'verde',
+                detalle: 'Cargá los días y horarios en los que podés trabajar, y anotate a los eventos que necesiten mozos.' },
+            ];
+          }
+        } else if (depto === 'compras') {
+          modulos = [
+            { href: '/compras', icon: 'ti-shopping-cart', nombre: 'Compras', desc: 'Órdenes y proveedores', tono:'navy',
+              detalle: 'Gestión de órdenes de compra y proveedores del hotel.' },
+          ];
+          if (esAdmin) modulos.push({ href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', tono:'verde',
+            detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' });
+        } else if (esAdmin) {
+          // Admin general (sin departamento — cuenta "Administrador"): no
+          // matcheaba ninguna rama de arriba, así que modulos quedaba
+          // vacío y el carrusel de inicio no aparecía. El admin general
+          // pasa igual todos los guards de requiereDepartamento() en
+          // middleware.js, así que acá le mostramos el set completo — los
+          // mismos módulos que ya ve en la barra de navegación (nav.ejs).
+          modulos = [
+            { href: '/eventos',  icon: 'ti-calendar-event', nombre: 'Eventos',  desc: 'Gestión y presupuestos', tono:'navy',
+              detalle: 'Planificá banquetes y eventos del hotel: armá el menú con platos ya costeados (o menús completos), asigná personal y vajilla, y calculá el costo total y las horas de producción antes de confirmar.' },
+            { href: '/miembros-de-equipo', icon: 'ti-users',          nombre: 'Miembro de equipo', desc: 'Equipo interno', tono:'verde',
+              detalle: 'Gestioná el equipo del hotel: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
+            { href: '/horarios', icon: 'ti-clock',          nombre: 'Horarios', desc: 'Turnos automáticos', tono:'navy',
+              detalle: 'Visualizá la grilla completa de turnos de todos los sectores, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
+            { href: '/recetas',  icon: 'ti-chef-hat',       nombre: 'Recetas',  desc: 'Recetario y videos', tono:'verde',
+              detalle: 'Recetario digital del hotel, con ingredientes, pasos de preparación, imágenes y video — buscá por nombre o categoría desde cualquier dispositivo, en la cocina o desde tu casa.' },
+            { href: '/costos',   icon: 'ti-coin',           nombre: 'Costos',   desc: 'Insumos y precios', tono:'navy',
+              detalle: 'Cargá insumos y sus precios, costeá platos automáticamente, y actualizá precios subiendo una foto de factura o el catálogo del proveedor — con historial completo de cada cambio.' },
+            { href: '/compras',  icon: 'ti-shopping-cart',  nombre: 'Compras',  desc: 'Órdenes y proveedores', tono:'verde',
+              detalle: 'Gestión de órdenes de compra y proveedores del hotel.' },
+            { href: '/configuracion', icon: 'ti-settings', nombre: 'Configuración', desc: 'Usuarios y sistema', tono:'navy',
+              detalle: 'Panel exclusivo de administrador: gestión de usuarios y roles, respaldo y restauración de la base de datos, y parámetros de seguridad del sistema.' },
+          ];
+        }
+      %>
+
+      <%
+        // Ilustración propia por módulo (SVG hecho a mano, sin depender de fotos externas)
+        function ilustracionCard(nombre) {
+          switch (nombre) {
+            case 'Eventos':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <rect x="35" y="58" width="120" height="112" rx="10" fill="currentColor" fill-opacity="0.407"/>
+                <rect x="35" y="58" width="120" height="28" rx="10" fill="currentColor" fill-opacity="0.469"/>
+                <rect x="55" y="42" width="8" height="26" rx="4" fill="currentColor" fill-opacity="0.661"/>
+                <rect x="127" y="42" width="8" height="26" rx="4" fill="currentColor" fill-opacity="0.661"/>
+                <circle cx="95" cy="128" r="27" fill="currentColor" fill-opacity="0.89"/>
+                <path d="M95 112 l5.5 12.5 13.5 1.2 -10.2 9.3 3.2 13.4 -12-7.2-12 7.2 3.2-13.4-10.2-9.3 13.5-1.2z" fill="#0b2540"/>
+                <circle cx="52" cy="105" r="4" fill="currentColor" fill-opacity="0.537"/>
+                <circle cx="140" cy="112" r="3" fill="currentColor" fill-opacity="0.537"/>
+                <circle cx="58" cy="155" r="3" fill="currentColor" fill-opacity="0.506"/>
+              </svg>`;
+            case 'Miembro de equipo':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="55" cy="110" r="19" fill="currentColor" fill-opacity="0.63"/>
+                <path d="M27 168 q28-36 56 0 z" fill="currentColor" fill-opacity="0.63"/>
+                <circle cx="95" cy="98" r="25" fill="currentColor" fill-opacity="0.89"/>
+                <path d="M57 170 q38-48 76 0 z" fill="currentColor" fill-opacity="0.89"/>
+                <circle cx="136" cy="112" r="17" fill="currentColor" fill-opacity="0.556"/>
+                <path d="M110 168 q26-32 52 0 z" fill="currentColor" fill-opacity="0.556"/>
+              </svg>`;
+            case 'Horarios':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="95" cy="122" r="56" fill="currentColor" fill-opacity="0.382"/>
+                <circle cx="95" cy="122" r="52" fill="none" stroke="currentColor" stroke-opacity="0.568" stroke-width="4"/>
+                <line x1="95" y1="122" x2="95" y2="82" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+                <line x1="95" y1="122" x2="124" y2="134" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+                <circle cx="95" cy="122" r="5" fill="currentColor"/>
+                <circle cx="95" cy="68" r="2.5" fill="currentColor" fill-opacity="0.661"/>
+                <circle cx="95" cy="176" r="2.5" fill="currentColor" fill-opacity="0.661"/>
+                <circle cx="41" cy="122" r="2.5" fill="currentColor" fill-opacity="0.661"/>
+                <circle cx="149" cy="122" r="2.5" fill="currentColor" fill-opacity="0.661"/>
+              </svg>`;
+            case 'Recetas':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <path d="M62 128 q-20-11-9-34 q6-17 26-15 q4-19 24-19 q20 0 24 19 q20-2 26 15 q11 23-9 34 z" fill="currentColor" fill-opacity="0.89"/>
+                <rect x="66" y="126" width="56" height="15" fill="currentColor" fill-opacity="0.89"/>
+                <rect x="87" y="150" width="15" height="48" rx="4" fill="currentColor" fill-opacity="0.518"/>
+                <line x1="52" y1="150" x2="52" y2="198" stroke="currentColor" stroke-opacity="0.63" stroke-width="4" stroke-linecap="round"/>
+                <line x1="45" y1="150" x2="45" y2="170" stroke="currentColor" stroke-opacity="0.63" stroke-width="3" stroke-linecap="round"/>
+                <line x1="59" y1="150" x2="59" y2="170" stroke="currentColor" stroke-opacity="0.63" stroke-width="3" stroke-linecap="round"/>
+              </svg>`;
+            case 'Costos':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="95" cy="168" rx="42" ry="12" fill="currentColor" fill-opacity="0.494"/>
+                <ellipse cx="95" cy="152" rx="42" ry="12" fill="currentColor" fill-opacity="0.58"/>
+                <ellipse cx="95" cy="136" rx="42" ry="12" fill="currentColor" fill-opacity="0.704"/>
+                <ellipse cx="95" cy="120" rx="42" ry="12" fill="currentColor" fill-opacity="0.89"/>
+                <text x="95" y="126" font-size="17" fill="#0b2540" text-anchor="middle" font-weight="700" font-family="Arial">$</text>
+                <polyline points="42,96 64,80 84,90 132,58" fill="none" stroke="currentColor" stroke-opacity="0.661" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>`;
+            case 'Configuración':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="78" cy="112" r="30" fill="none" stroke="currentColor" stroke-opacity="0.847" stroke-width="9" stroke-dasharray="6 8"/>
+                <circle cx="78" cy="112" r="11" fill="currentColor" fill-opacity="0.847"/>
+                <circle cx="130" cy="152" r="21" fill="none" stroke="currentColor" stroke-opacity="0.568" stroke-width="6" stroke-dasharray="4 6"/>
+                <circle cx="130" cy="152" r="7" fill="currentColor" fill-opacity="0.568"/>
+              </svg>`;
+            case 'Croutons':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <rect x="50" y="96" width="26" height="26" rx="5" fill="currentColor" fill-opacity="0.89" transform="rotate(-8 63 109)"/>
+                <rect x="84" y="86" width="26" height="26" rx="5" fill="currentColor" fill-opacity="0.692" transform="rotate(6 97 99)"/>
+                <rect x="112" y="104" width="26" height="26" rx="5" fill="currentColor" fill-opacity="0.568" transform="rotate(-4 125 117)"/>
+                <rect x="70" y="126" width="26" height="26" rx="5" fill="currentColor" fill-opacity="0.785" transform="rotate(10 83 139)"/>
+                <rect x="102" y="140" width="26" height="26" rx="5" fill="currentColor" fill-opacity="0.63" transform="rotate(-6 115 153)"/>
+                <circle cx="95" cy="70" r="4" fill="currentColor" fill-opacity="0.568"/>
+                <circle cx="130" cy="80" r="3" fill="currentColor" fill-opacity="0.506"/>
+              </svg>`;
+            case 'Compras':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <path d="M52 102 h84 l-13 48 h-58 z" fill="none" stroke="currentColor" stroke-opacity="0.866" stroke-width="4.5"/>
+                <line x1="36" y1="90" x2="52" y2="102" stroke="currentColor" stroke-opacity="0.866" stroke-width="4.5" stroke-linecap="round"/>
+                <circle cx="74" cy="166" r="7.5" fill="currentColor" fill-opacity="0.866"/>
+                <circle cx="118" cy="166" r="7.5" fill="currentColor" fill-opacity="0.866"/>
+                <rect x="64" y="70" width="18" height="18" rx="3" fill="currentColor" fill-opacity="0.531"/>
+                <rect x="90" y="64" width="21" height="21" rx="3" fill="currentColor" fill-opacity="0.63"/>
+              </svg>`;
+            case 'Finanzas':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <rect x="48" y="142" width="17" height="42" rx="3" fill="currentColor" fill-opacity="0.568"/>
+                <rect x="74" y="110" width="17" height="74" rx="3" fill="currentColor" fill-opacity="0.692"/>
+                <rect x="100" y="88" width="17" height="96" rx="3" fill="currentColor" fill-opacity="0.89"/>
+                <rect x="126" y="120" width="17" height="64" rx="3" fill="currentColor" fill-opacity="0.63"/>
+                <polyline points="48,136 82,104 108,82 134,112" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>`;
+            case 'Inventario':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <path d="M84 60 h22 v22 l10 14 v88 q0 10 -10 10 h-22 q-10 0 -10 -10 v-88 l10 -14 z" fill="currentColor" fill-opacity="0.89"/>
+                <rect x="82" y="56" width="26" height="10" rx="3" fill="currentColor" fill-opacity="0.661"/>
+                <rect x="80" y="128" width="30" height="44" rx="2" fill="currentColor" fill-opacity="0.494"/>
+                <circle cx="55" cy="150" r="4" fill="currentColor" fill-opacity="0.537"/>
+                <circle cx="132" cy="140" r="3" fill="currentColor" fill-opacity="0.506"/>
+              </svg>`;
+            case 'Horas extra':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="88" cy="128" r="48" fill="none" stroke="currentColor" stroke-opacity="0.568" stroke-width="4"/>
+                <line x1="88" y1="128" x2="88" y2="96" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+                <line x1="88" y1="128" x2="112" y2="138" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+                <circle cx="88" cy="128" r="5" fill="currentColor"/>
+                <circle cx="140" cy="86" r="19" fill="currentColor" fill-opacity="0.89"/>
+                <line x1="140" y1="78" x2="140" y2="94" stroke="#0b2540" stroke-width="4" stroke-linecap="round"/>
+                <line x1="132" y1="86" x2="148" y2="86" stroke="#0b2540" stroke-width="4" stroke-linecap="round"/>
+              </svg>`;
+            default:
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="95" cy="122" r="46" fill="currentColor" fill-opacity="0.419"/>
+              </svg>`;
+          }
+        }
+      %>
+
+      <% if (modulos.length > 0) { %>
+      <div class="deck" id="deck">
+        <button class="carousel-arrow deck-flecha deck-flecha-izq" onclick="pasoModulo(-1)" aria-label="Anterior"><i class="ti ti-chevron-left"></i></button>
+        <% modulos.forEach((m, i) => { %>
+        <div class="card card--<%= m.tono %>" data-index="<%= i %>" onclick="clickCard(<%= i %>)">
+          <div class="card__face">
+            <%- ilustracionCard(m.nombre) %>
+            <div class="card__scrim"></div>
+            <span class="card__nombre" data-i18n><%= m.nombre %></span>
+          </div>
+        </div>
+        <% }) %>
+        <button class="carousel-arrow deck-flecha deck-flecha-der" onclick="pasoModulo(1)" aria-label="Siguiente"><i class="ti ti-chevron-right"></i></button>
+      </div>
+
+      <div class="deck-controls">
+        <div class="carousel-dots" id="carouselDots">
+          <% modulos.forEach((m, i) => { %>
+          <span class="dot <%= i === 0 ? 'activa' : '' %>" data-index="<%= i %>" onclick="seleccionarModulo(<%= i %>)"></span>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="modulo-info">
+        <p class="stage-eyebrow" data-i18n>Portal interno · Módulo</p>
+        <h2 class="stage-nombre" id="slideNombre" data-i18n><%= modulos[0].nombre %></h2>
+        <p class="stage-detalle texto-descripcion" id="slideDetalle" data-i18n><%= modulos[0].detalle %></p>
+        <a href="<%= modulos[0].href %>" class="stage-btn" id="slideBtn">
+          <span data-i18n>Entrar</span> <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </a>
+      </div>
+      <% } %>
+
+      <% if (typeof resumen !== 'undefined' && resumen && resumen.tarjetas) { %>
+      <!-- "Resumen rápido": antes la home terminaba en el botón "Entrar" y
+           dejaba un tramo grande de espacio en blanco debajo en pantallas
+           altas. Este renglón de tarjetas da un vistazo del estado del
+           sector (activos, alertas, vencimientos) sin tener que entrar a
+           ningún módulo — llena ese espacio con algo útil en vez de vacío. -->
+      <div class="resumen-rapido">
+        <% resumen.tarjetas.forEach(t => { %>
+        <div class="resumen-tarjeta <%= t.alerta ? 'resumen-tarjeta--alerta' : '' %>">
+          <div class="resumen-tarjeta-icono"><i class="ti <%= t.icon %>" aria-hidden="true"></i></div>
+          <div>
+            <div class="resumen-tarjeta-valor"><%= t.valor %></div>
+            <div class="resumen-tarjeta-etiqueta"><%= t.etiqueta %></div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+
+    </div>
+  </main>
+
+  <nav class="mobile-nav">
+    <% if (depto === 'cocina') { %>
+      <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span data-i18n>Eventos</span></a>
+      <a href="/miembros-de-equipo" class="mobile-nav-link"><i class="ti ti-users"></i><span data-i18n>Miembro de equipo</span></a>
+      <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span data-i18n>Horarios</span></a>
+      <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span data-i18n>Recetas</span></a>
+      <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span data-i18n>Costos</span></a>
+      <% if (esAdmin) { %><a href="/configuracion" class="mobile-nav-link"><i class="ti ti-settings"></i><span data-i18n>Config</span></a><% } %>
+    <% } %>
+    <% if (depto === 'ayb') { %>
+      <% // Miembro de equipo y Croutons son solo para quien gestiona AYB
+         // (admin/supervisor) — un mozo común solo entra a Horarios. %>
+      <% if (esGestorAyb) { %><a href="/miembros-de-equipo" class="mobile-nav-link"><i class="ti ti-users"></i><span data-i18n>Miembro de equipo</span></a><% } %>
+      <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span data-i18n>Horarios</span></a>
+      <% if (esGestorAyb) { %><a href="/croutons" class="mobile-nav-link"><i class="ti ti-package"></i><span data-i18n>Croutons</span></a><% } %>
+      <% if (esAdmin) { %><a href="/configuracion" class="mobile-nav-link"><i class="ti ti-settings"></i><span data-i18n>Config</span></a><% } %>
+    <% } %>
+    <% if (depto === 'compras') { %>
+      <a href="/compras" class="mobile-nav-link"><i class="ti ti-shopping-cart"></i><span data-i18n>Compras</span></a>
+    <% } %>
+  </nav>
+
+</div>
+
+<% if (mostrarBienvenida) { %>
+<script src="/js/particulas.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    mostrarParticulasBienvenida('BIENVENIDOS AL PORTAL HILTON');
+  });
+</script>
+<% } %>
+
 
 <script>
 const MODULOS = <%- JSON.stringify(modulos) %>;
@@ -499,8 +511,13 @@ function seleccionarModulo(i) {
 
   [nombre, detalle].forEach(el => el.style.opacity = '0');
   setTimeout(() => {
-    nombre.textContent  = m.nombre;
-    detalle.textContent = m.detalle;
+    // tHilton() traduce si hay un idioma distinto de español elegido (ver
+    // /js/i18n.js) — acá hace falta a mano porque este texto lo pisa JS
+    // al navegar el carrusel, después de que data-i18n ya tradujo la
+    // primera tarjeta en la carga inicial de la página.
+    const t = window.tHilton || ((s) => s);
+    nombre.textContent  = t(m.nombre);
+    detalle.textContent = t(m.detalle);
     btn.href = m.href;
     [nombre, detalle].forEach(el => el.style.opacity = '1');
   }, 150);

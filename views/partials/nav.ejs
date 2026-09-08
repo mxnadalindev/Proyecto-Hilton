@@ -1,8 +1,31 @@
 ﻿<header class="header">
-  <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
+  <div class="header-logo-grupo">
+    <a href="/inicio" class="header-logo"><span class="logo-moneda">Hilton</span></a>
+    <%
+      // Windows no trae instalada la fuente de emoji de banderas (muestra
+      // "AR"/"US"/"BR" en vez del emoji 🇦🇷/🇺🇸/🇧🇷) — pasa en cualquier
+      // navegador ahí, no es un bug nuestro, es una fuente que falta en el
+      // sistema operativo. Un <select> nativo tampoco admite íconos/SVG
+      // dentro de sus <option> en ningún navegador. Por eso el selector de
+      // idioma es este widget propio (trigger + lista, igual que el de
+      // Departamento en el login) con banderas dibujadas en SVG — así se
+      // ven siempre igual sin depender de qué tenga instalado Windows.
+    %>
+    <div class="selector-idioma-wrap" id="selectorIdiomaWrap">
+      <button type="button" class="selector-idioma-trigger" id="selectorIdiomaTrigger" onclick="toggleSelectorIdioma()" title="Idioma / Language / Idioma" aria-label="Idioma / Language / Idioma" aria-haspopup="listbox">
+        <span class="bandera bandera-ar" id="selectorIdiomaBandera"></span>
+        <i class="ti ti-chevron-down" aria-hidden="true"></i>
+      </button>
+      <div class="selector-idioma-lista" id="selectorIdiomaLista" role="listbox">
+        <div class="selector-idioma-opcion seleccionada" data-idioma="es" role="option" onclick="elegirIdioma('es')"><span class="bandera bandera-ar"></span></div>
+        <div class="selector-idioma-opcion" data-idioma="en" role="option" onclick="elegirIdioma('en')"><span class="bandera bandera-us"></span></div>
+        <div class="selector-idioma-opcion" data-idioma="pt" role="option" onclick="elegirIdioma('pt')"><span class="bandera bandera-br"></span></div>
+      </div>
+    </div>
+  </div>
 
   <nav class="nav-pill desktop-only">
-    <a href="/inicio" class="nav-item <%= (typeof path !== 'undefined' && path === 'inicio') ? 'activo' : '' %>" title="Inicio">
+    <a href="/inicio" class="nav-item <%= (typeof path !== 'undefined' && path === 'inicio') ? 'activo' : '' %>" title="Inicio" data-i18n-title="Inicio">
       <i class="ti ti-home" aria-hidden="true"></i>
     </a>
     <% // .toLowerCase(): departamento/rol pueden estar guardados con distinta
@@ -10,27 +33,27 @@
        // con rol "Admin" (en vez de "admin") se quedaba sin ver Configuración.
        const _d = (usuario?.departamento || '').toLowerCase(); const _r = (usuario?.rol || '').toLowerCase(); %>
     <% if (_d === 'cocina' || (_r === 'admin' && _d !== 'ayb' && _d !== 'compras')) { %>
-      <a href="/eventos" class="nav-item <%= (typeof path !== 'undefined' && path === 'eventos') ? 'activo' : '' %>" title="Eventos">
-        <i class="ti ti-calendar-event" aria-hidden="true"></i><span class="nav-label">Eventos</span>
+      <a href="/eventos" class="nav-item <%= (typeof path !== 'undefined' && path === 'eventos') ? 'activo' : '' %>" title="Eventos" data-i18n-title="Eventos">
+        <i class="ti ti-calendar-event" aria-hidden="true"></i><span class="nav-label" data-i18n>Eventos</span>
       </a>
-      <a href="/miembros-de-equipo" class="nav-item <%= (typeof path !== 'undefined' && path === 'personal') ? 'activo' : '' %>" title="Miembro de equipo">
-        <i class="ti ti-users" aria-hidden="true"></i><span class="nav-label">Miembro de equipo</span>
+      <a href="/miembros-de-equipo" class="nav-item <%= (typeof path !== 'undefined' && path === 'personal') ? 'activo' : '' %>" title="Miembro de equipo" data-i18n-title="Miembro de equipo">
+        <i class="ti ti-users" aria-hidden="true"></i><span class="nav-label" data-i18n>Miembro de equipo</span>
       </a>
-      <a href="/horarios" class="nav-item <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>" title="Horarios">
-        <i class="ti ti-clock" aria-hidden="true"></i><span class="nav-label">Horarios</span>
+      <a href="/horarios" class="nav-item <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>" title="Horarios" data-i18n-title="Horarios">
+        <i class="ti ti-clock" aria-hidden="true"></i><span class="nav-label" data-i18n>Horarios</span>
       </a>
-      <a href="/recetas" class="nav-item <%= (typeof path !== 'undefined' && path === 'recetas') ? 'activo' : '' %>" title="Recetas">
-        <i class="ti ti-chef-hat" aria-hidden="true"></i><span class="nav-label">Recetas</span>
+      <a href="/recetas" class="nav-item <%= (typeof path !== 'undefined' && path === 'recetas') ? 'activo' : '' %>" title="Recetas" data-i18n-title="Recetas">
+        <i class="ti ti-chef-hat" aria-hidden="true"></i><span class="nav-label" data-i18n>Recetas</span>
       </a>
-      <a href="/costos" class="nav-item <%= (typeof path !== 'undefined' && path === 'costos') ? 'activo' : '' %>" title="Costos">
-        <i class="ti ti-coin" aria-hidden="true"></i><span class="nav-label">Costos</span>
+      <a href="/costos" class="nav-item <%= (typeof path !== 'undefined' && path === 'costos') ? 'activo' : '' %>" title="Costos" data-i18n-title="Costos">
+        <i class="ti ti-coin" aria-hidden="true"></i><span class="nav-label" data-i18n>Costos</span>
       </a>
       <% // Horas extra es solo para admin (carga de datos sensibles pensados
          // para liquidación) — a diferencia del resto de los ítems de acá
          // arriba, que ve cualquier persona de Cocina. %>
       <% if (_r === 'admin') { %>
-      <a href="/horas-extra" class="nav-item <%= (typeof path !== 'undefined' && path === 'horas-extra') ? 'activo' : '' %>" title="Horas extra">
-        <i class="ti ti-clock-plus" aria-hidden="true"></i><span class="nav-label">Horas extra</span>
+      <a href="/horas-extra" class="nav-item <%= (typeof path !== 'undefined' && path === 'horas-extra') ? 'activo' : '' %>" title="Horas extra" data-i18n-title="Horas extra">
+        <i class="ti ti-clock-plus" aria-hidden="true"></i><span class="nav-label" data-i18n>Horas extra</span>
       </a>
       <% } %>
     <% } %>
@@ -38,39 +61,114 @@
       <% // Miembro de equipo y Croutons son solo para quien gestiona AYB
          // (admin/supervisor) — un mozo común solo entra a Horarios. %>
       <% if (_r === 'admin' || _r === 'supervisor') { %>
-      <a href="/miembros-de-equipo" class="nav-item <%= (typeof path !== 'undefined' && path === 'personal') ? 'activo' : '' %>" title="Miembro de equipo">
-        <i class="ti ti-users" aria-hidden="true"></i><span class="nav-label">Miembro de equipo</span>
+      <a href="/miembros-de-equipo" class="nav-item <%= (typeof path !== 'undefined' && path === 'personal') ? 'activo' : '' %>" title="Miembro de equipo" data-i18n-title="Miembro de equipo">
+        <i class="ti ti-users" aria-hidden="true"></i><span class="nav-label" data-i18n>Miembro de equipo</span>
       </a>
       <% } %>
-      <a href="/horarios" class="nav-item <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>" title="Horarios">
-        <i class="ti ti-clock" aria-hidden="true"></i><span class="nav-label">Horarios</span>
+      <a href="/horarios" class="nav-item <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>" title="Horarios" data-i18n-title="Horarios">
+        <i class="ti ti-clock" aria-hidden="true"></i><span class="nav-label" data-i18n>Horarios</span>
       </a>
       <% if (_r === 'admin' || _r === 'supervisor') { %>
-      <a href="/croutons" class="nav-item <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>" title="Croutons">
-        <i class="ti ti-package" aria-hidden="true"></i><span class="nav-label">Croutons</span>
+      <a href="/croutons" class="nav-item <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>" title="Croutons" data-i18n-title="Croutons">
+        <i class="ti ti-package" aria-hidden="true"></i><span class="nav-label" data-i18n>Croutons</span>
       </a>
-      <a href="/inventario-ayb" class="nav-item <%= (typeof path !== 'undefined' && path === 'inventario-ayb') ? 'activo' : '' %>" title="Inventario">
-        <i class="ti ti-bottle" aria-hidden="true"></i><span class="nav-label">Inventario</span>
+      <a href="/inventario-ayb" class="nav-item <%= (typeof path !== 'undefined' && path === 'inventario-ayb') ? 'activo' : '' %>" title="Inventario" data-i18n-title="Inventario">
+        <i class="ti ti-bottle" aria-hidden="true"></i><span class="nav-label" data-i18n>Inventario</span>
       </a>
-      <a href="/costos" class="nav-item <%= (typeof path !== 'undefined' && path === 'costos') ? 'activo' : '' %>" title="Costos">
-        <i class="ti ti-coin" aria-hidden="true"></i><span class="nav-label">Costos</span>
+      <a href="/costos" class="nav-item <%= (typeof path !== 'undefined' && path === 'costos') ? 'activo' : '' %>" title="Costos" data-i18n-title="Costos">
+        <i class="ti ti-coin" aria-hidden="true"></i><span class="nav-label" data-i18n>Costos</span>
       </a>
       <% } %>
     <% } %>
     <% if (_r === 'admin') { %>
-      <a href="/configuracion" class="nav-item <%= (typeof path !== 'undefined' && path === 'configuracion') ? 'activo' : '' %>" title="Configuración">
-        <i class="ti ti-settings" aria-hidden="true"></i><span class="nav-label">Configuración</span>
+      <a href="/configuracion" class="nav-item <%= (typeof path !== 'undefined' && path === 'configuracion') ? 'activo' : '' %>" title="Configuración" data-i18n-title="Configuración">
+        <i class="ti ti-settings" aria-hidden="true"></i><span class="nav-label" data-i18n>Configuración</span>
       </a>
     <% } %>
   </nav>
 
   <div class="header-user">
     <span class="user-name desktop-only"><i class="ti ti-user-circle"></i> <%= usuario?.nombre %></span>
-    <a href="/logout" class="btn-logout" title="Cerrar sesión"><i class="ti ti-logout"></i></a>
+    <a href="/logout" class="btn-logout" title="Cerrar sesión" data-i18n-title="Cerrar sesión"><i class="ti ti-logout"></i></a>
   </div>
 </header>
 
+<script src="/js/i18n.js"></script>
+<script>
+// ── Selector de idioma del menú (widget propio con banderas SVG) ──
+function toggleSelectorIdioma() {
+  const wrap = document.getElementById('selectorIdiomaWrap');
+  if (wrap) wrap.classList.toggle('abierto');
+}
+function elegirIdioma(idioma) {
+  const wrap = document.getElementById('selectorIdiomaWrap');
+  if (wrap) wrap.classList.remove('abierto');
+  if (window.cambiarIdiomaHilton) window.cambiarIdiomaHilton(idioma);
+}
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('selectorIdiomaWrap');
+  if (wrap && !wrap.contains(e.target)) wrap.classList.remove('abierto');
+});
+// i18n.js dispara este evento cada vez que aplica un idioma (al cargar la
+// página y al elegir uno nuevo) — lo escuchamos para que la banderita del
+// botón y la opción resaltada de la lista coincidan con el idioma activo.
+document.addEventListener('hilton:idioma-aplicado', (e) => {
+  const bandera = document.getElementById('selectorIdiomaBandera');
+  const mapaBandera = { es: 'ar', en: 'us', pt: 'br' };
+  if (bandera) bandera.className = 'bandera bandera-' + (mapaBandera[e.detail.idioma] || 'ar');
+  document.querySelectorAll('.selector-idioma-opcion').forEach((op) => {
+    op.classList.toggle('seleccionada', op.dataset.idioma === e.detail.idioma);
+  });
+});
+</script>
+
 <style>
+/* ── Logo + selector de idioma ──
+   El logo "Hilton" ya no es el único hijo de la primera columna de la
+   grilla del header — ahora comparte un wrapper en flex con el selector de
+   idioma (ES/EN/PT), a pedido: "ponlo al lado de la palabra hilton del
+   nav". El wrapper es el que ahora hereda el justify-self:start que antes
+   tenía el logo solo, para no romper el layout de 3 columnas del .header. */
+.header-logo-grupo{ display:flex; align-items:center; gap:10px; justify-self:start; min-width:0; }
+
+/* ── Banderitas dibujadas en SVG (no emoji) — se ven igual en todos lados ── */
+.bandera{ display:inline-block; width:20px; height:14px; border-radius:2px; background-size:cover; background-position:center; box-shadow:0 0 0 1px rgba(0,0,0,0.12); flex-shrink:0; }
+.bandera-ar{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 20'%3E%3Crect width='30' height='20' fill='%23fff'/%3E%3Crect width='30' height='6.7' fill='%2374ACDF'/%3E%3Crect y='13.3' width='30' height='6.7' fill='%2374ACDF'/%3E%3Ccircle cx='15' cy='10' r='2.4' fill='%23F6B40E'/%3E%3C/svg%3E"); }
+.bandera-us{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 20'%3E%3Crect width='30' height='20' fill='%23fff'/%3E%3Crect width='30' height='1.54' y='0' fill='%23B22234'/%3E%3Crect width='30' height='1.54' y='3.08' fill='%23B22234'/%3E%3Crect width='30' height='1.54' y='6.16' fill='%23B22234'/%3E%3Crect width='30' height='1.54' y='9.24' fill='%23B22234'/%3E%3Crect width='30' height='1.54' y='12.32' fill='%23B22234'/%3E%3Crect width='30' height='1.54' y='15.4' fill='%23B22234'/%3E%3Crect width='30' height='1.54' y='18.48' fill='%23B22234'/%3E%3Crect width='12' height='10.8' fill='%233C3B6E'/%3E%3C/svg%3E"); }
+.bandera-br{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 20'%3E%3Crect width='30' height='20' fill='%23009739'/%3E%3Cpolygon points='15,2 28,10 15,18 2,10' fill='%23FEDD00'/%3E%3Ccircle cx='15' cy='10' r='5' fill='%23012169'/%3E%3C/svg%3E"); }
+
+.selector-idioma-wrap{ position:relative; flex-shrink:0; }
+.selector-idioma-trigger{
+  display:flex; align-items:center; gap:6px;
+  background:rgba(6,147,126,0.14);
+  border:1px solid rgba(6,147,126,0.32);
+  border-radius:7px;
+  padding:5px 9px;
+  cursor:pointer;
+  color:#06937e;
+  font-size:12px;
+}
+.selector-idioma-trigger:hover{ background:rgba(6,147,126,0.22); }
+.selector-idioma-trigger:focus{ outline:none; box-shadow:0 0 0 3px rgba(6,147,126,0.2); }
+.selector-idioma-wrap.abierto .selector-idioma-trigger i{ transform:rotate(180deg); }
+.selector-idioma-trigger i{ transition:transform 0.15s ease; }
+.selector-idioma-lista{
+  position:absolute; left:0; top:calc(100% + 6px);
+  background:var(--blanco);
+  border:1px solid var(--gris-borde);
+  border-radius:9px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.18);
+  padding:5px;
+  display:flex; flex-direction:column; gap:3px;
+  z-index:60;
+  opacity:0; transform:translateY(-6px); pointer-events:none;
+  transition:opacity 0.12s ease, transform 0.12s ease;
+}
+.selector-idioma-wrap.abierto .selector-idioma-lista{ opacity:1; transform:translateY(0); pointer-events:auto; }
+.selector-idioma-opcion{ display:flex; align-items:center; padding:6px 8px; border-radius:6px; cursor:pointer; }
+.selector-idioma-opcion:hover{ background:var(--gris-fondo); }
+.selector-idioma-opcion.seleccionada{ background:rgba(6,147,126,0.14); }
+
 /* ── Barra de navegación tipo "pill", navy sobre fondo claro, resaltado verde ── */
 .nav-pill{
   display:flex; align-items:center; gap:5px;
@@ -229,7 +327,7 @@
 }
 </style>
 
-<button class="asistente-burbuja" id="asistenteBurbuja" onclick="toggleAsistente()" title="Asistente">
+<button class="asistente-burbuja" id="asistenteBurbuja" onclick="toggleAsistente()" title="Asistente" data-i18n-title="Asistente">
   <svg class="asistente-cara" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <circle cx="20" cy="20" r="17" fill="rgba(255,255,255,0.14)"/>
     <ellipse class="ojo ojo-1" cx="14.5" cy="19" rx="2.1" ry="2.6" fill="#fff"/>
@@ -241,14 +339,14 @@
 
 <div class="asistente-panel" id="asistentePanel">
   <div class="asistente-header">
-    <span class="asistente-header-titulo"><i class="ti ti-sparkles"></i> Asistente Hilton</span>
+    <span class="asistente-header-titulo"><i class="ti ti-sparkles"></i> <span data-i18n>Asistente Hilton</span></span>
     <button class="asistente-cerrar" onclick="toggleAsistente()"><i class="ti ti-x"></i></button>
   </div>
   <div class="asistente-mensajes" id="asistenteMensajes">
-    <div class="asistente-msg bot">Hola 👋 Puedo consultar insumos sin precio, quién trabaja tal día, stock de Inventario AYB, horas extra de Cocina (admin), actualizar precios o asignar/quitar RECOFF. ¿En qué te ayudo?</div>
+    <div class="asistente-msg bot" data-i18n>Hola 👋 Puedo consultar insumos sin precio, quién trabaja tal día, stock de Inventario AYB, horas extra de Cocina (admin), actualizar precios o asignar/quitar RECOFF. ¿En qué te ayudo?</div>
   </div>
   <div class="asistente-input-row">
-    <input type="text" id="asistenteInput" placeholder="Escribí tu consulta..." onkeydown="if(event.key==='Enter')enviarMensajeAsistente()">
+    <input type="text" id="asistenteInput" placeholder="Escribí tu consulta..." data-i18n-ph="Escribí tu consulta..." onkeydown="if(event.key==='Enter')enviarMensajeAsistente()">
     <button onclick="enviarMensajeAsistente()"><i class="ti ti-send"></i></button>
   </div>
 </div>
@@ -277,9 +375,10 @@ function agregarBotonesConfirmacion() {
   const cont = document.getElementById('asistenteMensajes');
   const div = document.createElement('div');
   div.className = 'asistente-confirmar';
+  const t = window.tHilton || ((s) => s);
   div.innerHTML = `
-    <button class="si" onclick="responderConfirmacion('sí')">Sí, confirmar</button>
-    <button onclick="responderConfirmacion('no')">No, cancelar</button>
+    <button class="si" onclick="responderConfirmacion('sí')">${t('Sí, confirmar')}</button>
+    <button onclick="responderConfirmacion('no')">${t('No, cancelar')}</button>
   `;
   cont.appendChild(div);
   cont.scrollTop = cont.scrollHeight;
@@ -315,11 +414,11 @@ async function enviarMensajeAsistente(textoForzado) {
       agregarMensajeAsistente(data.texto, 'bot');
       if (data.requiereConfirmacion) agregarBotonesConfirmacion();
     } else {
-      agregarMensajeAsistente(data.error || 'Ocurrió un error.', 'bot');
+      agregarMensajeAsistente(data.error || (window.tHilton ? window.tHilton('Ocurrió un error.') : 'Ocurrió un error.'), 'bot');
     }
   } catch (e) {
     pensando.remove();
-    agregarMensajeAsistente('No pude conectarme. Probá de nuevo.', 'bot');
+    agregarMensajeAsistente(window.tHilton ? window.tHilton('No pude conectarme. Probá de nuevo.') : 'No pude conectarme. Probá de nuevo.', 'bot');
   }
 }
 

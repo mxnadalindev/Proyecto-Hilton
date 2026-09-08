@@ -5,6 +5,190 @@
   <title>Miembro de equipo — Hilton</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+/* ── Header "Otras opciones" (AYB): agrupa Ver en Horarios / Importar mozos /
+   Cargar con foto — mismas clases y estilos que el desplegable "Otras
+   opciones" de Horarios (horarios.ejs), para mantener la misma apariencia. */
+.dropdown-otras-opciones{
+  display:none;
+  position:absolute; right:0; top:calc(100% + 6px); z-index:200;
+  background:var(--blanco); border:1px solid var(--gris-borde); border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.15);
+  min-width:220px; padding:6px;
+}
+.dropdown-otras-opciones.abierto{ display:flex; flex-direction:column; gap:2px; }
+.dropdown-otras-item{
+  display:flex; align-items:center; gap:8px; width:100%;
+  background:none; border:none; padding:9px 12px;
+  font-family:var(--font-sans); font-size:0.78rem; font-weight:500;
+  color:var(--negro); text-decoration:none; cursor:pointer;
+  border-radius:6px; text-align:left;
+}
+.dropdown-otras-item:hover{ background:var(--gris-fondo); }
+.dropdown-otras-item i{ font-size:15px; color:var(--gris-texto); flex-shrink:0; }
+
+.recoff-control{display:inline-flex;align-items:center;gap:6px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:20px;padding:2px 4px;}
+.recoff-control button{width:20px;height:20px;border-radius:50%;border:none;background:var(--blanco);color:var(--gris-texto);cursor:pointer;font-size:0.85rem;line-height:1;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;}
+.recoff-control button:hover{background:var(--azul);color:#fff;}
+.recoff-numero{font-size:0.78rem;font-weight:700;color:var(--negro);min-width:16px;text-align:center;}
+.puesto-badge{font-size:0.68rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:2px 7px;border-radius:20px;white-space:nowrap;}
+.btn-asignar{background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;transition:background 0.2s;display:inline-flex;align-items:center;}
+.btn-asignar:hover{background:#6d28d9;}
+.btn-menu{background:none;border:none;cursor:pointer;color:var(--gris-texto);font-size:18px;padding:4px;border-radius:6px;}
+.btn-menu:hover{background:var(--gris-fondo);}
+.dropdown-menu{position:absolute;right:0;top:36px;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:200;min-width:150px;padding:4px;}
+.dropdown-item{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;padding:8px 12px;font-size:0.78rem;font-family:var(--font-sans);color:var(--negro);cursor:pointer;border-radius:6px;text-align:left;}
+.dropdown-item:hover{background:var(--gris-fondo);}
+.dropdown-danger{color:#dc2626;}.dropdown-danger:hover{background:#fef2f2;}
+.dropdown-success{color:#16a34a;}.dropdown-success:hover{background:#f0fdf4;}
+.field label{display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;}
+.field input{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;}
+.field input:focus{border-color:var(--azul);background:var(--blanco);}
+
+/* Select de estado por día — flecha propia chica en vez de la nativa del navegador, para que no tape el texto */
+.sel-dia-estado{
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+  width:70px;
+  padding:3px 16px 3px 6px;
+  border:1px solid var(--gris-borde);
+  border-radius:5px;
+  font-size:0.6rem;
+  font-family:var(--font-sans);
+  outline:none;
+  text-align:left;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  overflow:hidden;
+  cursor:pointer;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%2394a3b8' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 5px center;
+  background-size:8px 5px;
+}
+.sel-dia-estado:focus{border-color:var(--azul);}
+
+/* Calendario */
+.cal-dia{padding:6px 4px;border-radius:6px;cursor:pointer;font-size:0.8rem;color:var(--negro);transition:all 0.15s;border:1px solid transparent;position:relative;}
+.cal-dia:hover{background:var(--azul-claro);color:var(--azul);}
+.cal-dia.hoy{font-weight:700;color:var(--azul);}
+.cal-dia.rango-sel{background:var(--azul);color:#fff;border-radius:0;}
+.cal-dia.rango-inicio{border-radius:6px 0 0 6px;}
+.cal-dia.rango-fin{border-radius:0 6px 6px 0;}
+.cal-dia.rango-inicio.rango-fin{border-radius:6px;}
+.cal-dia.rango-pendiente{background:var(--azul-claro);color:var(--azul);border:1.5px dashed var(--azul);border-radius:6px;font-weight:700;}
+.cal-dia.vacio{visibility:hidden;}
+.cal-dia.es-feriado{border:1.5px solid #dc2626;font-weight:700;}
+.cal-dia.es-feriado.rango-sel{border-color:#fff;}
+.cal-dia-flag{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:var(--blanco);border:1px solid var(--gris-borde);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--gris-borde);cursor:pointer;transition:all 0.15s;line-height:1;z-index:2;}
+.cal-dia-flag:hover{border-color:#dc2626;color:#dc2626;transform:scale(1.25);}
+.cal-dia.es-feriado .cal-dia-flag{background:#dc2626;border-color:#dc2626;color:#fff;}
+
+/* ── Aviso "deslizá" arriba de la tabla: solo se ve en pantallas chicas,
+   donde la tabla necesariamente hay que scrollearla al costado (tiene
+   muchas columnas fijas — RECOFF, SECTOR, un día por columna, etc. — así
+   que "apilarla" en tarjetas la haría perder la vista de todos los días
+   juntos, que es el uso principal de esta pantalla). ── */
+.aviso-scroll-tabla{display:none;}
+
+/* Valores "de escritorio" para las propiedades que antes estaban puestas
+   como estilo inline directo en el HTML — se movieron acá (con el mismo
+   valor de siempre) porque un estilo inline SIEMPRE le gana a una regla
+   de este bloque <style>, aunque la regla esté dentro de un @media que
+   sí aplica: eso es lo que hacía que el ajuste mobile pareciera no
+   tener ningún efecto por más que la pantalla fuera angosta. */
+.card-selector-rango{padding:20px;gap:24px;}
+#cal-container{min-width:280px;}
+.card-periodo-ayb{padding:14px 20px;justify-content:space-between;}
+
+/* ── Responsive: celulares chicos (hasta 600px, cubre los 320-428px típicos) ── */
+@media (max-width: 600px) {
+  /* La tarjeta del selector de rango (calendario + "Rango seleccionado")
+     dejaba el calendario con un ancho mínimo de 280px que no entraba en
+     pantallas de 320-360px de ancho (sumado al padding de la tarjeta),
+     provocando que se corte el último día de la semana (Sáb). En mobile
+     el calendario pasa a ocupar todo el ancho disponible y las dos
+     columnas se apilan una debajo de la otra. */
+  .card-selector-rango{padding:14px !important;gap:16px !important;}
+  .card-selector-rango #cal-container{min-width:0 !important;width:100%;}
+  .card-selector-rango .panel-rango-sel{width:100%;min-width:0;}
+  #cal-grid{gap:3px;}
+  .cal-dia{padding:8px 2px;font-size:0.75rem;}
+  #semana-dias span, .card-selector-rango span{white-space:normal;}
+
+  .card-periodo-ayb{padding:12px 14px !important;justify-content:center !important;text-align:center;}
+  .card-periodo-ayb > a{flex:1 1 auto;justify-content:center;}
+
+  /* La tabla de empleados tiene demasiadas columnas (nombre, puesto,
+     sector, RECOFF y un estado por día) para entrar en una pantalla de
+     celular sin perder legibilidad — se deja el scroll horizontal que ya
+     tenía (funciona bien con el dedo), pero se avisa que existe, porque
+     en una pantalla angosta no se nota a simple vista que hay más
+     columnas a la derecha. */
+  .aviso-scroll-tabla{
+    display:flex;align-items:center;gap:6px;
+    font-size:0.72rem;color:var(--gris-texto);
+    background:var(--gris-fondo);border:1px solid var(--gris-borde);
+    border-radius:8px;padding:7px 10px;margin:0 0 8px;
+  }
+}
+.cal-nombre-dia{font-size:0.6rem;font-weight:600;color:var(--gris-texto);padding:4px 0;text-align:center;}
+
+/* Cartel "Horario cargado correctamente" con cocinerito animado — ventana
+   centrada en el medio de la pantalla (antes era un cartelito abajo), con
+   el mismo verde que el botón "Cargar este rango" (var(--azul)). */
+#cartel-horario-guardado{
+  position:fixed;
+  inset:0;
+  z-index:2000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  background:rgba(0,0,0,0);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.25s ease, background 0.25s ease;
+}
+#cartel-horario-guardado.mostrar{
+  opacity:1;
+  pointer-events:auto;
+  background:rgba(0,0,0,0.35);
+}
+#cartel-horario-guardado .cartel-caja{
+  background:var(--azul);
+  color:#fff;
+  font-family:var(--font-sans);
+  font-size:0.95rem;
+  font-weight:600;
+  padding:30px 40px;
+  border-radius:18px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  text-align:center;
+  max-width:min(90vw, 340px);
+  transform:scale(0.85);
+  transition:transform 0.25s cubic-bezier(.22,1,.36,1);
+}
+#cartel-horario-guardado.mostrar .cartel-caja{
+  transform:scale(1);
+}
+.cartel-cocinerito{
+  font-size:2.4rem;
+  line-height:1;
+  display:inline-block;
+  animation:cocinerito-salto 0.6s ease-in-out infinite;
+}
+@keyframes cocinerito-salto{
+  0%, 100%{ transform:translateY(0) rotate(0deg); }
+  30%{ transform:translateY(-9px) rotate(-8deg); }
+  60%{ transform:translateY(0) rotate(6deg); }
+}
+</style>
 </head>
 <body>
 <div class="app-layout">
@@ -60,7 +244,7 @@
         <h1 class="seccion-titulo">Miembro de equipo</h1>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+        <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
         <% if (misDepto === 'ayb') { %>
         <!-- AYB: "Ver en Horarios" + Importar mozos + Cargar con foto agrupados
              en un desplegable "Otras opciones", mismo patrón/clases que usa
@@ -637,190 +821,6 @@
   </div>
 </div>
 
-<style>
-/* ── Header "Otras opciones" (AYB): agrupa Ver en Horarios / Importar mozos /
-   Cargar con foto — mismas clases y estilos que el desplegable "Otras
-   opciones" de Horarios (horarios.ejs), para mantener la misma apariencia. */
-.dropdown-otras-opciones{
-  display:none;
-  position:absolute; right:0; top:calc(100% + 6px); z-index:200;
-  background:var(--blanco); border:1px solid var(--gris-borde); border-radius:10px;
-  box-shadow:0 8px 24px rgba(0,0,0,0.15);
-  min-width:220px; padding:6px;
-}
-.dropdown-otras-opciones.abierto{ display:flex; flex-direction:column; gap:2px; }
-.dropdown-otras-item{
-  display:flex; align-items:center; gap:8px; width:100%;
-  background:none; border:none; padding:9px 12px;
-  font-family:var(--font-sans); font-size:0.78rem; font-weight:500;
-  color:var(--negro); text-decoration:none; cursor:pointer;
-  border-radius:6px; text-align:left;
-}
-.dropdown-otras-item:hover{ background:var(--gris-fondo); }
-.dropdown-otras-item i{ font-size:15px; color:var(--gris-texto); flex-shrink:0; }
-
-.recoff-control{display:inline-flex;align-items:center;gap:6px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:20px;padding:2px 4px;}
-.recoff-control button{width:20px;height:20px;border-radius:50%;border:none;background:var(--blanco);color:var(--gris-texto);cursor:pointer;font-size:0.85rem;line-height:1;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;}
-.recoff-control button:hover{background:var(--azul);color:#fff;}
-.recoff-numero{font-size:0.78rem;font-weight:700;color:var(--negro);min-width:16px;text-align:center;}
-.puesto-badge{font-size:0.68rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:2px 7px;border-radius:20px;white-space:nowrap;}
-.btn-asignar{background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:13px;transition:background 0.2s;display:inline-flex;align-items:center;}
-.btn-asignar:hover{background:#6d28d9;}
-.btn-menu{background:none;border:none;cursor:pointer;color:var(--gris-texto);font-size:18px;padding:4px;border-radius:6px;}
-.btn-menu:hover{background:var(--gris-fondo);}
-.dropdown-menu{position:absolute;right:0;top:36px;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:200;min-width:150px;padding:4px;}
-.dropdown-item{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;padding:8px 12px;font-size:0.78rem;font-family:var(--font-sans);color:var(--negro);cursor:pointer;border-radius:6px;text-align:left;}
-.dropdown-item:hover{background:var(--gris-fondo);}
-.dropdown-danger{color:#dc2626;}.dropdown-danger:hover{background:#fef2f2;}
-.dropdown-success{color:#16a34a;}.dropdown-success:hover{background:#f0fdf4;}
-.field label{display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;}
-.field input{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;}
-.field input:focus{border-color:var(--azul);background:var(--blanco);}
-
-/* Select de estado por día — flecha propia chica en vez de la nativa del navegador, para que no tape el texto */
-.sel-dia-estado{
-  -webkit-appearance:none;
-  -moz-appearance:none;
-  appearance:none;
-  width:70px;
-  padding:3px 16px 3px 6px;
-  border:1px solid var(--gris-borde);
-  border-radius:5px;
-  font-size:0.6rem;
-  font-family:var(--font-sans);
-  outline:none;
-  text-align:left;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  overflow:hidden;
-  cursor:pointer;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%2394a3b8' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-  background-repeat:no-repeat;
-  background-position:right 5px center;
-  background-size:8px 5px;
-}
-.sel-dia-estado:focus{border-color:var(--azul);}
-
-/* Calendario */
-.cal-dia{padding:6px 4px;border-radius:6px;cursor:pointer;font-size:0.8rem;color:var(--negro);transition:all 0.15s;border:1px solid transparent;position:relative;}
-.cal-dia:hover{background:var(--azul-claro);color:var(--azul);}
-.cal-dia.hoy{font-weight:700;color:var(--azul);}
-.cal-dia.rango-sel{background:var(--azul);color:#fff;border-radius:0;}
-.cal-dia.rango-inicio{border-radius:6px 0 0 6px;}
-.cal-dia.rango-fin{border-radius:0 6px 6px 0;}
-.cal-dia.rango-inicio.rango-fin{border-radius:6px;}
-.cal-dia.rango-pendiente{background:var(--azul-claro);color:var(--azul);border:1.5px dashed var(--azul);border-radius:6px;font-weight:700;}
-.cal-dia.vacio{visibility:hidden;}
-.cal-dia.es-feriado{border:1.5px solid #dc2626;font-weight:700;}
-.cal-dia.es-feriado.rango-sel{border-color:#fff;}
-.cal-dia-flag{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:var(--blanco);border:1px solid var(--gris-borde);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--gris-borde);cursor:pointer;transition:all 0.15s;line-height:1;z-index:2;}
-.cal-dia-flag:hover{border-color:#dc2626;color:#dc2626;transform:scale(1.25);}
-.cal-dia.es-feriado .cal-dia-flag{background:#dc2626;border-color:#dc2626;color:#fff;}
-
-/* ── Aviso "deslizá" arriba de la tabla: solo se ve en pantallas chicas,
-   donde la tabla necesariamente hay que scrollearla al costado (tiene
-   muchas columnas fijas — RECOFF, SECTOR, un día por columna, etc. — así
-   que "apilarla" en tarjetas la haría perder la vista de todos los días
-   juntos, que es el uso principal de esta pantalla). ── */
-.aviso-scroll-tabla{display:none;}
-
-/* Valores "de escritorio" para las propiedades que antes estaban puestas
-   como estilo inline directo en el HTML — se movieron acá (con el mismo
-   valor de siempre) porque un estilo inline SIEMPRE le gana a una regla
-   de este bloque <style>, aunque la regla esté dentro de un @media que
-   sí aplica: eso es lo que hacía que el ajuste mobile pareciera no
-   tener ningún efecto por más que la pantalla fuera angosta. */
-.card-selector-rango{padding:20px;gap:24px;}
-#cal-container{min-width:280px;}
-.card-periodo-ayb{padding:14px 20px;justify-content:space-between;}
-
-/* ── Responsive: celulares chicos (hasta 600px, cubre los 320-428px típicos) ── */
-@media (max-width: 600px) {
-  /* La tarjeta del selector de rango (calendario + "Rango seleccionado")
-     dejaba el calendario con un ancho mínimo de 280px que no entraba en
-     pantallas de 320-360px de ancho (sumado al padding de la tarjeta),
-     provocando que se corte el último día de la semana (Sáb). En mobile
-     el calendario pasa a ocupar todo el ancho disponible y las dos
-     columnas se apilan una debajo de la otra. */
-  .card-selector-rango{padding:14px !important;gap:16px !important;}
-  .card-selector-rango #cal-container{min-width:0 !important;width:100%;}
-  .card-selector-rango .panel-rango-sel{width:100%;min-width:0;}
-  #cal-grid{gap:3px;}
-  .cal-dia{padding:8px 2px;font-size:0.75rem;}
-  #semana-dias span, .card-selector-rango span{white-space:normal;}
-
-  .card-periodo-ayb{padding:12px 14px !important;justify-content:center !important;text-align:center;}
-  .card-periodo-ayb > a{flex:1 1 auto;justify-content:center;}
-
-  /* La tabla de empleados tiene demasiadas columnas (nombre, puesto,
-     sector, RECOFF y un estado por día) para entrar en una pantalla de
-     celular sin perder legibilidad — se deja el scroll horizontal que ya
-     tenía (funciona bien con el dedo), pero se avisa que existe, porque
-     en una pantalla angosta no se nota a simple vista que hay más
-     columnas a la derecha. */
-  .aviso-scroll-tabla{
-    display:flex;align-items:center;gap:6px;
-    font-size:0.72rem;color:var(--gris-texto);
-    background:var(--gris-fondo);border:1px solid var(--gris-borde);
-    border-radius:8px;padding:7px 10px;margin:0 0 8px;
-  }
-}
-.cal-nombre-dia{font-size:0.6rem;font-weight:600;color:var(--gris-texto);padding:4px 0;text-align:center;}
-
-/* Cartel "Horario cargado correctamente" con cocinerito animado — ventana
-   centrada en el medio de la pantalla (antes era un cartelito abajo), con
-   el mismo verde que el botón "Cargar este rango" (var(--azul)). */
-#cartel-horario-guardado{
-  position:fixed;
-  inset:0;
-  z-index:2000;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:16px;
-  background:rgba(0,0,0,0);
-  opacity:0;
-  pointer-events:none;
-  transition:opacity 0.25s ease, background 0.25s ease;
-}
-#cartel-horario-guardado.mostrar{
-  opacity:1;
-  pointer-events:auto;
-  background:rgba(0,0,0,0.35);
-}
-#cartel-horario-guardado .cartel-caja{
-  background:var(--azul);
-  color:#fff;
-  font-family:var(--font-sans);
-  font-size:0.95rem;
-  font-weight:600;
-  padding:30px 40px;
-  border-radius:18px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.3);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:12px;
-  text-align:center;
-  max-width:min(90vw, 340px);
-  transform:scale(0.85);
-  transition:transform 0.25s cubic-bezier(.22,1,.36,1);
-}
-#cartel-horario-guardado.mostrar .cartel-caja{
-  transform:scale(1);
-}
-.cartel-cocinerito{
-  font-size:2.4rem;
-  line-height:1;
-  display:inline-block;
-  animation:cocinerito-salto 0.6s ease-in-out infinite;
-}
-@keyframes cocinerito-salto{
-  0%, 100%{ transform:translateY(0) rotate(0deg); }
-  30%{ transform:translateY(-9px) rotate(-8deg); }
-  60%{ transform:translateY(0) rotate(6deg); }
-}
-</style>
 
 <script>
 function ajustarRecoff(uid, delta) {

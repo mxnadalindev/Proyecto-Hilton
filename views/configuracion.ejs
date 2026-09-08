@@ -5,6 +5,26 @@
   <title>Configuración — Hilton</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+.cfg-card{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px;box-shadow:var(--sombra);}
+.cfg-titulo{font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin:0;display:flex;align-items:center;gap:7px;}
+.btn-icono{background:none;border:1px solid var(--gris-borde);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:13px;color:var(--gris-texto);text-decoration:none;display:inline-flex;align-items:center;}
+.btn-icono:hover{background:var(--gris-fondo);}
+.btn-icono-verde{border-color:#bbf7d0;color:#16a34a;}.btn-icono-verde:hover{background:#f0fdf4;}
+.btn-icono-rojo{border-color:#fecaca;color:#dc2626;}.btn-icono-rojo:hover{background:#fef2f2;}
+.btn-icono-naranja{border-color:#fed7aa;color:#ea580c;}.btn-icono-naranja:hover{background:#fff7ed;}
+.cfg-field{display:flex;flex-direction:column;gap:6px;}
+.cfg-field label{font-size:0.78rem;font-weight:600;color:var(--negro);}
+.cfg-hint{font-size:0.72rem;color:var(--gris-texto);margin:0;}
+.cfg-input{background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:8px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;}
+.cfg-input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);}
+.cfg-seguridad-grid{grid-template-columns:1fr 1fr;}
+
+@media (max-width: 600px) {
+  .cfg-card{padding:16px;}
+  .cfg-seguridad-grid{grid-template-columns:1fr !important;}
+}
+</style>
 </head>
 <body>
 <div class="app-layout">
@@ -16,7 +36,7 @@
         <p class="seccion-label">Portal interno</p>
         <h1 class="seccion-titulo">Configuración</h1>
       </div>
-      <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+      <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
     </div>
 
     <% if (msg) { %>
@@ -249,26 +269,6 @@
   <%- include('partials/mobile-nav', { path: 'configuracion' }) %>
 </div>
 
-<style>
-.cfg-card{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px;box-shadow:var(--sombra);}
-.cfg-titulo{font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin:0;display:flex;align-items:center;gap:7px;}
-.btn-icono{background:none;border:1px solid var(--gris-borde);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:13px;color:var(--gris-texto);text-decoration:none;display:inline-flex;align-items:center;}
-.btn-icono:hover{background:var(--gris-fondo);}
-.btn-icono-verde{border-color:#bbf7d0;color:#16a34a;}.btn-icono-verde:hover{background:#f0fdf4;}
-.btn-icono-rojo{border-color:#fecaca;color:#dc2626;}.btn-icono-rojo:hover{background:#fef2f2;}
-.btn-icono-naranja{border-color:#fed7aa;color:#ea580c;}.btn-icono-naranja:hover{background:#fff7ed;}
-.cfg-field{display:flex;flex-direction:column;gap:6px;}
-.cfg-field label{font-size:0.78rem;font-weight:600;color:var(--negro);}
-.cfg-hint{font-size:0.72rem;color:var(--gris-texto);margin:0;}
-.cfg-input{background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:8px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;}
-.cfg-input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);}
-.cfg-seguridad-grid{grid-template-columns:1fr 1fr;}
-
-@media (max-width: 600px) {
-  .cfg-card{padding:16px;}
-  .cfg-seguridad-grid{grid-template-columns:1fr !important;}
-}
-</style>
 
 <script>
 const tabIds = <%- JSON.stringify(tabList.map(t => t.id)) %>;

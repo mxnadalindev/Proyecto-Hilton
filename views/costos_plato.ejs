@@ -5,6 +5,30 @@
   <title><%= plato.nombre %> — Costos</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+.form-card { background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px;box-shadow:var(--sombra); }
+.form-card-title { font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin-bottom:18px;display:flex;align-items:center;gap:7px; }
+.field { margin-bottom:0; }
+.field label { display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px; }
+.field input { width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none; }
+.field input:focus { border-color:var(--azul);background:var(--blanco); }
+.btn-danger { background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-family:var(--font-sans);font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s; }
+.btn-danger:hover { background:#dc2626;color:#fff; }
+
+.costos-plato-grid{grid-template-columns:1fr 1fr;}
+.costos-plato-stats{grid-template-columns:1fr 1fr;}
+
+/* ── Responsive: celulares chicos (320-428px típicos) ── */
+@media (max-width: 600px) {
+  .costos-plato-grid{grid-template-columns:1fr !important;}
+}
+@media (max-width: 374px) {
+  /* Las 4 tarjetas de estadísticas (costo total, precio venta, margen,
+     porciones) quedan muy apretadas en 2 columnas en el celular más
+     angosto — pasan a una sola columna solo ahí. */
+  .costos-plato-stats{grid-template-columns:1fr !important;}
+}
+</style>
 </head>
 <body>
 <div class="app-layout">
@@ -154,30 +178,6 @@
   <%- include('partials/mobile-nav', { path: 'costos' }) %>
 </div>
 
-<style>
-.form-card { background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px;box-shadow:var(--sombra); }
-.form-card-title { font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin-bottom:18px;display:flex;align-items:center;gap:7px; }
-.field { margin-bottom:0; }
-.field label { display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px; }
-.field input { width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none; }
-.field input:focus { border-color:var(--azul);background:var(--blanco); }
-.btn-danger { background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-family:var(--font-sans);font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s; }
-.btn-danger:hover { background:#dc2626;color:#fff; }
-
-.costos-plato-grid{grid-template-columns:1fr 1fr;}
-.costos-plato-stats{grid-template-columns:1fr 1fr;}
-
-/* ── Responsive: celulares chicos (320-428px típicos) ── */
-@media (max-width: 600px) {
-  .costos-plato-grid{grid-template-columns:1fr !important;}
-}
-@media (max-width: 374px) {
-  /* Las 4 tarjetas de estadísticas (costo total, precio venta, margen,
-     porciones) quedan muy apretadas en 2 columnas en el celular más
-     angosto — pasan a una sola columna solo ahí. */
-  .costos-plato-stats{grid-template-columns:1fr !important;}
-}
-</style>
 
 </body>
 </html>

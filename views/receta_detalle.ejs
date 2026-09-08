@@ -5,6 +5,40 @@
   <title><%= receta.nombre %> — Hilton</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+.detalle-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
+.detalle-card-title { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
+.info-rows { display: flex; flex-direction: column; }
+.info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--gris-borde); }
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 0.75rem; color: var(--gris-texto); }
+.info-val { font-size: 0.85rem; color: var(--negro); font-weight: 500; }
+.list-empty { font-size: 0.78rem; color: var(--gris-texto); font-style: italic; padding: 8px 0; }
+.back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; }
+.back-link:hover { color: var(--azul); }
+.btn-danger { background: var(--rojo-claro); border: 1px solid var(--rojo-borde); color: var(--rojo); font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all var(--tr); }
+.btn-danger:hover { background: var(--rojo); color: #fff; }
+.btn-whatsapp { background: #25D366; border: none; color: #fff; font-family: var(--font-sans); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 9px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: none; transition: background var(--tr); }
+.btn-whatsapp:hover { background: #1ea952; }
+
+.receta-foto { margin-bottom: 20px; border-radius: 12px; overflow: hidden; box-shadow: var(--sombra); }
+.receta-foto img { width: 100%; max-height: 380px; object-fit: cover; display: block; }
+.receta-medio { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .receta-medio { grid-template-columns: 1fr; } }
+
+.tabla-ingredientes-ver { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+.tabla-ingredientes-ver th { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gris-texto); text-align: left; padding: 0 6px 8px; border-bottom: 1px solid var(--gris-borde); }
+.tabla-ingredientes-ver td { padding: 8px 6px; font-size: 0.83rem; color: var(--negro); border-bottom: 1px solid var(--gris-borde); }
+.tabla-ingredientes-ver tr:last-child td { border-bottom: none; }
+
+.videos-grid { display: flex; flex-direction: column; gap: 18px; }
+.fotos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.fotos-grid img { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; display: block; }
+
+@media (max-width: 600px) {
+  .detalle-card { padding: 16px; }
+}
+</style>
 </head>
 <body>
 <div class="app-layout">
@@ -189,40 +223,6 @@
   <%- include('partials/mobile-nav', { path: 'recetas' }) %>
 </div>
 
-<style>
-.detalle-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
-.detalle-card-title { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
-.info-rows { display: flex; flex-direction: column; }
-.info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--gris-borde); }
-.info-row:last-child { border-bottom: none; }
-.info-label { font-size: 0.75rem; color: var(--gris-texto); }
-.info-val { font-size: 0.85rem; color: var(--negro); font-weight: 500; }
-.list-empty { font-size: 0.78rem; color: var(--gris-texto); font-style: italic; padding: 8px 0; }
-.back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; }
-.back-link:hover { color: var(--azul); }
-.btn-danger { background: var(--rojo-claro); border: 1px solid var(--rojo-borde); color: var(--rojo); font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all var(--tr); }
-.btn-danger:hover { background: var(--rojo); color: #fff; }
-.btn-whatsapp { background: #25D366; border: none; color: #fff; font-family: var(--font-sans); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 9px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: none; transition: background var(--tr); }
-.btn-whatsapp:hover { background: #1ea952; }
-
-.receta-foto { margin-bottom: 20px; border-radius: 12px; overflow: hidden; box-shadow: var(--sombra); }
-.receta-foto img { width: 100%; max-height: 380px; object-fit: cover; display: block; }
-.receta-medio { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 900px) { .receta-medio { grid-template-columns: 1fr; } }
-
-.tabla-ingredientes-ver { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-.tabla-ingredientes-ver th { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gris-texto); text-align: left; padding: 0 6px 8px; border-bottom: 1px solid var(--gris-borde); }
-.tabla-ingredientes-ver td { padding: 8px 6px; font-size: 0.83rem; color: var(--negro); border-bottom: 1px solid var(--gris-borde); }
-.tabla-ingredientes-ver tr:last-child td { border-bottom: none; }
-
-.videos-grid { display: flex; flex-direction: column; gap: 18px; }
-.fotos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
-.fotos-grid img { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; display: block; }
-
-@media (max-width: 600px) {
-  .detalle-card { padding: 16px; }
-}
-</style>
 
 </body>
 </html>

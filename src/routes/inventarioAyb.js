@@ -108,10 +108,21 @@ router.post('/producto/:id/ajustar', async (req, res) => {
     return res.redirect('/inicio?msg=sin_acceso');
   }
   const volverAQr = req.body.volver_a_qr === '1';
+  // Si el ajuste vino de una fila dentro del modal de lista de productos,
+  // al volver reabrimos ese mismo modal (y la búsqueda/rubro que tenía
+  // puesto) — si no, guardar un stock desde ahí devolvía a la pantalla
+  // resumen con el modal cerrado, como si nada se hubiera hecho.
+  const volverLista = req.body.volver_lista === '1';
+  const buscarActual = (req.body.buscar_actual || '').trim();
+  const rubroActual = (req.body.rubro_actual || '').trim();
+  const qsVolverLista = !volverLista ? '' :
+    (buscarActual
+      ? `&buscar=${encodeURIComponent(buscarActual)}`
+      : (rubroActual ? `&rubro=${encodeURIComponent(rubroActual)}` : '&modal=productos'));
   const redirigirCon = (msg) => res.redirect(
     volverAQr
       ? `/inventario-ayb/producto/${req.params.id}/ajustar?msg=${encodeURIComponent(msg)}`
-      : `/inventario-ayb?msg=${encodeURIComponent(msg)}`
+      : `/inventario-ayb?msg=${encodeURIComponent(msg)}${qsVolverLista}`
   );
 
   try {
@@ -231,6 +242,10 @@ router.use((req, res, next) => {
 });
 
 // ── Listado principal ─────────────────────────────────────────────
+// La lista completa de productos ya no vive suelta en la pantalla (con
+// muchos productos se hacía kilométrica) — ahora vive en un modal, con un
+// cartel resumen arriba para abrirlo, mismo patrón que Insumos en Costos.
+// Adentro, se separa por rubro (categoría) en vez de mostrar todo mezclado.
 router.get('/', async (req, res) => {
   // Busca por nombre, categoría (útil para los productos importados de un
   // cierre de inventario, que traen la ubicación como categoría, ej. "210")
@@ -238,20 +253,39 @@ router.get('/', async (req, res) => {
   // (insumos de Costos busca por nombre o código, Recetas por nombre o
   // categoría), no solo por nombre como antes.
   const q = (req.query.buscar || '').trim();
-  const productos = await db.all2(
-    q
-      ? `SELECT * FROM productos_ayb WHERE activo=true AND (nombre ILIKE $1 OR categoria ILIKE $1 OR codigo_barras ILIKE $1) ORDER BY categoria NULLS LAST, nombre`
-      : `SELECT * FROM productos_ayb WHERE activo=true ORDER BY categoria NULLS LAST, nombre`,
-    q ? [`%${q}%`] : []
-  );
+  const rubro = (req.query.rubro || '').trim();
 
-  const bajoStock = productos.filter(p => p.stock_minimo != null && (p.stock_actual || 0) <= p.stock_minimo);
+  // El stock bajo y el total siempre se calculan sobre TODOS los productos
+  // activos, nunca sobre lo que haya filtrado una búsqueda o un rubro — si
+  // no, buscar algo específico hacía "desaparecer" productos del cartel de
+  // alerta y del contador, aunque siguieran con stock bajo.
+  const todosActivos = await db.all2("SELECT * FROM productos_ayb WHERE activo=true ORDER BY categoria NULLS LAST, nombre");
+  const bajoStock = todosActivos.filter(p => p.stock_minimo != null && (p.stock_actual || 0) <= p.stock_minimo);
+  const categoriasDisponibles = [...new Set(todosActivos.map(p => p.categoria || 'Sin categoría'))].sort((a, b) => a.localeCompare(b, 'es'));
+
+  let productos;
+  if (q) {
+    productos = await db.all2(
+      `SELECT * FROM productos_ayb WHERE activo=true AND (nombre ILIKE $1 OR categoria ILIKE $1 OR codigo_barras ILIKE $1) ORDER BY categoria NULLS LAST, nombre`,
+      [`%${q}%`]
+    );
+  } else if (rubro) {
+    productos = rubro === 'Sin categoría'
+      ? todosActivos.filter(p => !p.categoria)
+      : todosActivos.filter(p => p.categoria === rubro);
+  } else {
+    productos = todosActivos;
+  }
 
   res.render('inventario_ayb', {
     productos,
     bajoStock,
-    totalProductos: productos.length,
+    categoriasDisponibles,
+    rubro,
+    totalProductos: todosActivos.length,
+    totalListado: productos.length,
     buscar: q,
+    abrirModalLista: req.query.modal === 'productos',
     msg: req.query.msg || null,
     geminiConfigurado: !!process.env.GEMINI_API_KEY,
   });
@@ -283,7 +317,20 @@ router.post('/producto/nuevo', async (req, res) => {
 });
 
 // ── Editar datos de un producto (no la cantidad — eso es "ajustar") ──
+// Arma el query string para volver a la lista de productos manteniendo el
+// modal abierto en el mismo lugar donde estaba (todos / buscando / un
+// rubro puntual) — mismo criterio que usa /producto/:id/ajustar.
+function qsVolverListaProductos(req) {
+  if (req.body.volver_lista !== '1') return '';
+  const buscarActual = (req.body.buscar_actual || '').trim();
+  const rubroActual = (req.body.rubro_actual || '').trim();
+  if (buscarActual) return `&buscar=${encodeURIComponent(buscarActual)}`;
+  if (rubroActual) return `&rubro=${encodeURIComponent(rubroActual)}`;
+  return '&modal=productos';
+}
+
 router.post('/producto/:id/editar', async (req, res) => {
+  const qs = qsVolverListaProductos(req);
   try {
     await db.run2(
       `UPDATE productos_ayb SET nombre=$1, categoria=$2, unidad_default=$3, stock_minimo=$4, codigo_barras=$5 WHERE id=$6`,
@@ -296,21 +343,22 @@ router.post('/producto/:id/editar', async (req, res) => {
         req.params.id,
       ]
     );
-    res.redirect('/inventario-ayb?msg=' + encodeURIComponent('Producto actualizado.'));
+    res.redirect('/inventario-ayb?msg=' + encodeURIComponent('Producto actualizado.') + qs);
   } catch (e) {
     console.error('Error editando producto de inventario AYB:', e.message);
-    res.redirect('/inventario-ayb?msg=' + encodeURIComponent('Error actualizando el producto: ' + e.message));
+    res.redirect('/inventario-ayb?msg=' + encodeURIComponent('Error actualizando el producto: ' + e.message) + qs);
   }
 });
 
 // ── Dar de baja un producto (soft delete — no se borra el historial) ──
 router.post('/producto/:id/eliminar', async (req, res) => {
+  const qs = qsVolverListaProductos(req);
   try {
     await db.run2(`UPDATE productos_ayb SET activo=false WHERE id=$1`, [req.params.id]);
-    res.redirect('/inventario-ayb?msg=' + encodeURIComponent('Producto dado de baja.'));
+    res.redirect('/inventario-ayb?msg=' + encodeURIComponent('Producto dado de baja.') + qs);
   } catch (e) {
     console.error('Error dando de baja producto de inventario AYB:', e.message);
-    res.redirect('/inventario-ayb?msg=' + encodeURIComponent('Error: ' + e.message));
+    res.redirect('/inventario-ayb?msg=' + encodeURIComponent('Error: ' + e.message) + qs);
   }
 });
 

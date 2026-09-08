@@ -593,6 +593,32 @@ const init = async () => {
   `);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_horas_extra_usuario ON horas_extra (usuario_id, fecha DESC)`);
 
+  // Costeo de AYB sobre su propio catálogo (productos_ayb) — antes, Costos
+  // en la vista de AYB usaba la misma tabla "insumos" que Cocina (ver
+  // comentario junto a esa tabla), pero AYB en realidad costea SUS PROPIOS
+  // productos de Inventario AYB, no insumos de cocina. Se agrega acá el
+  // precio y un historial propio, igual que insumos/historial_precios pero
+  // apuntando a productos_ayb, sin tocar nada de lo que ya usa Cocina.
+  await pool.query(`ALTER TABLE productos_ayb ADD COLUMN IF NOT EXISTS precio_unitario REAL DEFAULT 0`);
+  await pool.query(`ALTER TABLE productos_ayb ADD COLUMN IF NOT EXISTS proveedor TEXT`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS historial_precios_ayb (
+      id SERIAL PRIMARY KEY,
+      producto_id INTEGER NOT NULL REFERENCES productos_ayb(id) ON DELETE CASCADE,
+      precio_anterior REAL DEFAULT 0,
+      precio_nuevo REAL DEFAULT 0,
+      fecha TIMESTAMP DEFAULT NOW(),
+      origen TEXT DEFAULT 'manual',
+      proveedor TEXT,
+      factura_referencia TEXT,
+      usuario_id INTEGER REFERENCES usuarios(id),
+      usuario_nombre TEXT,
+      confianza_match REAL,
+      aplicado_automaticamente BOOLEAN DEFAULT false
+    )
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_historial_precios_ayb_producto ON historial_precios_ayb (producto_id, fecha DESC)`);
+
   // Admin por defecto
   const admin = await db.get2(
     "SELECT id FROM usuarios WHERE email = $1", ['admin@hilton.com']

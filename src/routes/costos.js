@@ -25,7 +25,7 @@ function departamentoEfectivo(req) {
   if (d === 'cocina' || d === 'ayb') return d;
   return req.query.depto === 'ayb' ? 'ayb' : 'cocina';
 }
-const { parsearCsvInsumos, importarInsumos } = require('../services/importadorInsumos');
+const { parsearCsvInsumos, importarInsumos, importarProductosAyb } = require('../services/importadorInsumos');
 const { parsearCsvPlatos, importarPlatos } = require('../services/importadorPlatos');
 
 const storage = multer.diskStorage({
@@ -96,14 +96,27 @@ async function calcularVariacionPrecios(dias, tipo) {
 // orden de categoría/nombre) no aparecía nunca, aunque existiera. Esta
 // ruta sí consulta TODA la tabla, igual que la búsqueda con Enter de
 // siempre, solo que devuelve JSON en vez de renderizar la página entera.
+// Columnas de productos_ayb "disfrazadas" con los mismos nombres que usa la
+// tabla insumos (codigo, unidad) — así la vista y el resto de esta ruta
+// pueden tratar ambas listas de la misma manera sin tener que duplicar el EJS.
+const SELECT_PRODUCTOS_AYB_COMO_INSUMO =
+  "id, nombre, categoria, codigo_barras AS codigo, unidad_default AS unidad, precio_unitario, stock_actual, proveedor";
+
 router.get('/insumos/buscar-vivo', loginRequerido, async (req, res) => {
   const q = (req.query.q || '').trim();
   if (!q) return res.json({ insumos: [] });
-  const insumos = await db.all2(
-    "SELECT id, codigo, nombre, precio_unitario FROM insumos WHERE nombre ILIKE $1 OR codigo ILIKE $1 ORDER BY categoria, nombre LIMIT 200",
-    [`%${q}%`]
-  );
-  res.json({ insumos });
+  const esAyb = departamentoEfectivo(req) === 'ayb';
+  const insumos = esAyb
+    ? await db.all2(
+        `SELECT id, codigo_barras AS codigo, nombre, precio_unitario FROM productos_ayb
+         WHERE activo=true AND (nombre ILIKE $1 OR codigo_barras ILIKE $1) ORDER BY categoria NULLS LAST, nombre LIMIT 200`,
+        [`%${q}%`]
+      )
+    : await db.all2(
+        "SELECT id, codigo, nombre, precio_unitario FROM insumos WHERE nombre ILIKE $1 OR codigo ILIKE $1 ORDER BY categoria, nombre LIMIT 200",
+        [`%${q}%`]
+      );
+  res.json({ insumos, esAyb });
 });
 
 router.get('/', loginRequerido, async (req, res) => {
@@ -111,8 +124,36 @@ router.get('/', loginRequerido, async (req, res) => {
   const letra  = (req.query.letra || '').trim().toUpperCase().slice(0, 1);
   const LIMITE_SIN_BUSQUEDA = 200;
 
+  const depto = departamentoEfectivo(req);
+  const esAyb = depto === 'ayb';
+  const esAdminGeneral = !['cocina', 'ayb'].includes((req.session.usuario?.departamento || '').toLowerCase());
+
+  // ── Insumos/Ingredientes: para Cocina es la tabla "insumos" de siempre.
+  //    Para AYB, pasan a ser los productos de Inventario AYB (misma lista,
+  //    un solo lugar donde se cargan) — no una lista aparte para Costos.
   let insumos, totalInsumos;
-  if (buscar) {
+  if (esAyb) {
+    if (buscar) {
+      insumos = await db.all2(
+        `SELECT ${SELECT_PRODUCTOS_AYB_COMO_INSUMO} FROM productos_ayb WHERE activo=true AND (nombre ILIKE $1 OR codigo_barras ILIKE $1) ORDER BY categoria NULLS LAST, nombre LIMIT 500`,
+        [`%${buscar}%`]
+      );
+      totalInsumos = insumos.length;
+    } else if (letra) {
+      insumos = await db.all2(
+        `SELECT ${SELECT_PRODUCTOS_AYB_COMO_INSUMO} FROM productos_ayb WHERE activo=true AND nombre ILIKE $1 ORDER BY nombre LIMIT 500`,
+        [`${letra}%`]
+      );
+      totalInsumos = insumos.length;
+    } else {
+      const totalRow = await db.get2("SELECT COUNT(*)::int AS total FROM productos_ayb WHERE activo=true");
+      totalInsumos = totalRow?.total || 0;
+      insumos = await db.all2(
+        `SELECT ${SELECT_PRODUCTOS_AYB_COMO_INSUMO} FROM productos_ayb WHERE activo=true ORDER BY categoria NULLS LAST, nombre LIMIT $1`,
+        [LIMITE_SIN_BUSQUEDA]
+      );
+    }
+  } else if (buscar) {
     insumos = await db.all2(
       "SELECT * FROM insumos WHERE nombre ILIKE $1 OR codigo ILIKE $1 ORDER BY categoria, nombre LIMIT 500",
       [`%${buscar}%`]
@@ -133,37 +174,40 @@ router.get('/', loginRequerido, async (req, res) => {
     );
   }
 
-  const depto = departamentoEfectivo(req);
-  const esAdminGeneral = !['cocina', 'ayb'].includes((req.session.usuario?.departamento || '').toLowerCase());
-
+  // ── Costeo de platos: no aplica a AYB (no tiene combos/recetas armadas
+  //    como Cocina) — se deja directamente vacío y sin consultar la tabla.
   const buscarPlato = (req.query.buscarPlato || '').trim();
   const letraPlato  = (req.query.letraPlato || '').trim().toUpperCase().slice(0, 1);
-  let platos, totalPlatos;
-  if (buscarPlato) {
-    platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 AND nombre ILIKE $2 ORDER BY nombre LIMIT 300", [depto, `%${buscarPlato}%`]);
-    totalPlatos = platos.length;
-  } else if (letraPlato) {
-    platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 AND nombre ILIKE $2 ORDER BY nombre LIMIT 300", [depto, `${letraPlato}%`]);
-    totalPlatos = platos.length;
-  } else {
-    const totalPlatosRow = await db.get2("SELECT COUNT(*)::int AS total FROM platos_costo WHERE departamento=$1", [depto]);
-    totalPlatos = totalPlatosRow?.total || 0;
-    platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 ORDER BY nombre LIMIT 300", [depto]);
+  let platos = [], totalPlatos = 0;
+  if (!esAyb) {
+    if (buscarPlato) {
+      platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 AND nombre ILIKE $2 ORDER BY nombre LIMIT 300", [depto, `%${buscarPlato}%`]);
+      totalPlatos = platos.length;
+    } else if (letraPlato) {
+      platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 AND nombre ILIKE $2 ORDER BY nombre LIMIT 300", [depto, `${letraPlato}%`]);
+      totalPlatos = platos.length;
+    } else {
+      const totalPlatosRow = await db.get2("SELECT COUNT(*)::int AS total FROM platos_costo WHERE departamento=$1", [depto]);
+      totalPlatos = totalPlatosRow?.total || 0;
+      platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 ORDER BY nombre LIMIT 300", [depto]);
+    }
   }
   const categorias = [...new Set(insumos.map(i=>i.categoria))];
   const msg = req.query.msg || null;
   const geminiConfigurado = !!process.env.GEMINI_API_KEY;
 
-  // ── Variación de precios: compara el precio actual de cada insumo contra el
-  //    precio que tenía al INICIO del período elegido (según historial_precios).
-  //    Solo entran los insumos que tuvieron al menos un cambio registrado en ese
-  //    período — si nunca cambiaron, no hay "antes" con qué comparar.
+  // ── Variación de precios: compara el precio actual de cada insumo/producto
+  //    contra el precio que tenía al INICIO del período elegido. Para AYB
+  //    corre sobre productos_ayb + historial_precios_ayb; para Cocina, igual
+  //    que siempre, sobre insumos + historial_precios.
   const DIAS_PERMITIDOS = [7, 14, 21, 28];
   const diasVariacion = DIAS_PERMITIDOS.includes(parseInt(req.query.dias)) ? parseInt(req.query.dias) : 7;
   const tipoVariacion = ['subieron', 'bajaron', 'iguales'].includes(req.query.tipoVariacion)
     ? req.query.tipoVariacion : 'subieron';
 
-  const variacionPrecios = await calcularVariacionPrecios(diasVariacion, tipoVariacion, 10);
+  const variacionPrecios = esAyb
+    ? await calcularVariacionPreciosAyb(diasVariacion, tipoVariacion, 10)
+    : await calcularVariacionPrecios(diasVariacion, tipoVariacion, 10);
 
   res.render('costos', {
     insumos, platos, categorias, msg, geminiConfigurado,
@@ -173,7 +217,7 @@ router.get('/', loginRequerido, async (req, res) => {
     limiteSinBusqueda: LIMITE_SIN_BUSQUEDA,
     variacionPrecios, diasVariacion, tipoVariacion,
     mostrarModalVariacion: req.query.dias !== undefined || req.query.tipoVariacion !== undefined,
-    depto, esAdminGeneral
+    depto, esAdminGeneral, esAyb
   });
 });
 
@@ -207,6 +251,36 @@ async function calcularVariacionPrecios(diasVariacion, tipoVariacion, limite) {
   return filasVariacion.filter(f => f.variacion_abs > 0.01).slice(0, limite);
 }
 
+// Igual que calcularVariacionPrecios, pero para los productos de AYB
+// (productos_ayb + historial_precios_ayb) en vez de insumos de Cocina.
+async function calcularVariacionPreciosAyb(diasVariacion, tipoVariacion, limite) {
+  const filasVariacion = await db.all2(`
+    WITH primero AS (
+      SELECT DISTINCT ON (producto_id) producto_id, precio_anterior AS precio_inicio
+      FROM historial_precios_ayb
+      WHERE fecha >= NOW() - ($1 || ' days')::interval
+      ORDER BY producto_id, fecha ASC
+    )
+    SELECT pr.id, pr.nombre, pr.codigo_barras AS codigo, pr.categoria, pr.unidad_default AS unidad,
+           pr.precio_unitario AS precio_actual,
+           p.precio_inicio,
+           (pr.precio_unitario - p.precio_inicio) AS variacion_abs,
+           CASE WHEN p.precio_inicio > 0
+                THEN ROUND((((pr.precio_unitario - p.precio_inicio) / p.precio_inicio) * 100)::numeric, 1)
+                ELSE 0 END AS variacion_pct
+    FROM primero p
+    JOIN productos_ayb pr ON pr.id = p.producto_id
+    ORDER BY variacion_pct ${tipoVariacion === 'bajaron' ? 'ASC' : 'DESC'}
+  `, [diasVariacion]);
+
+  if (tipoVariacion === 'iguales') {
+    return filasVariacion.filter(f => Math.abs(f.variacion_abs) < 0.01).slice(0, limite);
+  } else if (tipoVariacion === 'bajaron') {
+    return filasVariacion.filter(f => f.variacion_abs < -0.01).slice(0, limite);
+  }
+  return filasVariacion.filter(f => f.variacion_abs > 0.01).slice(0, limite);
+}
+
 // Descarga en Excel la misma tabla que se ve en el modal de Variación de precios
 router.get('/variacion-excel', loginRequerido, async (req, res) => {
   const DIAS_PERMITIDOS = [7, 14, 21, 28];
@@ -214,7 +288,10 @@ router.get('/variacion-excel', loginRequerido, async (req, res) => {
   const tipoVariacion = ['subieron', 'bajaron', 'iguales'].includes(req.query.tipoVariacion)
     ? req.query.tipoVariacion : 'subieron';
 
-  const filas = await calcularVariacionPrecios(diasVariacion, tipoVariacion, 10);
+  const esAyb = departamentoEfectivo(req) === 'ayb';
+  const filas = esAyb
+    ? await calcularVariacionPreciosAyb(diasVariacion, tipoVariacion, 10)
+    : await calcularVariacionPrecios(diasVariacion, tipoVariacion, 10);
   const NOMBRE_TIPO = { subieron: 'Subieron', bajaron: 'Bajaron', iguales: 'Se mantuvieron' };
 
   const wb = new ExcelJS.Workbook();
@@ -306,6 +383,38 @@ router.post('/insumo/:id/precio', loginRequerido, async (req, res) => {
   res.redirect('/costos');
 });
 
+// Actualiza el precio de un producto de AYB (Inventario AYB) desde Costos —
+// igual mecánica que /insumo/:id/precio (el precio nunca baja solo, salvo
+// que se tilde "Forzar"), pero sobre productos_ayb/historial_precios_ayb en
+// vez de insumos/historial_precios, y sin recalcular platos (AYB no tiene).
+router.post('/producto-ayb/:id/precio', loginRequerido, async (req, res) => {
+  const producto = await db.get2("SELECT * FROM productos_ayb WHERE id=$1", [req.params.id]);
+  if (producto) {
+    const precioActual = parseFloat(producto.precio_unitario) || 0;
+    const precioNuevo = parseFloat(req.body.precio_nuevo);
+    const forzar = req.body.forzar_menor === '1';
+    const volverAyb = '/costos?depto=ayb';
+
+    if (isNaN(precioNuevo) || precioNuevo <= 0) {
+      return res.redirect(volverAyb + '&msg=' + encodeURIComponent('El precio ingresado no es válido.'));
+    }
+
+    if (precioNuevo < precioActual && !forzar) {
+      return res.redirect(volverAyb + '&msg=' + encodeURIComponent(
+        `El precio ingresado ($${precioNuevo.toFixed(2)}) es menor al actual ($${precioActual.toFixed(2)}) — no se aplicó. Se mantiene el más alto. Si es una corrección real, tildá "Forzar" y guardá de nuevo.`
+      ));
+    }
+
+    if (Math.abs(precioNuevo - precioActual) > 0.001) {
+      await db.run2("INSERT INTO historial_precios_ayb (producto_id,precio_anterior,precio_nuevo,origen) VALUES ($1,$2,$3,'manual')",
+        [producto.id, precioActual, precioNuevo]);
+      await db.run2("UPDATE productos_ayb SET precio_unitario=$1 WHERE id=$2",
+        [precioNuevo, req.params.id]);
+    }
+  }
+  res.redirect('/costos?depto=ayb');
+});
+
 router.post('/insumo/:id/eliminar', loginRequerido, async (req, res) => {
   await db.run2("DELETE FROM plato_insumos WHERE insumo_id=$1", [req.params.id]);
   await db.run2("DELETE FROM insumos WHERE id=$1", [req.params.id]);
@@ -315,6 +424,8 @@ router.post('/insumo/:id/eliminar', loginRequerido, async (req, res) => {
 router.post('/plato/nuevo', loginRequerido, async (req, res) => {
   const { nombre, categoria, porciones, precio_venta, margen_ganancia } = req.body;
   const depto = departamentoEfectivo(req);
+  // Costeo de platos no aplica a AYB (costea sus propios productos, no platos armados).
+  if (depto === 'ayb') return res.redirect('/costos?depto=ayb');
   await db.run2(
     "INSERT INTO platos_costo (nombre,categoria,porciones,precio_venta,margen_ganancia,departamento) VALUES ($1,$2,$3,$4,$5,$6)",
     [nombre, categoria||'', parseInt(porciones)||1, parseFloat(precio_venta)||0, parseFloat(margen_ganancia)||30, depto]
@@ -469,7 +580,20 @@ const UMBRAL_AUTO_APLICAR = 0.90;
 // registro completo en historial_precios y recalculando los platos afectados.
 // Centralizado acá para que la auto-aplicación y la confirmación manual
 // graben exactamente los mismos datos, sin duplicar la lógica.
-async function aplicarCambioPrecio({ insumoId, precioAnterior, precioNuevo, proveedor, facturaReferencia, usuario, confianza, automatico }) {
+async function aplicarCambioPrecio({ insumoId, precioAnterior, precioNuevo, proveedor, facturaReferencia, usuario, confianza, automatico, esAyb }) {
+  if (esAyb) {
+    // Igual mecánica, pero sobre productos_ayb/historial_precios_ayb — AYB no
+    // tiene platos armados, así que no hay nada que recalcular en cascada.
+    await db.run2(
+      `INSERT INTO historial_precios_ayb
+        (producto_id, precio_anterior, precio_nuevo, origen, proveedor, factura_referencia, usuario_id, usuario_nombre, confianza_match, aplicado_automaticamente)
+       VALUES ($1,$2,$3,'gemini',$4,$5,$6,$7,$8,$9)`,
+      [insumoId, precioAnterior, precioNuevo, proveedor || null, facturaReferencia || null,
+       usuario?.id || null, usuario?.nombre || null, confianza != null ? confianza : null, !!automatico]
+    );
+    await db.run2("UPDATE productos_ayb SET precio_unitario=$1 WHERE id=$2", [precioNuevo, insumoId]);
+    return;
+  }
   await db.run2(
     `INSERT INTO historial_precios
       (insumo_id, precio_anterior, precio_nuevo, origen, proveedor, factura_referencia, usuario_id, usuario_nombre, confianza_match, aplicado_automaticamente)
@@ -509,7 +633,10 @@ router.post('/factura', loginRequerido, upload.single('factura'), async (req, re
       return res.redirect('/costos?msg=' + encodeURIComponent('No se pudo leer ningún ítem con precio válido en la factura.'));
     }
 
-    const insumos = await db.all2("SELECT * FROM insumos");
+    const esAyb = departamentoEfectivo(req) === 'ayb';
+    const insumos = esAyb
+      ? await db.all2(`SELECT ${SELECT_PRODUCTOS_AYB_COMO_INSUMO} FROM productos_ayb WHERE activo=true`)
+      : await db.all2("SELECT * FROM insumos");
     const usuario = req.session.usuario;
     const facturaReferencia = numeroFactura || null;
 
@@ -525,8 +652,9 @@ router.post('/factura', loginRequerido, upload.single('factura'), async (req, re
       // cambio de precio antes de que lo confirme (mismo dato que ya usa el
       // bot en "consultar_recetas_por_insumo", reutilizado acá para que la
       // pantalla de revisión muestre lo mismo sin tener que preguntarle al bot).
+      // AYB no tiene platos armados, así que esto se salta directamente.
       let platosAfectados = [];
-      if (match) {
+      if (match && !esAyb) {
         const rows = await db.all2(`
           SELECT p.nombre, p.costo_total
           FROM plato_insumos pi JOIN platos_costo p ON p.id = pi.plato_id
@@ -562,7 +690,7 @@ router.post('/factura', loginRequerido, upload.single('factura'), async (req, re
         if (Math.abs(precioDetectado - precioActual) > 0.001) {
           await aplicarCambioPrecio({
             insumoId: match.id, precioAnterior: precioActual, precioNuevo: precioDetectado,
-            proveedor, facturaReferencia, usuario, confianza: score, automatico: true
+            proveedor, facturaReferencia, usuario, confianza: score, automatico: true, esAyb
           });
         }
         autoAplicados++;
@@ -580,7 +708,7 @@ router.post('/factura', loginRequerido, upload.single('factura'), async (req, re
     );
 
     // Guardamos lo pendiente de revisar en sesión para la pantalla de confirmación
-    req.session.facturaPendiente = { proveedor, facturaReferencia, items: pendientes };
+    req.session.facturaPendiente = { proveedor, facturaReferencia, items: pendientes, esAyb };
 
     let avisoDuplicada = null;
     if (yaProcesada) {
@@ -589,17 +717,21 @@ router.post('/factura', loginRequerido, upload.single('factura'), async (req, re
     }
     req.session.avisoFacturaDuplicada = avisoDuplicada;
 
+    const volver = esAyb ? '/costos?depto=ayb' : '/costos';
+
     if (pendientes.length === 0) {
       let mensaje = autoAplicados > 0
         ? `${autoAplicados} precio(s) actualizados automáticamente desde la factura (coincidencia de alta confianza).`
         : 'No hubo cambios de precio para aplicar (los precios detectados no eran mayores a los actuales).';
-      return res.redirect('/costos?msg=' + encodeURIComponent(mensaje));
+      return res.redirect(volver + (volver.includes('?') ? '&' : '?') + 'msg=' + encodeURIComponent(mensaje));
     }
 
     res.redirect('/costos/factura/revisar' + (autoAplicados > 0 ? ('?autoAplicados=' + autoAplicados) : ''));
   } catch (e) {
     console.error('Error analizando factura con Gemini:', e.message, e.cause || '');
-    res.redirect('/costos?msg=' + encodeURIComponent(mensajeErrorGemini(e)));
+    const esAyb = departamentoEfectivo(req) === 'ayb';
+    const volver = esAyb ? '/costos?depto=ayb' : '/costos';
+    res.redirect(volver + (volver.includes('?') ? '&' : '?') + 'msg=' + encodeURIComponent(mensajeErrorGemini(e)));
   }
 });
 
@@ -616,6 +748,8 @@ router.get('/factura/revisar', loginRequerido, async (req, res) => {
 router.post('/factura/aplicar', loginRequerido, async (req, res) => {
   const pendiente = req.session.facturaPendiente || { items: [] };
   const comparacion = pendiente.items || [];
+  const esAyb = !!pendiente.esAyb;
+  const volver = esAyb ? '/costos?depto=ayb' : '/costos';
   let seleccionados = req.body.aplicar || [];
   if (!Array.isArray(seleccionados)) seleccionados = [seleccionados];
   const idxsSeleccionados = seleccionados.map(s => parseInt(s));
@@ -643,7 +777,7 @@ router.post('/factura/aplicar', loginRequerido, async (req, res) => {
         await aplicarCambioPrecio({
           insumoId: item.insumo_id, precioAnterior: precioActual, precioNuevo: precioDetectado,
           proveedor: pendiente.proveedor, facturaReferencia: pendiente.facturaReferencia,
-          usuario, confianza: item.confianza != null ? item.confianza / 100 : null, automatico: false
+          usuario, confianza: item.confianza != null ? item.confianza / 100 : null, automatico: false, esAyb
         });
       }
       aplicados++;
@@ -655,39 +789,46 @@ router.post('/factura/aplicar', loginRequerido, async (req, res) => {
     if (menoresIgnorados > 0) {
       mensaje += ` ${menoresIgnorados} se ignoraron por tener un precio menor al actual (se mantiene el más alto).`;
     }
-    res.redirect('/costos?msg=' + encodeURIComponent(mensaje));
+    res.redirect(volver + (volver.includes('?') ? '&' : '?') + 'msg=' + encodeURIComponent(mensaje));
   } catch (e) {
     console.error('Error aplicando precios de factura:', e.message);
-    res.redirect('/costos?msg=' + encodeURIComponent('Error aplicando los cambios: ' + e.message));
+    res.redirect(volver + (volver.includes('?') ? '&' : '?') + 'msg=' + encodeURIComponent('Error aplicando los cambios: ' + e.message));
   }
 });
 
 // ── Importación masiva de insumos desde CSV del sistema de compras ────
 router.post('/insumos/importar', loginRequerido, uploadCsv.single('archivo_csv'), async (req, res) => {
-  if (!req.file) return res.redirect('/costos?msg=' + encodeURIComponent('No se recibió ningún archivo.'));
+  const esAyb = departamentoEfectivo(req) === 'ayb';
+  const volver = esAyb ? '/costos?depto=ayb' : '/costos';
+  if (!req.file) return res.redirect(volver + (volver.includes('?') ? '&' : '?') + 'msg=' + encodeURIComponent('No se recibió ningún archivo.'));
 
   const categoria = (req.body.categoria || '').trim();
-  if (!categoria) return res.redirect('/costos?msg=' + encodeURIComponent('Falta indicar la categoría para este archivo.'));
+  if (!categoria) return res.redirect(volver + (volver.includes('?') ? '&' : '?') + 'msg=' + encodeURIComponent('Falta indicar la categoría para este archivo.'));
 
   try {
     const productos = parsearCsvInsumos(req.file.path);
 
     if (productos.length === 0) {
-      return res.redirect('/costos?msg=' + encodeURIComponent('El archivo no tiene ningún producto válido (sin código).'));
+      return res.redirect(volver + (volver.includes('?') ? '&' : '?') + 'msg=' + encodeURIComponent('El archivo no tiene ningún producto válido (sin código).'));
     }
 
-    const resumen = await importarInsumos(productos, categoria);
+    if (esAyb) {
+      const resumen = await importarProductosAyb(productos, categoria);
+      req.session.importacionResumen = { ...resumen, categoria, totalProcesados: productos.length, esAyb: true };
+    } else {
+      const resumen = await importarInsumos(productos, categoria);
 
-    // Recalculamos en cascada los platos que usan los insumos cuyo precio cambió
-    for (const cambio of resumen.cambiosDePrecios) {
-      await recalcularPlatos(cambio.insumo_id);
+      // Recalculamos en cascada los platos que usan los insumos cuyo precio cambió
+      for (const cambio of resumen.cambiosDePrecios) {
+        await recalcularPlatos(cambio.insumo_id);
+      }
+
+      req.session.importacionResumen = { ...resumen, categoria, totalProcesados: productos.length };
     }
-
-    req.session.importacionResumen = { ...resumen, categoria, totalProcesados: productos.length };
     res.redirect('/costos/insumos/importar/resultado');
   } catch (e) {
     console.error('Error importando insumos:', e.message);
-    res.redirect('/costos?msg=' + encodeURIComponent('Error importando el archivo: ' + e.message));
+    res.redirect(volver + (volver.includes('?') ? '&' : '?') + 'msg=' + encodeURIComponent('Error importando el archivo: ' + e.message));
   }
 });
 
@@ -698,6 +839,7 @@ router.get('/insumos/importar/resultado', loginRequerido, async (req, res) => {
 
 // ── Importación masiva de platos con sus insumos (CSV de costeo tipo "un bloque por plato") ──
 router.post('/platos/importar', loginRequerido, uploadCsv.single('archivo_platos'), async (req, res) => {
+  if (departamentoEfectivo(req) === 'ayb') return res.redirect('/costos?depto=ayb');
   if (!req.file) return res.redirect('/costos?msg=' + encodeURIComponent('No se recibió ningún archivo.'));
 
   const categoria = (req.body.categoria_platos || '').trim();

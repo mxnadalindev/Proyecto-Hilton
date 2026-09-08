@@ -5,6 +5,54 @@
   <title><%= receta ? 'Editar receta' : 'Nueva receta' %> — Hilton</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-col { display: flex; flex-direction: column; gap: 20px; }
+.form-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
+.form-card-title { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field label { display: block; font-size: 0.68rem; font-weight: 500; color: var(--negro); margin-bottom: 6px; letter-spacing: 0.05em; }
+.field input[type="text"],
+.field input[type="number"],
+.field select,
+.field textarea {
+  width: 100%; background: var(--gris-fondo); border: 1px solid var(--gris-borde);
+  border-radius: 8px; padding: 10px 12px; font-family: var(--font-sans);
+  font-size: 0.85rem; color: var(--negro); outline: none;
+  transition: border-color var(--tr), box-shadow var(--tr);
+  resize: vertical;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--azul);
+  box-shadow: 0 0 0 3px var(--azul-claro);
+  background: var(--blanco);
+}
+.form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--gris-borde); }
+.back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; }
+.back-link:hover { color: var(--azul); }
+@media (max-width: 900px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* Tabla de ingredientes */
+.tabla-ingredientes { width: 100%; min-width: 480px; border-collapse: collapse; }
+.tabla-ingredientes th { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gris-texto); text-align: left; padding: 0 6px 8px; }
+.tabla-ingredientes td { padding: 4px 6px 4px 0; vertical-align: middle; }
+.tabla-ingredientes input, .tabla-ingredientes select { width: 100%; background: var(--gris-fondo); border: 1px solid var(--gris-borde); border-radius: 7px; padding: 7px 9px; font-family: var(--font-sans); font-size: 0.8rem; color: var(--negro); outline: none; }
+.tabla-ingredientes input:focus, .tabla-ingredientes select:focus { border-color: var(--azul); background: var(--blanco); }
+.subtotal-ing { font-size: 0.78rem; font-weight: 600; color: var(--azul); white-space: nowrap; }
+.btn-fila-quitar { background: var(--rojo-claro); border: none; color: var(--rojo); width: 28px; height: 28px; border-radius: 7px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.btn-fila-quitar:hover { background: var(--rojo); color: #fff; }
+
+/* Filas de video / foto */
+.fila-video, .fila-foto { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--gris-fondo); border: 1px solid var(--gris-borde); border-radius: 9px; padding: 10px; margin-bottom: 8px; }
+.fila-video select, .fila-video input[type="text"], .fila-foto select { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 7px; padding: 7px 9px; font-family: var(--font-sans); font-size: 0.78rem; color: var(--negro); outline: none; }
+.fila-video input[type="file"], .fila-foto input[type="file"] { font-size: 0.75rem; max-width: 180px; }
+.fila-foto-preview { font-size: 0.7rem; color: var(--gris-texto); font-style: italic; }
+
+@media (max-width: 600px) {
+  .form-card { padding: 16px; }
+}
+</style>
 </head>
 <body>
 <div class="app-layout">
@@ -127,54 +175,6 @@
   <%- include('partials/mobile-nav', { path: 'recetas' }) %>
 </div>
 
-<style>
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.form-col { display: flex; flex-direction: column; gap: 20px; }
-.form-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
-.form-card-title { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
-.field { margin-bottom: 16px; }
-.field:last-child { margin-bottom: 0; }
-.field label { display: block; font-size: 0.68rem; font-weight: 500; color: var(--negro); margin-bottom: 6px; letter-spacing: 0.05em; }
-.field input[type="text"],
-.field input[type="number"],
-.field select,
-.field textarea {
-  width: 100%; background: var(--gris-fondo); border: 1px solid var(--gris-borde);
-  border-radius: 8px; padding: 10px 12px; font-family: var(--font-sans);
-  font-size: 0.85rem; color: var(--negro); outline: none;
-  transition: border-color var(--tr), box-shadow var(--tr);
-  resize: vertical;
-}
-.field input:focus, .field select:focus, .field textarea:focus {
-  border-color: var(--azul);
-  box-shadow: 0 0 0 3px var(--azul-claro);
-  background: var(--blanco);
-}
-.form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--gris-borde); }
-.back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; }
-.back-link:hover { color: var(--azul); }
-@media (max-width: 900px) { .form-grid { grid-template-columns: 1fr; } }
-
-/* Tabla de ingredientes */
-.tabla-ingredientes { width: 100%; min-width: 480px; border-collapse: collapse; }
-.tabla-ingredientes th { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gris-texto); text-align: left; padding: 0 6px 8px; }
-.tabla-ingredientes td { padding: 4px 6px 4px 0; vertical-align: middle; }
-.tabla-ingredientes input, .tabla-ingredientes select { width: 100%; background: var(--gris-fondo); border: 1px solid var(--gris-borde); border-radius: 7px; padding: 7px 9px; font-family: var(--font-sans); font-size: 0.8rem; color: var(--negro); outline: none; }
-.tabla-ingredientes input:focus, .tabla-ingredientes select:focus { border-color: var(--azul); background: var(--blanco); }
-.subtotal-ing { font-size: 0.78rem; font-weight: 600; color: var(--azul); white-space: nowrap; }
-.btn-fila-quitar { background: var(--rojo-claro); border: none; color: var(--rojo); width: 28px; height: 28px; border-radius: 7px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.btn-fila-quitar:hover { background: var(--rojo); color: #fff; }
-
-/* Filas de video / foto */
-.fila-video, .fila-foto { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--gris-fondo); border: 1px solid var(--gris-borde); border-radius: 9px; padding: 10px; margin-bottom: 8px; }
-.fila-video select, .fila-video input[type="text"], .fila-foto select { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 7px; padding: 7px 9px; font-family: var(--font-sans); font-size: 0.78rem; color: var(--negro); outline: none; }
-.fila-video input[type="file"], .fila-foto input[type="file"] { font-size: 0.75rem; max-width: 180px; }
-.fila-foto-preview { font-size: 0.7rem; color: var(--gris-texto); font-style: italic; }
-
-@media (max-width: 600px) {
-  .form-card { padding: 16px; }
-}
-</style>
 
 <script>
 function toggleOtro(campo) {

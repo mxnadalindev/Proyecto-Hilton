@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
 
 :root {
   --blanco:      #ffffff;
@@ -16,12 +16,13 @@
   --rojo:        #dc2626;
   --rojo-claro:  #fef2f2;
   --rojo-borde:  #fecaca;
-  --font-serif:  'Cormorant Garamond', Georgia, serif;
-  --font-sans:   'Montserrat', sans-serif;
-  /* Para textos de descripción/párrafo largo (ej. el detalle del módulo
-     en Inicio) — Cormorant Garamond es una serif decorativa, pierde
-     legibilidad en texto corrido; Lora está pensada justo para eso y
-     acompaña el clima del resto sin competir con Montserrat. */
+  /* Una sola tipografía para todo el sitio interno (a pedido) — las tres
+     variables apuntan a Lora. Se dejan las tres por separado (en vez de
+     borrarlas y usar una sola) para no tener que tocar cada archivo que
+     ya referencia var(--font-serif)/var(--font-sans)/var(--font-desc);
+     cambiando esto acá alcanza para que todo el sitio cambie junto. */
+  --font-serif:  'Lora', Georgia, serif;
+  --font-sans:   'Lora', Georgia, serif;
   --font-desc:   'Lora', Georgia, serif;
   --tr:          0.25s ease;
   --sombra:      0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
@@ -422,29 +423,55 @@ input::placeholder, textarea::placeholder {
 .fade-up:nth-child(2) { animation-delay: 0.12s; }
 .fade-up:nth-child(3) { animation-delay: 0.19s; }
 
-/* ── Botones globales ── */
+/* ── Botones globales ──
+   Estilo "vidrio" verde/azul traslúcido (el mismo que se usó primero en
+   Horas Extra y después en Inventario AYB): btn-primary = acciones de
+   confirmar/crear (verde), btn-secondary = volver/cancelar/otras opciones
+   (azul). Las acciones destructivas (eliminar, dar de baja) se manejan
+   aparte con sus propias clases y quedan en rojo a propósito. */
 .btn-primary {
   display: inline-flex; align-items: center; gap: 6px;
-  background: var(--azul); color: #fff; border: none;
-  border-radius: 8px; padding: 10px 18px;
+  background: rgba(6,147,126,0.14); color: #06937e;
+  border: 1px solid rgba(6,147,126,0.32); border-radius: 8px;
+  padding: 0 18px; box-sizing: border-box;
+  /* Altura fija en vez de depender del padding + alto de línea del texto:
+     con el cambio de tipografía a Lora, "normal" line-height quedaba unos
+     px más bajo que antes, y estos botones (36px) terminaban desalineados
+     en altura contra .btn-icono-casa (40px fijo) cuando aparecen juntos en
+     una misma barra — se veían "uno más chico que el otro" a simple vista. */
+  height: 40px;
   font-family: var(--font-sans); font-size: 0.7rem;
   font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
   text-decoration: none; cursor: pointer;
-  transition: background var(--tr), transform var(--tr), box-shadow var(--tr);
-  box-shadow: var(--sombra-md);
+  transition: all var(--tr);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
-.btn-primary:hover { background: var(--azul-hover); transform: translateY(-1px); }
+.btn-primary:hover { background: rgba(6,147,126,0.24); }
 
 .btn-secondary {
   display: inline-flex; align-items: center; gap: 6px;
-  background: var(--blanco); color: var(--gris-texto);
-  border: 1px solid var(--gris-borde); border-radius: 8px;
-  padding: 10px 18px; font-family: var(--font-sans);
-  font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em;
+  background: rgba(0,47,97,0.12); color: #002f61;
+  border: 1px solid rgba(0,47,97,0.28); border-radius: 8px;
+  padding: 0 18px; box-sizing: border-box; font-family: var(--font-sans);
+  /* Ver comentario en .btn-primary de acá arriba: misma razón. */
+  height: 40px;
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em;
   text-transform: uppercase; text-decoration: none; cursor: pointer;
   transition: all var(--tr);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
-.btn-secondary:hover { border-color: var(--azul); color: var(--azul); }
+.btn-secondary:hover { background: rgba(0,47,97,0.20); }
+
+.btn-icono-casa {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; box-sizing: border-box; padding: 0;
+  background: rgba(6,147,126,0.14); color: #06937e;
+  border: 1px solid rgba(6,147,126,0.32); border-radius: 8px;
+  font-size: 16px; text-decoration: none; cursor: pointer;
+  transition: all var(--tr);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.btn-icono-casa:hover { background: rgba(6,147,126,0.24); }
 
 .btn-sm {
   font-size: 0.65rem; font-weight: 500; letter-spacing: 0.08em;

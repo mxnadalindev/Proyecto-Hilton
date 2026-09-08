@@ -272,6 +272,49 @@
 
     .page-footer { color: rgba(255,255,255,0.75); font-size: 0.7rem; margin-top: 22px; text-align: center; text-shadow: 0 1px 6px rgba(0,0,0,0.5); }
 
+    /* ── Selector de idioma — vidrio esmerilado, al lado del logo "Hilton" ──
+       Antes era un <select> nativo con banderas emoji (🇦🇷/🇺🇸/🇧🇷) — en
+       Windows esa fuente de emoji no viene instalada, así que el navegador
+       mostraba el código de país en texto ("AR"/"US"/"BR") en vez del
+       dibujito, sin importar qué navegador fuera. Es el mismo widget propio
+       con banderas en SVG que ya se usa en el header del portal (nav.ejs),
+       adaptado acá al estilo oscuro/vidrio del login. */
+    .bandera{ display:inline-block; width:20px; height:14px; border-radius:2px; background-size:cover; background-position:center; box-shadow:0 0 0 1px rgba(255,255,255,0.25); flex-shrink:0; }
+    .bandera-ar{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 20'%3E%3Crect width='30' height='20' fill='%23fff'/%3E%3Crect width='30' height='6.7' fill='%2374ACDF'/%3E%3Crect y='13.3' width='30' height='6.7' fill='%2374ACDF'/%3E%3Ccircle cx='15' cy='10' r='2.4' fill='%23F6B40E'/%3E%3C/svg%3E"); }
+    .bandera-us{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 20'%3E%3Crect width='30' height='20' fill='%23fff'/%3E%3Crect width='30' height='1.54' y='0' fill='%23B22234'/%3E%3Crect width='30' height='1.54' y='3.08' fill='%23B22234'/%3E%3Crect width='30' height='1.54' y='6.16' fill='%23B22234'/%3E%3Crect width='30' height='1.54' y='9.24' fill='%23B22234'/%3E%3Crect width='30' height='1.54' y='12.32' fill='%23B22234'/%3E%3Crect width='30' height='1.54' y='15.4' fill='%23B22234'/%3E%3Crect width='30' height='1.54' y='18.48' fill='%23B22234'/%3E%3Crect width='12' height='10.8' fill='%233C3B6E'/%3E%3C/svg%3E"); }
+    .bandera-br{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 20'%3E%3Crect width='30' height='20' fill='%23009739'/%3E%3Cpolygon points='15,2 28,10 15,18 2,10' fill='%23FEDD00'/%3E%3Ccircle cx='15' cy='10' r='5' fill='%23012169'/%3E%3C/svg%3E"); }
+
+    .selector-idioma-login-wrap{ position: relative; margin-left: 12px; }
+    .selector-idioma-login-trigger{
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.14);
+      -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+      border: 1.5px solid rgba(255,255,255,0.32);
+      color: #fff; border-radius: 7px; padding: 5px 9px;
+      cursor: pointer; font-size: 12px;
+    }
+    .selector-idioma-login-trigger:hover { background-color: rgba(255,255,255,0.24); }
+    .selector-idioma-login-trigger i { transition: transform 0.15s ease; }
+    .selector-idioma-login-wrap.abierto .selector-idioma-login-trigger i { transform: rotate(180deg); }
+    .selector-idioma-login-lista{
+      position: absolute; left: 0; top: calc(100% + 6px);
+      background: rgba(12,22,34,0.75);
+      -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 9px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+      padding: 5px; z-index: 60;
+      display: flex; flex-direction: column; gap: 3px;
+      opacity: 0; transform: translateY(-6px); pointer-events: none;
+      transition: opacity 0.12s ease, transform 0.12s ease;
+    }
+    .selector-idioma-login-wrap.abierto .selector-idioma-login-lista{ opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .selector-idioma-login-opcion{ display: flex; align-items: center; padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+    .selector-idioma-login-opcion:hover{ background: rgba(255,255,255,0.14); }
+    .selector-idioma-login-opcion.seleccionada{ background: rgba(255,255,255,0.24); }
+
+    .brand-mini-top { display: flex; align-items: baseline; flex-wrap: wrap; }
+
     /* ── Mobile: sin overlay, cambio simple con botón ── */
     @media (max-width: 768px) {
       .auth-shell { height: auto; border-radius: 16px; }
@@ -293,11 +336,24 @@
   <div class="auth-form-side auth-form-login">
     <div class="auth-form-inner">
       <div class="brand-mini">
-        <div class="brand-name">Hilton</div>
+        <div class="brand-mini-top">
+          <div class="brand-name">Hilton</div>
+          <div class="selector-idioma-login-wrap">
+            <button type="button" class="selector-idioma-login-trigger" onclick="toggleSelectorIdiomaLogin(this)" title="Idioma / Language / Idioma" aria-label="Idioma / Language / Idioma" aria-haspopup="listbox">
+              <span class="bandera bandera-ar selector-idioma-login-bandera"></span>
+              <i class="ti ti-chevron-down" aria-hidden="true"></i>
+            </button>
+            <div class="selector-idioma-login-lista" role="listbox">
+              <div class="selector-idioma-login-opcion seleccionada" data-idioma="es" role="option" onclick="elegirIdiomaLogin(this,'es')"><span class="bandera bandera-ar"></span></div>
+              <div class="selector-idioma-login-opcion" data-idioma="en" role="option" onclick="elegirIdiomaLogin(this,'en')"><span class="bandera bandera-us"></span></div>
+              <div class="selector-idioma-login-opcion" data-idioma="pt" role="option" onclick="elegirIdiomaLogin(this,'pt')"><span class="bandera bandera-br"></span></div>
+            </div>
+          </div>
+        </div>
         <div class="brand-sub">Buenos Aires · Portal interno</div>
       </div>
-      <h2 class="form-title">Bienvenido</h2>
-      <p class="form-subtitle">Ingresá con tu cuenta corporativa para continuar</p>
+      <h2 class="form-title" data-i18n>Bienvenido</h2>
+      <p class="form-subtitle" data-i18n>Ingresá con tu cuenta corporativa para continuar</p>
 
       <% if (error) { %>
       <div class="error-banner"><i class="ti ti-alert-circle"></i> <%= error %></div>
@@ -313,16 +369,16 @@
 
       <form method="POST" action="/login" id="loginForm" novalidate>
         <div class="field" id="field-email">
-          <div class="field-label"><span>Correo electrónico o CUIL</span></div>
+          <div class="field-label"><span data-i18n>Correo electrónico o CUIL</span></div>
           <div class="input-wrap">
             <i class="ti ti-mail input-icon"></i>
-            <input type="text" name="email" id="email" placeholder="tu.nombre@hilton.com o tu CUIL" autocomplete="username" required>
+            <input type="text" name="email" id="email" placeholder="tu.nombre@hilton.com o tu CUIL" data-i18n-ph="tu.nombre@hilton.com o tu CUIL" autocomplete="username" required>
           </div>
         </div>
         <div class="field">
           <div class="field-label">
-            <span>Contraseña</span>
-            <small>Contactá al administrador</small>
+            <span data-i18n>Contraseña</span>
+            <small data-i18n>Contactá al administrador</small>
           </div>
           <div class="input-wrap">
             <i class="ti ti-lock input-icon"></i>
@@ -334,20 +390,20 @@
         </div>
         <div class="check-row">
           <input type="checkbox" id="remember" name="remember">
-          <label for="remember">Mantener sesión iniciada</label>
+          <label for="remember" data-i18n>Mantener sesión iniciada</label>
         </div>
         <div class="check-row">
           <input type="checkbox" id="recordarCuenta">
-          <label for="recordarCuenta">Recordar esta cuenta en este navegador (hasta 3)</label>
+          <label for="recordarCuenta" data-i18n>Recordar esta cuenta en este navegador (hasta 3)</label>
         </div>
         <button type="submit" class="btn-submit" id="submitBtn">
           <div class="spinner"></div>
-          <span class="btn-text">Ingresar al portal</span>
+          <span class="btn-text" data-i18n>Ingresar al portal</span>
           <i class="ti ti-arrow-right btn-text"></i>
         </button>
       </form>
 
-      <p class="mobile-switch">¿No tenés cuenta? <button type="button" onclick="setMode('registro')">Registrate</button></p>
+      <p class="mobile-switch"><span data-i18n>¿No tenés cuenta?</span> <button type="button" onclick="setMode('registro')" data-i18n>Registrate</button></p>
     </div>
   </div>
 
@@ -355,11 +411,24 @@
   <div class="auth-form-side auth-form-registro">
     <div class="auth-form-inner">
       <div class="brand-mini">
-        <div class="brand-name">Hilton</div>
+        <div class="brand-mini-top">
+          <div class="brand-name">Hilton</div>
+          <div class="selector-idioma-login-wrap">
+            <button type="button" class="selector-idioma-login-trigger" onclick="toggleSelectorIdiomaLogin(this)" title="Idioma / Language / Idioma" aria-label="Idioma / Language / Idioma" aria-haspopup="listbox">
+              <span class="bandera bandera-ar selector-idioma-login-bandera"></span>
+              <i class="ti ti-chevron-down" aria-hidden="true"></i>
+            </button>
+            <div class="selector-idioma-login-lista" role="listbox">
+              <div class="selector-idioma-login-opcion seleccionada" data-idioma="es" role="option" onclick="elegirIdiomaLogin(this,'es')"><span class="bandera bandera-ar"></span></div>
+              <div class="selector-idioma-login-opcion" data-idioma="en" role="option" onclick="elegirIdiomaLogin(this,'en')"><span class="bandera bandera-us"></span></div>
+              <div class="selector-idioma-login-opcion" data-idioma="pt" role="option" onclick="elegirIdiomaLogin(this,'pt')"><span class="bandera bandera-br"></span></div>
+            </div>
+          </div>
+        </div>
         <div class="brand-sub">Buenos Aires · Portal interno</div>
       </div>
-      <h2 class="form-title">Crear cuenta</h2>
-      <p class="form-subtitle">Registrate para acceder al portal</p>
+      <h2 class="form-title" data-i18n>Crear cuenta</h2>
+      <p class="form-subtitle" data-i18n>Registrate para acceder al portal</p>
 
       <% if (typeof errorReg !== 'undefined' && errorReg) { %>
       <div class="error-banner"><i class="ti ti-alert-circle"></i> <%= errorReg %></div>
@@ -367,29 +436,29 @@
 
       <form method="POST" action="/registro" novalidate>
         <div class="field">
-          <div class="field-label"><span>Nombre y apellido</span></div>
+          <div class="field-label"><span data-i18n>Nombre y apellido</span></div>
           <div class="input-wrap">
             <i class="ti ti-user input-icon"></i>
             <input type="text" name="nombre" placeholder="Juan García" required>
           </div>
         </div>
         <div class="field">
-          <div class="field-label"><span>Correo electrónico corporativo</span></div>
+          <div class="field-label"><span data-i18n>Correo electrónico corporativo</span></div>
           <div class="input-wrap">
             <i class="ti ti-mail input-icon"></i>
             <input type="email" name="email" placeholder="tu.nombre@hilton.com">
           </div>
         </div>
         <div class="field">
-          <div class="field-label"><span>CUIL (si sos de Alimentos y Bebidas)</span></div>
+          <div class="field-label"><span data-i18n>CUIL (si sos de Alimentos y Bebidas)</span></div>
           <div class="input-wrap">
             <i class="ti ti-id input-icon"></i>
             <input type="text" name="cuil" placeholder="20432824927">
           </div>
-          <p class="pass-hint">Si ya te cargó el encargado de A&B, poné tu CUIL acá para activar tu cuenta — no hace falta el email.</p>
+          <p class="pass-hint" data-i18n>Si ya te cargó el encargado de A&B, poné tu CUIL acá para activar tu cuenta — no hace falta el email.</p>
         </div>
         <div class="field">
-          <div class="field-label"><span>Contraseña</span></div>
+          <div class="field-label"><span data-i18n>Contraseña</span></div>
           <div class="input-wrap">
             <i class="ti ti-lock input-icon"></i>
             <input type="password" name="password" id="pass-reg" placeholder="••••••••" required>
@@ -397,17 +466,17 @@
               <i class="ti ti-eye" id="eye2"></i>
             </button>
           </div>
-          <p class="pass-hint">Mínimo 8 caracteres, una mayúscula y un número.</p>
+          <p class="pass-hint" data-i18n>Mínimo 8 caracteres, una mayúscula y un número.</p>
         </div>
         <div class="field">
-          <div class="field-label"><span>Repetir contraseña</span></div>
+          <div class="field-label"><span data-i18n>Repetir contraseña</span></div>
           <div class="input-wrap">
             <i class="ti ti-lock input-icon"></i>
             <input type="password" name="password2" placeholder="••••••••" required>
           </div>
         </div>
         <div class="field">
-          <div class="field-label"><span>Departamento</span></div>
+          <div class="field-label"><span data-i18n>Departamento</span></div>
           <div class="input-wrap custom-select" id="deptoCustomSelect">
             <i class="ti ti-building input-icon"></i>
             <select name="departamento" id="deptoSelectReal" tabindex="-1">
@@ -415,23 +484,23 @@
               <option value="cocina">Cocina</option>
               <option value="compras">Compras</option>
             </select>
-            <div class="custom-select-trigger" id="deptoTrigger" tabindex="0" role="button" aria-haspopup="listbox">Seleccioná tu área...</div>
+            <div class="custom-select-trigger" id="deptoTrigger" tabindex="0" role="button" aria-haspopup="listbox" data-i18n>Seleccioná tu área...</div>
             <i class="ti ti-chevron-down custom-select-chevron"></i>
             <div class="custom-select-list" id="deptoList" role="listbox">
-              <div class="custom-select-opcion seleccionada" data-value="">Seleccioná tu área...</div>
-              <div class="custom-select-opcion" data-value="cocina">Cocina</div>
-              <div class="custom-select-opcion" data-value="compras">Compras</div>
+              <div class="custom-select-opcion seleccionada" data-value="" data-i18n>Seleccioná tu área...</div>
+              <div class="custom-select-opcion" data-value="cocina" data-i18n>Cocina</div>
+              <div class="custom-select-opcion" data-value="compras" data-i18n>Compras</div>
             </div>
           </div>
-          <p class="pass-hint">Si cargaste tu CUIL arriba, este campo no hace falta — tu área ya está definida en tu ficha.</p>
+          <p class="pass-hint" data-i18n>Si cargaste tu CUIL arriba, este campo no hace falta — tu área ya está definida en tu ficha.</p>
         </div>
         <button type="submit" class="btn-submit" style="margin-top:4px;">
-          <span class="btn-text">Crear cuenta</span>
+          <span class="btn-text" data-i18n>Crear cuenta</span>
           <i class="ti ti-user-plus btn-text"></i>
         </button>
       </form>
 
-      <p class="mobile-switch">¿Ya tenés cuenta? <button type="button" onclick="setMode('login')">Iniciar sesión</button></p>
+      <p class="mobile-switch"><span data-i18n>¿Ya tenés cuenta?</span> <button type="button" onclick="setMode('login')" data-i18n>Iniciar sesión</button></p>
     </div>
   </div>
 
@@ -439,15 +508,15 @@
   <div class="auth-overlay" id="authOverlay">
     <div class="auth-overlay-content" id="overlayLogin">
       <i class="ti ti-chef-hat overlay-icon" aria-hidden="true"></i>
-      <h3>¿Nuevo en el equipo?</h3>
-      <p>Registrate para empezar a usar horarios, recetas, eventos y costos desde un solo lugar.</p>
-      <button type="button" class="btn-ghost" onclick="setMode('registro')">Crear cuenta</button>
+      <h3 data-i18n>¿Nuevo en el equipo?</h3>
+      <p data-i18n>Registrate para empezar a usar horarios, recetas, eventos y costos desde un solo lugar.</p>
+      <button type="button" class="btn-ghost" onclick="setMode('registro')" data-i18n>Crear cuenta</button>
     </div>
     <div class="auth-overlay-content" id="overlayRegistro">
       <i class="ti ti-lock overlay-icon" aria-hidden="true"></i>
-      <h3>¿Ya sos parte del equipo?</h3>
-      <p>Iniciá sesión con tu cuenta corporativa para acceder al portal interno.</p>
-      <button type="button" class="btn-ghost" onclick="setMode('login')">Iniciar sesión</button>
+      <h3 data-i18n>¿Ya sos parte del equipo?</h3>
+      <p data-i18n>Iniciá sesión con tu cuenta corporativa para acceder al portal interno.</p>
+      <button type="button" class="btn-ghost" onclick="setMode('login')" data-i18n>Iniciar sesión</button>
     </div>
   </div>
 
@@ -464,7 +533,36 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 <% } %>
 
+<script src="/js/i18n.js"></script>
 <script>
+// ── Selector de idioma (widget propio con banderas SVG) ──
+// Hay dos copias en el DOM (lado login y lado registro) que comparten el
+// mismo idioma global — por eso se manejan por clase (closest/querySelectorAll)
+// en vez de por id, y ambas se actualizan juntas al elegir un idioma.
+function toggleSelectorIdiomaLogin(btn) {
+  const wrap = btn.closest('.selector-idioma-login-wrap');
+  document.querySelectorAll('.selector-idioma-login-wrap.abierto').forEach((w) => { if (w !== wrap) w.classList.remove('abierto'); });
+  if (wrap) wrap.classList.toggle('abierto');
+}
+function elegirIdiomaLogin(el, idioma) {
+  const wrap = el.closest('.selector-idioma-login-wrap');
+  if (wrap) wrap.classList.remove('abierto');
+  if (window.cambiarIdiomaHilton) window.cambiarIdiomaHilton(idioma);
+}
+document.addEventListener('click', (e) => {
+  document.querySelectorAll('.selector-idioma-login-wrap.abierto').forEach((wrap) => {
+    if (!wrap.contains(e.target)) wrap.classList.remove('abierto');
+  });
+});
+document.addEventListener('hilton:idioma-aplicado', (e) => {
+  const mapaBandera = { es: 'ar', en: 'us', pt: 'br' };
+  const clase = 'bandera bandera-' + (mapaBandera[e.detail.idioma] || 'ar') + ' selector-idioma-login-bandera';
+  document.querySelectorAll('.selector-idioma-login-bandera').forEach((b) => { b.className = clase; });
+  document.querySelectorAll('.selector-idioma-login-opcion').forEach((op) => {
+    op.classList.toggle('seleccionada', op.dataset.idioma === e.detail.idioma);
+  });
+});
+
 // Mostrar el modo correcto según mensajes que vengan del servidor
 <% if (typeof errorReg !== 'undefined' && errorReg) { %>
 window.addEventListener('DOMContentLoaded', () => setMode('registro'));
@@ -548,14 +646,15 @@ document.getElementById('loginForm').addEventListener('submit', () => {
       cont.innerHTML = '';
       return;
     }
+    const t = window.tHilton || ((s) => s);
     cont.style.display = 'block';
-    cont.innerHTML = '<p class="cuentas-guardadas-titulo"><i class="ti ti-bookmark"></i> Cuentas guardadas acá:</p>'
+    cont.innerHTML = '<p class="cuentas-guardadas-titulo"><i class="ti ti-bookmark"></i> ' + t('Cuentas guardadas acá:') + '</p>'
       + '<div class="cuentas-guardadas-chips">'
       + cuentas.map((c, i) => `
           <span class="cuenta-chip" data-idx="${i}">
             <i class="ti ti-user-circle"></i>
             <span class="cuenta-chip-email">${escaparHtmlLogin(c.email)}</span>
-            <button type="button" class="cuenta-chip-quitar" title="Quitar de guardadas" onclick="event.stopPropagation(); quitarCuentaGuardada(${i})"><i class="ti ti-x"></i></button>
+            <button type="button" class="cuenta-chip-quitar" title="${t('Quitar de guardadas')}" onclick="event.stopPropagation(); quitarCuentaGuardada(${i})"><i class="ti ti-x"></i></button>
           </span>
         `).join('')
       + '</div>';
@@ -588,6 +687,10 @@ document.getElementById('loginForm').addEventListener('submit', () => {
   });
 
   pintarCuentasGuardadas();
+  // Re-pintar si cambia el idioma (el título "Cuentas guardadas acá:" y el
+  // title="Quitar de guardadas" del botón se generan en JS, no vía
+  // data-i18n, así que no se actualizan solos con el resto de la página).
+  document.addEventListener('hilton:idioma-aplicado', pintarCuentasGuardadas);
 })();
 
 // ── Select custom de Departamento (vidrio esmerilado) ──

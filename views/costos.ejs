@@ -5,6 +5,132 @@
   <title>Costos — Hilton</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+.main-content-ancho{max-width:1600px;}
+.puesto-badge{font-size:0.68rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:2px 8px;border-radius:20px;}
+.field{margin-bottom:0;}
+.field label{display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;}
+.field input,.field select{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;transition:border-color 0.2s;}
+.field input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);background:var(--blanco);}
+
+/* Tarjeta unificada de importación, centrada, arriba de cada columna */
+.tarjeta-unificada{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:22px;box-shadow:var(--sombra);text-align:center;margin-bottom:22px;}
+.tarjeta-unificada-icono{width:44px;height:44px;border-radius:10px;background:var(--azul-claro);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px;}
+.tarjeta-unificada-icono-csv{background:#f0fdf4;color:#16a34a;}
+.tarjeta-unificada-titulo{font-size:0.9rem;font-weight:600;color:var(--negro);margin:0 0 4px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
+.tarjeta-unificada-desc{font-size:0.76rem;color:var(--gris-texto);margin:0 0 16px;line-height:1.5;}
+.tarjeta-unificada-opciones{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;}
+.opcion-precio-sola{flex-shrink:0;}
+.opcion-precio{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.opcion-precio-sola{flex-direction:row;flex-wrap:wrap;justify-content:center;}
+.opcion-precio-label{font-size:0.72rem;font-weight:600;color:var(--gris-texto);display:flex;align-items:center;gap:5px;}
+.opcion-divisor{width:1px;align-self:stretch;background:var(--gris-borde);min-height:60px;}
+
+/* Tarjeta resumen (reemplaza a la tabla siempre visible) */
+.tarjeta-resumen-lista{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:26px 22px;box-shadow:var(--sombra);text-align:center;}
+.tarjeta-resumen-numero{font-family:var(--font-serif);font-size:2.4rem;font-weight:400;color:var(--negro);margin:4px 0 0;line-height:1;}
+.tarjeta-resumen-lista .tarjeta-unificada-desc{margin-bottom:18px;}
+.tarjeta-resumen-lista .btn-primary{width:100%;justify-content:center;}
+
+/* Modal de lista completa: overlay a pantalla completa, la caja centrada y grande */
+.modal-lista{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;}
+.modal-lista-caja{background:var(--blanco);border-radius:16px;width:100%;max-width:800px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
+.modal-lista-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--gris-borde);flex-shrink:0;}
+.modal-lista-titulo{font-size:0.95rem;font-weight:600;color:var(--negro);display:flex;align-items:center;gap:8px;margin:0;}
+.modal-lista-cerrar{background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);padding:4px;}
+.modal-lista-cerrar:hover{color:var(--negro);}
+.modal-lista-body{padding:18px 22px;overflow-y:auto;}
+
+/* En celular, el modal ocupa toda la pantalla */
+@media (max-width:700px){
+  .modal-lista{padding:0;}
+  .modal-lista-caja{max-width:100%;max-height:100vh;height:100vh;border-radius:0;}
+}
+@media (max-width:600px){
+  .opcion-divisor{display:none;}
+}
+.precio-card-input-categoria{padding:9px 10px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.8rem;outline:none;background:var(--gris-fondo);color:var(--negro);}
+.precio-card-input-categoria:focus{border-color:var(--azul);background:var(--blanco);}
+
+/* Solapas alfabéticas — discretas, tipo índice de agenda */
+.solapas-letras{display:flex;gap:2px;overflow-x:auto;padding-bottom:10px;margin-bottom:12px;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--gris-borde);}
+.solapas-letras::-webkit-scrollbar{height:3px;}
+.solapas-letras::-webkit-scrollbar-thumb{background:var(--azul-borde);border-radius:3px;}
+.solapa-letra{flex-shrink:0;display:flex;align-items:center;justify-content:center;min-width:24px;height:26px;padding:0 6px;border-radius:5px;color:var(--gris-texto);font-size:0.68rem;font-weight:600;text-decoration:none;transition:all 0.15s;border:1px solid transparent;}
+.solapa-letra:hover{background:var(--azul-claro);color:var(--azul);}
+.solapa-letra.activa{background:var(--azul);color:#fff;}
+.badge-activo{font-size:0.62rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;padding:2px 8px 2px 6px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;}
+.badge-activo i{color:#16a34a;}
+.badge-inactivo{font-size:0.62rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--gris-texto);background:var(--gris-borde);padding:2px 8px;border-radius:20px;}
+.input-archivo{display:flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--gris-borde);border-radius:8px;font-size:0.8rem;color:var(--gris-texto);cursor:pointer;background:var(--gris-fondo);transition:border-color 0.2s;max-width:220px;}
+.input-archivo:hover{border-color:var(--azul);}
+.input-archivo span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.input-archivo input[type=file]{display:none;}
+.input-archivo-disabled{opacity:0.5;cursor:not-allowed;}
+.input-archivo-disabled:hover{border-color:var(--gris-borde);}
+.input-archivo-ok{border-color:#16a34a;background:#f0fdf4;color:#16a34a;}
+@keyframes girar{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.girando{animation:girar 0.8s linear infinite;}
+.btn-excel{display:inline-flex;align-items:center;gap:6px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-family:var(--font-sans);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background 0.2s;}
+.btn-excel:hover{background:#15803d;}
+
+/* Chips de período y pestañas de la Variación de precios */
+.chip-periodo{font-size:0.72rem;font-weight:600;color:var(--gris-texto);background:var(--gris-fondo);border:1px solid var(--gris-borde);padding:5px 13px;border-radius:20px;text-decoration:none;transition:all 0.15s;}
+.chip-periodo:hover{border-color:var(--azul);color:var(--azul);}
+.chip-periodo.activo{background:var(--azul);border-color:var(--azul);color:#fff;}
+.tab-variacion{font-size:0.76rem;font-weight:600;color:var(--gris-texto);text-decoration:none;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;}
+.tab-variacion:hover{color:var(--negro);}
+.tab-variacion.activo{color:var(--negro);border-bottom-color:var(--azul);}
+
+/* Variación de precios: único cartel fijo arriba de todo, chico y azul, centrado */
+.tarjeta-variacion-chica{max-width:480px;margin:0 auto 26px;background:rgba(0,47,97,0.10);border:1px solid rgba(0,47,97,0.26);border-radius:12px;padding:16px 20px;text-align:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.tarjeta-variacion-chica .tarjeta-unificada-icono{background:rgba(0,47,97,0.14);color:#002f61;width:36px;height:36px;font-size:16px;}
+.tarjeta-variacion-chica .tarjeta-unificada-titulo{justify-content:center;color:#002f61;font-size:0.82rem;}
+.tarjeta-variacion-chica .tarjeta-unificada-desc{font-size:0.72rem;margin-bottom:12px;}
+
+/* Carrusel con las otras 4 tarjetas (Insumos, Costeo de platos, Actualización
+   de precios, Costeo Excel/CSV) — mismo patrón que ya usa Horas Extra para
+   las fichas de empleados: ancho completo, muestra las que entren en pantalla
+   y pagina de a una "pantalla" por vez con flechas/puntitos, en vez de que
+   la página se angoste de golpe como con un carrusel de una tarjeta sola. */
+.costos-carousel-outer{position:relative;padding:0 44px;}
+/* justify-content:center: cuando las 4 tarjetas entran en el ancho
+   disponible (pantallas grandes) quedan centradas como el resto de la
+   página, en vez de pegadas al borde izquierdo con un hueco vacío a la
+   derecha. Cuando NO entran (pantallas chicas, hay que scrollear) esto no
+   tiene efecto — el carrusel arranca igual desde la primera tarjeta. */
+.costos-carousel{display:flex;align-items:stretch;justify-content:center;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:2px 2px 10px;-ms-overflow-style:none;scrollbar-width:none;}
+.costos-carousel::-webkit-scrollbar{display:none;}
+.costos-card{flex:0 0 320px;scroll-snap-align:start;height:288px;}
+/* Mismo alto para las 4, sin importar cuánto texto/formulario tenga cada
+   una — ícono/título/descripción arriba, y el botón o formulario siempre
+   pegado abajo (margin-top:auto), para que no queden salteadas. */
+.costos-card .tarjeta-unificada,.costos-card .tarjeta-resumen-lista{height:100%;box-sizing:border-box;margin-bottom:0;padding:18px;display:flex;flex-direction:column;}
+.costos-card .tarjeta-unificada-icono{margin-bottom:8px;}
+.costos-card .tarjeta-unificada-desc{margin-bottom:10px;font-size:0.7rem;line-height:1.4;}
+.costos-card .precio-card-input-categoria{padding:7px 10px;font-size:0.76rem;}
+/* "Elegir archivo" + el botón, en la misma fila y angostos, para que
+   entren los dos sin desbordar el ancho fijo de la tarjeta (antes se
+   pasaban del borde y aparecía una barra de scroll horizontal). */
+.costos-card .tarjeta-unificada-opciones{gap:8px;overflow-x:visible;}
+.costos-card .input-archivo{max-width:145px;flex:0 1 auto;padding:9px 10px;}
+.costos-card .input-archivo span{max-width:85px;}
+.costos-card .btn-primary{padding:9px 12px;font-size:0.64rem;white-space:nowrap;}
+.costos-card .tarjeta-unificada-opciones,.costos-card .tarjeta-resumen-lista>.btn-primary,.costos-card form{margin-top:auto;}
+@media (max-width:480px){
+  .costos-card{flex-basis:82vw;height:auto;min-height:288px;}
+  .costos-carousel-outer{padding:0 36px;}
+}
+.costos-flecha{position:absolute;top:50%;transform:translateY(-50%);z-index:2;background:var(--blanco);box-shadow:var(--sombra);}
+.costos-flecha-izq{left:0;}
+.costos-flecha-der{right:0;}
+.carousel-arrow{width:32px;height:32px;border-radius:50%;background:var(--gris-fondo);border:1px solid var(--gris-borde);color:var(--gris-texto);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:background 0.2s,color 0.2s;}
+.carousel-arrow:hover{background:var(--azul-claro);color:var(--azul);}
+.deck-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:14px;}
+.carousel-dots{display:flex;gap:7px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--gris-borde);cursor:pointer;transition:background 0.2s, transform 0.2s;}
+.dot.activa{background:var(--azul);transform:scale(1.3);}
+</style>
 </head>
 <body>
 <div class="app-layout">
@@ -19,23 +145,29 @@
         <h1 class="seccion-titulo">Costos</h1>
         <% // Este selector solo lo ve un admin general (sin departamento propio) —
            // una cuenta de Cocina o de AYB ya ve directo lo suyo, sin nada para
-           // elegir acá. La lista de insumos/precios es la misma para los dos;
-           // lo único que cambia con este link son los platos que se listan. %>
+           // elegir acá. Cocina ve sus insumos/platos de siempre; AYB ve el
+           // catálogo de Inventario AYB (sin costeo de platos, no aplica). %>
         <% if (typeof esAdminGeneral !== 'undefined' && esAdminGeneral) { %>
         <p style="font-size:0.75rem;color:var(--gris-texto);margin-top:4px;">
-          Viendo platos de <strong><%= depto === 'ayb' ? 'AYB' : 'Cocina' %></strong> ·
+          Viendo <strong><%= depto === 'ayb' ? 'AYB' : 'Cocina' %></strong> ·
           <a href="/costos<%= depto === 'ayb' ? '' : '?depto=ayb' %>" style="color:var(--azul);"><%= depto === 'ayb' ? 'ver Cocina' : 'ver AYB' %></a>
         </p>
         <% } %>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+        <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
+        <% if (typeof esAyb !== 'undefined' && esAyb) { %>
+        <a href="/inventario-ayb" class="btn-secondary">
+          <i class="ti ti-package"></i> Gestionar productos
+        </a>
+        <% } else { %>
         <button onclick="showModal('modal-insumo')" class="btn-secondary">
           <i class="ti ti-plus"></i> Nuevo insumo
         </button>
         <button onclick="showModal('modal-plato')" class="btn-primary">
           <i class="ti ti-tools-kitchen-2"></i> Nuevo plato
         </button>
+        <% } %>
       </div>
     </div>
 
@@ -49,100 +181,125 @@
     </div>
     <% } %>
 
-    <div class="costos-grid-principal" style="display:grid;gap:20px;">
-      <!-- INSUMOS -->
-      <div>
-        <!-- Actualización de precios: un solo selector, detecta foto vs. catálogo solo -->
-        <div class="tarjeta-unificada">
-          <div class="tarjeta-unificada-icono"><i class="ti ti-refresh"></i></div>
-          <p class="tarjeta-unificada-titulo">
-            Actualización de precios
-            <% if (geminiConfigurado) { %>
-              <span class="badge-activo"><i class="ti ti-circle-filled" style="font-size:7px;"></i> Activo</span>
-            <% } else { %>
-              <span class="badge-inactivo">Foto no configurada</span>
-            <% } %>
-          </p>
-          <p class="tarjeta-unificada-desc">Elegí una foto de factura o el catálogo del proveedor — el sistema detecta solo cuál es.</p>
+    <% // Para un admin general viendo AYB, hay que arrastrar "&depto=ayb" en
+       // los links de variación (período/pestañas/Excel) — si no, al hacer
+       // clic se vuelve a Cocina, porque esos datos ahora salen de tablas
+       // distintas según el departamento. %>
+    <% const qDepto = (typeof esAyb !== 'undefined' && esAyb) ? '&depto=ayb' : ''; %>
 
-          <div class="tarjeta-unificada-opciones">
-            <form id="form-actualizacion" method="POST" enctype="multipart/form-data"
-                  class="opcion-precio opcion-precio-sola" onsubmit="return prepararEnvioUnificado()">
-              <input type="text" id="input-categoria-unificada" placeholder="Categoría (si es catálogo)" class="precio-card-input-categoria" style="display:none;">
-              <label class="input-archivo" id="label-archivo-unificado">
-                <i class="ti ti-paperclip"></i>
-                <span id="nombre-archivo-unificado">Elegir archivo</span>
-                <input type="file" id="input-unificado" required onchange="detectarTipoArchivo(this)">
-              </label>
-              <button type="submit" id="btn-actualizar-unificado" class="btn-primary">
-                <i class="ti ti-upload" id="icon-actualizar-unificado"></i>
-                <span id="texto-actualizar-unificado">Actualizar</span>
-              </button>
-            </form>
+    <!-- Variación de precios: único cartel fijo arriba de todo, chico y azul -->
+    <div class="tarjeta-variacion-chica">
+      <div class="tarjeta-unificada-icono"><i class="ti ti-trending-up"></i></div>
+      <p class="tarjeta-unificada-titulo">Variación de precios</p>
+      <p class="tarjeta-unificada-desc">Los insumos que más subieron, bajaron o se mantuvieron en un período.</p>
+      <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=<%= tipoVariacion %><%= qDepto %>#modal-variacion-precios" class="btn-secondary">
+        <i class="ti ti-chart-line"></i> Ver variación
+      </a>
+    </div>
+
+    <!-- Carrusel con las otras 4 tarjetas — mismo patrón que el de fichas de
+         empleados en Horas Extra (ancho completo, flechas a los costados,
+         puntitos abajo, pagina según cuántas entren en pantalla). -->
+    <div class="costos-carousel-outer">
+      <button type="button" class="carousel-arrow costos-flecha costos-flecha-izq" onclick="pasoCostosCarousel(-1)" aria-label="Anterior"><i class="ti ti-chevron-left"></i></button>
+      <button type="button" class="carousel-arrow costos-flecha costos-flecha-der" onclick="pasoCostosCarousel(1)" aria-label="Siguiente"><i class="ti ti-chevron-right"></i></button>
+      <div class="costos-carousel" id="costosCarousel">
+
+        <!-- Resumen de Insumos, la lista completa vive en el modal. En AYB
+             esta lista es directamente el catálogo de Inventario AYB. -->
+        <div class="costos-card">
+          <div class="tarjeta-resumen-lista">
+            <div class="tarjeta-unificada-icono"><i class="ti ti-package"></i></div>
+            <p class="tarjeta-unificada-titulo">Insumos / Ingredientes</p>
+            <p class="tarjeta-resumen-numero"><%= totalInsumos %></p>
+            <p class="tarjeta-unificada-desc">
+              insumo<%= totalInsumos !== 1 ? 's' : '' %> cargado<%= totalInsumos !== 1 ? 's' : '' %>
+              <% if (typeof esAyb !== 'undefined' && esAyb) { %><br>(catálogo de Inventario AYB)<% } %>
+            </p>
+            <button type="button" class="btn-primary" onclick="showModal('modal-lista-insumos')">
+              <i class="ti ti-list"></i> Ver insumos
+            </button>
           </div>
         </div>
 
-        <!-- Resumen de Insumos, la lista completa vive en el modal -->
-        <div class="tarjeta-resumen-lista">
-          <div class="tarjeta-unificada-icono"><i class="ti ti-package"></i></div>
-          <p class="tarjeta-unificada-titulo">Insumos / Ingredientes</p>
-          <p class="tarjeta-resumen-numero"><%= totalInsumos %></p>
-          <p class="tarjeta-unificada-desc">insumo<%= totalInsumos !== 1 ? 's' : '' %> cargado<%= totalInsumos !== 1 ? 's' : '' %></p>
-          <button type="button" class="btn-primary" onclick="showModal('modal-lista-insumos')">
-            <i class="ti ti-list"></i> Ver insumos
-          </button>
-        </div>
-      </div>
-
-      <!-- PLATOS -->
-      <div>
-        <!-- Importar costeo de platos, centrado -->
-        <div class="tarjeta-unificada">
-          <div class="tarjeta-unificada-icono tarjeta-unificada-icono-csv"><i class="ti ti-file-spreadsheet"></i></div>
-          <p class="tarjeta-unificada-titulo">Costeo de platos (Excel/CSV)</p>
-          <p class="tarjeta-unificada-desc">Planilla de costeo — un bloque por plato. Si ya existe (mismo nombre), se actualizan sus ingredientes.</p>
-
-          <form id="form-importar-platos" method="POST" action="/costos/platos/importar" enctype="multipart/form-data"
-                class="opcion-precio opcion-precio-sola" onsubmit="return prepararEnvioPlatos()">
-            <input type="text" name="categoria_platos" id="input-categoria-platos" placeholder="Categoría (ej: Pastelería)" required class="precio-card-input-categoria">
-            <label class="input-archivo">
-              <i class="ti ti-paperclip"></i>
-              <span id="nombre-archivo-platos">Elegir archivo</span>
-              <input type="file" id="input-platos" name="archivo_platos" required
-                     onchange="marcarArchivoPlatosElegido(this)">
-            </label>
-            <button type="submit" id="btn-importar-platos" class="btn-primary">
-              <i class="ti ti-upload" id="icon-importar-platos"></i>
-              <span id="texto-importar-platos">Importar</span>
+        <% if (typeof esAyb === 'undefined' || !esAyb) { %>
+        <!-- Resumen de Platos, la lista completa vive en el modal. No aplica a AYB. -->
+        <div class="costos-card">
+          <div class="tarjeta-resumen-lista">
+            <div class="tarjeta-unificada-icono tarjeta-unificada-icono-csv"><i class="ti ti-tools-kitchen-2"></i></div>
+            <p class="tarjeta-unificada-titulo">Costeo de platos</p>
+            <p class="tarjeta-resumen-numero"><%= totalPlatos %></p>
+            <p class="tarjeta-unificada-desc">plato<%= totalPlatos !== 1 ? 's' : '' %> costeado<%= totalPlatos !== 1 ? 's' : '' %></p>
+            <button type="button" class="btn-primary" onclick="showModal('modal-lista-platos')">
+              <i class="ti ti-list"></i> Ver platos
             </button>
-          </form>
+          </div>
+        </div>
+        <% } %>
+
+        <!-- Actualización de precios: un solo selector, detecta foto vs. catálogo solo -->
+        <div class="costos-card">
+          <div class="tarjeta-unificada">
+            <div class="tarjeta-unificada-icono"><i class="ti ti-refresh"></i></div>
+            <p class="tarjeta-unificada-titulo">
+              Actualización de precios
+              <% if (geminiConfigurado) { %>
+                <span class="badge-activo"><i class="ti ti-circle-filled" style="font-size:7px;"></i> Activo</span>
+              <% } else { %>
+                <span class="badge-inactivo">Foto no configurada</span>
+              <% } %>
+            </p>
+            <p class="tarjeta-unificada-desc">Elegí una foto de factura o el catálogo del proveedor — el sistema detecta solo cuál es.</p>
+
+            <div class="tarjeta-unificada-opciones">
+              <form id="form-actualizacion" method="POST" enctype="multipart/form-data"
+                    class="opcion-precio opcion-precio-sola" onsubmit="return prepararEnvioUnificado()">
+                <input type="text" id="input-categoria-unificada" placeholder="Categoría (si es catálogo)" class="precio-card-input-categoria" style="display:none;">
+                <label class="input-archivo" id="label-archivo-unificado">
+                  <i class="ti ti-paperclip"></i>
+                  <span id="nombre-archivo-unificado">Elegir archivo</span>
+                  <input type="file" id="input-unificado" required onchange="detectarTipoArchivo(this)">
+                </label>
+                <button type="submit" id="btn-actualizar-unificado" class="btn-primary">
+                  <i class="ti ti-upload" id="icon-actualizar-unificado"></i>
+                  <span id="texto-actualizar-unificado">Actualizar</span>
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
 
-        <!-- Resumen de Platos, la lista completa vive en el modal -->
-        <div class="tarjeta-resumen-lista">
-          <div class="tarjeta-unificada-icono tarjeta-unificada-icono-csv"><i class="ti ti-tools-kitchen-2"></i></div>
-          <p class="tarjeta-unificada-titulo">Costeo de platos</p>
-          <p class="tarjeta-resumen-numero"><%= totalPlatos %></p>
-          <p class="tarjeta-unificada-desc">plato<%= totalPlatos !== 1 ? 's' : '' %> costeado<%= totalPlatos !== 1 ? 's' : '' %></p>
-          <button type="button" class="btn-primary" onclick="showModal('modal-lista-platos')">
-            <i class="ti ti-list"></i> Ver platos
-          </button>
+        <% if (typeof esAyb === 'undefined' || !esAyb) { %>
+        <!-- Importar costeo de platos. No aplica a AYB. -->
+        <div class="costos-card">
+          <div class="tarjeta-unificada">
+            <div class="tarjeta-unificada-icono tarjeta-unificada-icono-csv"><i class="ti ti-file-spreadsheet"></i></div>
+            <p class="tarjeta-unificada-titulo">Costeo de platos (Excel/CSV)</p>
+            <p class="tarjeta-unificada-desc">Planilla de costeo — un bloque por plato. Si ya existe (mismo nombre), se actualizan sus ingredientes.</p>
+
+            <form id="form-importar-platos" method="POST" action="/costos/platos/importar" enctype="multipart/form-data" onsubmit="return prepararEnvioPlatos()">
+              <input type="text" name="categoria_platos" id="input-categoria-platos" placeholder="Categoría (ej: Pastelería)" required class="precio-card-input-categoria" style="width:100%;box-sizing:border-box;margin-bottom:10px;">
+              <div class="opcion-precio opcion-precio-sola">
+              <label class="input-archivo">
+                <i class="ti ti-paperclip"></i>
+                <span id="nombre-archivo-platos">Elegir archivo</span>
+                <input type="file" id="input-platos" name="archivo_platos" required
+                       onchange="marcarArchivoPlatosElegido(this)">
+              </label>
+              <button type="submit" id="btn-importar-platos" class="btn-primary">
+                <i class="ti ti-upload" id="icon-importar-platos"></i>
+                <span id="texto-importar-platos">Importar</span>
+              </button>
+              </div>
+            </form>
+          </div>
         </div>
+        <% } %>
+
       </div>
     </div>
-
-    <!-- Variación de precios: franja de ancho completo, no rompe la grilla de 4 tarjetas de arriba -->
-    <div class="tarjeta-unificada tarjeta-variacion-franja" style="margin-top:20px;text-align:left;">
-      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-        <div class="tarjeta-unificada-icono" style="background:#fef3c7;color:#b45309;flex-shrink:0;"><i class="ti ti-trending-up"></i></div>
-        <div style="flex:1;min-width:220px;">
-          <p class="tarjeta-unificada-titulo" style="justify-content:flex-start;">Variación de precios</p>
-          <p class="tarjeta-unificada-desc" style="margin-bottom:0;">Los insumos que más subieron, bajaron o se mantuvieron en un período.</p>
-        </div>
-        <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=<%= tipoVariacion %>#modal-variacion-precios" class="btn-primary" style="flex-shrink:0;">
-          <i class="ti ti-chart-line"></i> Ver variación
-        </a>
-      </div>
+    <div class="deck-controls">
+      <div class="carousel-dots" id="costosDots"></div>
     </div>
 
     <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--gris-borde);">
@@ -165,11 +322,12 @@
       <div style="position:relative;margin-bottom:12px;">
         <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
         <form method="GET" action="/costos">
+          <% if (typeof esAyb !== 'undefined' && esAyb) { %><input type="hidden" name="depto" value="ayb"><% } %>
           <input type="text" name="buscar" id="buscar-insumos-input" value="<%= buscar %>" placeholder="Buscar insumo por nombre o código..."
                  oninput="filtrarInsumosEnVivo()"
                  style="width:100%;padding:8px 32px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
           <% if (buscar) { %>
-          <a href="/costos#modal-lista-insumos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
+          <a href="/costos<%= (typeof esAyb !== 'undefined' && esAyb) ? '?depto=ayb' : '' %>#modal-lista-insumos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
           <% } %>
         </form>
       </div>
@@ -179,9 +337,9 @@
       </p>
 
       <div id="solapas-letras-insumos" class="solapas-letras" style="<%= buscar ? 'display:none;' : '' %>">
-        <a href="/costos" class="solapa-letra <%= !letra ? 'activa' : '' %>">Todos</a>
+        <a href="/costos<%= (typeof esAyb !== 'undefined' && esAyb) ? '?depto=ayb' : '' %>" class="solapa-letra <%= !letra ? 'activa' : '' %>">Todos</a>
         <% 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => { %>
-        <a href="/costos?letra=<%= l %>" class="solapa-letra <%= letra === l ? 'activa' : '' %>"><%= l %></a>
+        <a href="/costos?letra=<%= l %><%= qDepto %>" class="solapa-letra <%= letra === l ? 'activa' : '' %>"><%= l %></a>
         <% }) %>
       </div>
 
@@ -210,7 +368,7 @@
                   <% } %>
                 </td>
                 <td>
-                  <form method="POST" action="/costos/insumo/<%= ins.id %>/precio" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+                  <form method="POST" action="<%= (typeof esAyb !== 'undefined' && esAyb) ? '/costos/producto-ayb/' : '/costos/insumo/' %><%= ins.id %>/precio" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
                     <span style="font-size:0.78rem;color:var(--gris-texto);">$</span>
                     <input type="number" name="precio_nuevo" value="<%= ins.precio_unitario %>" placeholder="Ej: 4500" step="0.01" min="0"
                            style="width:80px;padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.82rem;outline:none;">
@@ -222,6 +380,11 @@
                   </form>
                 </td>
                 <td>
+                  <% if (typeof esAyb !== 'undefined' && esAyb) { %>
+                    <a href="/inventario-ayb" title="Gestionar en Inventario AYB" style="background:var(--azul-claro);color:var(--azul);display:inline-flex;align-items:center;justify-content:center;font-size:15px;padding:5px 8px;border-radius:6px;text-decoration:none;">
+                      <i class="ti ti-external-link"></i>
+                    </a>
+                  <% } else { %>
                   <form method="POST" action="/costos/insumo/<%= ins.id %>/eliminar"
                         onsubmit="return confirm('¿Eliminar este insumo?')" style="margin:0;">
                     <button type="submit"
@@ -232,6 +395,7 @@
                       <i class="ti ti-trash"></i>
                     </button>
                   </form>
+                  <% } %>
                 </td>
               </tr>
               <% }) %>
@@ -241,6 +405,8 @@
                   No se encontraron insumos para "<%= buscar %>".
                 <% } else if (letra) { %>
                   No hay insumos que empiecen con "<%= letra %>".
+                <% } else if (typeof esAyb !== 'undefined' && esAyb) { %>
+                  Sin productos cargados. Agregalos desde <a href="/inventario-ayb">Inventario AYB</a>.
                 <% } else { %>
                   Sin insumos. Agregá el primero.
                 <% } %>
@@ -258,7 +424,8 @@
   </div>
 </div>
 
-<!-- Modal: lista completa de Platos -->
+<% if (typeof esAyb === 'undefined' || !esAyb) { %>
+<!-- Modal: lista completa de Platos. No aplica a AYB. -->
 <div id="modal-lista-platos" class="modal-lista" style="display:none;" onclick="if(event.target===this)hideModal('modal-lista-platos')">
   <div class="modal-lista-caja">
     <div class="modal-lista-header">
@@ -349,6 +516,7 @@
     </div>
   </div>
 </div>
+<% } %>
 
 <!-- Modal: Variación de precios -->
 <div id="modal-variacion-precios" class="modal-lista" style="display:none;" onclick="if(event.target===this)hideModal('modal-variacion-precios')">
@@ -356,7 +524,7 @@
     <div class="modal-lista-header">
       <p class="modal-lista-titulo"><i class="ti ti-chart-line"></i> Variación de precios</p>
       <div style="display:flex;align-items:center;gap:8px;">
-        <a href="/costos/variacion-excel?dias=<%= diasVariacion %>&tipoVariacion=<%= tipoVariacion %>" class="btn-excel" style="padding:7px 12px;font-size:0.65rem;">
+        <a href="/costos/variacion-excel?dias=<%= diasVariacion %>&tipoVariacion=<%= tipoVariacion %><%= qDepto %>" class="btn-excel" style="padding:7px 12px;font-size:0.65rem;">
           <i class="ti ti-file-spreadsheet"></i> Excel
         </a>
         <button onclick="hideModal('modal-variacion-precios')" class="modal-lista-cerrar"><i class="ti ti-x"></i></button>
@@ -367,22 +535,22 @@
       <!-- Selector de período -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
         <% [{v:7,l:'7 días'},{v:14,l:'14 días'},{v:21,l:'21 días'},{v:28,l:'28 días'}].forEach(p => { %>
-        <a href="/costos?dias=<%= p.v %>&tipoVariacion=<%= tipoVariacion %>#modal-variacion-precios"
+        <a href="/costos?dias=<%= p.v %>&tipoVariacion=<%= tipoVariacion %><%= qDepto %>#modal-variacion-precios"
            class="chip-periodo <%= diasVariacion === p.v ? 'activo' : '' %>"><%= p.l %></a>
         <% }) %>
       </div>
 
       <!-- Pestañas subieron / bajaron / iguales -->
       <div style="display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--gris-borde);flex-wrap:wrap;">
-        <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=subieron#modal-variacion-precios"
+        <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=subieron<%= qDepto %>#modal-variacion-precios"
            class="tab-variacion <%= tipoVariacion === 'subieron' ? 'activo' : '' %>">
           <i class="ti ti-trending-up" style="color:#dc2626;"></i> Subieron
         </a>
-        <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=bajaron#modal-variacion-precios"
+        <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=bajaron<%= qDepto %>#modal-variacion-precios"
            class="tab-variacion <%= tipoVariacion === 'bajaron' ? 'activo' : '' %>">
           <i class="ti ti-trending-down" style="color:#16a34a;"></i> Bajaron
         </a>
-        <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=iguales#modal-variacion-precios"
+        <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=iguales<%= qDepto %>#modal-variacion-precios"
            class="tab-variacion <%= tipoVariacion === 'iguales' ? 'activo' : '' %>">
           <i class="ti ti-minus" style="color:var(--gris-texto);"></i> Se mantuvieron
         </a>
@@ -435,7 +603,8 @@
   </div>
 </div>
 
-<!-- Modal nuevo insumo -->
+<% if (typeof esAyb === 'undefined' || !esAyb) { %>
+<!-- Modal nuevo insumo. Para AYB, los productos se cargan desde Inventario AYB. -->
 <div id="modal-insumo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -537,88 +706,8 @@
     </form>
   </div>
 </div>
+<% } %>
 
-<style>
-.main-content-ancho{max-width:1600px;}
-.costos-grid-principal{grid-template-columns:1fr 1fr;}
-.puesto-badge{font-size:0.68rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:2px 8px;border-radius:20px;}
-.field{margin-bottom:0;}
-.field label{display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;}
-.field input,.field select{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;transition:border-color 0.2s;}
-.field input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);background:var(--blanco);}
-
-/* Tarjeta unificada de importación, centrada, arriba de cada columna */
-.tarjeta-unificada{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:22px;box-shadow:var(--sombra);text-align:center;margin-bottom:22px;}
-.tarjeta-unificada-icono{width:44px;height:44px;border-radius:10px;background:var(--azul-claro);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px;}
-.tarjeta-unificada-icono-csv{background:#f0fdf4;color:#16a34a;}
-.tarjeta-unificada-titulo{font-size:0.9rem;font-weight:600;color:var(--negro);margin:0 0 4px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
-.tarjeta-unificada-desc{font-size:0.76rem;color:var(--gris-texto);margin:0 0 16px;line-height:1.5;}
-.tarjeta-unificada-opciones{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;}
-.opcion-precio-sola{flex-shrink:0;}
-.opcion-precio{display:flex;flex-direction:column;align-items:center;gap:8px;}
-.opcion-precio-sola{flex-direction:row;flex-wrap:wrap;justify-content:center;}
-.opcion-precio-label{font-size:0.72rem;font-weight:600;color:var(--gris-texto);display:flex;align-items:center;gap:5px;}
-.opcion-divisor{width:1px;align-self:stretch;background:var(--gris-borde);min-height:60px;}
-
-/* Tarjeta resumen (reemplaza a la tabla siempre visible) */
-.tarjeta-resumen-lista{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:26px 22px;box-shadow:var(--sombra);text-align:center;}
-.tarjeta-resumen-numero{font-family:var(--font-serif);font-size:2.4rem;font-weight:400;color:var(--negro);margin:4px 0 0;line-height:1;}
-.tarjeta-resumen-lista .tarjeta-unificada-desc{margin-bottom:18px;}
-.tarjeta-resumen-lista .btn-primary{width:100%;justify-content:center;}
-
-/* Modal de lista completa: overlay a pantalla completa, la caja centrada y grande */
-.modal-lista{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;}
-.modal-lista-caja{background:var(--blanco);border-radius:16px;width:100%;max-width:800px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
-.modal-lista-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--gris-borde);flex-shrink:0;}
-.modal-lista-titulo{font-size:0.95rem;font-weight:600;color:var(--negro);display:flex;align-items:center;gap:8px;margin:0;}
-.modal-lista-cerrar{background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);padding:4px;}
-.modal-lista-cerrar:hover{color:var(--negro);}
-.modal-lista-body{padding:18px 22px;overflow-y:auto;}
-
-/* En celular, el modal ocupa toda la pantalla */
-@media (max-width:700px){
-  .modal-lista{padding:0;}
-  .modal-lista-caja{max-width:100%;max-height:100vh;height:100vh;border-radius:0;}
-}
-@media (max-width:600px){
-  .opcion-divisor{display:none;}
-  /* Insumos/Platos en 2 columnas no entran en un celular sin achicarse
-     demasiado — se apilan en una sola columna. */
-  .costos-grid-principal{grid-template-columns:1fr !important;}
-}
-.precio-card-input-categoria{padding:9px 10px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.8rem;outline:none;background:var(--gris-fondo);color:var(--negro);}
-.precio-card-input-categoria:focus{border-color:var(--azul);background:var(--blanco);}
-
-/* Solapas alfabéticas — discretas, tipo índice de agenda */
-.solapas-letras{display:flex;gap:2px;overflow-x:auto;padding-bottom:10px;margin-bottom:12px;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--gris-borde);}
-.solapas-letras::-webkit-scrollbar{height:3px;}
-.solapas-letras::-webkit-scrollbar-thumb{background:var(--azul-borde);border-radius:3px;}
-.solapa-letra{flex-shrink:0;display:flex;align-items:center;justify-content:center;min-width:24px;height:26px;padding:0 6px;border-radius:5px;color:var(--gris-texto);font-size:0.68rem;font-weight:600;text-decoration:none;transition:all 0.15s;border:1px solid transparent;}
-.solapa-letra:hover{background:var(--azul-claro);color:var(--azul);}
-.solapa-letra.activa{background:var(--azul);color:#fff;}
-.badge-activo{font-size:0.62rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;padding:2px 8px 2px 6px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;}
-.badge-activo i{color:#16a34a;}
-.badge-inactivo{font-size:0.62rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--gris-texto);background:var(--gris-borde);padding:2px 8px;border-radius:20px;}
-.input-archivo{display:flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--gris-borde);border-radius:8px;font-size:0.8rem;color:var(--gris-texto);cursor:pointer;background:var(--gris-fondo);transition:border-color 0.2s;max-width:220px;}
-.input-archivo:hover{border-color:var(--azul);}
-.input-archivo span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.input-archivo input[type=file]{display:none;}
-.input-archivo-disabled{opacity:0.5;cursor:not-allowed;}
-.input-archivo-disabled:hover{border-color:var(--gris-borde);}
-.input-archivo-ok{border-color:#16a34a;background:#f0fdf4;color:#16a34a;}
-@keyframes girar{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-.girando{animation:girar 0.8s linear infinite;}
-.btn-excel{display:inline-flex;align-items:center;gap:6px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-family:var(--font-sans);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background 0.2s;}
-.btn-excel:hover{background:#15803d;}
-
-/* Chips de período y pestañas de la Variación de precios */
-.chip-periodo{font-size:0.72rem;font-weight:600;color:var(--gris-texto);background:var(--gris-fondo);border:1px solid var(--gris-borde);padding:5px 13px;border-radius:20px;text-decoration:none;transition:all 0.15s;}
-.chip-periodo:hover{border-color:var(--azul);color:var(--azul);}
-.chip-periodo.activo{background:var(--azul);border-color:var(--azul);color:#fff;}
-.tab-variacion{font-size:0.76rem;font-weight:600;color:var(--gris-texto);text-decoration:none;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;}
-.tab-variacion:hover{color:var(--negro);}
-.tab-variacion.activo{color:var(--negro);border-bottom-color:var(--azul);}
-</style>
 
 <script>
 function showModal(id){
@@ -637,6 +726,8 @@ function hideModal(id){ document.getElementById(id).style.display='none'; }
 // antes el buscador con Enter — solo que ahora se dispara solo, con un
 // pequeño debounce para no mandar un pedido por cada letra tipeada.
 
+const ES_AYB = <%= (typeof esAyb !== 'undefined' && esAyb) ? 'true' : 'false' %>;
+
 function escaparHtml(t) {
   const div = document.createElement('div');
   div.textContent = t == null ? '' : String(t);
@@ -645,6 +736,19 @@ function escaparHtml(t) {
 
 function filaInsumoHtml(ins) {
   const sinPrecio = !ins.precio_unitario || parseFloat(ins.precio_unitario) === 0;
+  const rutaPrecio = ES_AYB ? '/costos/producto-ayb/' : '/costos/insumo/';
+  const colEliminar = ES_AYB
+    ? `<a href="/inventario-ayb" title="Gestionar en Inventario AYB" style="background:var(--azul-claro);color:var(--azul);display:inline-flex;align-items:center;justify-content:center;font-size:15px;padding:5px 8px;border-radius:6px;text-decoration:none;"><i class="ti ti-external-link"></i></a>`
+    : `<form method="POST" action="/costos/insumo/${ins.id}/eliminar"
+              onsubmit="return confirm('¿Eliminar este insumo?')" style="margin:0;">
+          <button type="submit"
+                  style="background:var(--azul-claro);border:none;color:var(--azul);cursor:pointer;font-size:15px;padding:5px 8px;border-radius:6px;transition:all 0.2s;"
+                  title="Eliminar"
+                  onmouseover="this.style.background='#dc2626';this.style.color='#fff';"
+                  onmouseout="this.style.background='var(--azul-claro)';this.style.color='var(--azul)';">
+            <i class="ti ti-trash"></i>
+          </button>
+        </form>`;
   return `
     <tr>
       <td style="font-size:0.72rem;color:var(--gris-texto);font-family:monospace;">${ins.codigo ? escaparHtml(ins.codigo) : '—'}</td>
@@ -653,7 +757,7 @@ function filaInsumoHtml(ins) {
         ${sinPrecio ? '<span style="display:inline-block;margin-left:6px;font-size:0.6rem;font-weight:700;background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:20px;">SIN PRECIO</span>' : ''}
       </td>
       <td>
-        <form method="POST" action="/costos/insumo/${ins.id}/precio" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+        <form method="POST" action="${rutaPrecio}${ins.id}/precio" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
           <span style="font-size:0.78rem;color:var(--gris-texto);">$</span>
           <input type="number" name="precio_nuevo" value="${ins.precio_unitario != null ? ins.precio_unitario : ''}" placeholder="Ej: 4500" step="0.01" min="0"
                  style="width:80px;padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.82rem;outline:none;">
@@ -664,18 +768,7 @@ function filaInsumoHtml(ins) {
           </label>
         </form>
       </td>
-      <td>
-        <form method="POST" action="/costos/insumo/${ins.id}/eliminar"
-              onsubmit="return confirm('¿Eliminar este insumo?')" style="margin:0;">
-          <button type="submit"
-                  style="background:var(--azul-claro);border:none;color:var(--azul);cursor:pointer;font-size:15px;padding:5px 8px;border-radius:6px;transition:all 0.2s;"
-                  title="Eliminar"
-                  onmouseover="this.style.background='#dc2626';this.style.color='#fff';"
-                  onmouseout="this.style.background='var(--azul-claro)';this.style.color='var(--azul)';">
-            <i class="ti ti-trash"></i>
-          </button>
-        </form>
-      </td>
+      <td>${colEliminar}</td>
     </tr>
   `;
 }
@@ -711,7 +804,7 @@ function filtrarInsumosEnVivo() {
     const idPedido = ++_pedidoInsumosEnCurso;
     let data;
     try {
-      const resp = await fetch('/costos/insumos/buscar-vivo?q=' + encodeURIComponent(texto));
+      const resp = await fetch('/costos/insumos/buscar-vivo?q=' + encodeURIComponent(texto) + (ES_AYB ? '&depto=ayb' : ''));
       data = await resp.json();
     } catch (e) {
       return; // sin conexión momentánea: dejamos lo último que había en pantalla
@@ -735,7 +828,7 @@ function filtrarInsumosEnVivo() {
 <% if (buscar || letra) { %>
 showModal('modal-lista-insumos');
 <% } %>
-<% if (buscarPlato || letraPlato) { %>
+<% if ((buscarPlato || letraPlato) && (typeof esAyb === 'undefined' || !esAyb)) { %>
 showModal('modal-lista-platos');
 <% } %>
 <% if (mostrarModalVariacion) { %>
@@ -829,7 +922,7 @@ function prepararEnvioUnificado() {
       alert('La lectura de fotos de factura todavía no está configurada. Usá el catálogo en su lugar.');
       return false;
     }
-    form.action = '/costos/factura';
+    form.action = '/costos/factura' + (ES_AYB ? '?depto=ayb' : '');
     input.name = 'factura';
     catInput.name = '';
     texto.textContent = 'Analizando factura...';
@@ -838,7 +931,7 @@ function prepararEnvioUnificado() {
       alert('Escribí a qué categoría pertenece este catálogo (ej: Frescos, Secos, Congelados).');
       return false;
     }
-    form.action = '/costos/insumos/importar';
+    form.action = '/costos/insumos/importar' + (ES_AYB ? '?depto=ayb' : '');
     input.name = 'archivo_csv';
     catInput.name = 'categoria';
     texto.textContent = 'Importando...';
@@ -884,6 +977,92 @@ function prepararEnvioPlatos() {
   texto.textContent = 'Importando...';
   return true;
 }
+
+// ── Carrusel de las 4 tarjetas (Insumos, Costeo de platos, Actualización de
+// precios, Costeo Excel/CSV) — mismo patrón que el carrusel de fichas de
+// empleados de Horas Extra: muestra las que entren juntas en el ancho de
+// pantalla disponible y pagina de a una "pantalla" por vez, en vez de una
+// tarjeta sola a la vez (así en pantallas anchas se ven varias juntas, sin
+// angostar la página de golpe).
+let costosPaginaActual = 0;
+
+function costosPorPagina() {
+  const cont = document.getElementById('costosCarousel');
+  const primera = cont ? cont.querySelector('.costos-card') : null;
+  if (!cont || !primera) return 1;
+  const ancho = primera.getBoundingClientRect().width + 14; // + gap
+  return Math.max(1, Math.floor(cont.clientWidth / ancho));
+}
+
+function actualizarDotsCostos() {
+  const cont = document.getElementById('costosCarousel');
+  const dotsEl = document.getElementById('costosDots');
+  if (!cont || !dotsEl) return;
+  const total = cont.querySelectorAll('.costos-card').length;
+  const totalPaginas = Math.max(1, Math.ceil(total / costosPorPagina()));
+  dotsEl.innerHTML = '';
+  for (let i = 0; i < totalPaginas; i++) {
+    const d = document.createElement('span');
+    d.className = 'dot' + (i === 0 ? ' activa' : '');
+    d.onclick = () => irAPaginaCostos(i);
+    dotsEl.appendChild(d);
+  }
+}
+
+function irAPaginaCostos(i) {
+  const cont = document.getElementById('costosCarousel');
+  const tarjetas = cont ? [...cont.querySelectorAll('.costos-card')] : [];
+  const objetivo = tarjetas[i * costosPorPagina()];
+  if (!cont || !objetivo) return;
+  cont.scrollTo({ left: objetivo.offsetLeft - cont.offsetLeft, behavior: 'smooth' });
+  document.querySelectorAll('#costosDots .dot').forEach((d, di) => d.classList.toggle('activa', di === i));
+  costosPaginaActual = i;
+}
+
+function pasoCostosCarousel(dir) {
+  const totalPaginas = document.querySelectorAll('#costosDots .dot').length;
+  const nueva = Math.min(Math.max(costosPaginaActual + dir, 0), totalPaginas - 1);
+  irAPaginaCostos(nueva);
+}
+
+document.addEventListener('DOMContentLoaded', actualizarDotsCostos);
+let _resizeCostosTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeCostosTimer);
+  _resizeCostosTimer = setTimeout(actualizarDotsCostos, 200);
+});
+
+// Si el usuario arrastra el carrusel a mano (swipe táctil) en vez de usar
+// las flechas/puntitos, igual mantenemos el puntito activo sincronizado.
+// (Ojo: con pocas tarjetas la última "página" no siempre llega a desplazarse
+// un ancho completo de página — el navegador frena el scroll antes porque no
+// queda más contenido — así que esa última posición se detecta aparte, en
+// vez de calcularla dividiendo la posición por el ancho de una página.)
+(function () {
+  const cont = document.getElementById('costosCarousel');
+  if (!cont) return;
+  let timer;
+  cont.addEventListener('scroll', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const tarjetas = [...cont.querySelectorAll('.costos-card')];
+      const totalPaginas = document.querySelectorAll('#costosDots .dot').length;
+      if (!tarjetas.length || !totalPaginas) return;
+
+      let pagina;
+      const alFinal = cont.scrollLeft >= cont.scrollWidth - cont.clientWidth - 2;
+      if (alFinal) {
+        pagina = totalPaginas - 1;
+      } else {
+        const anchoPagina = costosPorPagina() * (tarjetas[0].getBoundingClientRect().width + 14);
+        pagina = Math.min(totalPaginas - 1, Math.round(cont.scrollLeft / anchoPagina));
+      }
+
+      document.querySelectorAll('#costosDots .dot').forEach((d, di) => d.classList.toggle('activa', di === pagina));
+      costosPaginaActual = pagina;
+    }, 120);
+  });
+})();
 </script>
 </body>
 </html>

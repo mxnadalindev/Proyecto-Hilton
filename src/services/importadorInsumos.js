@@ -176,4 +176,73 @@ async function importarInsumos(productos, categoria) {
   return resumen;
 }
 
-module.exports = { parsearCsvInsumos, importarInsumos };
+/**
+ * Igual que importarInsumos, pero para el catálogo de productos de AYB
+ * (productos_ayb + historial_precios_ayb) en vez de la tabla insumos de
+ * Cocina — mismo formato de archivo, mismo upsert por código (acá
+ * codigo_barras), misma regla de "el precio nunca baja solo".
+ */
+async function importarProductosAyb(productos, categoria) {
+  const resumen = {
+    nuevos: 0,
+    actualizados: 0,
+    sinCambios: 0,
+    sinPrecio: 0,
+    negativosRechazados: 0,
+    menoresIgnorados: 0,
+    cambiosDePrecios: [],
+  };
+
+  for (const p of productos) {
+    if (p.precio_unitario < 0) {
+      resumen.negativosRechazados++;
+      continue;
+    }
+    if (p.precio_unitario === 0) resumen.sinPrecio++;
+
+    const existente = await db.get2('SELECT * FROM productos_ayb WHERE codigo_barras=$1', [p.codigo]);
+
+    if (!existente) {
+      await db.run2(
+        `INSERT INTO productos_ayb (nombre, categoria, unidad_default, precio_unitario, stock_actual, proveedor, codigo_barras, activo)
+         VALUES ($1,$2,$3,$4,0,$5,$6,true)`,
+        [p.nombre, categoria, p.unidad, p.precio_unitario, p.proveedor, p.codigo]
+      );
+      resumen.nuevos++;
+      continue;
+    }
+
+    const precioAnterior = parseFloat(existente.precio_unitario) || 0;
+
+    if (p.precio_unitario < precioAnterior) {
+      resumen.menoresIgnorados++;
+      continue;
+    }
+
+    if (Math.abs(precioAnterior - p.precio_unitario) > 0.001) {
+      await db.run2(
+        `UPDATE productos_ayb SET precio_unitario=$1, proveedor=$2 WHERE codigo_barras=$3`,
+        [p.precio_unitario, p.proveedor, p.codigo]
+      );
+      await db.run2(
+        `INSERT INTO historial_precios_ayb (producto_id, precio_anterior, precio_nuevo, origen)
+         VALUES ($1,$2,$3,'importacion_csv')`,
+        [existente.id, precioAnterior, p.precio_unitario]
+      );
+      resumen.actualizados++;
+      resumen.cambiosDePrecios.push({
+        producto_id: existente.id,
+        codigo: p.codigo,
+        nombre: p.nombre,
+        precio_anterior: precioAnterior,
+        precio_nuevo: p.precio_unitario,
+      });
+    } else {
+      resumen.sinCambios++;
+    }
+  }
+
+  return resumen;
+}
+
+module.exports = { parsearCsvInsumos, importarInsumos, importarProductosAyb };

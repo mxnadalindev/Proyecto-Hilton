@@ -5,6 +5,37 @@
   <title>Croutons — Hilton</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+.tarjeta-unificada{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:22px;box-shadow:var(--sombra);text-align:center;margin-bottom:22px;}
+.tarjeta-unificada-icono{width:44px;height:44px;border-radius:10px;background:var(--azul-claro);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px;}
+.tarjeta-unificada-titulo{font-size:0.9rem;font-weight:600;color:var(--negro);margin:0 0 4px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
+.tarjeta-unificada-desc{font-size:0.76rem;color:var(--gris-texto);margin:0 0 16px;line-height:1.5;}
+.tarjeta-unificada-opciones{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;}
+.opcion-precio-sola{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;}
+.precio-card-input-categoria{border:1px solid var(--gris-borde);border-radius:8px;padding:9px 12px;font-size:0.8rem;outline:none;background:var(--gris-fondo);min-width:180px;}
+.precio-card-input-categoria:focus{border-color:var(--azul);background:var(--blanco);}
+
+.badge-activo{font-size:0.62rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;padding:2px 8px 2px 6px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;}
+.badge-activo i{color:#16a34a;}
+.badge-inactivo{font-size:0.62rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--gris-texto);background:var(--gris-borde);padding:2px 8px;border-radius:20px;}
+
+.input-archivo{display:flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--gris-borde);border-radius:8px;font-size:0.8rem;color:var(--gris-texto);cursor:pointer;background:var(--gris-fondo);transition:border-color 0.2s;max-width:220px;}
+.input-archivo:hover{border-color:var(--azul);}
+.input-archivo span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.input-archivo input[type=file]{display:none;}
+.input-archivo-ok{border-color:#16a34a;background:#f0fdf4;color:#16a34a;}
+
+.girando{animation:girar 0.8s linear infinite;}
+@keyframes girar{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+
+.btn-icono{background:none;border:1px solid var(--gris-borde);border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gris-texto);transition:border-color .2s,color .2s;}
+.btn-icono:hover{border-color:var(--azul);color:var(--azul);}
+
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:0.72rem;font-weight:600;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.04em;}
+.field input{border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;background:var(--gris-fondo);}
+.field input:focus{border-color:var(--azul);background:var(--blanco);}
+</style>
 </head>
 <body>
 <div class="app-layout">
@@ -19,7 +50,7 @@
         <h1 class="seccion-titulo">Croutons</h1>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+        <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
         <button onclick="showModal('modal-lote')" class="btn-primary">
           <i class="ti ti-plus"></i> Cargar lote a mano
         </button>
@@ -211,37 +242,6 @@
   </div>
 </div>
 
-<style>
-.tarjeta-unificada{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:22px;box-shadow:var(--sombra);text-align:center;margin-bottom:22px;}
-.tarjeta-unificada-icono{width:44px;height:44px;border-radius:10px;background:var(--azul-claro);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px;}
-.tarjeta-unificada-titulo{font-size:0.9rem;font-weight:600;color:var(--negro);margin:0 0 4px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
-.tarjeta-unificada-desc{font-size:0.76rem;color:var(--gris-texto);margin:0 0 16px;line-height:1.5;}
-.tarjeta-unificada-opciones{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;}
-.opcion-precio-sola{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;}
-.precio-card-input-categoria{border:1px solid var(--gris-borde);border-radius:8px;padding:9px 12px;font-size:0.8rem;outline:none;background:var(--gris-fondo);min-width:180px;}
-.precio-card-input-categoria:focus{border-color:var(--azul);background:var(--blanco);}
-
-.badge-activo{font-size:0.62rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;padding:2px 8px 2px 6px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;}
-.badge-activo i{color:#16a34a;}
-.badge-inactivo{font-size:0.62rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--gris-texto);background:var(--gris-borde);padding:2px 8px;border-radius:20px;}
-
-.input-archivo{display:flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--gris-borde);border-radius:8px;font-size:0.8rem;color:var(--gris-texto);cursor:pointer;background:var(--gris-fondo);transition:border-color 0.2s;max-width:220px;}
-.input-archivo:hover{border-color:var(--azul);}
-.input-archivo span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.input-archivo input[type=file]{display:none;}
-.input-archivo-ok{border-color:#16a34a;background:#f0fdf4;color:#16a34a;}
-
-.girando{animation:girar 0.8s linear infinite;}
-@keyframes girar{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
-
-.btn-icono{background:none;border:1px solid var(--gris-borde);border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gris-texto);transition:border-color .2s,color .2s;}
-.btn-icono:hover{border-color:var(--azul);color:var(--azul);}
-
-.field{display:flex;flex-direction:column;gap:6px;}
-.field label{font-size:0.72rem;font-weight:600;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.04em;}
-.field input{border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;background:var(--gris-fondo);}
-.field input:focus{border-color:var(--azul);background:var(--blanco);}
-</style>
 
 <script>
 function showModal(id){
