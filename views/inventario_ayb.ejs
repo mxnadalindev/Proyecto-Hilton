@@ -181,29 +181,28 @@
     </div>
 
     <div class="modal-lista-body">
-      <form method="GET" action="/inventario-ayb" style="position:relative;margin-bottom:12px;">
+      <form method="GET" action="/inventario-ayb" style="position:relative;margin-bottom:12px;" onsubmit="return false;">
         <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
-        <input type="text" name="buscar" value="<%= buscar %>" placeholder="Buscar por nombre, categoría o código..."
+        <input type="text" name="buscar" id="buscar-productos-input" value="<%= buscar %>" placeholder="Buscar por nombre, categoría o código..."
+               oninput="filtrarProductosEnVivo()"
                style="width:100%;padding:8px 32px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
-        <% if (buscar) { %>
-        <a href="/inventario-ayb#modal-lista-productos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
-        <% } %>
+        <a href="/inventario-ayb#modal-lista-productos" title="Limpiar búsqueda" onclick="document.getElementById('buscar-productos-input').value='';filtrarProductosEnVivo();" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;<%= buscar ? '' : 'display:none;' %>" id="btn-limpiar-buscar-productos"><i class="ti ti-x"></i></a>
       </form>
 
-      <% if (buscar) { %>
-        <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;">
-          <%= totalListado %> resultado<%= totalListado !== 1 ? 's' : '' %> para "<%= buscar %>"
-        </p>
-      <% } else { %>
-      <!-- Rubros (categorías) — filtra la lista a un solo rubro por vez. -->
-      <div class="solapas-rubros">
+      <p id="contador-resultados-productos" style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;<%= buscar ? '' : 'display:none;' %>">
+        <%= totalListado %> resultado<%= totalListado !== 1 ? 's' : '' %> para "<%= buscar %>"
+      </p>
+
+      <!-- Rubros (categorías) — filtra la lista a un solo rubro por vez. Se
+           esconde mientras se está buscando, igual que antes. -->
+      <div class="solapas-rubros" id="solapas-rubros-productos" style="<%= buscar ? 'display:none;' : '' %>">
         <a href="/inventario-ayb#modal-lista-productos" class="solapa-rubro <%= !rubro ? 'activa' : '' %>">Todos</a>
         <% categoriasDisponibles.forEach(cat => { %>
         <a href="/inventario-ayb?rubro=<%= encodeURIComponent(cat) %>#modal-lista-productos" class="solapa-rubro <%= rubro === cat ? 'activa' : '' %>"><%= cat %></a>
         <% }) %>
       </div>
-      <% } %>
 
+      <div id="contenedor-productos-lista">
       <% if (productos.length === 0) { %>
         <div style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
           <% if (buscar) { %>
@@ -277,6 +276,7 @@
         </table>
       </div>
       <% } %>
+      </div>
     </div>
   </div>
 </div>
@@ -442,6 +442,137 @@ function abrirModalEditar(p) {
   document.getElementById('edit-stock-minimo').value = p.stock_minimo != null ? p.stock_minimo : '';
   document.getElementById('edit-codigo-barras').value = p.codigo_barras || '';
   showModal('modal-editar');
+}
+
+// ── Búsqueda en vivo (mientras se escribe, sin Enter) ───────────────
+// Antes había que tocar Enter para que el buscador de arriba hiciera algo
+// (era un form GET normal) — sin ningún botón "Buscar" a la vista, quedaba
+// pareciendo roto. Ahora, igual que el buscador de Insumos en Costos, cada
+// letra tipeada dispara (con un pequeño debounce) un pedido a
+// /inventario-ayb/productos/buscar-vivo que consulta TODA la tabla —no
+// solo lo que ya está en pantalla— y reemplaza la lista sin recargar la
+// página.
+let _debounceProductos = null;
+let _pedidoProductosEnCurso = 0;
+let CONTENEDOR_PRODUCTOS_ORIGINAL = null;
+
+function escaparHtmlProductos(t) {
+  const div = document.createElement('div');
+  div.textContent = t == null ? '' : String(t);
+  return div.innerHTML;
+}
+
+function filaProductoHtml(p) {
+  const bajo = p.stock_minimo != null && (p.stock_actual || 0) <= p.stock_minimo;
+  const pJson = escaparHtmlProductos(JSON.stringify({
+    id: p.id, nombre: p.nombre, categoria: p.categoria || '', unidad_default: p.unidad_default || '',
+    stock_minimo: p.stock_minimo, codigo_barras: p.codigo_barras || ''
+  })).replace(/&quot;/g, '&#34;');
+  return `
+    <tr>
+      <td style="font-size:0.82rem;font-weight:500;">
+        ${escaparHtmlProductos(p.nombre)}
+        ${p.codigo_barras ? `<span style="display:block;font-size:0.68rem;color:var(--gris-texto);">Cód: ${escaparHtmlProductos(p.codigo_barras)}</span>` : ''}
+      </td>
+      <td style="font-size:0.8rem;color:var(--gris-texto);">${p.categoria ? escaparHtmlProductos(p.categoria) : '—'}</td>
+      <td>
+        <form method="POST" action="/inventario-ayb/producto/${p.id}/ajustar" style="display:flex;gap:4px;align-items:center;">
+          <input type="hidden" name="modo" value="establecer">
+          <input type="hidden" name="volver_lista" value="1">
+          <input type="hidden" name="buscar_actual" value="${escaparHtmlProductos(document.getElementById('buscar-productos-input').value)}">
+          <input type="hidden" name="rubro_actual" value="">
+          <input type="number" name="cantidad" value="${p.stock_actual || 0}" step="0.01" min="0"
+                 style="width:70px;background:${bajo ? '#fef3c7' : 'var(--gris-fondo)'};border:1px solid ${bajo ? '#fde68a' : 'var(--gris-borde)'};border-radius:6px;padding:5px 7px;font-size:0.8rem;">
+          <span style="color:var(--gris-texto);">${p.unidad_default ? escaparHtmlProductos(p.unidad_default) : ''}</span>
+          <button type="submit" class="btn-icono-glass-verde" title="Guardar cantidad"><i class="ti ti-device-floppy"></i></button>
+        </form>
+      </td>
+      <td style="font-size:0.8rem;color:var(--gris-texto);">${p.stock_minimo != null ? p.stock_minimo : '—'}</td>
+      <td style="white-space:nowrap;">
+        <a href="/inventario-ayb/producto/${p.id}/ajustar" class="btn-icono-glass-navy" title="Ver QR / ajuste rápido"><i class="ti ti-qrcode"></i></a>
+      </td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="btn-icono-glass-navy" title="Editar" onclick='abrirModalEditar(${pJson})'><i class="ti ti-pencil"></i></button>
+        <form method="POST" action="/inventario-ayb/producto/${p.id}/eliminar" style="display:inline;" onsubmit="return confirm('¿Dar de baja este producto? No se borra el historial.');">
+          <input type="hidden" name="volver_lista" value="1">
+          <input type="hidden" name="buscar_actual" value="${escaparHtmlProductos(document.getElementById('buscar-productos-input').value)}">
+          <input type="hidden" name="rubro_actual" value="">
+          <button type="submit" class="btn-icono" title="Dar de baja" style="color:#dc2626;"><i class="ti ti-trash"></i></button>
+        </form>
+      </td>
+    </tr>
+  `;
+}
+
+function renderProductosBuscados(productos, texto) {
+  const contenedor = document.getElementById('contenedor-productos-lista');
+  if (productos.length === 0) {
+    contenedor.innerHTML = `<div style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">No se encontró ningún producto para "${escaparHtmlProductos(texto)}".</div>`;
+    return;
+  }
+  contenedor.innerHTML = `
+    <div class="tabla-wrap">
+      <table class="tabla" style="width:100%;">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Stock actual</th>
+            <th>Mínimo</th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${productos.map(filaProductoHtml).join('')}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function filtrarProductosEnVivo() {
+  const input = document.getElementById('buscar-productos-input');
+  const contenedor = document.getElementById('contenedor-productos-lista');
+  if (CONTENEDOR_PRODUCTOS_ORIGINAL === null) CONTENEDOR_PRODUCTOS_ORIGINAL = contenedor.innerHTML;
+
+  const texto = input.value.trim();
+  const solapas = document.getElementById('solapas-rubros-productos');
+  const contador = document.getElementById('contador-resultados-productos');
+  const btnLimpiar = document.getElementById('btn-limpiar-buscar-productos');
+
+  clearTimeout(_debounceProductos);
+
+  if (!texto) {
+    // Buscador vacío: volvemos a mostrar la lista tal como estaba al cargar la página.
+    contenedor.innerHTML = CONTENEDOR_PRODUCTOS_ORIGINAL;
+    if (solapas) solapas.style.display = '';
+    if (contador) contador.style.display = 'none';
+    if (btnLimpiar) btnLimpiar.style.display = 'none';
+    return;
+  }
+
+  if (solapas) solapas.style.display = 'none';
+  if (btnLimpiar) btnLimpiar.style.display = '';
+
+  _debounceProductos = setTimeout(async () => {
+    const idPedido = ++_pedidoProductosEnCurso;
+    let data;
+    try {
+      const resp = await fetch('/inventario-ayb/productos/buscar-vivo?q=' + encodeURIComponent(texto));
+      data = await resp.json();
+    } catch (e) {
+      return; // sin conexión momentánea: dejamos lo último que había en pantalla
+    }
+    // Si mientras esperábamos la respuesta el usuario ya tipeó algo nuevo
+    // (y disparó otro pedido más reciente), descartamos esta respuesta vieja.
+    if (idPedido !== _pedidoProductosEnCurso) return;
+
+    const productos = data.productos || [];
+    if (contador) {
+      contador.style.display = '';
+      contador.textContent = productos.length + ' resultado' + (productos.length !== 1 ? 's' : '') + ' para "' + texto + '"';
+    }
+    renderProductosBuscados(productos, texto);
+  }, 300);
 }
 </script>
 

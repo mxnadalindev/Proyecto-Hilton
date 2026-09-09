@@ -73,7 +73,14 @@ router.post('/login', async (req, res) => {
       req.session.usuario = { id: user.id, nombre: user.nombre, rol: user.rol, email: user.email, departamento: user.departamento, es_admin_general: user.es_admin_general };
       req.session.mostrarBienvenida = true;
       await registrar(req, 'login', user.email);
-      return res.redirect('/inicio');
+      // Si llegó acá porque tocó un link que le pedía loguearse primero
+      // (por ej. una invitación por WhatsApp a un evento de AYB — ver
+      // GET /horarios/invitacion/:token), vuelve a esa misma URL en vez de
+      // siempre ir al menú principal. Se borra de la sesión apenas se usa,
+      // para no volver a redirigir ahí en el próximo login.
+      const volverA = req.session.volverA;
+      delete req.session.volverA;
+      return res.redirect(volverA || '/inicio');
       };
 
     registrarIntento(email, false);

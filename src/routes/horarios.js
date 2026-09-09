@@ -1,9 +1,128 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const db = require('../db/database');
 const { loginRequerido, requiereDepartamento } = require('./middleware');
-router.use(loginRequerido, requiereDepartamento('/horarios'));
 const ExcelJS = require('exceljs');
+
+// ── Invitación por WhatsApp (link único, GET /horarios/invitacion/:token) ──
+// A propósito ANTES del router.use(loginRequerido...) de más abajo: esa
+// versión genérica de "pedir login" redirige a /login sin recordar a dónde
+// tenía que volver, y acá si nos hace falta (el mozo toca el link de
+// WhatsApp sin estar logueado, tiene que volver a ESTE link después de
+// entrar). Por eso estas dos rutas resuelven el login a mano, guardando la
+// URL en session.volverA (auth.js la usa después de un login exitoso), y
+// hacen sus propios chequeos de sesión/departamento en vez de depender del
+// middleware compartido con el resto de /horarios.
+function fmtHorarioEvento(ev) {
+  return ev.hora_hasta ? `de ${ev.hora_desde} a ${ev.hora_hasta}` : `desde las ${ev.hora_desde}`;
+}
+
+router.get('/invitacion/:token', async (req, res) => {
+  if (!req.session.usuario) {
+    req.session.volverA = req.originalUrl;
+    return res.redirect('/login');
+  }
+  try {
+    const inv = await db.get2(`
+      SELECT i.id, i.usuario_id, i.estado, i.vence_en::text,
+             e.id AS evento_id, e.nombre, e.descripcion, e.fecha::text, e.hora_desde, e.hora_hasta
+      FROM eventos_ayb_invitaciones i
+      JOIN eventos_ayb e ON e.id = i.evento_id
+      WHERE i.token = $1
+    `, [req.params.token]);
+
+    if (!inv) {
+      return res.render('horarios_invitacion', { invalido: true, mensaje: 'Ese link de invitación no existe o ya no es válido.', evento: null, estado: null });
+    }
+    if (!inv.usuario_id) {
+      return res.render('horarios_invitacion', { invalido: true, mensaje: 'Este link no corresponde a una invitación de mozo.', evento: null, estado: null });
+    }
+    if (inv.usuario_id !== req.session.usuario.id) {
+      return res.render('horarios_invitacion', { invalido: true, mensaje: 'Esta invitación no es para tu cuenta. Ingresá con el usuario al que se la mandamos.', evento: null, estado: null });
+    }
+
+    // Si ya venció el plazo y todavía figuraba "pendiente", se marca acá
+    // (no hace falta esperar al próximo tick del escalamiento para que la
+    // persona vea el estado correcto si entra justo después de vencida).
+    if (inv.estado === 'pendiente' && inv.vence_en && new Date(inv.vence_en) < new Date()) {
+      await db.run2(`UPDATE eventos_ayb_invitaciones SET estado='vencido' WHERE id=$1`, [inv.id]);
+      inv.estado = 'vencido';
+    }
+
+    const evento = {
+      nombre: inv.nombre, descripcion: inv.descripcion, fecha: inv.fecha,
+      horario: fmtHorarioEvento(inv)
+    };
+
+    if (inv.estado !== 'pendiente') {
+      const mensajes = {
+        aceptado: 'Ya habías confirmado que venís a este evento. ¡Gracias!',
+        rechazado: 'Ya habías avisado que no podés venir a este evento.',
+        vencido: 'El plazo de 24hs para responder esta invitación ya pasó.',
+      };
+      return res.render('horarios_invitacion', { invalido: false, respondido: true, mensaje: mensajes[inv.estado] || null, evento, estado: inv.estado });
+    }
+
+    res.render('horarios_invitacion', { invalido: false, respondido: false, mensaje: null, evento, estado: 'pendiente', token: req.params.token });
+  } catch (e) {
+    console.error('Error abriendo invitación AYB:', e.message);
+    res.render('horarios_invitacion', { invalido: true, mensaje: 'No se pudo cargar la invitación. Probá de nuevo en un momento.', evento: null, estado: null });
+  }
+});
+
+router.post('/invitacion/:token/responder', async (req, res) => {
+  if (!req.session.usuario) {
+    req.session.volverA = req.originalUrl.replace('/responder', '');
+    return res.redirect('/login');
+  }
+  try {
+    const inv = await db.get2(`
+      SELECT i.id, i.usuario_id, i.estado, i.vence_en::text, i.evento_id,
+             e.cupo, e.fecha::text, e.hora_desde, e.hora_hasta
+      FROM eventos_ayb_invitaciones i
+      JOIN eventos_ayb e ON e.id = i.evento_id
+      WHERE i.token = $1
+    `, [req.params.token]);
+
+    if (!inv || inv.usuario_id !== req.session.usuario.id) {
+      return res.redirect(`/horarios/invitacion/${req.params.token}`);
+    }
+    if (inv.estado === 'pendiente' && inv.vence_en && new Date(inv.vence_en) < new Date()) {
+      await db.run2(`UPDATE eventos_ayb_invitaciones SET estado='vencido' WHERE id=$1`, [inv.id]);
+      return res.redirect(`/horarios/invitacion/${req.params.token}`);
+    }
+    if (inv.estado !== 'pendiente') {
+      return res.redirect(`/horarios/invitacion/${req.params.token}`);
+    }
+
+    const accion = req.body.accion === 'aceptar' ? 'aceptar' : 'rechazar';
+
+    if (accion === 'rechazar') {
+      await db.run2(`UPDATE eventos_ayb_invitaciones SET estado='rechazado', respondido_en=NOW() WHERE id=$1`, [inv.id]);
+      return res.redirect(`/horarios/invitacion/${req.params.token}`);
+    }
+
+    // Aceptar: mismo camino que anotarse a mano (POST /eventos/:id/anotarse)
+    // — respeta cupo y deja el mismo aviso (no bloqueante) de descanso.
+    const conteo = await db.get2('SELECT COUNT(*)::int AS n FROM eventos_ayb_inscripciones WHERE evento_id=$1', [inv.evento_id]);
+    if (conteo.n >= inv.cupo) {
+      await db.run2(`UPDATE eventos_ayb_invitaciones SET estado='vencido', respondido_en=NOW() WHERE id=$1`, [inv.id]);
+      return res.redirect(`/horarios/invitacion/${req.params.token}`);
+    }
+    await db.run2(
+      'INSERT INTO eventos_ayb_inscripciones (evento_id, usuario_id) VALUES ($1,$2) ON CONFLICT DO NOTHING',
+      [inv.evento_id, req.session.usuario.id]
+    );
+    await db.run2(`UPDATE eventos_ayb_invitaciones SET estado='aceptado', respondido_en=NOW() WHERE id=$1`, [inv.id]);
+    res.redirect(`/horarios/invitacion/${req.params.token}`);
+  } catch (e) {
+    console.error('Error respondiendo invitación AYB:', e.message);
+    res.redirect(`/horarios/invitacion/${req.params.token}`);
+  }
+});
+
+router.use(loginRequerido, requiereDepartamento('/horarios'));
 
 // .normalize('NFC'): defensivo contra el caso en que estos literales con
 // tilde queden guardados en el archivo con una forma Unicode distinta
@@ -326,7 +445,7 @@ router.get('/eventos', loginRequerido, async (req, res) => {
     const uid = req.session.usuario.id;
 
     const filas = await db.all2(`
-      SELECT e.id, e.nombre, e.fecha::text AS fecha, e.hora_desde, e.hora_hasta, e.cupo, e.oculto,
+      SELECT e.id, e.nombre, e.descripcion, e.fecha::text AS fecha, e.hora_desde, e.hora_hasta, e.cupo, e.oculto,
              COUNT(i.id)::int AS anotados,
              BOOL_OR(i.usuario_id = $1) AS yo_anotado
       FROM eventos_ayb e
@@ -336,14 +455,25 @@ router.get('/eventos', loginRequerido, async (req, res) => {
       ORDER BY e.fecha, e.hora_desde
     `, [uid, mes]);
 
+    // OJO — bug corregido acá: antes esto le devolvía "cupo" y "anotados"
+    // (cuántos mozos hacen falta en total) a CUALQUIER usuario de AYB que
+    // pidiera esta lista, gestor o no. Un mozo común no tiene por qué
+    // enterarse de cuánta gente se está convocando en total para un
+    // evento — solo le corresponde saber que el evento existe, si ya está
+    // anotado, y si ya está cubierto (booleano, no revela el número). El
+    // corte se hace acá, del lado del servidor — no alcanza con ocultarlo
+    // en la pantalla, porque cualquiera podría pedir este JSON directo.
     const eventos = filas
       .filter(f => esGestor || !f.oculto)
-      .map(f => ({
-        id: f.id, nombre: f.nombre, fecha: f.fecha,
-        hora_desde: f.hora_desde, hora_hasta: f.hora_hasta,
-        cupo: f.cupo, anotados: f.anotados, oculto: f.oculto,
-        yo_anotado: !!f.yo_anotado, cubierto: f.anotados >= f.cupo
-      }));
+      .map(f => {
+        const base = {
+          id: f.id, nombre: f.nombre, descripcion: f.descripcion, fecha: f.fecha,
+          hora_desde: f.hora_desde, hora_hasta: f.hora_hasta, oculto: f.oculto,
+          yo_anotado: !!f.yo_anotado, cubierto: f.anotados >= f.cupo
+        };
+        if (esGestor) { base.cupo = f.cupo; base.anotados = f.anotados; }
+        return base;
+      });
 
     res.json({ ok: true, eventos, esGestor });
   } catch (e) {
@@ -391,6 +521,7 @@ router.post('/eventos', loginRequerido, async (req, res) => {
   try {
     if (!puedeGestionarEventosAyb(req)) return res.status(403).json({ ok: false, error: 'No autorizado.' });
     const nombre = String(req.body.nombre || '').trim();
+    const descripcion = req.body.descripcion ? String(req.body.descripcion).trim() : null;
     const fecha = req.body.fecha;
     const hora_desde = String(req.body.hora_desde || '').trim();
     const hora_hasta = req.body.hora_hasta ? String(req.body.hora_hasta).trim() : null;
@@ -399,9 +530,9 @@ router.post('/eventos', loginRequerido, async (req, res) => {
       return res.json({ ok: false, error: 'Faltan datos del evento (nombre, fecha, horario desde y cupo).' });
     }
     const fila = await db.get2(
-      `INSERT INTO eventos_ayb (nombre, fecha, hora_desde, hora_hasta, cupo, creado_por)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
-      [nombre, fecha, hora_desde, hora_hasta, cupo, req.session.usuario.id]
+      `INSERT INTO eventos_ayb (nombre, descripcion, fecha, hora_desde, hora_hasta, cupo, creado_por)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+      [nombre, descripcion, fecha, hora_desde, hora_hasta, cupo, req.session.usuario.id]
     );
     res.json({ ok: true, id: fila.id });
   } catch (e) {
@@ -414,6 +545,7 @@ router.post('/eventos/:id/editar', loginRequerido, async (req, res) => {
   try {
     if (!puedeGestionarEventosAyb(req)) return res.status(403).json({ ok: false, error: 'No autorizado.' });
     const nombre = String(req.body.nombre || '').trim();
+    const descripcion = req.body.descripcion ? String(req.body.descripcion).trim() : null;
     const fecha = req.body.fecha;
     const hora_desde = String(req.body.hora_desde || '').trim();
     const hora_hasta = req.body.hora_hasta ? String(req.body.hora_hasta).trim() : null;
@@ -429,9 +561,9 @@ router.post('/eventos/:id/editar', loginRequerido, async (req, res) => {
       return res.json({ ok: false, error: `Ya hay ${actual.anotados} mozo${actual.anotados !== 1 ? 's' : ''} anotado${actual.anotados !== 1 ? 's' : ''} — el cupo no puede ser menor a eso.` });
     }
     const fila = await db.get2(
-      `UPDATE eventos_ayb SET nombre=$1, fecha=$2, hora_desde=$3, hora_hasta=$4, cupo=$5
-       WHERE id=$6 RETURNING id`,
-      [nombre, fecha, hora_desde, hora_hasta, cupo, req.params.id]
+      `UPDATE eventos_ayb SET nombre=$1, descripcion=$2, fecha=$3, hora_desde=$4, hora_hasta=$5, cupo=$6
+       WHERE id=$7 RETURNING id`,
+      [nombre, descripcion, fecha, hora_desde, hora_hasta, cupo, req.params.id]
     );
     if (!fila) return res.json({ ok: false, error: 'Evento no encontrado.' });
     res.json({ ok: true });
@@ -511,6 +643,38 @@ router.get('/eventos/:id/inscriptos', loginRequerido, async (req, res) => {
     res.json({ ok: true, inscriptos });
   } catch (e) {
     console.error('Error listando inscriptos AYB:', e.message);
+    res.json({ ok: false, error: e.message });
+  }
+});
+
+// Convocatorias mandadas para un evento (tandas de fijo/eventual/consultora,
+// con quién aceptó/rechazó/todavía no respondió) — para que el gestor vea
+// de un vistazo en qué etapa de la cascada está cada evento sin tener que
+// ir a mirar la tabla a mano. Solo gestor, igual que "Ver anotados".
+router.get('/eventos/:id/invitaciones', loginRequerido, async (req, res) => {
+  try {
+    if (!puedeGestionarEventosAyb(req)) return res.status(403).json({ ok: false, error: 'No autorizado.' });
+    const filas = await db.all2(`
+      SELECT i.id, i.tanda, i.estado, i.enviado_en::text, i.vence_en::text, i.respondido_en::text,
+             u.nombre AS mozo_nombre, c.nombre AS consultora_nombre
+      FROM eventos_ayb_invitaciones i
+      LEFT JOIN usuarios u ON u.id = i.usuario_id
+      LEFT JOIN consultoras c ON c.id = i.consultora_id
+      WHERE i.evento_id = $1
+      ORDER BY i.tanda, i.enviado_en
+    `, [req.params.id]);
+    // "Marcadoras" de tandas sin nadie elegible (ver marcarTandaSinElegibles
+    // en escalamientoAyb.js) no tienen mozo ni consultora — se excluyen acá
+    // de la lista que ve el gestor, no aportan nada para mostrarle.
+    const invitaciones = filas.filter(f => f.mozo_nombre || f.consultora_nombre);
+    const tandasEnviadas = [...new Set(filas.map(f => f.tanda))];
+    const tandaActiva = tandasEnviadas.length ? tandasEnviadas[tandasEnviadas.length - 1] : null;
+    res.json({
+      ok: true, invitaciones, tandaActiva,
+      consultorasNotificadas: tandasEnviadas.includes('consultora'),
+    });
+  } catch (e) {
+    console.error('Error listando invitaciones AYB:', e.message);
     res.json({ ok: false, error: e.message });
   }
 });
@@ -971,6 +1135,24 @@ router.post('/reiniciar-semana', loginRequerido, async (req, res) => {
   }
 });
 
+// Botón manual, para el gestor, de "revisar convocatorias ahora" — el
+// escalamiento automático ya corre solo cada pocos minutos (ver
+// src/services/escalamientoAyb.js + el setInterval de server.js), esto es
+// solo para no tener que esperar el próximo tick si alguien quiere
+// forzarlo (y es lo que usan los tests para no tener que esperar horas
+// reales entre tandas).
+router.post('/escalamiento/correr', loginRequerido, async (req, res) => {
+  try {
+    if (!puedeGestionarEventosAyb(req)) return res.status(403).json({ ok: false, error: 'No autorizado.' });
+    const { correrEscalamiento } = require('../services/escalamientoAyb');
+    const resumen = await correrEscalamiento();
+    res.json({ ok: true, resumen });
+  } catch (e) {
+    console.error('Error corriendo escalamiento AYB a mano:', e.message);
+    res.json({ ok: false, error: e.message });
+  }
+});
+
 module.exports = router;
 // Se exportan además (sin cambiar el export por defecto de arriba, que
 // sigue siendo el router de siempre) para poder reusar el mismo cálculo de
@@ -980,3 +1162,13 @@ module.exports = router;
 // Miembro de equipo (como hace habitualmente) nunca lo veía.
 module.exports.alertasEventualesAyb = alertasEventualesAyb;
 module.exports.puedeGestionarEventosAyb = puedeGestionarEventosAyb;
+// Reglas de descanso/turno de AYB (12hs de descanso, 12hs máx. por turno,
+// bolsa de 200hs mensual para Eventuales) — se exportan para que el motor
+// de escalamiento (src/services/escalamientoAyb.js) las reuse tal cual en
+// vez de reimplementarlas: una invitación automática nunca se manda si de
+// entrada ya rompería alguna de estas reglas.
+module.exports.rangoEvento = rangoEvento;
+module.exports.chequearDescanso12hs = chequearDescanso12hs;
+module.exports.HORAS_DESCANSO_MIN = HORAS_DESCANSO_MIN;
+module.exports.HORAS_MAX_TURNO = HORAS_MAX_TURNO;
+module.exports.BOLSA_HORAS_MENSUAL_EVENTUAL = BOLSA_HORAS_MENSUAL_EVENTUAL;

@@ -291,6 +291,24 @@ router.get('/', async (req, res) => {
   });
 });
 
+// ── Búsqueda en vivo (mientras se escribe, sin Enter) ───────────────
+// Mismo patrón que /costos/insumos/buscar-vivo: la búsqueda con Enter de
+// arriba ya andaba bien contra la base, pero no tenía ningún disparador
+// mientras el usuario escribía — había que acordarse de tocar Enter, y sin
+// ningún botón de "Buscar" a la vista quedaba pareciendo roto ("pongo y no
+// busca"). Esta ruta consulta TODA la tabla igual que la de arriba, solo
+// que devuelve JSON en vez de renderizar la página entera, para que el
+// front la dispare solo con un debounce corto.
+router.get('/productos/buscar-vivo', async (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (!q) return res.json({ productos: [] });
+  const productos = await db.all2(
+    `SELECT * FROM productos_ayb WHERE activo=true AND (nombre ILIKE $1 OR categoria ILIKE $1 OR codigo_barras ILIKE $1) ORDER BY categoria NULLS LAST, nombre LIMIT 200`,
+    [`%${q}%`]
+  );
+  res.json({ productos });
+});
+
 // ── Alta manual de un producto ─────────────────────────────────────
 router.post('/producto/nuevo', async (req, res) => {
   const nombre = (req.body.nombre || '').trim();

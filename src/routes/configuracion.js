@@ -162,9 +162,41 @@ router.get('/', loginRequerido, soloAdmin, async (req, res) => {
     console.error('Error cargando configuración del sistema:', e.message);
   }
 
+  // Consultoras y "WhatsApp pendientes" son cosas de AYB — se muestran acá
+  // (en vez de una pantalla nueva aparte) porque Configuración ya es el
+  // lugar de este portal para pantallas de administración transversales
+  // (ver el comentario de arriba de todo el archivo), y porque un admin
+  // general también tiene que poder verlas aunque no esté "en" AYB.
+  let consultoras = [];
+  let whatsappPendientes = [];
+  const verAyb = general || miDepto === 'ayb';
+  if (verAyb) {
+    try {
+      consultoras = await db.all2(`SELECT id, nombre, celular, activo, creado_en::text AS creado_en FROM consultoras ORDER BY nombre`);
+    } catch (e) {
+      console.error('Error cargando consultoras:', e.message);
+    }
+    try {
+      // Se listan los pendientes (enviado=false) más recientes primero —
+      // no tiene sentido bajar TODO el historial acá, solo lo que el
+      // encargado todavía tiene que mandar a mano.
+      whatsappPendientes = await db.all2(`
+        SELECT w.id, w.destinatario_celular, w.mensaje, w.creado_en::text AS creado_en,
+               i.tanda, e.nombre AS evento_nombre
+        FROM whatsapp_outbox w
+        LEFT JOIN eventos_ayb_invitaciones i ON i.id = w.invitacion_id
+        LEFT JOIN eventos_ayb e ON e.id = i.evento_id
+        WHERE w.enviado = false
+        ORDER BY w.creado_en DESC
+      `);
+    } catch (e) {
+      console.error('Error cargando WhatsApp pendientes:', e.message);
+    }
+  }
+
   const msg = req.query.msg || null;
   const backups = getBackups();
-  res.render('configuracion', { usuarios, DEPTOS, SECTORES, msg, path: 'configuracion', backups, auditoria, config, general, miDepto });
+  res.render('configuracion', { usuarios, DEPTOS, SECTORES, msg, path: 'configuracion', backups, auditoria, config, general, miDepto, verAyb, consultoras, whatsappPendientes });
 });
 
 // ── Usuarios ──────────────────────────────────────────
@@ -319,6 +351,66 @@ router.post('/seguridad', loginRequerido, soloAdmin, async (req, res) => {
   }
   await registrar(req, 'cambio_seguridad', JSON.stringify(valores));
   res.redirect('/configuracion?msg=seguridad_actualizada&tab=seguridad');
+});
+
+// ── Consultoras (agencias de personal eventual de AYB) ───────────────
+// Cualquier admin (general o de AYB) puede mantenerlas — no se restringe a
+// soloAdminGeneral porque, a diferencia de reasignar departamentos, esto
+// es una lista propia del día a día de AYB, igual que Backup/Seguridad
+// quedan disponibles para cualquier admin (ver comentario en GET '/').
+function puedeGestionarAyb(req) {
+  const rol = (req.session.usuario?.rol || '').toLowerCase();
+  if (rol !== 'admin') return false;
+  return esGeneral(req.session.usuario) || (req.session.usuario.departamento || '').toLowerCase() === 'ayb';
+}
+
+router.post('/consultoras', loginRequerido, soloAdmin, async (req, res) => {
+  if (!puedeGestionarAyb(req)) return res.redirect('/configuracion');
+  const nombre = String(req.body.nombre || '').trim();
+  const celular = String(req.body.celular || '').trim();
+  if (!nombre || !celular) {
+    return res.redirect('/configuracion?msg=' + encodeURIComponent('Completá nombre y celular de la consultora.') + '&tab=consultoras');
+  }
+  await db.run2('INSERT INTO consultoras (nombre, celular) VALUES ($1,$2)', [nombre, celular]);
+  await registrar(req, 'consultora_creada', nombre);
+  res.redirect('/configuracion?msg=consultora_creada&tab=consultoras');
+});
+
+router.post('/consultoras/:id/editar', loginRequerido, soloAdmin, async (req, res) => {
+  if (!puedeGestionarAyb(req)) return res.redirect('/configuracion');
+  const nombre = String(req.body.nombre || '').trim();
+  const celular = String(req.body.celular || '').trim();
+  if (!nombre || !celular) {
+    return res.redirect('/configuracion?msg=' + encodeURIComponent('Completá nombre y celular de la consultora.') + '&tab=consultoras');
+  }
+  await db.run2('UPDATE consultoras SET nombre=$1, celular=$2 WHERE id=$3', [nombre, celular, req.params.id]);
+  await registrar(req, 'consultora_editada', nombre);
+  res.redirect('/configuracion?msg=consultora_editada&tab=consultoras');
+});
+
+router.post('/consultoras/:id/activar', loginRequerido, soloAdmin, async (req, res) => {
+  if (!puedeGestionarAyb(req)) return res.redirect('/configuracion');
+  await db.run2('UPDATE consultoras SET activo=true WHERE id=$1', [req.params.id]);
+  await registrar(req, 'consultora_activada', req.params.id);
+  res.redirect('/configuracion?msg=consultora_activada&tab=consultoras');
+});
+
+router.post('/consultoras/:id/desactivar', loginRequerido, soloAdmin, async (req, res) => {
+  if (!puedeGestionarAyb(req)) return res.redirect('/configuracion');
+  await db.run2('UPDATE consultoras SET activo=false WHERE id=$1', [req.params.id]);
+  await registrar(req, 'consultora_desactivada', req.params.id);
+  res.redirect('/configuracion?msg=consultora_desactivada&tab=consultoras');
+});
+
+// ── WhatsApp pendientes (buzón de salida — ver src/services/whatsapp.js) ──
+// Todavía no hay una cuenta de WhatsApp Business conectada: cada mensaje
+// que el sistema "manda" queda cargado acá hasta que un humano lo mande de
+// verdad con el link wa.me (mismo patrón ya usado en Horarios de AYB) y lo
+// marque como enviado.
+router.post('/whatsapp-outbox/:id/marcar-enviado', loginRequerido, soloAdmin, async (req, res) => {
+  if (!puedeGestionarAyb(req)) return res.redirect('/configuracion');
+  await db.run2('UPDATE whatsapp_outbox SET enviado=true, enviado_en=NOW() WHERE id=$1', [req.params.id]);
+  res.redirect('/configuracion?tab=whatsapp');
 });
 
 module.exports = router;

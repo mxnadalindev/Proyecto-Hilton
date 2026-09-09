@@ -74,6 +74,8 @@
         backup_eliminado:'Backup eliminado.', backup_restaurado:'Base de datos restaurada.',
         backup_error:'Error al crear el backup.', backup_no_encontrado:'Backup no encontrado.',
         seguridad_actualizada:'Configuración de seguridad guardada.',
+        consultora_creada:'Consultora agregada.', consultora_editada:'Consultora actualizada.',
+        consultora_activada:'Consultora activada.', consultora_desactivada:'Consultora desactivada.',
       };
       const esError = ['backup_error','backup_no_encontrado'].includes(msg);
     %>
@@ -89,7 +91,9 @@
     <% } %>
 
     <!-- Tabs -->
-    <% const tabList = [{id:'usuarios',label:'Usuarios'},{id:'backup',label:'Backup BD'},{id:'auditoria',label:'Auditoría'},{id:'seguridad',label:'Seguridad'},{id:'notificaciones',label:'Notificaciones'},{id:'importacion',label:'Importación'}]; %>
+    <% const tabList = [{id:'usuarios',label:'Usuarios'},{id:'backup',label:'Backup BD'},{id:'auditoria',label:'Auditoría'},{id:'seguridad',label:'Seguridad'}]; %>
+    <% if (verAyb) { tabList.push({id:'consultoras',label:'Consultoras'}, {id:'whatsapp',label:'WhatsApp pendientes'}); } %>
+    <% tabList.push({id:'notificaciones',label:'Notificaciones'}, {id:'importacion',label:'Importación'}); %>
     <% if (tabList.length > 1) { %>
     <div style="display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--gris-borde);overflow-x:auto;">
       <% tabList.forEach((t,i) => { %>
@@ -267,6 +271,94 @@
       </div>
     </div>
 
+    <% if (verAyb) { %>
+    <!-- TAB: Consultoras -->
+    <div id="tab-content-consultoras" style="display:none;">
+      <div class="cfg-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:10px;">
+          <p class="cfg-titulo"><i class="ti ti-building-store"></i> Consultoras de personal eventual</p>
+        </div>
+        <p style="font-size:0.78rem;color:var(--gris-texto);margin:-2px 0 20px;">Se avisa por WhatsApp a las consultoras activas cuando un evento de AYB sigue sin cubrirse 24hs después de convocar a los mozos Eventuales.</p>
+
+        <form method="POST" action="/configuracion/consultoras" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--gris-borde);">
+          <div class="cfg-field" style="flex:1;min-width:160px;">
+            <label>Nombre</label>
+            <input type="text" name="nombre" required class="cfg-input" placeholder="Ej: Agencia Events SRL">
+          </div>
+          <div class="cfg-field" style="flex:1;min-width:160px;">
+            <label>Celular (WhatsApp)</label>
+            <input type="text" name="celular" required class="cfg-input" placeholder="Ej: 5491122334455">
+          </div>
+          <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> Agregar</button>
+        </form>
+
+        <% if (!consultoras.length) { %>
+        <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;padding:16px 0;">No hay consultoras cargadas todavía.</p>
+        <% } else { %>
+        <div style="overflow-x:auto;"><table class="tabla" style="width:100%;"><thead><tr><th>Nombre</th><th>Celular</th><th>Estado</th><th></th></tr></thead><tbody>
+          <% consultoras.forEach(c => { %>
+          <tr style="border-bottom:1px solid var(--gris-borde);">
+            <td>
+              <form method="POST" action="/configuracion/consultoras/<%= c.id %>/editar" style="display:flex;gap:6px;align-items:center;margin:0;">
+                <input type="text" name="nombre" value="<%= c.nombre %>" style="border:1px solid transparent;background:none;font-size:0.82rem;font-weight:500;padding:4px 6px;border-radius:6px;font-family:var(--font-sans);color:var(--negro);width:170px;" onfocus="this.style.borderColor='var(--gris-borde)';this.style.background='var(--gris-fondo)';">
+                <input type="text" name="celular" value="<%= c.celular %>" style="border:1px solid transparent;background:none;font-size:0.78rem;padding:4px 6px;border-radius:6px;font-family:var(--font-sans);color:var(--gris-texto);width:140px;" onfocus="this.style.borderColor='var(--gris-borde)';this.style.background='var(--gris-fondo)';">
+                <button type="submit" title="Guardar" class="btn-icono"><i class="ti ti-device-floppy"></i></button>
+              </form>
+            </td>
+            <td style="font-size:0.78rem;color:var(--gris-texto);"><%= c.celular %></td>
+            <td><span style="font-size:0.68rem;font-weight:600;background:<%= c.activo?'#f0fdf4':'#fef2f2' %>;color:<%= c.activo?'#16a34a':'#dc2626' %>;border:1px solid <%= c.activo?'#bbf7d0':'#fecaca' %>;padding:2px 8px;border-radius:20px;"><%= c.activo?'Activa':'Inactiva' %></span></td>
+            <td><div style="display:flex;gap:4px;justify-content:flex-end;">
+              <% if (c.activo) { %>
+              <form method="POST" action="/configuracion/consultoras/<%= c.id %>/desactivar" style="margin:0;"><button type="submit" title="Desactivar" class="btn-icono"><i class="ti ti-building-off"></i></button></form>
+              <% } else { %>
+              <form method="POST" action="/configuracion/consultoras/<%= c.id %>/activar" style="margin:0;"><button type="submit" title="Activar" class="btn-icono btn-icono-verde"><i class="ti ti-check"></i></button></form>
+              <% } %>
+            </div></td>
+          </tr>
+          <% }) %>
+        </tbody></table></div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- TAB: WhatsApp pendientes -->
+    <div id="tab-content-whatsapp" style="display:none;">
+      <div class="cfg-card">
+        <p class="cfg-titulo" style="margin-bottom:8px;"><i class="ti ti-brand-whatsapp"></i> WhatsApp pendientes de enviar</p>
+        <p style="font-size:0.78rem;color:var(--gris-texto);margin:0 0 20px;">Todavía no hay una cuenta de WhatsApp Business conectada — estos mensajes los arma el sistema solo (convocatorias de eventos de AYB), pero hay que mandarlos a mano tocando el link. Al volver de WhatsApp, marcalo como enviado para que no quede colgado acá.</p>
+        <% if (!whatsappPendientes.length) { %>
+        <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;padding:16px 0;">No hay mensajes pendientes.</p>
+        <% } else { %>
+        <% whatsappPendientes.forEach(w => { %>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 4px;border-bottom:1px solid var(--gris-borde);">
+          <div style="flex:1;min-width:220px;">
+            <div style="font-size:0.75rem;color:var(--gris-texto);margin-bottom:4px;">
+              <%= w.destinatario_celular || 'Sin celular cargado' %>
+              <% if (w.tanda) { %> · tanda <%= w.tanda %><% } %>
+              <% if (w.evento_nombre) { %> · <%= w.evento_nombre %><% } %>
+              · <%= w.creado_en ? w.creado_en.slice(0,16).replace('T',' ') : '' %>
+            </div>
+            <div style="font-size:0.82rem;color:var(--negro);white-space:pre-wrap;"><%= w.mensaje %></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+            <% if (w.destinatario_celular) { %>
+            <a href="https://wa.me/<%= w.destinatario_celular.replace(/\D/g,'') %>?text=<%= encodeURIComponent(w.mensaje) %>" target="_blank" class="btn-whatsapp-cfg" onclick="marcarWhatsappEnviado(<%= w.id %>)" style="display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-family:var(--font-sans);font-size:0.72rem;font-weight:600;text-decoration:none;cursor:pointer;white-space:nowrap;">
+              <i class="ti ti-brand-whatsapp"></i> Enviar
+            </a>
+            <% } else { %>
+            <span style="font-size:0.7rem;color:var(--gris-texto);">Sin celular</span>
+            <% } %>
+            <form method="POST" action="/configuracion/whatsapp-outbox/<%= w.id %>/marcar-enviado" id="form-wa-<%= w.id %>" style="margin:0;">
+              <button type="submit" style="background:none;border:none;color:var(--gris-texto);text-decoration:underline;cursor:pointer;font-size:0.68rem;">Marcar enviado</button>
+            </form>
+          </div>
+        </div>
+        <% }) %>
+        <% } %>
+      </div>
+    </div>
+    <% } %>
+
     <!-- TAB: Notificaciones (próximamente) -->
     <div id="tab-content-notificaciones" style="display:none;">
       <div class="cfg-card" style="text-align:center;padding:48px;">
@@ -325,6 +417,20 @@ function mostrarTab(tab) {
 // Abrir tab según query param
 const urlTab = new URLSearchParams(window.location.search).get('tab');
 if (urlTab) mostrarTab(urlTab);
+
+// Tocar "Enviar" abre WhatsApp con el mensaje ya escrito (target=_blank,
+// misma idea que el resto del sitio) Y, en simultáneo, manda el POST que
+// lo saca de "pendientes" — así el encargado no tiene que volver acá a
+// tocar "Marcar enviado" a mano después de cada uno (queda ese botón
+// aparte solo por si mandó el mensaje de otra forma, o se arrepiente de
+// haber tocado "Enviar" sin llegar a mandarlo).
+function marcarWhatsappEnviado(id) {
+  const form = document.getElementById('form-wa-' + id);
+  if (form) fetch(form.action, { method: 'POST' }).then(() => {
+    const fila = form.closest('div[style*="border-bottom"]');
+    if (fila) fila.style.opacity = '0.4';
+  }).catch(() => {});
+}
 
 function buscarUsuario() {
   const q = document.getElementById('buscadorUsuarios').value.toLowerCase();

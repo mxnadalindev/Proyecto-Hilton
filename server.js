@@ -136,6 +136,13 @@ app.use('/croutons', require('./src/routes/croutons'));  // ← NUEVO — AYB: c
 app.use('/inventario-ayb', require('./src/routes/inventarioAyb'));  // ← NUEVO — AYB: stock de barra, separado de Croutons
 app.use('/asistente', require('./src/routes/asistente'));
 
+// Escalamiento automático de convocatorias de AYB (fijos → eventuales →
+// consultoras) — ver src/services/escalamientoAyb.js. Arranca una sola vez
+// acá, no en el router de horarios, para que no dependa de que alguien
+// entre a esa pantalla: tiene que revisar los eventos igual aunque nadie
+// esté mirando el portal en ese momento.
+require('./src/services/escalamientoAyb').iniciarEscalamientoAyb(5);
+
 // 404 — ruta que no matcheó ninguna de las de arriba
 app.use((req, res) => {
   res.status(404).render('error', {

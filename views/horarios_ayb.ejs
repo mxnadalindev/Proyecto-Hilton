@@ -73,6 +73,18 @@
       </div>
     </div>
 
+    <!-- Modal: convocatorias mandadas para un evento (tandas fijo/eventual/consultora) -->
+    <div id="modal-convocatorias" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+      <div style="background:var(--blanco);border-radius:16px;padding:28px;width:min(520px,92vw);max-height:80vh;display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <h2 id="conv-titulo" style="font-size:1.1rem;font-weight:600;color:var(--negro);">Convocatorias</h2>
+          <button type="button" onclick="hideModal('modal-convocatorias')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--gris-texto);">&times;</button>
+        </div>
+        <p id="conv-resumen" style="font-size:0.78rem;color:var(--gris-texto);margin-bottom:14px;"></p>
+        <div id="conv-lista" style="overflow-y:auto;flex:1;"></div>
+      </div>
+    </div>
+
     <!-- Modal: Mis próximos compromisos -->
     <div id="modal-mis-compromisos" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
       <div style="background:var(--blanco);border-radius:16px;padding:28px;width:min(480px,92vw);max-height:80vh;display:flex;flex-direction:column;">
@@ -174,6 +186,10 @@
     <div class="field" style="margin-bottom:14px;">
       <label style="display:block;font-size:0.72rem;font-weight:500;color:var(--negro);margin-bottom:6px;">Nombre del evento</label>
       <input type="text" id="ev-nombre" placeholder="Ej: Casamiento García" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label style="display:block;font-size:0.72rem;font-weight:500;color:var(--negro);margin-bottom:6px;">Descripción (opcional)</label>
+      <textarea id="ev-descripcion" placeholder="Detalle que le sirva al mozo — nunca se muestra el cupo, solo esto." rows="2" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;resize:vertical;"></textarea>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
       <div class="field">
@@ -541,6 +557,7 @@ function aplicarModoVista() {
 function abrirCargarEvento(fechaStr) {
   document.getElementById('ev-id').value = '';
   document.getElementById('ev-nombre').value = '';
+  document.getElementById('ev-descripcion').value = '';
   document.getElementById('ev-fecha').value = fechaStr || '';
   document.getElementById('ev-hora-desde').value = '';
   document.getElementById('ev-hora-hasta').value = '';
@@ -557,6 +574,7 @@ function abrirEditarEvento(id) {
   if (!ev) return;
   document.getElementById('ev-id').value = ev.id;
   document.getElementById('ev-nombre').value = ev.nombre;
+  document.getElementById('ev-descripcion').value = ev.descripcion || '';
   document.getElementById('ev-fecha').value = ev.fecha;
   document.getElementById('ev-hora-desde').value = ev.hora_desde || '';
   document.getElementById('ev-hora-hasta').value = ev.hora_hasta || '';
@@ -703,7 +721,11 @@ function renderEventos() {
   }
   el.innerHTML = eventosMes.map(ev => {
     const horario = ev.hora_hasta ? `${ev.hora_desde} a ${ev.hora_hasta}` : `desde las ${ev.hora_desde}`;
-    const cupoTxt = `${ev.anotados}/${ev.cupo}`;
+    // El cupo total y cuántos ya se anotaron NUNCA se le muestran a un
+    // mozo (el servidor ni siquiera se los manda — ver GET /horarios/eventos
+    // en horarios.js) — solo el gestor ve ese número acá.
+    const cupoTxt = esGestorEventos ? `${ev.anotados}/${ev.cupo} mozos` : '';
+    const descTxt = ev.descripcion ? `<div style="font-size:0.78rem;color:var(--gris-texto);margin-top:2px;font-style:italic;">${ev.descripcion}</div>` : '';
     let badge = '';
     if (!esGestorEventos && ev.yo_anotado) {
       badge = `<span style="font-size:0.65rem;font-weight:700;background:#16a34a;color:#fff;padding:3px 10px;border-radius:20px;"><i class="ti ti-check"></i> Estás anotado</span>`;
@@ -730,6 +752,9 @@ function renderEventos() {
         <button type="button" onclick="abrirInscriptos(${ev.id}, '${ev.nombre.replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;padding:7px 12px;font-size:0.75rem;color:var(--gris-texto);cursor:pointer;">
           Ver anotados (${ev.anotados})
         </button>
+        <button type="button" onclick="abrirConvocatorias(${ev.id}, '${ev.nombre.replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;padding:7px 12px;font-size:0.75rem;color:var(--gris-texto);cursor:pointer;">
+          Convocatorias
+        </button>
         <button type="button" onclick="abrirEditarEvento(${ev.id})" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;padding:7px 12px;font-size:0.75rem;color:var(--gris-texto);cursor:pointer;">
           Modificar
         </button>
@@ -744,7 +769,8 @@ function renderEventos() {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 4px;border-bottom:1px solid var(--gris-borde);">
         <div>
           <div style="font-size:0.9rem;font-weight:600;color:var(--negro);">${ev.nombre} ${badge}</div>
-          <div style="font-size:0.78rem;color:var(--gris-texto);margin-top:2px;">${fmtFechaCorta(ev.fecha)} · ${horario} · ${cupoTxt} mozos</div>
+          <div style="font-size:0.78rem;color:var(--gris-texto);margin-top:2px;">${fmtFechaCorta(ev.fecha)} · ${horario}${cupoTxt ? ' · ' + cupoTxt : ''}</div>
+          ${descTxt}
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           ${accionMozo}${accionesGestor}
@@ -756,6 +782,7 @@ function renderEventos() {
 async function guardarEvento() {
   const id = document.getElementById('ev-id').value;
   const nombre = document.getElementById('ev-nombre').value.trim();
+  const descripcion = document.getElementById('ev-descripcion').value.trim();
   const fecha = document.getElementById('ev-fecha').value;
   const hora_desde = document.getElementById('ev-hora-desde').value;
   const hora_hasta = document.getElementById('ev-hora-hasta').value;
@@ -766,7 +793,7 @@ async function guardarEvento() {
     const resp = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `nombre=${encodeURIComponent(nombre)}&fecha=${fecha}&hora_desde=${encodeURIComponent(hora_desde)}&hora_hasta=${encodeURIComponent(hora_hasta)}&cupo=${encodeURIComponent(cupo)}`
+      body: `nombre=${encodeURIComponent(nombre)}&descripcion=${encodeURIComponent(descripcion)}&fecha=${fecha}&hora_desde=${encodeURIComponent(hora_desde)}&hora_hasta=${encodeURIComponent(hora_hasta)}&cupo=${encodeURIComponent(cupo)}`
     });
     const data = await resp.json();
     if (!data.ok) { alert(data.error || 'No se pudo guardar el evento.'); return; }
@@ -832,6 +859,49 @@ async function marcarAsistencia(usuarioId, valor) {
     body: `asistio=${valor}`
   });
   await cargarInscriptos();
+}
+
+// ── Convocatorias (tandas de fijo/eventual/consultora mandadas para un
+// evento) — le muestra al gestor en qué etapa de la cascada está cada
+// evento y quién aceptó/rechazó/todavía no respondió, sin tener que ir a
+// mirar la tabla a mano. Ver GET /horarios/eventos/:id/invitaciones.
+const NOMBRES_TANDA = { fijo: 'Fijos', eventual: 'Eventuales', consultora: 'Consultoras' };
+const NOMBRES_ESTADO = { pendiente: 'Sin responder', aceptado: 'Aceptó', rechazado: 'Rechazó', vencido: 'Venció sin responder', notificado: 'Avisada' };
+const COLORES_ESTADO = { pendiente: '#b45309', aceptado: '#16a34a', rechazado: '#dc2626', vencido: 'var(--gris-texto)', notificado: '#1d4ed8' };
+
+async function abrirConvocatorias(eventoId, nombreEvento) {
+  document.getElementById('conv-titulo').textContent = 'Convocatorias — ' + nombreEvento;
+  document.getElementById('conv-resumen').textContent = '';
+  document.getElementById('conv-lista').innerHTML = '<p style="font-size:0.8rem;color:var(--gris-texto);padding:8px 0;">Cargando...</p>';
+  showModal('modal-convocatorias');
+  try {
+    const resp = await fetch(`/horarios/eventos/${eventoId}/invitaciones`);
+    const data = await resp.json();
+    if (!data.ok) { document.getElementById('conv-lista').innerHTML = '<p style="font-size:0.8rem;color:#dc2626;">No se pudo cargar.</p>'; return; }
+
+    if (!data.invitaciones.length) {
+      document.getElementById('conv-resumen').textContent = 'Todavía no se mandó ninguna convocatoria automática para este evento.';
+      document.getElementById('conv-lista').innerHTML = '';
+      return;
+    }
+
+    document.getElementById('conv-resumen').textContent = `Tanda activa: ${NOMBRES_TANDA[data.tandaActiva] || data.tandaActiva}.${data.consultorasNotificadas ? ' Ya se avisó a las consultoras.' : ''}`;
+
+    document.getElementById('conv-lista').innerHTML = data.invitaciones.map(inv => {
+      const nombre = inv.mozo_nombre || inv.consultora_nombre || '—';
+      const color = COLORES_ESTADO[inv.estado] || 'var(--gris-texto)';
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 4px;border-bottom:1px solid var(--gris-borde);">
+          <div>
+            <div style="font-size:0.85rem;font-weight:600;color:var(--negro);">${nombre}</div>
+            <div style="font-size:0.7rem;color:var(--gris-texto);margin-top:2px;">Tanda ${NOMBRES_TANDA[inv.tanda] || inv.tanda}</div>
+          </div>
+          <span style="font-size:0.7rem;font-weight:700;color:${color};">${NOMBRES_ESTADO[inv.estado] || inv.estado}</span>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    document.getElementById('conv-lista').innerHTML = '<p style="font-size:0.8rem;color:#dc2626;">No se pudo cargar.</p>';
+  }
 }
 
 async function ocultarEvento(id, oculto) {

@@ -619,6 +619,73 @@ const init = async () => {
   `);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_historial_precios_ayb_producto ON historial_precios_ayb (producto_id, fecha DESC)`);
 
+  // eventos_ayb.descripcion: texto libre opcional del evento. A diferencia
+  // de cupo/anotados (que nunca se le muestran al mozo — ver el fix del
+  // bug en horarios.js), esto SÍ se le muestra: le da contexto de qué es
+  // el evento sin revelar cuánta gente hace falta en total.
+  await pool.query(`ALTER TABLE eventos_ayb ADD COLUMN IF NOT EXISTS descripcion TEXT`);
+
+  // consultoras: agencias de personal eventual externas al hotel, que se
+  // avisan por WhatsApp cuando un evento sigue sin cubrirse después de las
+  // dos tandas internas (fijos y eventuales). Las carga y mantiene el
+  // propio encargado desde Configuración — no hay ninguna precargada acá.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS consultoras (
+      id SERIAL PRIMARY KEY,
+      nombre TEXT NOT NULL,
+      celular TEXT NOT NULL,
+      activo BOOLEAN NOT NULL DEFAULT true,
+      creado_en TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  // eventos_ayb_invitaciones: cada convocatoria mandada para cubrir el
+  // cupo de un evento — una fila por mozo invitado (tanda 'fijo' o
+  // 'eventual', con "token" único para el link de WhatsApp con el que
+  // responde Aceptar/Rechazar sin tener que textear de vuelta) o una fila
+  // por consultora avisada (tanda 'consultora', sin usuario_id/token — una
+  // agencia no acepta/rechaza desde el portal, solo se la notifica y su
+  // estado queda directamente en 'notificado'). "vence_en" es
+  // enviado_en + 24hs: pasado ese plazo sin respuesta, la escalada avanza
+  // a la siguiente tanda (ver src/services/escalamientoAyb.js).
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS eventos_ayb_invitaciones (
+      id SERIAL PRIMARY KEY,
+      evento_id INTEGER NOT NULL REFERENCES eventos_ayb(id) ON DELETE CASCADE,
+      usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+      consultora_id INTEGER REFERENCES consultoras(id) ON DELETE CASCADE,
+      tanda TEXT NOT NULL,
+      token TEXT UNIQUE,
+      estado TEXT NOT NULL DEFAULT 'pendiente',
+      enviado_en TIMESTAMP DEFAULT NOW(),
+      vence_en TIMESTAMP,
+      respondido_en TIMESTAMP
+    )
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_eventos_ayb_invitaciones_evento ON eventos_ayb_invitaciones (evento_id, tanda)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_eventos_ayb_invitaciones_token ON eventos_ayb_invitaciones (token)`);
+
+  // whatsapp_outbox: "buzón de salida" de WhatsApp. Todavía no hay una
+  // cuenta de WhatsApp Business conectada (Maxi la está gestionando), así
+  // que enviarWhatsApp() (ver src/services/whatsapp.js) por ahora solo dev
+  // deja el mensaje acá en vez de mandarlo de verdad — el encargado lo
+  // manda a mano con el link wa.me de cada fila (mismo patrón que ya se
+  // usa en Horarios de AYB) hasta que haya una API real conectada. El día
+  // que la haya, alcanza con cambiar SOLO el adentro de enviarWhatsApp():
+  // nadie que la llama en el resto del código necesita cambiar nada.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS whatsapp_outbox (
+      id SERIAL PRIMARY KEY,
+      destinatario_celular TEXT,
+      mensaje TEXT NOT NULL,
+      invitacion_id INTEGER REFERENCES eventos_ayb_invitaciones(id) ON DELETE CASCADE,
+      enviado BOOLEAN NOT NULL DEFAULT false,
+      creado_en TIMESTAMP DEFAULT NOW(),
+      enviado_en TIMESTAMP
+    )
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_whatsapp_outbox_pendientes ON whatsapp_outbox (enviado, creado_en)`);
+
   // Admin por defecto
   const admin = await db.get2(
     "SELECT id FROM usuarios WHERE email = $1", ['admin@hilton.com']

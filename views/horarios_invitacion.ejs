@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invitación a evento — Hilton</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"></noscript>
+</head>
+<body>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--gris-fondo);padding:16px;">
+  <div style="background:var(--blanco);border-radius:16px;padding:40px;max-width:480px;width:100%;text-align:center;box-shadow:var(--sombra-md);">
+
+    <% if (invalido) { %>
+      <div style="width:64px;height:64px;background:#fef2f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:#dc2626;">
+        <i class="ti ti-mail-off" aria-hidden="true"></i>
+      </div>
+      <h1 style="font-family:var(--font-serif);font-size:1.5rem;font-weight:400;color:var(--negro);margin-bottom:12px;">Invitación no disponible</h1>
+      <p style="font-size:0.85rem;color:var(--gris-texto);line-height:1.6;margin-bottom:28px;"><%= mensaje %></p>
+      <a href="/inicio" class="btn-primary" style="display:inline-flex;"><i class="ti ti-arrow-left"></i> Ir al menú principal</a>
+
+    <% } else { %>
+
+      <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--azul);margin:0 0 8px;">Invitación a evento de AYB</p>
+      <h1 style="font-family:var(--font-serif);font-size:1.6rem;font-weight:400;color:var(--negro);margin-bottom:6px;"><%= evento.nombre %></h1>
+      <p style="font-size:0.9rem;color:var(--gris-texto);margin-bottom:4px;"><%= evento.fecha %> · <%= evento.horario %></p>
+      <% if (evento.descripcion) { %>
+        <p style="font-size:0.85rem;color:var(--negro);background:var(--gris-fondo);border-radius:10px;padding:14px 16px;margin:16px 0;text-align:left;line-height:1.5;"><%= evento.descripcion %></p>
+      <% } %>
+
+      <% if (respondido) { %>
+        <% const colores = { aceptado: '#16a34a', rechazado: '#dc2626', vencido: '#b45309' }; %>
+        <% const iconos = { aceptado: 'ti-check', rechazado: 'ti-x', vencido: 'ti-clock-x' }; %>
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--gris-fondo);display:flex;align-items:center;justify-content:center;margin:20px auto 14px;font-size:24px;color:<%= colores[estado] || 'var(--gris-texto)' %>;">
+          <i class="ti <%= iconos[estado] || 'ti-info-circle' %>"></i>
+        </div>
+        <p style="font-size:0.88rem;color:var(--negro);margin-bottom:28px;line-height:1.5;"><%= mensaje %></p>
+        <a href="/inicio" class="btn-secondary" style="display:inline-flex;"><i class="ti ti-arrow-left"></i> Ir al menú principal</a>
+      <% } else { %>
+        <p style="font-size:0.82rem;color:var(--gris-texto);margin:18px 0 24px;">Tenés 24hs desde que te llegó el mensaje para confirmar. ¿Podés venir a trabajar este evento?</p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+          <form method="POST" action="/horarios/invitacion/<%= token %>/responder" style="margin:0;">
+            <input type="hidden" name="accion" value="aceptar">
+            <button type="submit" class="btn-primary" style="min-width:140px;"><i class="ti ti-check"></i> Sí, puedo venir</button>
+          </form>
+          <form method="POST" action="/horarios/invitacion/<%= token %>/responder" style="margin:0;">
+            <input type="hidden" name="accion" value="rechazar">
+            <button type="submit" class="btn-secondary" style="min-width:140px;color:#dc2626;border-color:#fecaca;"><i class="ti ti-x"></i> No puedo</button>
+          </form>
+        </div>
+      <% } %>
+
+    <% } %>
+
+  </div>
+</div>
+</body>
+</html>
