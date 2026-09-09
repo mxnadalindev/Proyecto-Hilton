@@ -207,6 +207,14 @@ router.get('/', loginRequerido, async (req, res) => {
   }
   guardarCookieRango(res, inicio, fin);
 
+  // Cartel de confirmación "Semana cargada" (solo Cocina/admin general):
+  // el botón "Cargar este rango" del calendario manda este flag en la URL
+  // para distinguir "recién until acá clickeando ese botón" de cualquier
+  // otro motivo por el que se puede llegar a esta misma URL (cookie
+  // recordada, refresh, volver con Atrás) — así el cartel solo aparece
+  // cuando corresponde, una vez, y no en cada visita a la página.
+  const recienCargado = req.query.recienCargado === '1';
+
   const dias = getDiasRango(inicio, fin);
 
   // Qué sectores puede ver/gestionar quien está mirando esta pantalla —
@@ -402,7 +410,7 @@ router.get('/', loginRequerido, async (req, res) => {
     modalidadesAyb: MODALIDADES_AYB, misDepto,
     ESTADOS, msg, esAdmin, hoy, inicio, fin, dias, horarioSemanalMap, sectorDiaMap,
     feriados, cargadosMozos, duplicadosMozos, dispMap, rangoAnterior, rangoSiguiente,
-    mozosVencidos, mozosPorVencer, mesFiltro, esGestorAyb, alertasAyb,
+    mozosVencidos, mozosPorVencer, mesFiltro, esGestorAyb, alertasAyb, recienCargado,
     // compatibilidad con campos viejos
     horarioMap: {}
   });

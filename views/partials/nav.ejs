@@ -403,10 +403,16 @@ async function enviarMensajeAsistente(textoForzado) {
   pensando.innerHTML = '<div class="asistente-typing"><span></span><span></span><span></span></div>';
 
   try {
+    // Mandamos el idioma que la persona tiene elegido ahora mismo en el
+    // selector de banderitas (guardado por i18n.js en localStorage) — así
+    // el asistente contesta siempre en ese idioma, sin importar en qué
+    // idioma se haya escrito el mensaje.
+    let idiomaActual = 'es';
+    try { idiomaActual = window.localStorage.getItem('hilton_idioma') || 'es'; } catch (e) { /* localStorage puede fallar en algún navegador raro — seguimos en español */ }
     const resp = await fetch('/asistente/mensaje', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mensaje }),
+      body: JSON.stringify({ mensaje, idioma: idiomaActual }),
     });
     const data = await resp.json();
     pensando.remove();

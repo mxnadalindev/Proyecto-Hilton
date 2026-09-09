@@ -3,8 +3,12 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Miembro de equipo — Hilton</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"></noscript>
 <style>
 /* ── Header "Otras opciones" (AYB): agrupa Ver en Horarios / Importar mozos /
    Cargar con foto — mismas clases y estilos que el desplegable "Otras
@@ -73,14 +77,20 @@
 .cal-dia{padding:6px 4px;border-radius:6px;cursor:pointer;font-size:0.8rem;color:var(--negro);transition:all 0.15s;border:1px solid transparent;position:relative;}
 .cal-dia:hover{background:var(--azul-claro);color:var(--azul);}
 .cal-dia.hoy{font-weight:700;color:var(--azul);}
-.cal-dia.rango-sel{background:var(--azul);color:#fff;border-radius:0;}
+/* Días del rango elegido: antes era un verde sólido con texto blanco.
+   Se cambió al mismo verde traslúcido que ya usan los botones tipo
+   "Nuevo empleado" (.btn-primary acá arriba: fondo rgba(6,147,126,0.14),
+   texto #06937e) — mismo tono en todos lados en vez de dos verdes
+   distintos (uno sólido para el calendario, otro traslúcido para los
+   botones). */
+.cal-dia.rango-sel{background:rgba(6,147,126,0.14);color:#06937e;border-radius:0;font-weight:700;}
 .cal-dia.rango-inicio{border-radius:6px 0 0 6px;}
 .cal-dia.rango-fin{border-radius:0 6px 6px 0;}
 .cal-dia.rango-inicio.rango-fin{border-radius:6px;}
 .cal-dia.rango-pendiente{background:var(--azul-claro);color:var(--azul);border:1.5px dashed var(--azul);border-radius:6px;font-weight:700;}
 .cal-dia.vacio{visibility:hidden;}
 .cal-dia.es-feriado{border:1.5px solid #dc2626;font-weight:700;}
-.cal-dia.es-feriado.rango-sel{border-color:#fff;}
+.cal-dia.es-feriado.rango-sel{border-color:#dc2626;}
 .cal-dia-flag{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:var(--blanco);border:1px solid var(--gris-borde);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--gris-borde);cursor:pointer;transition:all 0.15s;line-height:1;z-index:2;}
 .cal-dia-flag:hover{border-color:#dc2626;color:#dc2626;transform:scale(1.25);}
 .cal-dia.es-feriado .cal-dia-flag{background:#dc2626;border-color:#dc2626;color:#fff;}
@@ -135,10 +145,21 @@
 }
 .cal-nombre-dia{font-size:0.6rem;font-weight:600;color:var(--gris-texto);padding:4px 0;text-align:center;}
 
-/* Cartel "Horario cargado correctamente" con cocinerito animado — ventana
-   centrada en el medio de la pantalla (antes era un cartelito abajo), con
-   el mismo verde que el botón "Cargar este rango" (var(--azul)). */
-#cartel-horario-guardado{
+/* Cartel de confirmación con cocinerito animado — ventana centrada en el
+   medio de la pantalla. Usa el mismo azul VIDRIADO/traslúcido de los
+   botones tipo "Ver en Horarios"/"Ver equipo" (.btn-secondary en este
+   mismo archivo): fondo rgba(0,47,97,0.12) de verdad (no una versión
+   sólida/aproximada), borde rgba(0,47,97,0.28), texto var(--navy), y el
+   mismo backdrop-filter:blur(6px) que usa ese botón — eso es lo que le
+   da el aspecto "vidrio esmerilado" en vez de un color plano. Por eso el
+   fondo oscuro del modal (.cartel-overlay.mostrar) se cambió de negro a
+   un blanco semitransparente: así, atrás del vidrio azul se sigue viendo
+   blanco (como el fondo de página detrás del botón real), en vez de que
+   el traslúcido se mezcle con negro y quede más oscuro de lo esperado.
+   Clase compartida (.cartel-overlay) porque hay más de un cartel que usa
+   exactamente esta misma ventana (guardar horario de un empleado, cargar
+   un rango nuevo). */
+.cartel-overlay{
   position:fixed;
   inset:0;
   z-index:2000;
@@ -146,35 +167,40 @@
   align-items:center;
   justify-content:center;
   padding:16px;
-  background:rgba(0,0,0,0);
+  background:rgba(255,255,255,0);
   opacity:0;
   pointer-events:none;
   transition:opacity 0.25s ease, background 0.25s ease;
 }
-#cartel-horario-guardado.mostrar{
+.cartel-overlay.mostrar{
   opacity:1;
   pointer-events:auto;
-  background:rgba(0,0,0,0.35);
+  background:rgba(255,255,255,0.55);
+  -webkit-backdrop-filter:blur(3px);
+  backdrop-filter:blur(3px);
 }
-#cartel-horario-guardado .cartel-caja{
-  background:var(--azul);
-  color:#fff;
+.cartel-overlay .cartel-caja{
+  background:rgba(0,47,97,0.12);
+  color:var(--navy);
+  -webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);
   font-family:var(--font-sans);
   font-size:0.95rem;
   font-weight:600;
-  padding:30px 40px;
+  padding:28px 36px;
   border-radius:18px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  border:1px solid rgba(0,47,97,0.28);
+  box-shadow:0 20px 60px rgba(0,0,0,0.25);
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:12px;
+  gap:10px;
   text-align:center;
   max-width:min(90vw, 340px);
   transform:scale(0.85);
   transition:transform 0.25s cubic-bezier(.22,1,.36,1);
 }
-#cartel-horario-guardado.mostrar .cartel-caja{
+.cartel-overlay.mostrar .cartel-caja{
   transform:scale(1);
 }
 .cartel-cocinerito{
@@ -182,6 +208,32 @@
   line-height:1;
   display:inline-block;
   animation:cocinerito-salto 0.6s ease-in-out infinite;
+}
+/* "Dibujito" circular en el mismo azul de los botones (var(--navy),
+   #002f61 — el mismo azul de "Ver en Horarios"/"Ver equipo") para el
+   cartel de "Semana cargada", que antes solo tenía un iconito suelto sin
+   mucha personalidad. */
+.cartel-icono-badge{
+  width:58px;
+  height:58px;
+  border-radius:50%;
+  background:var(--navy);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.6rem;
+  box-shadow:0 8px 18px rgba(0,47,97,0.35);
+  animation:cocinerito-salto 0.6s ease-in-out infinite;
+}
+.cartel-titulo{
+  color:var(--navy);
+  font-size:1rem;
+}
+.cartel-sub{
+  color:var(--gris-texto);
+  font-weight:500;
+  font-size:0.8rem;
 }
 @keyframes cocinerito-salto{
   0%, 100%{ transform:translateY(0) rotate(0deg); }
@@ -285,7 +337,7 @@
       <div id="cal-container">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <button onclick="calMes(-1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:16px;">&#8249;</button>
-          <span id="cal-titulo" style="font-size:0.9rem;font-weight:600;color:var(--negro);"></span>
+          <span id="cal-titulo" style="font-size:0.85rem;font-weight:700;color:var(--azul);background:var(--azul-claro);padding:5px 14px;border-radius:20px;"></span>
           <button onclick="calMes(1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:16px;">&#8250;</button>
         </div>
         <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;"></div>
@@ -1061,7 +1113,11 @@ function actualizarEtiquetaRango() {
 
   btn.style.pointerEvents = '';
   btn.style.opacity = '';
-  btn.href = '/personal?inicio=' + rangoInicio + '&fin=' + rangoFin;
+  // &recienCargado=1: así, del lado del servidor, sabemos que se llegó acá
+  // clickeando este botón puntual (y no por la cookie recordada, un
+  // refresh, o volviendo con Atrás) para mostrar el cartel de confirmación
+  // solo en ese caso — ver mostrarCartelRangoCargado() más abajo.
+  btn.href = '/personal?inicio=' + rangoInicio + '&fin=' + rangoFin + '&recienCargado=1';
   if (btnVerHorarios) btnVerHorarios.href = '/horarios?inicio=' + rangoInicio + '&fin=' + rangoFin;
 }
 
@@ -1150,10 +1206,11 @@ function mostrarCartelHorarioGuardado() {
   if (!cartel) {
     cartel = document.createElement('div');
     cartel.id = 'cartel-horario-guardado';
+    cartel.className = 'cartel-overlay';
     cartel.innerHTML = `
       <div class="cartel-caja">
         <span class="cartel-cocinerito">👨‍🍳</span>
-        <span>Horario cargado correctamente</span>
+        <span class="cartel-titulo">Horario cargado correctamente</span>
       </div>
     `;
     // Tocar afuera de la ventana (el fondo oscuro) la cierra antes de tiempo
@@ -1173,6 +1230,70 @@ function mostrarCartelHorarioGuardado() {
   clearTimeout(_timeoutCartelHorario);
   _timeoutCartelHorario = setTimeout(() => cartel.classList.remove('mostrar'), 2200);
 }
+
+// Mismo cartelito, para cuando se confirma "Cargar este rango" en el
+// selector de semana de arriba — muestra la semana que efectivamente
+// quedó cargada (útil porque, al aterrizar de nuevo en /personal después
+// del click, no siempre queda obvio a simple vista qué rango se aplicó).
+let _timeoutCartelRango = null;
+function mostrarCartelRangoCargado(inicioStr, finStr) {
+  let cartel = document.getElementById('cartel-rango-cargado');
+  if (!cartel) {
+    cartel = document.createElement('div');
+    cartel.id = 'cartel-rango-cargado';
+    cartel.className = 'cartel-overlay';
+    document.body.appendChild(cartel);
+    cartel.addEventListener('click', (ev) => {
+      if (ev.target === cartel) {
+        clearTimeout(_timeoutCartelRango);
+        cartel.classList.remove('mostrar');
+      }
+    });
+  }
+
+  const d0 = new Date(inicioStr + 'T00:00:00');
+  const d1 = new Date(finStr + 'T00:00:00');
+  const rangoTexto = inicioStr === finStr
+    ? d0.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
+    : d0.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' }) + ' — ' +
+      d1.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  cartel.innerHTML = `
+    <div class="cartel-caja">
+      <span class="cartel-icono-badge"><i class="ti ti-calendar-check"></i></span>
+      <span class="cartel-titulo">Semana cargada</span>
+      <span class="cartel-sub">${rangoTexto}</span>
+    </div>
+  `;
+
+  cartel.classList.remove('mostrar');
+  void cartel.offsetWidth;
+  cartel.classList.add('mostrar');
+
+  clearTimeout(_timeoutCartelRango);
+  _timeoutCartelRango = setTimeout(() => cartel.classList.remove('mostrar'), 2200);
+}
+
+// Dispara el cartel de arriba al aterrizar acá recién apretando "Cargar
+// este rango" (ver el &recienCargado=1 que arma actualizarEtiquetaRango()
+// más arriba). Va DESPUÉS de la función (no en el bloque de
+// "Inicializar calendario", más arriba en el archivo): _timeoutCartelRango
+// se declara con "let" justo encima de mostrarCartelRangoCargado(), y una
+// variable "let" no está disponible antes de su propia línea (temporal
+// dead zone) — llamar a la función antes de que esa línea corra tiraba
+// "Cannot access '_timeoutCartelRango' before initialization" y cortaba
+// el resto del script (por eso el cartel se quedaba trabado sin cerrarse
+// nunca: el error pasaba adentro, antes de llegar al setTimeout).
+// history.replaceState saca el flag de la barra de direcciones para que
+// no se dispare de nuevo si la persona apreta F5 o vuelve con Atrás.
+<% if (typeof recienCargado !== 'undefined' && recienCargado) { %>
+mostrarCartelRangoCargado('<%= inicio %>', '<%= fin %>');
+try {
+  const _url = new URL(window.location.href);
+  _url.searchParams.delete('recienCargado');
+  window.history.replaceState(null, '', _url.pathname + _url.search);
+} catch (e) { /* no rompe nada si el navegador no soporta URL/history acá */ }
+<% } %>
 
 // Colorea el fondo de la fila según el primer estado (no-franco) encontrado entre los días
 function actualizarColorFila(uid) {

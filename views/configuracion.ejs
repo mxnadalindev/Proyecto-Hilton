@@ -3,8 +3,12 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Configuración — Hilton</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"></noscript>
 <style>
 .cfg-card{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px;box-shadow:var(--sombra);}
 .cfg-titulo{font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin:0;display:flex;align-items:center;gap:7px;}
@@ -19,6 +23,27 @@
 .cfg-input{background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:8px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;}
 .cfg-input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(37,99,235,0.1);}
 .cfg-seguridad-grid{grid-template-columns:1fr 1fr;}
+
+/* Modal de confirmación propio (reemplaza el confirm() nativo del
+   navegador, que se ve como un cartel gris feo de "localhost:5000 dice")
+   para las acciones de "Eliminar"/"Restaurar" de esta página — mismo
+   patrón visual (tarjeta blanca redondeada, fondo oscuro atrás) que ya
+   usan los demás modales del sitio (ver .modal-lista en costos.ejs). */
+.modal-confirmar{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.2s ease, background 0.2s ease;}
+.modal-confirmar.mostrar{opacity:1;pointer-events:auto;background:rgba(0,0,0,0.45);}
+.modal-confirmar-caja{background:var(--blanco);border-radius:16px;width:100%;max-width:380px;padding:26px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;transform:scale(0.9);transition:transform 0.2s cubic-bezier(.22,1,.36,1);}
+.modal-confirmar.mostrar .modal-confirmar-caja{transform:scale(1);}
+.modal-confirmar-icono{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.4rem;background:var(--azul-claro);color:var(--azul);}
+.modal-confirmar-caja.peligro .modal-confirmar-icono{background:#fef2f2;color:#dc2626;}
+.modal-confirmar-msg{font-size:0.88rem;color:var(--negro);font-weight:500;margin:0 0 22px;line-height:1.5;}
+.modal-confirmar-botones{display:flex;gap:10px;justify-content:center;}
+.modal-confirmar-botones button{font-size:0.78rem;font-weight:600;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:var(--font-sans);}
+.modal-confirmar-cancelar{background:none;border:1px solid var(--gris-borde);color:var(--gris-texto);}
+.modal-confirmar-cancelar:hover{background:var(--gris-fondo);}
+.modal-confirmar-aceptar{background:var(--azul);border:1px solid var(--azul);color:#fff;}
+.modal-confirmar-aceptar:hover{background:var(--azul-hover);}
+.modal-confirmar-caja.peligro .modal-confirmar-aceptar{background:#dc2626;border-color:#dc2626;}
+.modal-confirmar-caja.peligro .modal-confirmar-aceptar:hover{background:#b91c1c;}
 
 @media (max-width: 600px) {
   .cfg-card{padding:16px;}
@@ -113,7 +138,7 @@
                 </td>
                 <td><span style="font-size:0.68rem;font-weight:600;background:<%= u.activo?'#f0fdf4':'#fef2f2' %>;color:<%= u.activo?'#16a34a':'#dc2626' %>;border:1px solid <%= u.activo?'#bbf7d0':'#fecaca' %>;padding:2px 8px;border-radius:20px;"><%= u.activo?'Activo':'Inactivo' %></span></td>
                 <td style="font-size:0.72rem;color:var(--gris-texto);"><%= u.creado_en?u.creado_en.slice(0,10):'—' %></td>
-                <td><div style="display:flex;gap:4px;justify-content:flex-end;"><% if (u.activo) { %><form method="POST" action="/configuracion/usuario/<%= u.id %>/desactivar" style="margin:0;"><button type="submit" title="Desactivar" class="btn-icono"><i class="ti ti-user-off"></i></button></form><% } else { %><form method="POST" action="/configuracion/usuario/<%= u.id %>/activar" style="margin:0;"><button type="submit" title="Activar" class="btn-icono btn-icono-verde"><i class="ti ti-user-check"></i></button></form><% } %><form method="POST" action="/configuracion/usuario/<%= u.id %>/eliminar" style="margin:0;" onsubmit="return confirm('¿Eliminar permanentemente a <%= u.nombre %>?')"><button type="submit" title="Eliminar" class="btn-icono btn-icono-rojo"><i class="ti ti-trash"></i></button></form></div></td>
+                <td><div style="display:flex;gap:4px;justify-content:flex-end;"><% if (u.activo) { %><form method="POST" action="/configuracion/usuario/<%= u.id %>/desactivar" style="margin:0;"><button type="submit" title="Desactivar" class="btn-icono"><i class="ti ti-user-off"></i></button></form><% } else { %><form method="POST" action="/configuracion/usuario/<%= u.id %>/activar" style="margin:0;"><button type="submit" title="Activar" class="btn-icono btn-icono-verde"><i class="ti ti-user-check"></i></button></form><% } %><form method="POST" action="/configuracion/usuario/<%= u.id %>/eliminar" style="margin:0;" onsubmit="return confirmarAccion(event, this)"><button type="submit" title="Eliminar" class="btn-icono btn-icono-rojo" data-confirm-msg="¿Eliminar permanentemente a <%= u.nombre %>?" data-confirm-tipo="peligro"><i class="ti ti-trash"></i></button></form></div></td>
               </tr>
               <% }) %>
             </tbody>
@@ -147,8 +172,8 @@
             <td style="font-size:0.78rem;color:var(--gris-texto);"><%= new Date(b.fecha).toLocaleString('es-AR') %></td>
             <td><div style="display:flex;gap:6px;justify-content:flex-end;">
               <a href="/configuracion/backup/descargar/<%= b.nombre %>" class="btn-icono btn-icono-verde" title="Descargar"><i class="ti ti-download"></i></a>
-              <form method="POST" action="/configuracion/backup/restaurar/<%= b.nombre %>" style="margin:0;" onsubmit="return confirm('¿Restaurar BD con este backup? Se sobreescribirán todos los datos.')"><button type="submit" title="Restaurar" class="btn-icono btn-icono-naranja"><i class="ti ti-restore"></i></button></form>
-              <form method="POST" action="/configuracion/backup/eliminar/<%= b.nombre %>" style="margin:0;" onsubmit="return confirm('¿Eliminar este backup?')"><button type="submit" title="Eliminar" class="btn-icono btn-icono-rojo"><i class="ti ti-trash"></i></button></form>
+              <form method="POST" action="/configuracion/backup/restaurar/<%= b.nombre %>" style="margin:0;" onsubmit="return confirmarAccion(event, this)"><button type="submit" title="Restaurar" class="btn-icono btn-icono-naranja" data-confirm-msg="¿Restaurar BD con este backup? Se sobreescribirán todos los datos." data-confirm-tipo="peligro"><i class="ti ti-restore"></i></button></form>
+              <form method="POST" action="/configuracion/backup/eliminar/<%= b.nombre %>" style="margin:0;" onsubmit="return confirmarAccion(event, this)"><button type="submit" title="Eliminar" class="btn-icono btn-icono-rojo" data-confirm-msg="¿Eliminar este backup?" data-confirm-tipo="peligro"><i class="ti ti-trash"></i></button></form>
             </div></td>
           </tr>
           <% }) %>
@@ -269,6 +294,18 @@
   <%- include('partials/mobile-nav', { path: 'configuracion' }) %>
 </div>
 
+<!-- Modal de confirmación (reemplaza confirm() nativo) — se reusa para
+     Eliminar usuario / Restaurar backup / Eliminar backup. -->
+<div id="modal-confirmar" class="modal-confirmar" onclick="if(event.target===this) cerrarConfirmar()">
+  <div class="modal-confirmar-caja">
+    <div class="modal-confirmar-icono"><i class="ti ti-alert-triangle"></i></div>
+    <p class="modal-confirmar-msg" id="modalConfirmarMsg"></p>
+    <div class="modal-confirmar-botones">
+      <button type="button" class="modal-confirmar-cancelar" onclick="cerrarConfirmar()">Cancelar</button>
+      <button type="button" class="modal-confirmar-aceptar" onclick="aceptarConfirmar()">Confirmar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const tabIds = <%- JSON.stringify(tabList.map(t => t.id)) %>;
@@ -294,6 +331,35 @@ function buscarUsuario() {
   document.querySelectorAll('.fila-usuario').forEach(f => {
     f.style.display = f.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
+}
+
+// ── Modal de confirmación propio (Eliminar usuario / Restaurar backup /
+// Eliminar backup) en vez del confirm() nativo del navegador — se llama
+// desde el onsubmit de cada <form>, leyendo el mensaje y el "tipo" (para
+// pintar el ícono/botón en rojo si es una acción de riesgo, "peligro") del
+// data-confirm-msg/data-confirm-tipo del botón de submit que hay adentro.
+let _formPendienteConfirmar = null;
+function confirmarAccion(event, form) {
+  event.preventDefault();
+  const boton = form.querySelector('[data-confirm-msg]');
+  _formPendienteConfirmar = form;
+  document.getElementById('modalConfirmarMsg').textContent = boton ? boton.dataset.confirmMsg : '¿Confirmás esta acción?';
+  const caja = document.querySelector('#modal-confirmar .modal-confirmar-caja');
+  caja.classList.toggle('peligro', !!(boton && boton.dataset.confirmTipo === 'peligro'));
+  document.getElementById('modal-confirmar').classList.add('mostrar');
+  return false;
+}
+function cerrarConfirmar() {
+  document.getElementById('modal-confirmar').classList.remove('mostrar');
+  _formPendienteConfirmar = null;
+}
+function aceptarConfirmar() {
+  const form = _formPendienteConfirmar;
+  document.getElementById('modal-confirmar').classList.remove('mostrar');
+  // form.submit() (a diferencia de hacer click en el botón) NO vuelve a
+  // disparar el evento "submit" del formulario — así no entra de nuevo en
+  // confirmarAccion() y se manda derecho.
+  if (form) form.submit();
 }
 </script>
 </body>

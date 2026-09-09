@@ -3,8 +3,12 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Horarios — Hilton</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"></noscript>
 <style>
 .c-dia{padding:14px 6px;border-radius:8px;cursor:pointer;font-size:1rem;font-weight:600;color:var(--negro);transition:all 0.12s;border:1px solid transparent;background:var(--gris-fondo);}
 .c-dia:hover{box-shadow:0 0 0 1px var(--azul) inset;}
@@ -47,13 +51,13 @@
         <h1 class="seccion-titulo" id="ayb-titulo">Mi disponibilidad</h1>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
         <button type="button" onclick="abrirMisCompromisos()" class="btn-secondary"><i class="ti ti-calendar-event"></i> Mi agenda</button>
         <% // "Miembro de equipo" (con Vencimientos) es solo para quien gestiona
            // AYB (admin/supervisor) — un mozo común no debe verlo. %>
         <% if (esGestor) { %>
-        <a href="/miembros-de-equipo" id="ayb-btn-ver-equipo" class="btn-secondary"><i class="ti ti-users"></i> Ver equipo</a>
+        <a href="/miembros-de-equipo" id="ayb-btn-ver-equipo" class="btn-primary"><i class="ti ti-users"></i> Ver equipo</a>
         <% } %>
-        <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
       </div>
     </div>
 

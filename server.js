@@ -47,7 +47,29 @@ app.use((req, res, next) => {
 // (en vez de tirar el servidor abajo, como pasaba antes), este timeout hace
 // que el usuario vea una página de error a los 20s en vez de un spinner
 // infinito en el navegador.
+//
+// OJO — /asistente/mensaje queda afuera de este watchdog genérico por dos
+// motivos, encontrados al revisar un error real que reportó Maxi
+// ("No pude conectarme. Probá de nuevo." en el chat):
+//   1) Es una ruta de API que siempre responde JSON — pero este watchdog
+//      manda una PÁGINA HTML (res.render('error', ...)). Si el timeout de
+//      20s se disparaba antes de que Gemini contestara (cosa esperable:
+//      llamarGeminiConReintentos ya tiene sus propios reintentos con
+//      backoff, que solos pueden tardar más de 20s), el navegador recibía
+//      HTML donde esperaba JSON, resp.json() tiraba una excepción del lado
+//      del navegador, y el chat mostraba el mensaje genérico de "no pude
+//      conectarme" — aunque el pedido en realidad seguía en curso.
+//   2) Peor: cuando esa respuesta HTML de "timeout" ya se había mandado,
+//      y el asistente terminaba de procesar unos segundos después, volvía
+//      a intentar mandar SU propia respuesta sobre la misma conexión ya
+//      cerrada — eso tiraba "Cannot set headers after they are sent"
+//      (se ve en el log, pero no tira el servidor abajo gracias al
+//      handler de unhandledRejection de más arriba).
+// Como el asistente ya tiene sus propios tiempos de espera (45s por
+// intento a Gemini, hasta 3 intentos), le damos acá su propio watchdog más
+// largo (55s) que además responde JSON en vez de HTML.
 app.use((req, res, next) => {
+  const esAsistente = req.originalUrl.startsWith('/asistente/mensaje');
   // OJO: esto es un timer de JS común, NO req.setTimeout()/socket.setTimeout()
   // — probamos esa opción primero y en este Node (v22) el socket se cierra
   // solo al vencer el timeout, sin darle nunca la oportunidad al callback
@@ -55,13 +77,17 @@ app.use((req, res, next) => {
   // cortada en vez de la página de error). Con un timer normal sí funciona.
   const timer = setTimeout(() => {
     if (!res.headersSent) {
-      console.error(`⚠ Timeout de 20s en ${req.method} ${req.originalUrl}`);
-      res.status(504).render('error', {
-        mensaje: 'La página tardó demasiado en responder. Probá de nuevo — si vuelve a pasar, avisale al admin.',
-        volver: '/inicio',
-      });
+      console.error(`⚠ Timeout de ${esAsistente ? '55' : '20'}s en ${req.method} ${req.originalUrl}`);
+      if (esAsistente) {
+        res.status(504).json({ ok: false, error: 'El asistente tardó demasiado en responder. Probá de nuevo en un momento.' });
+      } else {
+        res.status(504).render('error', {
+          mensaje: 'La página tardó demasiado en responder. Probá de nuevo — si vuelve a pasar, avisale al admin.',
+          volver: '/inicio',
+        });
+      }
     }
-  }, 20000);
+  }, esAsistente ? 55000 : 20000);
   res.on('finish', () => clearTimeout(timer));
   res.on('close', () => clearTimeout(timer));
   next();

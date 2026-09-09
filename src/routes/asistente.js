@@ -28,6 +28,40 @@ const { SECTORES: SECTORES_COCINA } = require('./personal');
 const MODELO = 'gemini-flash-latest';
 const URL_GEMINI = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent`;
 
+// ── Idioma ────────────────────────────────────────────────────────────
+// El sitio ya tiene un selector de idioma (ES/EN/PT) al lado del logo
+// "Hilton" (ver public/js/i18n.js + views/partials/nav.ejs) que guarda la
+// elección en localStorage. El front (enviarMensajeAsistente, en
+// partials/nav.ejs) manda ese mismo idioma en cada mensaje al bot, así el
+// asistente contesta siempre en el idioma que la persona tiene elegido en
+// el sitio en ese momento — sin importar en qué idioma haya escrito el
+// mensaje (Gemini entiende los tres perfectamente igual).
+const IDIOMAS_VALIDOS = ['es', 'en', 'pt'];
+function idiomaDesdeRequest(req) {
+  return IDIOMAS_VALIDOS.includes(req.body.idioma) ? req.body.idioma : 'es';
+}
+const NOMBRE_IDIOMA = { es: 'español', en: 'inglés (English)', pt: 'portugués (Português)' };
+
+// Elige uno de los tres textos ya redactados según el idioma actual. Se usa
+// para los mensajes que arma el servidor "a mano" (confirmaciones, errores,
+// resultados de acciones) — los que NO pasan por Gemini para redactarse,
+// así que si no los tradujéramos acá quedarían siempre en español pase lo
+// que pase con el selector de idioma del sitio.
+function msj(idioma, es, en, pt) {
+  if (idioma === 'en') return en;
+  if (idioma === 'pt') return pt;
+  return es;
+}
+
+// Red de seguridad: si el watchdog de 55s de server.js ya mandó su propia
+// respuesta de timeout sobre esta misma conexión (ver el comentario ahí),
+// esta función evita el crash "Cannot set headers after they are sent" que
+// tiraba el proceso cuando el asistente terminaba de procesar un ratito
+// después y trataba de mandar SU respuesta sobre una conexión ya cerrada.
+function enviarJson(res, payload) {
+  if (!res.headersSent) res.json(payload);
+}
+
 // ── Definición de herramientas que el asistente puede usar ──────────────
 const HERRAMIENTAS = [{
   functionDeclarations: [
@@ -189,6 +223,7 @@ function esAdminSesion(req) {
 // actualizar a mano cuando se agreguen novedades importantes).
 const NOVEDADES_RECIENTES = `
 Novedades recientes del sistema (por si el usuario pregunta "qué cambió", "qué hay nuevo" o similar):
+- El sitio ahora se puede ver en español, inglés o portugués con el selector de banderas que está al lado de la palabra "Hilton", arriba a la izquierda — y este asistente ahora también entiende y responde en los tres idiomas.
 - Nuevo módulo "Inventario" (Alimentos y Bebidas): permite ajustar el stock de bebidas a mano (Sumar/Restar/Fijar), o sacándole una foto a la botella para que la IA la reconozca y sume 1 unidad sola. Cada producto tiene una etiqueta QR imprimible para hacer el ajuste rápido desde el celular, escaneándola en el bar.
 - Dentro de Inventario hay una sección "Reportes de consumo": muestra mes a mes, por producto, cuánto se consumió, cuánto se repuso y las correcciones manuales (Fijar), usando el historial real de movimientos.
 - El sistema avisa automáticamente cuando algún producto de Inventario está por debajo del stock mínimo cargado (se muestra como alerta acá mismo, en este chat, y también como aviso en la pantalla de Inventario).
@@ -197,14 +232,42 @@ Novedades recientes del sistema (por si el usuario pregunta "qué cambió", "qu�
 - Nuevo módulo "Horas extra" (Cocina, solo admin): permite cargar las horas extra de cada empleado por fecha puntual, con nota opcional, y ver el informe acumulado por persona en el mes.
 `;
 
-const SYSTEM_PROMPT = `Sos el asistente virtual interno del Portal Hilton Buenos Aires, para el equipo de cocina y alimentos y bebidas.
-Respondé siempre en español, de forma breve, clara y amable. Hoy es ${new Date().toISOString().slice(0, 10)}.
+// Descripción de TODO lo que tiene el sistema hoy, módulo por módulo — así
+// el asistente puede responder preguntas generales de "qué hace" o "cómo
+// se usa" cada parte del portal (aunque no exista una herramienta puntual
+// para eso), no solo ejecutar consultas/acciones puntuales de datos.
+// Hay que sumar acá cualquier módulo nuevo que se agregue más adelante,
+// igual que ya se hace con NOVEDADES_RECIENTES.
+const DESCRIPCION_SISTEMA = `
+Módulos y funcionalidades del sistema (para responder preguntas generales sobre qué hace o cómo se usa cada parte, aunque no haya una herramienta puntual):
+- Inicio: pantalla de entrada, con tarjetas de acceso rápido a cada módulo según el sector y rol del usuario.
+- Eventos (Cocina): alta y gestión de eventos gastronómicos, con sus menús y platos asociados; detalle de cada evento.
+- Miembro de equipo (Cocina y AYB): alta y gestión de empleados/mozos; en Cocina se elige un rango de fechas en un calendario y se carga el estado de cada día por persona (Normal, OFF, VAC, RECOFF, LIBRE, ART, LICENCIA, CUMPLE, MUDANZA), con un cartel de confirmación al guardar; se pueden marcar feriados en el calendario; en AYB además se pueden importar mozos por planilla CSV o sacándoles una foto (lectura con IA) y agrupa "Ver en Horarios"/"Importar"/"Cargar con foto" en un botón "Otras opciones".
+- Horarios (Cocina y AYB): vista de los horarios ya cargados por período, para ver de un vistazo quién trabaja cada día y con qué estado.
+- Recetas (Cocina): recetario con los ingredientes de cada plato y su costo.
+- Costos (Cocina y AYB): administración de insumos y su precio unitario, con historial de variación de precios (qué subió/bajó y cuánto); costeo de platos armados a partir de recetas; e importación de facturas de compra con reconocimiento por IA — se sube la foto o el PDF de la factura y el sistema sugiere los insumos/precios para revisar y confirmar antes de cargarlos.
+- Croutons (AYB): control de stock de croutons con fecha de vencimiento, cargado a mano o leyendo el remito/etiqueta con IA.
+- Inventario (AYB): stock de bebidas del bar. Se ajusta a mano (sumar/restar/fijar cantidad) o sacando una foto a la botella para que la IA la reconozca y sume una unidad; cada producto tiene una etiqueta QR imprimible para ajustar rápido desde el celular escaneándola en el bar; avisa cuando algo queda por debajo del stock mínimo; tiene reportes de consumo mes a mes por producto.
+- Horas extra (Cocina, solo administradores): carga de horas extra por empleado y fecha puntual, con nota opcional, e informe acumulado por persona y mes — pensado para liquidación de sueldos.
+- Configuración (solo administradores): administración de las cuentas/usuarios del sistema.
+- Selector de idioma: arriba a la izquierda, al lado de la palabra "Hilton", hay banderitas para ver todo el sitio en español, inglés o portugués.
+- Este asistente (el chat, ese mismo con el que está hablando el usuario ahora): además de explicar cómo funciona cada módulo, puede CONSULTAR datos reales del sistema (insumos sin precio cargado, quién trabaja tal día, horas trabajadas de un empleado en un mes, variación de precios de insumos, qué recetas usan un insumo puntual, ranking de insumos más usados en platos, stock de Inventario AYB, horas extra cargadas) y hacer algunas ACCIONES puntuales que siempre piden confirmación antes de aplicarse (actualizar el precio de un insumo, poner o sacar RECOFF a un empleado en una fecha, cargar horas extra).
+`;
+
+function armarSystemPrompt(idioma) {
+  const nombreIdioma = NOMBRE_IDIOMA[idioma] || NOMBRE_IDIOMA.es;
+  return `Sos el asistente virtual interno del Portal Hilton Buenos Aires, para el equipo de cocina y alimentos y bebidas.
+Entendés perfectamente mensajes escritos en español, inglés o portugués — la persona puede escribirte en cualquiera de los tres idiomas y vas a entender igual lo que pide.
+Respondé SIEMPRE en ${nombreIdioma} — es el idioma que la persona tiene elegido ahora mismo en el selector de idioma del sitio — sin importar en qué idioma haya escrito su mensaje, salvo que te pida explícitamente cambiar de idioma dentro de la conversación.
+Sé breve, claro y amable. Hoy es ${new Date().toISOString().slice(0, 10)}.
 Cuando el usuario pida algo que corresponda a una de tus herramientas, usala. Si falta un dato imprescindible (ej. no dijo la fecha), preguntá antes de usar la herramienta.
 Nunca inventes datos: si una consulta no devuelve resultados, decilo tal cual.
+${DESCRIPCION_SISTEMA}
 ${NOVEDADES_RECIENTES}`;
+}
 
 // ── Ejecuta las herramientas de solo consulta ────────────────────────────
-async function ejecutarConsulta(nombre, args) {
+async function ejecutarConsulta(nombre, args, idioma) {
   if (nombre === 'consultar_insumos_sin_precio') {
     const rows = await db.all2(`
       SELECT nombre, categoria FROM insumos
@@ -233,8 +296,8 @@ async function ejecutarConsulta(nombre, args) {
 
   if (nombre === 'consultar_horas_trabajadas') {
     const candidatos = await buscarEmpleadoPorNombre(args.nombre_empleado);
-    if (candidatos.length === 0) return { error: `No encontré ningún empleado que coincida con "${args.nombre_empleado}".` };
-    if (candidatos.length > 1) return { error: `Encontré varios empleados que coinciden con "${args.nombre_empleado}": ${candidatos.map(c => c.nombre).join(', ')}. Decime cuál exactamente.` };
+    if (candidatos.length === 0) return { error: msjNoEncontreEmpleado(idioma, args.nombre_empleado) };
+    if (candidatos.length > 1) return { error: msjVariosEmpleados(idioma, args.nombre_empleado, candidatos) };
     const emp = candidatos[0];
     const mes = /^\d{4}-\d{2}$/.test(args.mes || '') ? args.mes : new Date().toISOString().slice(0, 7);
     const resultado = await horasDelMes(emp.id, emp.departamento, mes);
@@ -266,8 +329,8 @@ async function ejecutarConsulta(nombre, args) {
 
   if (nombre === 'consultar_recetas_por_insumo') {
     const insumos = await buscarInsumoPorNombre(args.nombre_insumo);
-    if (insumos.length === 0) return { error: `No encontré ningún insumo que coincida con "${args.nombre_insumo}".` };
-    if (insumos.length > 1) return { error: `Encontré varios insumos que coinciden con "${args.nombre_insumo}": ${insumos.map(c => c.nombre).join(', ')}. Decime cuál exactamente.` };
+    if (insumos.length === 0) return { error: msjNoEncontreInsumo(idioma, args.nombre_insumo) };
+    if (insumos.length > 1) return { error: msjVariosInsumos(idioma, args.nombre_insumo, insumos) };
     const insumo = insumos[0];
     const recetas = await db.all2(`
       SELECT p.nombre, p.costo_total, pi.cantidad, pi.unidad
@@ -320,7 +383,15 @@ async function ejecutarConsulta(nombre, args) {
       filas = filas.filter(r => r.stock_minimo != null && (r.stock_actual || 0) <= r.stock_minimo);
     }
     if (filas.length === 0) {
-      return { total: 0, mensaje: args.nombre_producto ? `No encontré ningún producto de Inventario AYB que coincida con "${args.nombre_producto}".` : 'No hay productos que cumplan ese filtro.' };
+      return {
+        total: 0,
+        mensaje: args.nombre_producto
+          ? msj(idioma,
+              `No encontré ningún producto de Inventario AYB que coincida con "${args.nombre_producto}".`,
+              `I couldn't find any AYB Inventory product matching "${args.nombre_producto}".`,
+              `Não encontrei nenhum produto do Inventário AYB que corresponda a "${args.nombre_producto}".`)
+          : msj(idioma, 'No hay productos que cumplan ese filtro.', 'There are no products matching that filter.', 'Não há produtos que atendam a esse filtro.'),
+      };
     }
     return {
       total: filas.length,
@@ -337,8 +408,8 @@ async function ejecutarConsulta(nombre, args) {
 
     if (args.nombre_empleado) {
       const candidatos = await buscarEmpleadoCocinaPorNombre(args.nombre_empleado);
-      if (candidatos.length === 0) return { error: `No encontré ningún empleado de Cocina que coincida con "${args.nombre_empleado}".` };
-      if (candidatos.length > 1) return { error: `Encontré varios empleados que coinciden con "${args.nombre_empleado}": ${candidatos.map(c => c.nombre).join(', ')}. Decime cuál exactamente.` };
+      if (candidatos.length === 0) return { error: msjNoEncontreEmpleadoCocina(idioma, args.nombre_empleado) };
+      if (candidatos.length > 1) return { error: msjVariosEmpleados(idioma, args.nombre_empleado, candidatos) };
       const emp = candidatos[0];
       const registros = await db.all2(`
         SELECT fecha::text AS fecha, horas, nota FROM horas_extra
@@ -362,14 +433,48 @@ async function ejecutarConsulta(nombre, args) {
       ORDER BY total DESC
       LIMIT 20
     `, [mes]);
-    if (rows.length === 0) return { mes, mensaje: 'No hay horas extra cargadas ese mes.' };
+    if (rows.length === 0) return { mes, mensaje: msj(idioma, 'No hay horas extra cargadas ese mes.', 'There are no overtime hours logged that month.', 'Não há horas extras lançadas nesse mês.') };
     return {
       mes,
       ranking: rows.map(r => ({ empleado: r.nombre, horas_extra_totales: Math.round(Number(r.total) * 10) / 10, registros: r.registros })),
     };
   }
 
-  return { error: 'Herramienta de consulta desconocida' };
+  return { error: msj(idioma, 'Herramienta de consulta desconocida', 'Unknown query tool', 'Ferramenta de consulta desconhecida') };
+}
+
+// ── Mensajes de "no encontré"/"encontré varios", en los tres idiomas ────
+function msjNoEncontreEmpleado(idioma, texto) {
+  return msj(idioma,
+    `No encontré ningún empleado que coincida con "${texto}".`,
+    `I couldn't find any employee matching "${texto}".`,
+    `Não encontrei nenhum funcionário que corresponda a "${texto}".`);
+}
+function msjNoEncontreEmpleadoCocina(idioma, texto) {
+  return msj(idioma,
+    `No encontré ningún empleado de Cocina que coincida con "${texto}".`,
+    `I couldn't find any Kitchen employee matching "${texto}".`,
+    `Não encontrei nenhum funcionário da Cozinha que corresponda a "${texto}".`);
+}
+function msjVariosEmpleados(idioma, texto, candidatos) {
+  const nombres = candidatos.map(c => c.nombre).join(', ');
+  return msj(idioma,
+    `Encontré varios empleados que coinciden con "${texto}": ${nombres}. Decime cuál exactamente.`,
+    `I found several employees matching "${texto}": ${nombres}. Tell me which one exactly.`,
+    `Encontrei vários funcionários que correspondem a "${texto}": ${nombres}. Me diga qual exatamente.`);
+}
+function msjNoEncontreInsumo(idioma, texto) {
+  return msj(idioma,
+    `No encontré ningún insumo que coincida con "${texto}".`,
+    `I couldn't find any supply item matching "${texto}".`,
+    `Não encontrei nenhum insumo que corresponda a "${texto}".`);
+}
+function msjVariosInsumos(idioma, texto, candidatos) {
+  const nombres = candidatos.map(c => c.nombre).join(', ');
+  return msj(idioma,
+    `Encontré varios insumos que coinciden con "${texto}": ${nombres}. Decime cuál exactamente.`,
+    `I found several supply items matching "${texto}": ${nombres}. Tell me which one exactly.`,
+    `Encontrei vários insumos que correspondem a "${texto}": ${nombres}. Me diga qual exatamente.`);
 }
 
 // Busca un insumo o empleado por nombre aproximado. Devuelve null si no hay match único.
@@ -396,51 +501,80 @@ async function buscarEmpleadoCocinaPorNombre(texto) {
 }
 
 // ── Arma el texto de confirmación + guarda la acción pendiente en sesión ──
-async function prepararAccion(req, nombre, args) {
+async function prepararAccion(req, nombre, args, idioma) {
   if (nombre === 'actualizar_precio_insumo') {
     const candidatos = await buscarInsumoPorNombre(args.nombre_insumo);
-    if (candidatos.length === 0) return { error: `No encontré ningún insumo que coincida con "${args.nombre_insumo}".` };
-    if (candidatos.length > 1) return { error: `Encontré varios insumos que coinciden con "${args.nombre_insumo}": ${candidatos.map(c => c.nombre).join(', ')}. Decime cuál exactamente.` };
+    if (candidatos.length === 0) return { error: msjNoEncontreInsumo(idioma, args.nombre_insumo) };
+    if (candidatos.length > 1) return { error: msjVariosInsumos(idioma, args.nombre_insumo, candidatos) };
     const insumo = candidatos[0];
     req.session.accionPendiente = { tipo: nombre, insumo_id: insumo.id };
-    return { confirmacion: `¿Confirmás que actualizo el precio de "${insumo.nombre}" a $${Number(args.precio_nuevo).toFixed(2)}? (Precio actual: $${Number(insumo.precio_unitario || 0).toFixed(2)})`, valorNuevo: args.precio_nuevo };
+    const precioNuevo = Number(args.precio_nuevo).toFixed(2);
+    const precioActual = Number(insumo.precio_unitario || 0).toFixed(2);
+    return {
+      confirmacion: msj(idioma,
+        `¿Confirmás que actualizo el precio de "${insumo.nombre}" a $${precioNuevo}? (Precio actual: $${precioActual})`,
+        `Do you confirm I update the price of "${insumo.nombre}" to $${precioNuevo}? (Current price: $${precioActual})`,
+        `Confirma que vou atualizar o preço de "${insumo.nombre}" para $${precioNuevo}? (Preço atual: $${precioActual})`),
+      valorNuevo: args.precio_nuevo,
+    };
   }
 
   if (nombre === 'asignar_recoff' || nombre === 'quitar_recoff') {
     const candidatos = await buscarEmpleadoPorNombre(args.nombre_empleado);
-    if (candidatos.length === 0) return { error: `No encontré ningún empleado que coincida con "${args.nombre_empleado}".` };
-    if (candidatos.length > 1) return { error: `Encontré varios empleados que coinciden con "${args.nombre_empleado}": ${candidatos.map(c => c.nombre).join(', ')}. Decime cuál exactamente.` };
+    if (candidatos.length === 0) return { error: msjNoEncontreEmpleado(idioma, args.nombre_empleado) };
+    if (candidatos.length > 1) return { error: msjVariosEmpleados(idioma, args.nombre_empleado, candidatos) };
     const emp = candidatos[0];
     req.session.accionPendiente = { tipo: nombre, usuario_id: emp.id, fecha: args.fecha };
-    const accionTexto = nombre === 'asignar_recoff' ? `ponerle RECOFF a` : `sacarle el RECOFF a`;
-    return { confirmacion: `¿Confirmás que le ${accionTexto === 'ponerle RECOFF a' ? 'pongo RECOFF a' : 'saco el RECOFF a'} ${emp.nombre} el ${args.fecha}?` };
+    const confirmacion = nombre === 'asignar_recoff'
+      ? msj(idioma,
+          `¿Confirmás que le pongo RECOFF a ${emp.nombre} el ${args.fecha}?`,
+          `Do you confirm I set RECOFF for ${emp.nombre} on ${args.fecha}?`,
+          `Confirma que vou colocar RECOFF para ${emp.nombre} no dia ${args.fecha}?`)
+      : msj(idioma,
+          `¿Confirmás que le saco el RECOFF a ${emp.nombre} el ${args.fecha}?`,
+          `Do you confirm I remove RECOFF from ${emp.nombre} on ${args.fecha}?`,
+          `Confirma que vou remover o RECOFF de ${emp.nombre} no dia ${args.fecha}?`);
+    return { confirmacion };
   }
 
   if (nombre === 'cargar_horas_extra') {
     const candidatos = await buscarEmpleadoCocinaPorNombre(args.nombre_empleado);
-    if (candidatos.length === 0) return { error: `No encontré ningún empleado de Cocina que coincida con "${args.nombre_empleado}".` };
-    if (candidatos.length > 1) return { error: `Encontré varios empleados que coinciden con "${args.nombre_empleado}": ${candidatos.map(c => c.nombre).join(', ')}. Decime cuál exactamente.` };
+    if (candidatos.length === 0) return { error: msjNoEncontreEmpleadoCocina(idioma, args.nombre_empleado) };
+    if (candidatos.length > 1) return { error: msjVariosEmpleados(idioma, args.nombre_empleado, candidatos) };
     const horas = Number(args.horas);
     if (!horas || horas <= 0 || horas > 24 || !/^\d{4}-\d{2}-\d{2}$/.test(args.fecha || '')) {
-      return { error: 'Revisá la fecha o la cantidad de horas — no me quedó un dato válido para cargar.' };
+      return {
+        error: msj(idioma,
+          'Revisá la fecha o la cantidad de horas — no me quedó un dato válido para cargar.',
+          'Check the date or the number of hours — I didn\'t get a valid value to log.',
+          'Verifique a data ou a quantidade de horas — não ficou um dado válido para lançar.'),
+      };
     }
     const emp = candidatos[0];
     req.session.accionPendiente = { tipo: nombre, usuario_id: emp.id, fecha: args.fecha, horas, nota: args.nota || null };
-    return { confirmacion: `¿Confirmás que cargo ${horas}hs extra para ${emp.nombre} el ${args.fecha}${args.nota ? ` (nota: "${args.nota}")` : ''}?` };
+    const notaTexto = args.nota
+      ? msj(idioma, ` (nota: "${args.nota}")`, ` (note: "${args.nota}")`, ` (observação: "${args.nota}")`)
+      : '';
+    return {
+      confirmacion: msj(idioma,
+        `¿Confirmás que cargo ${horas}hs extra para ${emp.nombre} el ${args.fecha}${notaTexto}?`,
+        `Do you confirm I log ${horas}h overtime for ${emp.nombre} on ${args.fecha}${notaTexto}?`,
+        `Confirma que vou lançar ${horas}h extras para ${emp.nombre} no dia ${args.fecha}${notaTexto}?`),
+    };
   }
 
-  return { error: 'Acción desconocida' };
+  return { error: msj(idioma, 'Acción desconocida', 'Unknown action', 'Ação desconhecida') };
 }
 
 // ── Ejecuta la acción ya confirmada, guardada en sesión ──────────────────
-async function ejecutarAccionPendiente(req) {
+async function ejecutarAccionPendiente(req, idioma) {
   const accion = req.session.accionPendiente;
-  if (!accion) return 'No tengo ninguna acción pendiente para confirmar.';
+  if (!accion) return msj(idioma, 'No tengo ninguna acción pendiente para confirmar.', 'I don\'t have any pending action to confirm.', 'Não tenho nenhuma ação pendente para confirmar.');
 
   if (accion.tipo === 'actualizar_precio_insumo') {
     await db.run2(`UPDATE insumos SET precio_unitario=$1, actualizado_en=NOW() WHERE id=$2`, [accion.valorNuevo, accion.insumo_id]);
     delete req.session.accionPendiente;
-    return 'Listo, actualicé el precio. ✓';
+    return msj(idioma, 'Listo, actualicé el precio. ✓', 'Done, I updated the price. ✓', 'Pronto, atualizei o preço. ✓');
   }
 
   if (accion.tipo === 'asignar_recoff') {
@@ -449,13 +583,13 @@ async function ejecutarAccionPendiente(req) {
       ON CONFLICT (usuario_id, fecha) DO UPDATE SET valor='RECOFF'
     `, [accion.usuario_id, accion.fecha]);
     delete req.session.accionPendiente;
-    return 'Listo, le asigné RECOFF ese día. ✓';
+    return msj(idioma, 'Listo, le asigné RECOFF ese día. ✓', 'Done, I set RECOFF for that day. ✓', 'Pronto, atribuí RECOFF nesse dia. ✓');
   }
 
   if (accion.tipo === 'quitar_recoff') {
     await db.run2(`DELETE FROM horarios_semanales WHERE usuario_id=$1 AND fecha=$2`, [accion.usuario_id, accion.fecha]);
     delete req.session.accionPendiente;
-    return 'Listo, saqué el RECOFF de ese día. ✓';
+    return msj(idioma, 'Listo, saqué el RECOFF de ese día. ✓', 'Done, I removed RECOFF from that day. ✓', 'Pronto, removi o RECOFF desse dia. ✓');
   }
 
   if (accion.tipo === 'cargar_horas_extra') {
@@ -464,41 +598,48 @@ async function ejecutarAccionPendiente(req) {
       VALUES ($1,$2,$3,$4,$5,$6)
     `, [accion.usuario_id, accion.fecha, accion.horas, accion.nota, req.session.usuario.id, req.session.usuario.nombre]);
     delete req.session.accionPendiente;
-    return 'Listo, cargué las horas extra. ✓';
+    return msj(idioma, 'Listo, cargué las horas extra. ✓', 'Done, I logged the overtime hours. ✓', 'Pronto, lancei as horas extras. ✓');
   }
 
   delete req.session.accionPendiente;
-  return 'No supe cómo aplicar esa acción.';
+  return msj(idioma, 'No supe cómo aplicar esa acción.', 'I didn\'t know how to apply that action.', 'Não consegui aplicar essa ação.');
 }
 
+// Reconoce confirmar/cancelar en los tres idiomas — el botón "Sí, confirmar"
+// / "No, cancelar" del panel del asistente ya se traduce en pantalla (ver
+// agregarBotonesConfirmacion en partials/nav.ejs), pero la persona también
+// puede escribir la respuesta a mano en cualquiera de los tres idiomas.
 function esAfirmativo(msg) {
-  return /^(si|sí|dale|confirmo|confirmar|ok|listo|s)$/i.test(msg.trim());
+  return /^(si|sí|dale|confirmo|confirmar|ok|listo|s|yes|y|sim|s)$/i.test(msg.trim());
 }
 function esNegativo(msg) {
-  return /^(no|cancelar|cancela|nop)$/i.test(msg.trim());
+  return /^(no|cancelar|cancela|nop|n|não|nao)$/i.test(msg.trim());
 }
 
 router.post('/mensaje', loginRequerido, async (req, res) => {
   const mensaje = (req.body.mensaje || '').trim();
-  if (!mensaje) return res.json({ ok: false, error: 'Mensaje vacío' });
+  const idioma = idiomaDesdeRequest(req);
+  if (!mensaje) return enviarJson(res, { ok: false, error: msj(idioma, 'Mensaje vacío', 'Empty message', 'Mensagem vazia') });
 
   try {
     // Si hay una acción pendiente de confirmar, resolvemos eso primero
     if (req.session.accionPendiente) {
       if (esAfirmativo(mensaje)) {
-        const texto = await ejecutarAccionPendiente(req);
-        return res.json({ ok: true, texto });
+        const texto = await ejecutarAccionPendiente(req, idioma);
+        return enviarJson(res, { ok: true, texto });
       }
       if (esNegativo(mensaje)) {
         delete req.session.accionPendiente;
-        return res.json({ ok: true, texto: 'Cancelado, no hice ningún cambio.' });
+        return enviarJson(res, { ok: true, texto: msj(idioma, 'Cancelado, no hice ningún cambio.', 'Cancelled, I didn\'t make any changes.', 'Cancelado, não fiz nenhuma alteração.') });
       }
       // Si escribió otra cosa, cancelamos la pendiente y seguimos como mensaje nuevo
       delete req.session.accionPendiente;
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return res.json({ ok: true, texto: 'El asistente todavía no está configurado (falta GEMINI_API_KEY).' });
+    if (!apiKey) return enviarJson(res, { ok: true, texto: msj(idioma, 'El asistente todavía no está configurado (falta GEMINI_API_KEY).', 'The assistant isn\'t configured yet (missing GEMINI_API_KEY).', 'O assistente ainda não está configurado (falta GEMINI_API_KEY).') });
+
+    const systemPrompt = armarSystemPrompt(idioma);
 
     // llamarGeminiConReintentos reintenta sola hasta 3 veces (con espera
     // creciente) cuando Gemini devuelve 503 "alta demanda" — eso era lo que
@@ -509,7 +650,7 @@ router.post('/mensaje', loginRequerido, async (req, res) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        systemInstruction: { parts: [{ text: systemPrompt }] },
         contents: [{ role: 'user', parts: [{ text: mensaje }] }],
         tools: HERRAMIENTAS,
       }),
@@ -531,27 +672,39 @@ router.post('/mensaje', loginRequerido, async (req, res) => {
     // ¿El modelo decidió llamar a una función?
     if (parte?.functionCall) {
       const { name, args } = parte.functionCall;
+      // Gemini exige que, al reenviarle su propio functionCall en el turno
+      // siguiente (para las herramientas de consulta, más abajo), venga
+      // acompañado del "thoughtSignature" que mandó junto con ESE mismo
+      // functionCall en la primera respuesta — si no, devuelve un 400
+      // ("Function call is missing a thought_signature..."). Esto es lo
+      // que realmente rompía "cuál es el producto de mayor stock", no un
+      // problema de idioma ni de conexión: el bot armaba bien la consulta,
+      // pero la segunda llamada (la que redacta la respuesta final con el
+      // resultado) le fallaba a Gemini con ese 400 antes de contestar.
+      const thoughtSignature = parte.thoughtSignature;
 
       if (HERRAMIENTAS_SOLO_ADMIN.includes(name) && !esAdminSesion(req)) {
-        return res.json({ ok: true, texto: 'Las horas extra son una función solo para administradores.' });
+        return enviarJson(res, { ok: true, texto: msj(idioma, 'Las horas extra son una función solo para administradores.', 'Overtime hours are an admin-only feature.', 'Horas extras são uma função exclusiva para administradores.') });
       }
 
       if (HERRAMIENTAS_DE_ACCION.includes(name)) {
-        const resultado = await prepararAccion(req, name, args || {});
-        if (resultado.error) return res.json({ ok: true, texto: resultado.error });
-        return res.json({ ok: true, texto: resultado.confirmacion, requiereConfirmacion: true });
+        const resultado = await prepararAccion(req, name, args || {}, idioma);
+        if (resultado.error) return enviarJson(res, { ok: true, texto: resultado.error });
+        return enviarJson(res, { ok: true, texto: resultado.confirmacion, requiereConfirmacion: true });
       }
 
       // Es una consulta: la ejecutamos y le devolvemos el resultado a Gemini para que redacte la respuesta
-      const resultadoConsulta = await ejecutarConsulta(name, args || {});
+      const resultadoConsulta = await ejecutarConsulta(name, args || {}, idioma);
+      const parteFunctionCall = { functionCall: { name, args } };
+      if (thoughtSignature) parteFunctionCall.thoughtSignature = thoughtSignature;
       const segundaLlamada = await llamarGeminiConReintentos(URL_GEMINI, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          systemInstruction: { parts: [{ text: systemPrompt }] },
           contents: [
             { role: 'user', parts: [{ text: mensaje }] },
-            { role: 'model', parts: [{ functionCall: { name, args } }] },
+            { role: 'model', parts: [parteFunctionCall] },
             { role: 'user', parts: [{ functionResponse: { name, response: resultadoConsulta } }] },
           ],
           tools: HERRAMIENTAS,
@@ -560,34 +713,46 @@ router.post('/mensaje', loginRequerido, async (req, res) => {
       const dataFinal = await segundaLlamada.json();
       if (dataFinal?.error) console.error('Error de Gemini (asistente, 2da llamada):', JSON.stringify(dataFinal.error));
       const partesFinal = dataFinal?.candidates?.[0]?.content?.parts || [];
-      const textoFinal = partesFinal.find(p => p.text)?.text || 'No pude generar una respuesta.';
-      return res.json({ ok: true, texto: textoFinal });
+      const textoFinal = partesFinal.find(p => p.text)?.text || msj(idioma, 'No pude generar una respuesta.', 'I couldn\'t generate a reply.', 'Não consegui gerar uma resposta.');
+      return enviarJson(res, { ok: true, texto: textoFinal });
     }
 
     // No llamó a ninguna función: respuesta de texto directa
-    const texto = parte?.text || 'No entendí bien, ¿podés reformular la pregunta?';
-    res.json({ ok: true, texto });
+    const texto = parte?.text || msj(idioma, 'No entendí bien, ¿podés reformular la pregunta?', 'I didn\'t quite understand, could you rephrase that?', 'Não entendi bem, você pode reformular a pergunta?');
+    enviarJson(res, { ok: true, texto });
   } catch (e) {
     console.error('Error en asistente:', e.message);
-    res.json({ ok: false, error: mensajeErrorAsistente(e) });
+    enviarJson(res, { ok: false, error: mensajeErrorAsistente(e, idioma) });
   }
 });
 
 // Mismo criterio de clasificación que mensajeErrorGemini (en
 // services/gemini.js, usado por "Reconocer con foto"), pero con el texto
-// adaptado al chat en vez de a la lectura de imágenes.
-function mensajeErrorAsistente(e) {
-  const msg = (e && e.message) || String(e);
-  if (/429|RESOURCE_EXHAUSTED|quota/i.test(msg)) {
-    return 'Se acabó la cuota gratuita diaria del asistente. Se resetea sola al otro día.';
+// adaptado al chat en vez de a la lectura de imágenes, y en los tres idiomas.
+function mensajeErrorAsistente(e, idioma) {
+  const msgOriginal = (e && e.message) || String(e);
+  if (/429|RESOURCE_EXHAUSTED|quota/i.test(msgOriginal)) {
+    return msj(idioma,
+      'Se acabó la cuota gratuita diaria del asistente. Se resetea sola al otro día.',
+      'The assistant\'s free daily quota ran out. It resets automatically the next day.',
+      'A cota gratuita diária do assistente acabou. Ela se reinicia sozinha no dia seguinte.');
   }
-  if (/503|UNAVAILABLE|high demand/i.test(msg)) {
-    return 'El asistente está con mucha demanda en este momento (ya reintenté varias veces). Esperá un minuto y probá de nuevo.';
+  if (/503|UNAVAILABLE|high demand/i.test(msgOriginal)) {
+    return msj(idioma,
+      'El asistente está con mucha demanda en este momento (ya reintenté varias veces). Esperá un minuto y probá de nuevo.',
+      'The assistant is experiencing high demand right now (I already retried several times). Wait a minute and try again.',
+      'O assistente está com muita demanda no momento (já tentei várias vezes). Espere um minuto e tente novamente.');
   }
-  if (/No se pudo conectar con Gemini|fetch failed|no respondió en/i.test(msg)) {
-    return 'No pude conectarme a internet para responder. Revisá la conexión de esta PC y probá de nuevo.';
+  if (/No se pudo conectar con Gemini|fetch failed|no respondió en/i.test(msgOriginal)) {
+    return msj(idioma,
+      'No pude conectarme a internet para responder. Revisá la conexión de esta PC y probá de nuevo.',
+      'I couldn\'t connect to the internet to reply. Check this computer\'s connection and try again.',
+      'Não consegui me conectar à internet para responder. Verifique a conexão deste computador e tente novamente.');
   }
-  return 'Tuve un problema para responder. Probá de nuevo en un momento.';
+  return msj(idioma,
+    'Tuve un problema para responder. Probá de nuevo en un momento.',
+    'I had a problem replying. Try again in a moment.',
+    'Tive um problema para responder. Tente novamente em instantes.');
 }
 
 module.exports = router;
