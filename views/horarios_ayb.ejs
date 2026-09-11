@@ -53,6 +53,7 @@
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
         <button type="button" onclick="abrirMisCompromisos()" class="btn-secondary"><i class="ti ti-calendar-event"></i> Mi agenda</button>
+        <button type="button" onclick="abrirEventosMes()" class="btn-secondary"><i class="ti ti-users"></i> Eventos</button>
         <% // "Miembro de equipo" (con Vencimientos) es solo para quien gestiona
            // AYB (admin/supervisor) — un mozo común no debe verlo. %>
         <% if (esGestor) { %>
@@ -82,6 +83,50 @@
         </div>
         <p id="conv-resumen" style="font-size:0.78rem;color:var(--gris-texto);margin-bottom:14px;"></p>
         <div id="conv-lista" style="overflow-y:auto;flex:1;"></div>
+      </div>
+    </div>
+
+    <!-- Modal: Eventos del mes (antes vivía siempre visible debajo del
+         calendario — se pasó a ventana emergente para no ocupar pantalla,
+         sobre todo en celular). -->
+    <div id="modal-eventos-mes" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+      <div style="background:var(--blanco);border-radius:16px;padding:28px;width:min(560px,92vw);max-height:85vh;display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <h2 style="font-size:1.1rem;font-weight:600;color:var(--negro);">Eventos del mes</h2>
+          <button type="button" onclick="hideModal('modal-eventos-mes')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--gris-texto);">&times;</button>
+        </div>
+        <div id="ev-lista" style="overflow-y:auto;flex:1;margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <!-- Modal: cargar disponibilidad de UN día (celular) — reemplaza al
+         panel "Días elegidos" cuando se toca un día en pantallas chicas. -->
+    <div id="modal-dia-mozo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+      <div style="background:var(--blanco);border-radius:16px;padding:28px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <h2 id="dm-fecha" style="font-size:1.1rem;font-weight:600;color:var(--negro);"></h2>
+          <button type="button" onclick="hideModal('modal-dia-mozo')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--gris-texto);">&times;</button>
+        </div>
+        <div id="dm-eventos"></div>
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          <div style="flex:1;">
+            <label style="font-size:0.7rem;color:var(--gris-texto);display:block;margin-bottom:4px;">Desde</label>
+            <input type="time" id="dm-desde" style="width:100%;padding:9px 10px;border:1px solid var(--gris-borde);border-radius:8px;font-size:0.85rem;">
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:0.7rem;color:var(--gris-texto);display:block;margin-bottom:4px;">Hasta</label>
+            <input type="time" id="dm-hasta" style="width:100%;padding:9px 10px;border:1px solid var(--gris-borde);border-radius:8px;font-size:0.85rem;">
+          </div>
+        </div>
+        <p style="font-size:0.72rem;color:var(--gris-texto);margin:-8px 0 16px;">Si dejás "Hasta" vacío, queda como "disponible desde esa hora, sin límite". Para "Marcar no disponible" el horario no hace falta.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button type="button" onclick="confirmarDiaMozoMobile('disponible')" class="btn-primary" style="width:100%;padding:13px;font-size:0.85rem;">
+            <i class="ti ti-check"></i> Confirmar disponible
+          </button>
+          <button type="button" onclick="confirmarDiaMozoMobile('no_disponible')" class="btn-secondary" style="width:100%;padding:13px;font-size:0.85rem;color:#dc2626;border-color:#fecaca;">
+            <i class="ti ti-x"></i> Marcar no disponible
+          </button>
+        </div>
       </div>
     </div>
 
@@ -122,11 +167,15 @@
             <span style="font-size:0.68rem;font-weight:700;background:#dc2626;border:1px solid #dc2626;color:#fff;padding:4px 12px;border-radius:20px;">No disponible</span>
             <span style="font-size:0.68rem;font-weight:700;background:var(--gris-fondo);border:1px solid var(--gris-borde);color:var(--gris-texto);padding:4px 12px;border-radius:20px;">Sin cargar</span>
             <span style="font-size:0.68rem;font-weight:700;background:var(--azul);border:1px solid var(--azul);color:#fff;padding:4px 12px;border-radius:20px;">Seleccionado</span>
+            <span style="font-size:0.68rem;font-weight:700;background:rgba(0,47,97,0.12);border:1px solid rgba(0,47,97,0.28);color:var(--azul);padding:4px 12px;border-radius:20px;">Con evento</span>
           </div>
           <div id="c-leyenda-gestor" style="display:none;gap:8px;flex-wrap:wrap;">
             <span style="font-size:0.68rem;font-weight:700;background:var(--azul-claro);border:1px solid var(--azul);color:var(--azul);padding:4px 12px;border-radius:20px;">Con eventos</span>
             <span style="font-size:0.68rem;font-weight:700;background:var(--gris-fondo);border:1px solid var(--gris-borde);color:var(--gris-texto);padding:4px 12px;border-radius:20px;">Sin eventos</span>
           </div>
+          <button type="button" id="ev-btn-convocar-ahora" onclick="correrEscalamientoAhora()" class="btn-secondary" style="display:none;padding:7px 14px;font-size:0.75rem;white-space:nowrap;" title="Sin esto, el sistema revisa los eventos solo cada unos minutos en segundo plano — este botón lo hace ahora mismo, sin esperar.">
+            <i class="ti ti-refresh"></i> Convocar ahora
+          </button>
           <button type="button" id="ev-btn-nuevo" onclick="abrirCargarEvento()" class="btn-primary" style="display:none;padding:7px 14px;font-size:0.75rem;white-space:nowrap;">
             <i class="ti ti-plus"></i> Cargar evento
           </button>
@@ -161,10 +210,6 @@
         <button type="button" onclick="limpiarSeleccion()" style="background:none;border:none;color:var(--gris-texto);text-decoration:underline;cursor:pointer;font-size:0.75rem;margin-top:14px;">Vaciar selección</button>
       </div>
 
-      <!-- Eventos del mes: dentro de la misma tarjeta del calendario -->
-      <div style="flex-basis:100%;border-top:1px solid var(--gris-borde);margin-top:16px;padding-top:16px;">
-        <div id="ev-lista"></div>
-      </div>
     </div>
 
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
@@ -251,6 +296,21 @@
   </div>
 </div>
 
+<!-- Confirmación de eliminar evento — reemplaza el confirm() nativo,
+     mismo estilo "peligro" que ya se usa en Configuración. -->
+<div id="modal-confirmar-eliminar-evento" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1200;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this) hideModal('modal-confirmar-eliminar-evento')">
+  <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.2);text-align:center;">
+    <div style="width:64px;height:64px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <i class="ti ti-trash" style="font-size:32px;color:#dc2626;"></i>
+    </div>
+    <p style="font-size:0.88rem;color:var(--negro);margin-bottom:22px;line-height:1.5;">¿Eliminar este evento? No se puede deshacer.</p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button type="button" class="btn-secondary" onclick="hideModal('modal-confirmar-eliminar-evento')" style="min-width:110px;">Cancelar</button>
+      <button type="button" onclick="confirmarEliminarEvento()" style="min-width:110px;background:#dc2626;color:#fff;border:none;border-radius:8px;padding:11px 18px;font-family:var(--font-sans);font-size:0.85rem;font-weight:600;cursor:pointer;">Eliminar</button>
+    </div>
+  </div>
+</div>
+
 
 <script>
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -294,6 +354,9 @@ function renderGrid() {
     const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const info = dispMapa[fechaStr];
     const sel = seleccionados.has(fechaStr);
+    // Eventos de ese día (para marcarlo en azul traslúcido) — nunca revela
+    // cupo/anotados acá, solo que hay algo cargado ese día.
+    const eventosDia = eventosMes.filter(ev => ev.fecha === fechaStr);
     let bg = 'var(--gris-fondo)', color = 'var(--negro)', border = 'transparent';
     if (sel) {
       bg = 'var(--azul)'; color = '#fff'; border = 'var(--azul)';
@@ -301,10 +364,14 @@ function renderGrid() {
       bg = '#22c55e'; color = '#fff'; border = '#22c55e';
     } else if (info && !info.disponible) {
       bg = '#dc2626'; color = '#fff'; border = '#dc2626';
+    } else if (eventosDia.length) {
+      // Mismo azul traslúcido que ya usamos en botones/carteles del resto del portal.
+      bg = 'rgba(0,47,97,0.12)'; color = 'var(--azul)'; border = 'rgba(0,47,97,0.28)';
     }
     let titulo = '';
     if (info && info.disponible) titulo = info.hora_hasta ? `Disponible de ${info.hora_desde} a ${info.hora_hasta}` : `Disponible desde las ${info.hora_desde}`;
     else if (info) titulo = 'No disponible';
+    if (eventosDia.length) titulo = (titulo ? titulo + ' · ' : '') + eventosDia.map(ev => ev.nombre).join(', ');
     html += `<div class="c-dia" style="background:${bg};color:${color};border-color:${border};" title="${titulo}" onclick="toggleDia('${fechaStr}')">${d}</div>`;
   }
   document.getElementById('c-grid').innerHTML = html;
@@ -366,10 +433,19 @@ let horariosPorDia = {};
 // si no hubiera pasado nada. Se ignora un segundo toggle del mismo día si
 // llega a menos de 250ms del anterior.
 let _ultimoToggleDia = null;
+// El panel "Días elegidos" al costado del calendario quedaba siempre
+// visible ocupando pantalla — en vez de eso, en cualquier pantalla (celular
+// o PC) un toque en un día abre directo una ventana emergente con ESE día
+// solo. El panel viejo (más abajo, seleccionados/horariosPorDia/etc.) queda
+// sin usarse pero no se borra por las dudas de que haga falta volver atrás.
 function toggleDia(fechaStr) {
+  if (esGestorEventos) return; // el gestor usa abrirCargarEvento(), no este flujo
   const ahora = Date.now();
   if (_ultimoToggleDia && _ultimoToggleDia.fecha === fechaStr && (ahora - _ultimoToggleDia.ts) < 250) return;
   _ultimoToggleDia = { fecha: fechaStr, ts: ahora };
+
+  abrirDiaMozoMobile(fechaStr);
+  return;
 
   if (seleccionados.has(fechaStr)) {
     seleccionados.delete(fechaStr);
@@ -497,6 +573,46 @@ async function confirmarSeleccion(estado) {
   if (errores > 0) mostrarAvisoAyb(`Se guardaron ${dias.length - errores} de ${dias.length} días. Hubo un error con el resto.`);
 }
 
+// ── Ventana emergente de un solo día (celular) ──────────────────────
+// Mismo endpoint que usa confirmarSeleccion, pero para un único día y sin
+// pasar por el panel "Días elegidos" ni por seleccionados/horariosPorDia.
+let _diaMozoMobileActual = null;
+
+function abrirDiaMozoMobile(fechaStr) {
+  _diaMozoMobileActual = fechaStr;
+  const info = dispMapa[fechaStr];
+  document.getElementById('dm-fecha').textContent = fmtFechaLarga(fechaStr);
+  document.getElementById('dm-desde').value = (info && info.disponible) ? (info.hora_desde || '') : '';
+  document.getElementById('dm-hasta').value = (info && info.disponible) ? (info.hora_hasta || '') : '';
+  const eventosDia = eventosMes.filter(ev => ev.fecha === fechaStr);
+  document.getElementById('dm-eventos').innerHTML = eventosDia.length
+    ? `<div style="background:rgba(0,47,97,0.12);border:1px solid rgba(0,47,97,0.28);color:var(--azul);border-radius:8px;padding:8px 10px;font-size:0.76rem;margin-bottom:14px;"><i class="ti ti-calendar-event"></i> Ese día hay evento: ${eventosDia.map(ev => ev.nombre).join(', ')}</div>`
+    : '';
+  showModal('modal-dia-mozo');
+}
+
+async function confirmarDiaMozoMobile(estado) {
+  const fecha = _diaMozoMobileActual;
+  if (!fecha) return;
+  const desde = document.getElementById('dm-desde').value;
+  const hasta = document.getElementById('dm-hasta').value;
+  if (estado === 'disponible' && !desde) {
+    mostrarAvisoAyb('Falta el horario "Desde".');
+    return;
+  }
+  try {
+    const resp = await fetch(`/personal/${uid}/disponibilidad`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `fecha=${fecha}&estado=${estado}&hora_desde=${encodeURIComponent(desde)}&hora_hasta=${encodeURIComponent(hasta)}`
+    });
+    const data = await resp.json();
+    if (!data.ok) { mostrarAvisoAyb('No se pudo guardar ese día.'); return; }
+  } catch (e) { mostrarAvisoAyb('No se pudo guardar ese día.'); return; }
+  hideModal('modal-dia-mozo');
+  await cargarMes();
+}
+
 // ── Eventos AYB (nombre, horario, cupo de mozos) ────
 let esGestorEventos = false;
 let eventosMes = [];
@@ -514,6 +630,7 @@ async function cargarEventos() {
       const eraGestor = esGestorEventos;
       esGestorEventos = data.esGestor;
       document.getElementById('ev-btn-nuevo').style.display = esGestorEventos ? 'inline-flex' : 'none';
+      document.getElementById('ev-btn-convocar-ahora').style.display = esGestorEventos ? 'inline-flex' : 'none';
       aplicarModoVista();
       // Si recién ahora supimos que es gestor (primera carga), el
       // calendario ya se había dibujado en modo "mozo" — hay que
@@ -526,7 +643,10 @@ async function cargarEventos() {
   } catch (e) { eventosMes = []; }
   if (esGestorEventos) await cargarDisponibilidadResumen(mesStr);
   renderEventos();
-  if (esGestorEventos) renderGrid(); // los conteos por día dependen de eventosMes y dispResumenMes
+  // Antes esto solo hacía falta para el gestor (conteos de anotados/cupo
+  // por día); ahora el mozo también necesita eventosMes actualizado para
+  // marcar en el calendario los días que tienen evento.
+  renderGrid();
 }
 
 // Informe de disponibilidad de mozos AYB por día (solo gestor) — para el
@@ -548,7 +668,9 @@ function aplicarModoVista() {
   document.getElementById('ayb-info-gestor').style.display = esGestorEventos ? 'flex' : 'none';
   document.getElementById('c-leyenda-mozo').style.display = esGestorEventos ? 'none' : 'flex';
   document.getElementById('c-leyenda-gestor').style.display = esGestorEventos ? 'flex' : 'none';
-  document.getElementById('ayb-form-mozo').style.display = esGestorEventos ? 'none' : 'block';
+  // El panel "Días elegidos" ya no se usa en ninguna pantalla (celular o
+  // PC) — el mozo carga cada día con la ventana emergente (abrirDiaMozoMobile).
+  document.getElementById('ayb-form-mozo').style.display = 'none';
 }
 
 // Abre "Cargar evento" en modo alta. Si viene de tocar un día del
@@ -633,7 +755,7 @@ function abrirInforme(fechaStr) {
 // usa la fecha que el gestor ya haya puesto en ese formulario.
 function abrirInformeDesdeModal() {
   const fecha = document.getElementById('ev-fecha').value;
-  if (!fecha) { alert('Elegí primero una fecha.'); return; }
+  if (!fecha) { mostrarAvisoAyb('Elegí primero una fecha.'); return; }
   abrirInforme(fecha);
 }
 
@@ -713,6 +835,42 @@ async function abrirMisCompromisos() {
   }
 }
 
+// Fuerza un "tick" del escalamiento ya mismo, en vez de esperar a que
+// corra solo en segundo plano (cada 5 minutos) — pensado para probar el
+// flujo de convocatorias sin tener que esperar.
+async function correrEscalamientoAhora() {
+  const btn = document.getElementById('ev-btn-convocar-ahora');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2"></i> Convocando...';
+  try {
+    const resp = await fetch('/horarios/escalamiento/correr', { method: 'POST' });
+    const data = await resp.json();
+    if (!data.ok) {
+      mostrarAvisoAyb(data.error || 'No se pudo correr el escalamiento.');
+    } else {
+      const r = data.resumen;
+      const partes = [];
+      if (r.fijoEnviadas) partes.push(`${r.fijoEnviadas} convocatoria(s) a mozos fijos`);
+      if (r.eventualEnviadas) partes.push(`${r.eventualEnviadas} convocatoria(s) a mozos eventuales`);
+      if (r.consultorasNotificadas) partes.push(`${r.consultorasNotificadas} aviso(s) a consultoras`);
+      const texto = partes.length
+        ? `Se mandaron: ${partes.join(', ')}. Revisá "WhatsApp pendientes" en Configuración si tu número todavía no está conectado.`
+        : `Revisé ${r.eventosRevisados} evento(s) — ninguno necesitaba una convocatoria nueva en este momento (o ya está dentro de las 24hs de espera de la tanda anterior).`;
+      mostrarAvisoAyb(texto);
+    }
+  } catch (e) {
+    mostrarAvisoAyb('No se pudo correr el escalamiento.');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-refresh"></i> Convocar ahora';
+  await cargarEventos();
+}
+
+function abrirEventosMes() {
+  renderEventos();
+  showModal('modal-eventos-mes');
+}
+
 function renderEventos() {
   const el = document.getElementById('ev-lista');
   if (!eventosMes.length) {
@@ -787,7 +945,7 @@ async function guardarEvento() {
   const hora_desde = document.getElementById('ev-hora-desde').value;
   const hora_hasta = document.getElementById('ev-hora-hasta').value;
   const cupo = document.getElementById('ev-cupo').value;
-  if (!nombre || !fecha || !hora_desde || !cupo) { alert('Completá nombre, fecha, hora desde y cupo.'); return; }
+  if (!nombre || !fecha || !hora_desde || !cupo) { mostrarAvisoAyb('Completá nombre, fecha, hora desde y cupo.'); return; }
   const url = id ? `/horarios/eventos/${id}/editar` : '/horarios/eventos';
   try {
     const resp = await fetch(url, {
@@ -796,18 +954,18 @@ async function guardarEvento() {
       body: `nombre=${encodeURIComponent(nombre)}&descripcion=${encodeURIComponent(descripcion)}&fecha=${fecha}&hora_desde=${encodeURIComponent(hora_desde)}&hora_hasta=${encodeURIComponent(hora_hasta)}&cupo=${encodeURIComponent(cupo)}`
     });
     const data = await resp.json();
-    if (!data.ok) { alert(data.error || 'No se pudo guardar el evento.'); return; }
+    if (!data.ok) { mostrarAvisoAyb(data.error || 'No se pudo guardar el evento.'); return; }
     hideModal('modal-evento');
     if (fecha) { cFecha = new Date(fecha + 'T00:00:00'); }
     await cargarEventos();
-  } catch (e) { alert('No se pudo guardar el evento.'); }
+  } catch (e) { mostrarAvisoAyb('No se pudo guardar el evento.'); }
 }
 
 async function anotarse(id) {
   const resp = await fetch(`/horarios/eventos/${id}/anotarse`, { method: 'POST' });
   const data = await resp.json();
-  if (!data.ok) alert(data.error || 'No se pudo anotar.');
-  else if (data.aviso) alert('Quedaste anotado, pero ojo: ' + data.aviso);
+  if (!data.ok) mostrarAvisoAyb(data.error || 'No se pudo anotar.');
+  else if (data.aviso) mostrarAvisoAyb('Quedaste anotado, pero ojo: ' + data.aviso);
   await cargarEventos();
 }
 
@@ -913,9 +1071,19 @@ async function ocultarEvento(id, oculto) {
   await cargarEventos();
 }
 
-async function eliminarEvento(id) {
-  if (!confirm('¿Eliminar este evento? No se puede deshacer.')) return;
-  await fetch(`/horarios/eventos/${id}/eliminar`, { method: 'POST' });
+// Reemplaza el confirm() nativo del navegador para eliminar un evento por
+// una ventana con el mismo estilo del resto del portal — igual criterio que
+// ya se usa en Configuración para eliminar usuarios/backups.
+let _eventoAEliminar = null;
+function eliminarEvento(id) {
+  _eventoAEliminar = id;
+  showModal('modal-confirmar-eliminar-evento');
+}
+async function confirmarEliminarEvento() {
+  hideModal('modal-confirmar-eliminar-evento');
+  if (!_eventoAEliminar) return;
+  await fetch(`/horarios/eventos/${_eventoAEliminar}/eliminar`, { method: 'POST' });
+  _eventoAEliminar = null;
   await cargarEventos();
 }
 

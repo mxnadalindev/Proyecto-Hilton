@@ -76,6 +76,7 @@
         seguridad_actualizada:'Configuración de seguridad guardada.',
         consultora_creada:'Consultora agregada.', consultora_editada:'Consultora actualizada.',
         consultora_activada:'Consultora activada.', consultora_desactivada:'Consultora desactivada.',
+        whatsapp_desvinculado:'WhatsApp desvinculado. Escaneá el QR nuevo para volver a vincular un número.',
       };
       const esError = ['backup_error','backup_no_encontrado'].includes(msg);
     %>
@@ -323,6 +324,22 @@
 
     <!-- TAB: WhatsApp pendientes -->
     <div id="tab-content-whatsapp" style="display:none;">
+      <!-- Vinculación con número personal (Baileys — NO es la API oficial
+           de WhatsApp Business, ver src/services/whatsappPersonal.js). Se
+           consulta /configuracion/whatsapp-personal/estado cada pocos
+           segundos para que el QR se refresque solo (vencen cada ~20s) y
+           para que el panel pase a "Conectado" apenas alguien escanea, sin
+           que el admin tenga que recargar la página. -->
+      <div class="cfg-card" style="margin-bottom:20px;">
+        <p class="cfg-titulo" style="margin-bottom:8px;"><i class="ti ti-brand-whatsapp"></i> WhatsApp — número personal vinculado</p>
+        <p style="font-size:0.78rem;color:var(--gris-texto);margin:0 0 16px;">
+          Envío automático real (no el link manual de abajo) usando un WhatsApp normal vinculado como dispositivo — igual que WhatsApp Web. No es la cuenta oficial de WhatsApp Business de Meta: es un número de teléfono común (el tuyo, o cualquiera que escanee el QR) mandando estos mensajes automáticamente.
+        </p>
+        <div id="waPersonalEstado" style="display:flex;flex-direction:column;align-items:flex-start;gap:14px;">
+          <p style="font-size:0.82rem;color:var(--gris-texto);">Consultando estado...</p>
+        </div>
+      </div>
+
       <div class="cfg-card">
         <p class="cfg-titulo" style="margin-bottom:8px;"><i class="ti ti-brand-whatsapp"></i> WhatsApp pendientes de enviar</p>
         <p style="font-size:0.78rem;color:var(--gris-texto);margin:0 0 20px;">Todavía no hay una cuenta de WhatsApp Business conectada — estos mensajes los arma el sistema solo (convocatorias de eventos de AYB), pero hay que mandarlos a mano tocando el link. Al volver de WhatsApp, marcalo como enviado para que no quede colgado acá.</p>
@@ -431,6 +448,51 @@ function marcarWhatsappEnviado(id) {
     if (fila) fila.style.opacity = '0.4';
   }).catch(() => {});
 }
+
+// ── Panel de WhatsApp (número personal, Baileys) ──────────────────────
+// Polling simple con setInterval (no hay websockets en este portal) —
+// alcanza de sobra para esto: el QR vence cada ~20s así que igual hay que
+// refrescar seguido mientras se está esperando el escaneo.
+<% if (verAyb) { %>
+function pintarEstadoWhatsappPersonal(data) {
+  const cont = document.getElementById('waPersonalEstado');
+  if (!cont) return;
+  if (data.estado === 'conectado') {
+    cont.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:9px;height:9px;border-radius:50%;background:#16a34a;display:inline-block;"></span>
+        <span style="font-size:0.85rem;font-weight:600;color:var(--negro);">Conectado${data.numero ? ' — +' + data.numero : ''}</span>
+      </div>
+      <form method="POST" action="/configuracion/whatsapp-personal/desvincular" style="margin:0;">
+        <button type="submit" class="btn-icono btn-icono-rojo" style="font-size:0.75rem;padding:7px 14px;"><i class="ti ti-plug-off"></i> Desvincular</button>
+      </form>`;
+  } else if (data.estado === 'esperando_qr' && data.qr) {
+    cont.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:9px;height:9px;border-radius:50%;background:#ea580c;display:inline-block;"></span>
+        <span style="font-size:0.85rem;font-weight:600;color:var(--negro);">Esperando que escanees el QR</span>
+      </div>
+      <p style="font-size:0.78rem;color:var(--gris-texto);margin:0;">Desde el celular que quieras usar: WhatsApp → Configuración → Dispositivos vinculados → Vincular un dispositivo, y escaneá este código. Se renueva solo si se vence, no hace falta recargar la página.</p>
+      <img src="${data.qr}" alt="Código QR para vincular WhatsApp" style="width:220px;height:220px;border:1px solid var(--gris-borde);border-radius:10px;padding:8px;background:#fff;">`;
+  } else {
+    cont.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:9px;height:9px;border-radius:50%;background:var(--gris-borde);display:inline-block;"></span>
+        <span style="font-size:0.85rem;font-weight:600;color:var(--negro);">Desconectado</span>
+      </div>
+      <p style="font-size:0.78rem;color:var(--gris-texto);margin:0;">Generando el QR para vincular... si esto no cambia en unos segundos, revisá que el servidor esté corriendo bien.</p>`;
+  }
+}
+
+function consultarEstadoWhatsappPersonal() {
+  fetch('/configuracion/whatsapp-personal/estado')
+    .then(r => r.json())
+    .then(pintarEstadoWhatsappPersonal)
+    .catch(() => {});
+}
+consultarEstadoWhatsappPersonal();
+setInterval(consultarEstadoWhatsappPersonal, 4000);
+<% } %>
 
 function buscarUsuario() {
   const q = document.getElementById('buscadorUsuarios').value.toLowerCase();

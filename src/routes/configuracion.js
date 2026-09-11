@@ -413,4 +413,32 @@ router.post('/whatsapp-outbox/:id/marcar-enviado', loginRequerido, soloAdmin, as
   res.redirect('/configuracion?tab=whatsapp');
 });
 
+// ── Vinculación de WhatsApp por número personal (Baileys) ─────────────
+// OJO: esto NO es la API oficial de WhatsApp Business — ver el comentario
+// grande en src/services/whatsappPersonal.js. Acá solo se expone el
+// estado de esa conexión (para el panel de Configuración) y la acción de
+// desvincular; el envío en sí lo maneja whatsapp.js/whatsappPersonal.js.
+const { getEstadoWhatsapp, desvincularWhatsapp } = require('../services/whatsappPersonal');
+
+// JSON, pensado para que la vista lo pise con un setInterval (mismo criterio
+// que cualquier otra pantalla "viva" del portal) y así muestre un QR nuevo
+// automáticamente cuando el anterior vence (Baileys los renueva solo cada
+// ~20s) sin que el admin tenga que recargar la página a mano.
+router.get('/whatsapp-personal/estado', loginRequerido, soloAdmin, (req, res) => {
+  if (!puedeGestionarAyb(req)) return res.status(403).json({ error: 'sin permiso' });
+  res.json(getEstadoWhatsapp());
+});
+
+router.post('/whatsapp-personal/desvincular', loginRequerido, soloAdmin, async (req, res) => {
+  if (!puedeGestionarAyb(req)) return res.redirect('/configuracion');
+  try {
+    await desvincularWhatsapp();
+    await registrar(req, 'whatsapp_personal_desvinculado', null);
+    res.redirect('/configuracion?msg=whatsapp_desvinculado&tab=whatsapp');
+  } catch (e) {
+    console.error('Error desvinculando WhatsApp personal:', e.message);
+    res.redirect('/configuracion?msg=' + encodeURIComponent('No se pudo desvincular: ' + e.message) + '&tab=whatsapp');
+  }
+});
+
 module.exports = router;

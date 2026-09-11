@@ -143,6 +143,17 @@ app.use('/asistente', require('./src/routes/asistente'));
 // esté mirando el portal en ese momento.
 require('./src/services/escalamientoAyb').iniciarEscalamientoAyb(5);
 
+// Puente de WhatsApp por número PERSONAL (Baileys, NO la API oficial de
+// Meta — ver el comentario grande en src/services/whatsappPersonal.js).
+// Se arranca acá, antes de que corra el primer tick de escalamiento, para
+// que si ya había una sesión guardada en data/whatsapp_session/ (de un
+// arranque anterior) quede reconectada y lista para mandar mensajes reales
+// desde el primer tick, no solo desde el segundo. Un fallo acá (ej. la
+// carpeta de sesión corrupta) no debe impedir que el resto del portal
+// arranque — igual queda el fallback de whatsapp_outbox.
+require('./src/services/whatsappPersonal').iniciarWhatsappPersonal()
+  .catch(e => console.error('Error arrancando el puente de WhatsApp (número personal):', e.message));
+
 // 404 — ruta que no matcheó ninguna de las de arriba
 app.use((req, res) => {
   res.status(404).render('error', {
