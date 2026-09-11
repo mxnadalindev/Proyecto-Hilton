@@ -174,22 +174,15 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Mostrar IPs de acceso
-function getIPs() {
-  const interfaces = os.networkInterfaces();
-  const ips = [];
-  for (const iface of Object.values(interfaces)) {
-    for (const alias of iface) {
-      if (alias.family === 'IPv4' && !alias.internal) {
-        ips.push(alias.address);
-      }
-    }
-  }
-  return ips;
-}
+// Mostrar IPs de acceso — misma lógica que usa src/utils/red.js para
+// armar los links de invitación de WhatsApp (que necesitan la IP de red
+// local, no "localhost", para poder abrirse desde el celular del mozo).
+// Se reusa de ahí en vez de reimplementarla acá para que las dos cosas no
+// se puedan desincronizar con el tiempo.
+const { getIpsLocales } = require('./src/utils/red');
 
 app.listen(PORT, '0.0.0.0', () => {
-  const ips = getIPs();
+  const ips = getIpsLocales();
   console.log('\n✓ Hilton Portal corriendo\n');
   console.log(`  Esta PC:    http://localhost:${PORT}`);
   ips.forEach(ip => {

@@ -37,13 +37,18 @@ function generarToken() {
   return crypto.randomBytes(24).toString('hex');
 }
 
-// URL base para armar el link de la invitación de WhatsApp — no hay un
-// dominio público fijo (esto se instala en la PC de Maxi), así que se usa
-// la variable de entorno PORTAL_URL si está cargada, y si no
-// localhost:PORT (mismo puerto que ya usa el resto del portal, ver
-// server.js) — alcanza para la red local del hotel.
+// URL base para armar el link de la invitación de WhatsApp — este link lo
+// tiene que poder abrir el CELULAR del mozo, no esta PC, así que
+// "localhost" no sirve acá (ver el comentario grande en
+// src/utils/red.js). Se usa la misma IP de red local que el server ya
+// calcula y muestra en la consola al arrancar ("Red local: ... usar en
+// celulares"), para no tener que pedirle a Maxi que configure nada a
+// mano — si en algún momento el portal tiene un dominio público fijo,
+// alcanza con cargar PORTAL_URL en el .env y automáticamente tiene
+// prioridad sobre la IP detectada.
+const { urlBaseParaCelulares } = require('../utils/red');
 function baseUrlPortal() {
-  return process.env.PORTAL_URL || `http://localhost:${process.env.PORT || 5000}`;
+  return urlBaseParaCelulares(process.env.PORT || 5000);
 }
 
 function fmtHorarioEvento(ev) {
@@ -161,7 +166,7 @@ async function convocarFijos(evento) {
     if (await respetaDescansoYTurno(mozo.id, evento)) elegibles.push(mozo);
   }
 
-  if (!elegibles.length) { await marcarTandaSinElegibles(evento.id, 'fijo'); return 0; }
+  if (!elegibles.length) { await marcarTandaSinElegibles(evento.id, 'fijo'); return { cantidad: 0, nombres: [] }; }
 
   for (const mozo of elegibles) {
     const token = generarToken();
@@ -172,7 +177,7 @@ async function convocarFijos(evento) {
     `, [evento.id, mozo.id, token]);
     await enviarWhatsApp(mozo.celular, mensajeInvitacionMozo(evento, mozo.nombre, token), fila.id);
   }
-  return elegibles.length;
+  return { cantidad: elegibles.length, nombres: elegibles.map(m => m.nombre) };
 }
 
 async function convocarEventuales(evento, gap) {
@@ -192,7 +197,7 @@ async function convocarEventuales(evento, gap) {
     elegibles.push(mozo);
   }
 
-  if (!elegibles.length) { await marcarTandaSinElegibles(evento.id, 'eventual'); return 0; }
+  if (!elegibles.length) { await marcarTandaSinElegibles(evento.id, 'eventual'); return { cantidad: 0, nombres: [] }; }
 
   for (const mozo of elegibles) {
     const token = generarToken();
@@ -203,7 +208,7 @@ async function convocarEventuales(evento, gap) {
     `, [evento.id, mozo.id, token]);
     await enviarWhatsApp(mozo.celular, mensajeInvitacionMozo(evento, mozo.nombre, token), fila.id);
   }
-  return elegibles.length;
+  return { cantidad: elegibles.length, nombres: elegibles.map(m => m.nombre) };
 }
 
 // A diferencia de las tandas de mozos, si no hay ninguna consultora activa
@@ -214,7 +219,7 @@ async function convocarEventuales(evento, gap) {
 // crea nada si la lista de consultoras está vacía.
 async function notificarConsultoras(evento, gap) {
   const consultoras = await db.all2(`SELECT id, nombre, celular FROM consultoras WHERE activo=true`);
-  if (!consultoras.length) return 0;
+  if (!consultoras.length) return { cantidad: 0, nombres: [] };
   for (const c of consultoras) {
     const fila = await db.get2(`
       INSERT INTO eventos_ayb_invitaciones (evento_id, consultora_id, tanda, estado, respondido_en)
@@ -223,7 +228,7 @@ async function notificarConsultoras(evento, gap) {
     `, [evento.id, c.id]);
     await enviarWhatsApp(c.celular, mensajeAvisoConsultora(evento, c.nombre, gap), fila.id);
   }
-  return consultoras.length;
+  return { cantidad: consultoras.length, nombres: consultoras.map(c => c.nombre) };
 }
 
 // Un solo "tick": revisa todos los eventos futuros con cupo sin cubrir y,
@@ -233,7 +238,14 @@ async function notificarConsultoras(evento, gap) {
 // consultoras) — nunca salta dos pasos en el mismo tick, así cada tanda
 // tiene su ventana completa de 24hs antes de que se dispare la siguiente.
 async function correrEscalamiento() {
-  const resumen = { eventosRevisados: 0, fijoEnviadas: 0, eventualEnviadas: 0, consultorasNotificadas: 0 };
+  // "detalleEventos": además de los totales de siempre (fijoEnviadas,
+  // etc.), se arma acá un renglón por cada evento revisado con qué pasó
+  // puntualmente con ÉL — a quién se le mandó WhatsApp (nombre y nombre,
+  // no solo un contador) y cuántos mozos siguen faltando para cubrir el
+  // cupo. Es lo que pidió Maxi para que el cartel de "Convocar ahora" (y a
+  // futuro cualquier otra pantalla) diga algo más útil que "se mandaron 2
+  // convocatorias" sin decir a quién ni si con eso ya alcanza.
+  const resumen = { eventosRevisados: 0, fijoEnviadas: 0, eventualEnviadas: 0, consultorasNotificadas: 0, detalleEventos: [] };
   try {
     await marcarVencidas();
 
@@ -242,18 +254,35 @@ async function correrEscalamiento() {
 
     for (const evento of eventos) {
       const gap = evento.cupo - evento.anotados;
-      if (gap <= 0) continue;
+      const base = { nombre: evento.nombre, fecha: evento.fecha, cupo: evento.cupo, anotados: evento.anotados, faltan: Math.max(gap, 0) };
+      if (gap <= 0) continue; // no debería pasar (la query ya filtra por esto), por las dudas.
 
       const existeFijo = await tandaExiste(evento.id, 'fijo');
       if (!existeFijo) {
-        resumen.fijoEnviadas += await convocarFijos(evento);
+        const r = await convocarFijos(evento);
+        resumen.fijoEnviadas += r.cantidad;
+        resumen.detalleEventos.push({
+          ...base,
+          accion: r.cantidad ? 'fijo_enviado' : 'fijo_sin_elegibles',
+          tanda: 'fijo',
+          nombres: r.nombres,
+        });
         continue;
       }
 
       const existeEventual = await tandaExiste(evento.id, 'eventual');
       if (!existeEventual) {
         if (await tandaVencida(evento.id, 'fijo')) {
-          resumen.eventualEnviadas += await convocarEventuales(evento, gap);
+          const r = await convocarEventuales(evento, gap);
+          resumen.eventualEnviadas += r.cantidad;
+          resumen.detalleEventos.push({
+            ...base,
+            accion: r.cantidad ? 'eventual_enviado' : 'eventual_sin_elegibles',
+            tanda: 'eventual',
+            nombres: r.nombres,
+          });
+        } else {
+          resumen.detalleEventos.push({ ...base, accion: 'esperando_vencimiento_fijo', tanda: 'fijo', nombres: [] });
         }
         continue;
       }
@@ -261,8 +290,21 @@ async function correrEscalamiento() {
       const existeConsultora = await tandaExiste(evento.id, 'consultora');
       if (!existeConsultora) {
         if (await tandaVencida(evento.id, 'eventual')) {
-          resumen.consultorasNotificadas += await notificarConsultoras(evento, gap);
+          const r = await notificarConsultoras(evento, gap);
+          resumen.consultorasNotificadas += r.cantidad;
+          resumen.detalleEventos.push({
+            ...base,
+            accion: r.cantidad ? 'consultoras_notificadas' : 'consultoras_sin_activas',
+            tanda: 'consultora',
+            nombres: r.nombres,
+          });
+        } else {
+          resumen.detalleEventos.push({ ...base, accion: 'esperando_vencimiento_eventual', tanda: 'eventual', nombres: [] });
         }
+      } else {
+        // Ya se avisó a las consultoras y el cupo sigue sin cubrirse — no
+        // queda ninguna tanda más por disparar, hace falta cubrirlo a mano.
+        resumen.detalleEventos.push({ ...base, accion: 'todas_las_tandas_agotadas', tanda: 'consultora', nombres: [] });
       }
     }
   } catch (e) {

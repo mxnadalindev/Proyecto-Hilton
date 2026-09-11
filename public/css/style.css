@@ -437,7 +437,11 @@ input::placeholder, textarea::placeholder {
    (azul). Las acciones destructivas (eliminar, dar de baja) se manejan
    aparte con sus propias clases y quedan en rojo a propósito. */
 .btn-primary {
-  display: inline-flex; align-items: center; gap: 6px;
+  /* justify-content:center: sin esto, cuando el botón tiene un min-width
+     más ancho que su propio texto (ej. los "Aceptar"/"Cancelar" de los
+     carteles de confirmación), el contenido queda pegado a la izquierda en
+     vez de centrado en el botón — se nota sobre todo en botones cortos. */
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   background: rgba(6,147,126,0.14); color: #06937e;
   border: 1px solid rgba(6,147,126,0.32); border-radius: 8px;
   padding: 0 18px; box-sizing: border-box;
@@ -456,7 +460,8 @@ input::placeholder, textarea::placeholder {
 .btn-primary:hover { background: rgba(6,147,126,0.24); }
 
 .btn-secondary {
-  display: inline-flex; align-items: center; gap: 6px;
+  /* Ver comentario en .btn-primary de acá arriba: misma razón. */
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   background: rgba(0,47,97,0.12); color: #002f61;
   border: 1px solid rgba(0,47,97,0.28); border-radius: 8px;
   padding: 0 18px; box-sizing: border-box; font-family: var(--font-sans);

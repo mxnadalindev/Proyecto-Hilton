@@ -291,7 +291,7 @@
     <div style="width:64px;height:64px;border-radius:50%;background:#fffbeb;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
       <i class="ti ti-alert-triangle" style="font-size:32px;color:#b45309;"></i>
     </div>
-    <p id="aviso-ayb-texto" style="font-size:0.88rem;color:var(--negro);margin-bottom:22px;line-height:1.5;"></p>
+    <p id="aviso-ayb-texto" style="font-size:0.88rem;color:var(--negro);margin-bottom:22px;line-height:1.5;white-space:pre-line;text-align:left;"></p>
     <button type="button" class="btn-primary" onclick="hideModal('modal-aviso-ayb')" style="min-width:120px;">Aceptar</button>
   </div>
 </div>
@@ -581,10 +581,17 @@ let _diaMozoMobileActual = null;
 function abrirDiaMozoMobile(fechaStr) {
   _diaMozoMobileActual = fechaStr;
   const info = dispMapa[fechaStr];
-  document.getElementById('dm-fecha').textContent = fmtFechaLarga(fechaStr);
-  document.getElementById('dm-desde').value = (info && info.disponible) ? (info.hora_desde || '') : '';
-  document.getElementById('dm-hasta').value = (info && info.disponible) ? (info.hora_hasta || '') : '';
   const eventosDia = eventosMes.filter(ev => ev.fecha === fechaStr);
+  document.getElementById('dm-fecha').textContent = fmtFechaLarga(fechaStr);
+  // Si el mozo ya había confirmado disponibilidad ese día, se precarga eso.
+  // Si no, y ese día hay un evento cargado por el admin, se precarga el
+  // horario DEL EVENTO — no tiene sentido pedirle al mozo que tipee a mano
+  // un horario que el sistema ya conoce, y así "Confirmar disponible" le
+  // funciona directo con un solo toque.
+  const yaDisponible = info && info.disponible;
+  const evConHorario = eventosDia.find(ev => ev.hora_desde);
+  document.getElementById('dm-desde').value = yaDisponible ? (info.hora_desde || '') : (evConHorario ? evConHorario.hora_desde : '');
+  document.getElementById('dm-hasta').value = yaDisponible ? (info.hora_hasta || '') : (evConHorario ? (evConHorario.hora_hasta || '') : '');
   document.getElementById('dm-eventos').innerHTML = eventosDia.length
     ? `<div style="background:rgba(0,47,97,0.12);border:1px solid rgba(0,47,97,0.28);color:var(--azul);border-radius:8px;padding:8px 10px;font-size:0.76rem;margin-bottom:14px;"><i class="ti ti-calendar-event"></i> Ese día hay evento: ${eventosDia.map(ev => ev.nombre).join(', ')}</div>`
     : '';
@@ -848,15 +855,7 @@ async function correrEscalamientoAhora() {
     if (!data.ok) {
       mostrarAvisoAyb(data.error || 'No se pudo correr el escalamiento.');
     } else {
-      const r = data.resumen;
-      const partes = [];
-      if (r.fijoEnviadas) partes.push(`${r.fijoEnviadas} convocatoria(s) a mozos fijos`);
-      if (r.eventualEnviadas) partes.push(`${r.eventualEnviadas} convocatoria(s) a mozos eventuales`);
-      if (r.consultorasNotificadas) partes.push(`${r.consultorasNotificadas} aviso(s) a consultoras`);
-      const texto = partes.length
-        ? `Se mandaron: ${partes.join(', ')}. Revisá "WhatsApp pendientes" en Configuración si tu número todavía no está conectado.`
-        : `Revisé ${r.eventosRevisados} evento(s) — ninguno necesitaba una convocatoria nueva en este momento (o ya está dentro de las 24hs de espera de la tanda anterior).`;
-      mostrarAvisoAyb(texto);
+      mostrarAvisoAyb(textoResumenEscalamiento(data.resumen));
     }
   } catch (e) {
     mostrarAvisoAyb('No se pudo correr el escalamiento.');
@@ -864,6 +863,55 @@ async function correrEscalamientoAhora() {
   btn.disabled = false;
   btn.innerHTML = '<i class="ti ti-refresh"></i> Convocar ahora';
   await cargarEventos();
+}
+
+// Arma el texto del cartel de "Convocar ahora" a partir del resumen que
+// devuelve el server — un renglón por evento revisado, diciendo a quién
+// se le mandó WhatsApp (nombre y apellido, no solo un contador) y cuántos
+// mozos siguen faltando para completar la nómina de ese evento. Antes acá
+// solo se mostraban totales agregados (ej. "2 convocatoria(s) a mozos
+// fijos"), lo que no alcanzaba para saber si con eso ya estaba cubierto o
+// a quién ir a buscar en persona si el WhatsApp automático no anduvo.
+function textoResumenEscalamiento(r) {
+  if (!r.detalleEventos || !r.detalleEventos.length) {
+    return `Revisé ${r.eventosRevisados} evento(s) — ninguno tiene el cupo sin cubrir en este momento.`;
+  }
+  const NOMBRE_TANDA = { fijo: 'mozos fijos', eventual: 'mozos eventuales', consultora: 'consultoras' };
+  const renglones = r.detalleEventos.map(ev => {
+    const faltanTxt = ev.faltan > 0 ? `faltan ${ev.faltan} mozo${ev.faltan === 1 ? '' : 's'}` : 'nómina completa';
+    let accionTxt;
+    switch (ev.accion) {
+      case 'fijo_enviado':
+      case 'eventual_enviado':
+        accionTxt = `se avisó por WhatsApp a ${NOMBRE_TANDA[ev.tanda]}: ${ev.nombres.join(', ')}`;
+        break;
+      case 'consultoras_notificadas':
+        accionTxt = `se avisó por WhatsApp a las consultoras: ${ev.nombres.join(', ')}`;
+        break;
+      case 'fijo_sin_elegibles':
+        accionTxt = 'no había ningún mozo fijo disponible para convocar (por descanso, tope de horas, o no tiene celular cargado)';
+        break;
+      case 'eventual_sin_elegibles':
+        accionTxt = 'no había ningún mozo eventual disponible para convocar';
+        break;
+      case 'consultoras_sin_activas':
+        accionTxt = 'no hay ninguna consultora activa cargada en Configuración';
+        break;
+      case 'esperando_vencimiento_fijo':
+        accionTxt = 'esperando la respuesta de los mozos fijos ya convocados (24hs desde que se les mandó el WhatsApp)';
+        break;
+      case 'esperando_vencimiento_eventual':
+        accionTxt = 'esperando la respuesta de los mozos eventuales ya convocados (24hs desde que se les mandó el WhatsApp)';
+        break;
+      case 'todas_las_tandas_agotadas':
+        accionTxt = 'ya se avisó a fijos, eventuales y consultoras — hay que cubrirlo a mano';
+        break;
+      default:
+        accionTxt = 'sin novedades';
+    }
+    return `• ${ev.nombre} (${fmtFechaCorta(ev.fecha)}): ${accionTxt}. ${faltanTxt}.`;
+  });
+  return `Revisé ${r.eventosRevisados} evento(s):\n${renglones.join('\n')}\n\nRevisá "WhatsApp pendientes" en Configuración si algún número todavía no está conectado.`;
 }
 
 function abrirEventosMes() {

@@ -71,14 +71,55 @@ function getEstadoWhatsapp() {
 
 // El JID de un contacto individual en Baileys es "<código país + número, solo
 // dígitos>@s.whatsapp.net" (ver README de Baileys, sección "Whatsapp IDs
-// Explain"). El resto del portal ya guarda los celulares como texto libre
-// y los limpia con .replace(/\D/g,'') para armar los links wa.me — se
-// reusa exactamente la misma limpieza acá para no introducir un segundo
-// criterio de "qué es un número válido".
+// Explain"). El resto del portal guarda los celulares como texto libre sin
+// código de país (ej. "1122334455", instrucción pensada para los links
+// manuales de wa.me, que WhatsApp corrige solo al abrirlos) — pero Baileys
+// no perdona: si el JID no tiene el 54 (Argentina) + 9 (celular argentino)
+// exactos, no encuentra la cuenta y el envío falla en silencio, cayendo al
+// modo manual. Acá se arma ese formato a partir de lo que haya cargado el
+// usuario, sea cual sea la forma en que lo haya escrito.
 function numeroAJid(numero) {
-  const digitos = (numero || '').replace(/\D/g, '');
+  let digitos = (numero || '').replace(/\D/g, '');
   if (!digitos) return null;
-  return `${digitos}@s.whatsapp.net`;
+
+  // Si ya viene con 54 al principio, se lo sacamos para analizar el resto
+  // como número local y volver a armarlo siempre de la misma manera —
+  // evita duplicar el 54 o dejarlo mal puesto según cómo lo haya tipeado
+  // cada uno (con o sin 54, con o sin 0/9/15 de más).
+  if (digitos.startsWith('54')) digitos = digitos.slice(2);
+  // El "0" de discado nacional (ej. la gente que carga "011 ..." en vez de
+  // "11 ...") tampoco va en el JID — solo va el código de área pelado.
+  if (digitos.startsWith('0')) digitos = digitos.slice(1);
+  // El "9" que WhatsApp exige para celulares argentinos a veces ya está
+  // cargado (por gente que lo sabe) y a veces no — se saca si está, para
+  // volver a agregarlo siempre en el mismo lugar.
+  if (digitos.startsWith('9')) digitos = digitos.slice(1);
+
+  // El viejo "15" de celular argentino (ej. "011 15 2233-4455") NO va
+  // pegado al principio del número entero — va DESPUÉS del código de área,
+  // y el código de área puede tener 2, 3 o 4 dígitos según la ciudad ("11"
+  // Buenos Aires, "351" Córdoba, etc.). El chequeo anterior acá
+  // (digitos.startsWith('15')) solo detectaba el caso en que no hubiera
+  // código de área en absoluto — para el caso real y mucho más común de
+  // "ÁREA + 15 + número" (ej. "1115-2233-4455") no hacía nada, el "15"
+  // quedaba pegado en el medio del número y el JID resultante tenía 2
+  // dígitos de más: no correspondía a ninguna cuenta real de WhatsApp, así
+  // que Baileys no tiraba error (el envío "funcionaba" del lado del
+  // código) pero el mensaje no le llegaba a nadie. Un número argentino de
+  // área+local sin el 15 mide siempre 10 dígitos — si mide 12, lo más
+  // probable es que tenga un "15" de más metido después del código de
+  // área; se prueban las 3 posiciones posibles (largo de área 2, 3 o 4) y
+  // se saca de ahí donde aparezca.
+  if (digitos.length === 12) {
+    for (const largoArea of [2, 3, 4]) {
+      if (digitos.slice(largoArea, largoArea + 2) === '15') {
+        digitos = digitos.slice(0, largoArea) + digitos.slice(largoArea + 2);
+        break;
+      }
+    }
+  }
+
+  return `549${digitos}@s.whatsapp.net`;
 }
 
 async function iniciarWhatsappPersonal() {
