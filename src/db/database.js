@@ -114,33 +114,37 @@ const init = async () => {
     )
   `);
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS evento_platos (
-      id SERIAL PRIMARY KEY,
-      evento_id INTEGER NOT NULL REFERENCES eventos(id),
-      plato_nombre TEXT NOT NULL,
-      cantidad_porciones INTEGER DEFAULT 1,
-      costo_porcion REAL DEFAULT 0,
-      subtotal REAL DEFAULT 0
-    )
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS evento_personal (
-      id SERIAL PRIMARY KEY,
-      evento_id INTEGER NOT NULL REFERENCES eventos(id),
-      usuario_id INTEGER NOT NULL REFERENCES usuarios(id)
-    )
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS evento_vajilla (
-      id SERIAL PRIMARY KEY,
-      evento_id INTEGER NOT NULL REFERENCES eventos(id),
-      vajilla_nombre TEXT NOT NULL,
-      cantidad INTEGER DEFAULT 1
-    )
-  `);
+  // Estas 3 tablas "hijas" de eventos no dependen una de otra (solo de
+  // eventos/usuarios, ya creadas arriba) — se crean en paralelo para que el
+  // arranque tarde un poco menos. No cambia qué se crea, solo que las tres
+  // consultas van juntas en vez de una atrás de la otra.
+  await Promise.all([
+    pool.query(`
+      CREATE TABLE IF NOT EXISTS evento_platos (
+        id SERIAL PRIMARY KEY,
+        evento_id INTEGER NOT NULL REFERENCES eventos(id),
+        plato_nombre TEXT NOT NULL,
+        cantidad_porciones INTEGER DEFAULT 1,
+        costo_porcion REAL DEFAULT 0,
+        subtotal REAL DEFAULT 0
+      )
+    `),
+    pool.query(`
+      CREATE TABLE IF NOT EXISTS evento_personal (
+        id SERIAL PRIMARY KEY,
+        evento_id INTEGER NOT NULL REFERENCES eventos(id),
+        usuario_id INTEGER NOT NULL REFERENCES usuarios(id)
+      )
+    `),
+    pool.query(`
+      CREATE TABLE IF NOT EXISTS evento_vajilla (
+        id SERIAL PRIMARY KEY,
+        evento_id INTEGER NOT NULL REFERENCES eventos(id),
+        vajilla_nombre TEXT NOT NULL,
+        cantidad INTEGER DEFAULT 1
+      )
+    `),
+  ]);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS recetas (
@@ -218,54 +222,60 @@ const init = async () => {
   await pool.query(`ALTER TABLE platos_costo ADD COLUMN IF NOT EXISTS departamento TEXT`);
   await pool.query(`UPDATE platos_costo SET departamento='cocina' WHERE departamento IS NULL`);
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS plato_insumos (
-      id SERIAL PRIMARY KEY,
-      plato_id INTEGER NOT NULL REFERENCES platos_costo(id),
-      insumo_id INTEGER NOT NULL REFERENCES insumos(id),
-      cantidad REAL DEFAULT 0,
-      unidad TEXT,
-      costo_parcial REAL DEFAULT 0
-    )
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS historial_precios (
-      id SERIAL PRIMARY KEY,
-      insumo_id INTEGER NOT NULL REFERENCES insumos(id),
-      precio_anterior REAL DEFAULT 0,
-      precio_nuevo REAL DEFAULT 0,
-      fecha TIMESTAMP DEFAULT NOW(),
-      origen TEXT DEFAULT 'manual'
-    )
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS auditoria (
-      id SERIAL PRIMARY KEY,
-      usuario_id INTEGER REFERENCES usuarios(id),
-      usuario_nombre TEXT,
-      accion TEXT NOT NULL,
-      detalle TEXT,
-      ip TEXT,
-      creado_en TIMESTAMP DEFAULT NOW()
-    )
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS configuracion_sistema (
-      clave TEXT PRIMARY KEY,
-      valor TEXT
-    )
-  `);
-  await pool.query(`
-    INSERT INTO configuracion_sistema (clave, valor) VALUES
-      ('max_intentos_login', '5'),
-      ('tiempo_bloqueo_min', '15'),
-      ('sesion_horas', '8'),
-      ('forzar_cambio_password', 'false')
-    ON CONFLICT (clave) DO NOTHING
-  `);
+  // Estas 4 tablas no dependen una de otra (cada una solo de platos_costo/
+  // insumos/usuarios, ya creadas arriba) — van en paralelo. configuracion_
+  // sistema mantiene su propio INSERT justo después de su CREATE (ese sí
+  // tiene que ir en ese orden, por eso queda como una función chica en vez
+  // de una consulta suelta).
+  await Promise.all([
+    pool.query(`
+      CREATE TABLE IF NOT EXISTS plato_insumos (
+        id SERIAL PRIMARY KEY,
+        plato_id INTEGER NOT NULL REFERENCES platos_costo(id),
+        insumo_id INTEGER NOT NULL REFERENCES insumos(id),
+        cantidad REAL DEFAULT 0,
+        unidad TEXT,
+        costo_parcial REAL DEFAULT 0
+      )
+    `),
+    pool.query(`
+      CREATE TABLE IF NOT EXISTS historial_precios (
+        id SERIAL PRIMARY KEY,
+        insumo_id INTEGER NOT NULL REFERENCES insumos(id),
+        precio_anterior REAL DEFAULT 0,
+        precio_nuevo REAL DEFAULT 0,
+        fecha TIMESTAMP DEFAULT NOW(),
+        origen TEXT DEFAULT 'manual'
+      )
+    `),
+    pool.query(`
+      CREATE TABLE IF NOT EXISTS auditoria (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER REFERENCES usuarios(id),
+        usuario_nombre TEXT,
+        accion TEXT NOT NULL,
+        detalle TEXT,
+        ip TEXT,
+        creado_en TIMESTAMP DEFAULT NOW()
+      )
+    `),
+    (async () => {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS configuracion_sistema (
+          clave TEXT PRIMARY KEY,
+          valor TEXT
+        )
+      `);
+      await pool.query(`
+        INSERT INTO configuracion_sistema (clave, valor) VALUES
+          ('max_intentos_login', '5'),
+          ('tiempo_bloqueo_min', '15'),
+          ('sesion_horas', '8'),
+          ('forzar_cambio_password', 'false')
+        ON CONFLICT (clave) DO NOTHING
+      `);
+    })(),
+  ]);
 
   // horarios_semanales: la usan Personal, Horarios y el Asistente todo el
   // tiempo (RECOFF, estados como VAC/LIBRE/ART, horarios por día) pero,
@@ -283,15 +293,19 @@ const init = async () => {
       UNIQUE (usuario_id, fecha)
     )
   `);
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_horarios_semanales_recoff
-    ON horarios_semanales (usuario_id)
-    WHERE UPPER(valor) = 'RECOFF'
-  `);
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_horarios_semanales_fecha
-    ON horarios_semanales (fecha)
-  `);
+  // Estos dos índices son independientes entre sí (ambos sobre
+  // horarios_semanales, ya creada arriba, pero uno no depende del otro).
+  await Promise.all([
+    pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_horarios_semanales_recoff
+      ON horarios_semanales (usuario_id)
+      WHERE UPPER(valor) = 'RECOFF'
+    `),
+    pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_horarios_semanales_fecha
+      ON horarios_semanales (fecha)
+    `),
+  ]);
 
   // feriados: Personal ya tiene las rutas para cargarlos y borrarlos (con
   // try/catch, así que no tiraba el servidor abajo como las otras), pero
@@ -369,25 +383,29 @@ const init = async () => {
   // principal de /recetas, en la subconsulta de imagen de portada) pero
   // nunca se creaban en ningún lado — sin esto, entrar a /recetas rompía
   // el servidor entero apenas hubiera una sola receta con foto.
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS receta_fotos (
-      id SERIAL PRIMARY KEY,
-      receta_id INTEGER NOT NULL REFERENCES recetas(id) ON DELETE CASCADE,
-      clasificacion TEXT NOT NULL DEFAULT 'Otros',
-      archivo TEXT NOT NULL,
-      orden INTEGER DEFAULT 0,
-      creado_en TIMESTAMP DEFAULT NOW()
-    )
-  `);
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS receta_insumos (
-      id SERIAL PRIMARY KEY,
-      receta_id INTEGER NOT NULL REFERENCES recetas(id) ON DELETE CASCADE,
-      insumo_id INTEGER NOT NULL REFERENCES insumos(id),
-      cantidad REAL DEFAULT 0,
-      unidad TEXT
-    )
-  `);
+  // receta_fotos y receta_insumos tampoco dependen una de otra (solo de
+  // recetas/insumos, ya creadas).
+  await Promise.all([
+    pool.query(`
+      CREATE TABLE IF NOT EXISTS receta_fotos (
+        id SERIAL PRIMARY KEY,
+        receta_id INTEGER NOT NULL REFERENCES recetas(id) ON DELETE CASCADE,
+        clasificacion TEXT NOT NULL DEFAULT 'Otros',
+        archivo TEXT NOT NULL,
+        orden INTEGER DEFAULT 0,
+        creado_en TIMESTAMP DEFAULT NOW()
+      )
+    `),
+    pool.query(`
+      CREATE TABLE IF NOT EXISTS receta_insumos (
+        id SERIAL PRIMARY KEY,
+        receta_id INTEGER NOT NULL REFERENCES recetas(id) ON DELETE CASCADE,
+        insumo_id INTEGER NOT NULL REFERENCES insumos(id),
+        cantidad REAL DEFAULT 0,
+        unidad TEXT
+      )
+    `),
+  ]);
 
   // Insumos — código de producto (antes migración 004 aparte): columna
   // opcional pero única cuando está cargada, para poder buscar/matchear
@@ -697,8 +715,12 @@ const init = async () => {
       respondido_en TIMESTAMP
     )
   `);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_eventos_ayb_invitaciones_evento ON eventos_ayb_invitaciones (evento_id, tanda)`);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_eventos_ayb_invitaciones_token ON eventos_ayb_invitaciones (token)`);
+  // Estos dos índices son independientes entre sí (ambos sobre
+  // eventos_ayb_invitaciones, ya creada arriba).
+  await Promise.all([
+    pool.query(`CREATE INDEX IF NOT EXISTS idx_eventos_ayb_invitaciones_evento ON eventos_ayb_invitaciones (evento_id, tanda)`),
+    pool.query(`CREATE INDEX IF NOT EXISTS idx_eventos_ayb_invitaciones_token ON eventos_ayb_invitaciones (token)`),
+  ]);
 
   // whatsapp_outbox: "buzón de salida" de WhatsApp. Todavía no hay una
   // cuenta de WhatsApp Business conectada (Maxi la está gestionando), así
