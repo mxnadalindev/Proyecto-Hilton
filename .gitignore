@@ -2,3 +2,11 @@ uploads/
 .env
 data/
 node_modules/
+
+# Copias de la base de datos: tienen contraseñas (encriptadas) y datos
+# personales de todos los empleados cargados — no deben viajar dentro del
+# repositorio de Git. Esto solo evita que se agreguen copias NUEVAS a
+# partir de ahora; las que ya estaban commiteadas de antes siguen en el
+# historial y hay que sacarlas aparte (ver informe de análisis).
+backups/
+*.dump

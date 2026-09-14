@@ -396,7 +396,18 @@ input::placeholder, textarea::placeholder {
 .tabla-wrap {
   background: var(--blanco);
   border: 1px solid var(--gris-borde);
-  border-radius: 12px; overflow: hidden; box-shadow: var(--sombra);
+  /* Antes era "overflow:hidden" a secas (pensado solo para redondear las
+     esquinas). El problema: si una tabla tiene muchas columnas + nombres
+     largos (ej. Inventario AYB con productos importados de un cierre, tipo
+     "ACONDICIONADOR PERSEA 350ML") y es más ancha que su contenedor, el
+     contenido que sobra no se veía NI se podía scrollear — quedaba
+     directamente recortado e invisible, incluidas las últimas columnas
+     (Editar/Eliminar). Eso es lo que reportó Maxi como que esos botones
+     "no se ven" en algunos rubros. En mobile esto ya se resolvía más abajo
+     con overflow-x:auto; ahora se hace igual acá siempre, para que en vez
+     de recortarse aparezca un scroll horizontal. overflow-y se deja hidden
+     para conservar las esquinas redondeadas de arriba/abajo. */
+  border-radius: 12px; overflow-x: auto; overflow-y: hidden; box-shadow: var(--sombra);
 }
 .tabla { width: 100%; border-collapse: collapse; }
 .tabla thead { background: var(--gris-fondo); }

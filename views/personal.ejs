@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"></noscript>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css"></noscript>
 <style>
 /* ── Header "Otras opciones" (AYB): agrupa Ver en Horarios / Importar mozos /
    Cargar con foto — mismas clases y estilos que el desplegable "Otras
@@ -874,6 +874,7 @@
 </div>
 
 
+<script src="/js/ui-comun.js"></script>
 <script>
 function ajustarRecoff(uid, delta) {
   fetch(`/personal/${uid}/recoff-ajustar`, {
@@ -1335,16 +1336,7 @@ function onCambioEstadoDia(sel, uid) {
   actualizarColorFila(uid);
 }
 
-// ── Modales ──
-function showModal(id){ document.getElementById(id).style.display='flex'; setTimeout(()=>{ const p=document.querySelector('#'+id+' input:not([type=hidden])'); if(p) p.focus(); },100); }
-function hideModal(id){ document.getElementById(id).style.display='none'; }
-
 // ── Desplegable "Otras opciones" (header, solo AYB) ──
-function toggleOtrasOpciones(ev) {
-  ev.stopPropagation();
-  const dd = document.getElementById('dropdown-otras-opciones');
-  if (dd) dd.classList.toggle('abierto');
-}
 document.addEventListener('click', (ev) => {
   const dropdown = document.getElementById('dropdown-otras-opciones');
   const boton = document.getElementById('btn-otras-opciones');

@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"></noscript>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css"></noscript>
 <style>
 .main-content-ancho{max-width:1600px;}
 .puesto-badge{font-size:0.68rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:2px 8px;border-radius:20px;}
@@ -150,7 +150,7 @@
         <% // Este selector solo lo ve un admin general (sin departamento propio) —
            // una cuenta de Cocina o de AYB ya ve directo lo suyo, sin nada para
            // elegir acá. Cocina ve sus insumos/platos de siempre; AYB ve el
-           // catálogo de Inventario AYB (sin costeo de platos, no aplica). %>
+           // catálogo de Inventario AYB más sus tragos costeados. %>
         <% if (typeof esAdminGeneral !== 'undefined' && esAdminGeneral) { %>
         <p style="font-size:0.75rem;color:var(--gris-texto);margin-top:4px;">
           Viendo <strong><%= depto === 'ayb' ? 'AYB' : 'Cocina' %></strong> ·
@@ -164,6 +164,9 @@
         <a href="/inventario-ayb" class="btn-secondary">
           <i class="ti ti-package"></i> Gestionar productos
         </a>
+        <button onclick="showModal('modal-plato')" class="btn-primary">
+          <i class="ti ti-glass"></i> Nuevo trago
+        </button>
         <% } else { %>
         <button onclick="showModal('modal-insumo')" class="btn-secondary">
           <i class="ti ti-plus"></i> Nuevo insumo
@@ -226,20 +229,24 @@
           </div>
         </div>
 
-        <% if (typeof esAyb === 'undefined' || !esAyb) { %>
-        <!-- Resumen de Platos, la lista completa vive en el modal. No aplica a AYB. -->
+        <!-- Resumen de Platos/Tragos, la lista completa vive en el modal. -->
         <div class="costos-card">
           <div class="tarjeta-resumen-lista">
-            <div class="tarjeta-unificada-icono tarjeta-unificada-icono-csv"><i class="ti ti-tools-kitchen-2"></i></div>
-            <p class="tarjeta-unificada-titulo">Costeo de platos</p>
+            <div class="tarjeta-unificada-icono tarjeta-unificada-icono-csv"><i class="ti <%= (typeof esAyb !== 'undefined' && esAyb) ? 'ti-glass' : 'ti-tools-kitchen-2' %>"></i></div>
+            <p class="tarjeta-unificada-titulo">Costeo de <%= (typeof esAyb !== 'undefined' && esAyb) ? 'tragos' : 'platos' %></p>
             <p class="tarjeta-resumen-numero"><%= totalPlatos %></p>
-            <p class="tarjeta-unificada-desc">plato<%= totalPlatos !== 1 ? 's' : '' %> costeado<%= totalPlatos !== 1 ? 's' : '' %></p>
+            <p class="tarjeta-unificada-desc">
+              <% if (typeof esAyb !== 'undefined' && esAyb) { %>
+                trago<%= totalPlatos !== 1 ? 's' : '' %> costeado<%= totalPlatos !== 1 ? 's' : '' %>
+              <% } else { %>
+                plato<%= totalPlatos !== 1 ? 's' : '' %> costeado<%= totalPlatos !== 1 ? 's' : '' %>
+              <% } %>
+            </p>
             <button type="button" class="btn-primary" onclick="showModal('modal-lista-platos')">
-              <i class="ti ti-list"></i> Ver platos
+              <i class="ti ti-list"></i> Ver <%= (typeof esAyb !== 'undefined' && esAyb) ? 'tragos' : 'platos' %>
             </button>
           </div>
         </div>
-        <% } %>
 
         <!-- Actualización de precios: un solo selector, detecta foto vs. catálogo solo -->
         <div class="costos-card">
@@ -428,12 +435,13 @@
   </div>
 </div>
 
-<% if (typeof esAyb === 'undefined' || !esAyb) { %>
-<!-- Modal: lista completa de Platos. No aplica a AYB. -->
+<% const esAybModal = (typeof esAyb !== 'undefined' && esAyb); const palabraItem = esAybModal ? 'trago' : 'plato'; %>
+<!-- Modal: lista completa de Platos (Cocina) / Tragos (AYB) — misma tabla,
+     platos_costo.departamento ya separa cuáles ve cada uno. -->
 <div id="modal-lista-platos" class="modal-lista" style="display:none;" onclick="if(event.target===this)hideModal('modal-lista-platos')">
   <div class="modal-lista-caja">
     <div class="modal-lista-header">
-      <p class="modal-lista-titulo"><i class="ti ti-tools-kitchen-2"></i> Costeo de platos</p>
+      <p class="modal-lista-titulo"><i class="ti <%= esAybModal ? 'ti-glass' : 'ti-tools-kitchen-2' %>"></i> Costeo de <%= esAybModal ? 'tragos' : 'platos' %></p>
       <button onclick="hideModal('modal-lista-platos')" class="modal-lista-cerrar"><i class="ti ti-x"></i></button>
     </div>
 
@@ -445,7 +453,7 @@
              // ese contexto al buscar — una cuenta de Cocina/AYB no lo necesita
              // (departamentoEfectivo ignora este parámetro para ellas). %>
           <% if (typeof depto !== 'undefined' && depto === 'ayb') { %><input type="hidden" name="depto" value="ayb"><% } %>
-          <input type="text" name="buscarPlato" value="<%= buscarPlato %>" placeholder="Buscar plato por nombre..."
+          <input type="text" name="buscarPlato" value="<%= buscarPlato %>" placeholder="Buscar <%= palabraItem %> por nombre..."
                  style="width:100%;padding:8px 32px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
           <% if (buscarPlato) { %>
           <a href="/costos<%= depto === 'ayb' ? '?depto=ayb' : '' %>#modal-lista-platos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
@@ -472,7 +480,7 @@
         <table class="tabla">
           <thead>
             <tr>
-              <th>Plato</th>
+              <th><%= esAybModal ? 'Trago' : 'Plato' %></th>
               <th>Costo</th>
               <th>Margen</th>
               <th>Precio venta</th>
@@ -506,11 +514,11 @@
             <% } else { %>
               <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
                 <% if (buscarPlato) { %>
-                  No se encontraron platos para "<%= buscarPlato %>".
+                  No se encontraron <%= palabraItem %>s para "<%= buscarPlato %>".
                 <% } else if (letraPlato) { %>
-                  No hay platos que empiecen con "<%= letraPlato %>".
+                  No hay <%= palabraItem %>s que empiecen con "<%= letraPlato %>".
                 <% } else { %>
-                  Sin platos. Agregá el primero.
+                  Sin <%= palabraItem %>s. Agregá el primero.
                 <% } %>
               </td></tr>
             <% } %>
@@ -520,7 +528,6 @@
     </div>
   </div>
 </div>
-<% } %>
 
 <!-- Modal: Variación de precios -->
 <div id="modal-variacion-precios" class="modal-lista" style="display:none;" onclick="if(event.target===this)hideModal('modal-variacion-precios')">
@@ -662,38 +669,48 @@
     </form>
   </div>
 </div>
+<% } %>
 
-<!-- Modal nuevo plato -->
+<% const esAybNuevo = (typeof esAyb !== 'undefined' && esAyb); %>
+<!-- Modal nuevo plato (Cocina) / nuevo trago (AYB) — mismo formulario,
+     solo cambian las opciones de categoría y el rótulo. -->
 <div id="modal-plato" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Nuevo plato</h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Nuevo <%= esAybNuevo ? 'trago' : 'plato' %></h2>
       <button onclick="hideModal('modal-plato')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
-    <form method="POST" action="/costos/plato/nuevo<%= typeof depto !== 'undefined' && depto === 'ayb' ? '?depto=ayb' : '' %>">
+    <form method="POST" action="/costos/plato/nuevo<%= esAybNuevo ? '?depto=ayb' : '' %>">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="field" style="grid-column:1/-1;">
-          <label>Nombre del plato</label>
-          <input type="text" name="nombre" placeholder="Ej: Risotto de hongos" required>
+          <label>Nombre del <%= esAybNuevo ? 'trago' : 'plato' %></label>
+          <input type="text" name="nombre" placeholder="<%= esAybNuevo ? 'Ej: Daiquiri' : 'Ej: Risotto de hongos' %>" required>
         </div>
         <div class="field" style="grid-column:1/-1;">
           <label>Categoría</label>
           <select name="categoria" id="sel-cat-plato" onchange="toggleOtroPlato()"
                   style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;color:var(--negro);outline:none;">
             <option value="">Seleccionar...</option>
+            <% if (esAybNuevo) { %>
+            <option>Tragos Clasicos</option><option>Tragos de Autor</option>
+            <option>Cerveza</option><option>Vino</option><option>Sin alcohol</option>
+            <% } else { %>
             <option>Entrada</option><option>Sopa</option><option>Ensalada</option>
             <option>Principal</option><option>Guarnición</option><option>Postre</option>
             <option>Desayuno</option><option>Merienda</option><option>Panadería</option>
             <option>Pastelería</option><option>Bebida</option>
+            <% } %>
             <option value="otro">Otro (escribir)</option>
           </select>
           <input type="text" id="otro-cat-plato" name="categoria_otro" placeholder="Escribir categoría..."
                  style="display:none;margin-top:6px;width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;color:var(--negro);outline:none;">
         </div>
+        <% if (!esAybNuevo) { %>
         <div class="field">
           <label>Porciones que rinde</label>
           <input type="number" name="porciones" placeholder="1" min="1" value="1">
         </div>
+        <% } %>
         <div class="field">
           <label>Margen de ganancia (%)</label>
           <input type="number" name="margen_ganancia" placeholder="30" min="0" max="100" value="30">
@@ -705,21 +722,15 @@
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
         <button type="button" onclick="hideModal('modal-plato')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary" onclick="prepararPlato()"><i class="ti ti-plus"></i> Crear plato</button>
+        <button type="submit" class="btn-primary" onclick="prepararPlato()"><i class="ti ti-plus"></i> Crear <%= esAybNuevo ? 'trago' : 'plato' %></button>
       </div>
     </form>
   </div>
 </div>
-<% } %>
 
 
+<script src="/js/ui-comun.js"></script>
 <script>
-function showModal(id){
-  document.getElementById(id).style.display='flex';
-  setTimeout(()=>{const f=document.querySelector('#'+id+' input:not([type=hidden])');if(f)f.focus();},100);
-}
-function hideModal(id){ document.getElementById(id).style.display='none'; }
-
 // Búsqueda de insumos en vivo (sin esperar Enter ni recargar la página).
 // OJO: la pantalla principal solo trae los primeros 200 insumos por
 // defecto (para no cargar toda la tabla de una) — así que filtrar nomás
@@ -832,7 +843,7 @@ function filtrarInsumosEnVivo() {
 <% if (buscar || letra) { %>
 showModal('modal-lista-insumos');
 <% } %>
-<% if ((buscarPlato || letraPlato) && (typeof esAyb === 'undefined' || !esAyb)) { %>
+<% if (buscarPlato || letraPlato) { %>
 showModal('modal-lista-platos');
 <% } %>
 <% if (mostrarModalVariacion) { %>

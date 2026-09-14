@@ -174,23 +174,22 @@ router.get('/', loginRequerido, async (req, res) => {
     );
   }
 
-  // ── Costeo de platos: no aplica a AYB (no tiene combos/recetas armadas
-  //    como Cocina) — se deja directamente vacío y sin consultar la tabla.
+  // ── Costeo de platos/tragos: cada departamento ve los suyos
+  //    (platos_costo.departamento). AYB los llama "tragos" en la vista,
+  //    pero es la misma tabla y las mismas consultas que Cocina.
   const buscarPlato = (req.query.buscarPlato || '').trim();
   const letraPlato  = (req.query.letraPlato || '').trim().toUpperCase().slice(0, 1);
   let platos = [], totalPlatos = 0;
-  if (!esAyb) {
-    if (buscarPlato) {
-      platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 AND nombre ILIKE $2 ORDER BY nombre LIMIT 300", [depto, `%${buscarPlato}%`]);
-      totalPlatos = platos.length;
-    } else if (letraPlato) {
-      platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 AND nombre ILIKE $2 ORDER BY nombre LIMIT 300", [depto, `${letraPlato}%`]);
-      totalPlatos = platos.length;
-    } else {
-      const totalPlatosRow = await db.get2("SELECT COUNT(*)::int AS total FROM platos_costo WHERE departamento=$1", [depto]);
-      totalPlatos = totalPlatosRow?.total || 0;
-      platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 ORDER BY nombre LIMIT 300", [depto]);
-    }
+  if (buscarPlato) {
+    platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 AND nombre ILIKE $2 ORDER BY nombre LIMIT 300", [depto, `%${buscarPlato}%`]);
+    totalPlatos = platos.length;
+  } else if (letraPlato) {
+    platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 AND nombre ILIKE $2 ORDER BY nombre LIMIT 300", [depto, `${letraPlato}%`]);
+    totalPlatos = platos.length;
+  } else {
+    const totalPlatosRow = await db.get2("SELECT COUNT(*)::int AS total FROM platos_costo WHERE departamento=$1", [depto]);
+    totalPlatos = totalPlatosRow?.total || 0;
+    platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 ORDER BY nombre LIMIT 300", [depto]);
   }
   const categorias = [...new Set(insumos.map(i=>i.categoria))];
   const msg = req.query.msg || null;
@@ -386,7 +385,8 @@ router.post('/insumo/:id/precio', loginRequerido, async (req, res) => {
 // Actualiza el precio de un producto de AYB (Inventario AYB) desde Costos —
 // igual mecánica que /insumo/:id/precio (el precio nunca baja solo, salvo
 // que se tilde "Forzar"), pero sobre productos_ayb/historial_precios_ayb en
-// vez de insumos/historial_precios, y sin recalcular platos (AYB no tiene).
+// vez de insumos/historial_precios. También recalcula en cascada los tragos
+// que usan este producto como ingrediente (plato_insumos_ayb).
 router.post('/producto-ayb/:id/precio', loginRequerido, async (req, res) => {
   const producto = await db.get2("SELECT * FROM productos_ayb WHERE id=$1", [req.params.id]);
   if (producto) {
@@ -410,6 +410,7 @@ router.post('/producto-ayb/:id/precio', loginRequerido, async (req, res) => {
         [producto.id, precioActual, precioNuevo]);
       await db.run2("UPDATE productos_ayb SET precio_unitario=$1 WHERE id=$2",
         [precioNuevo, req.params.id]);
+      await recalcularPlatosAyb(producto.id);
     }
   }
   res.redirect('/costos?depto=ayb');
@@ -424,8 +425,6 @@ router.post('/insumo/:id/eliminar', loginRequerido, async (req, res) => {
 router.post('/plato/nuevo', loginRequerido, async (req, res) => {
   const { nombre, categoria, porciones, precio_venta, margen_ganancia } = req.body;
   const depto = departamentoEfectivo(req);
-  // Costeo de platos no aplica a AYB (costea sus propios productos, no platos armados).
-  if (depto === 'ayb') return res.redirect('/costos?depto=ayb');
   await db.run2(
     "INSERT INTO platos_costo (nombre,categoria,porciones,precio_venta,margen_ganancia,departamento) VALUES ($1,$2,$3,$4,$5,$6)",
     [nombre, categoria||'', parseInt(porciones)||1, parseFloat(precio_venta)||0, parseFloat(margen_ganancia)||30, depto]
@@ -433,37 +432,79 @@ router.post('/plato/nuevo', loginRequerido, async (req, res) => {
   res.redirect('/costos' + (depto === 'ayb' ? '?depto=ayb' : ''));
 });
 
+// Un plato de Cocina y un trago de AYB viven en la misma fila de
+// platos_costo (ver comentario en database.js), así que las rutas de acá
+// para abajo se ramifican leyendo plato.departamento en vez de duplicarse
+// en un archivo aparte — Cocina sigue apuntando a insumos/plato_insumos,
+// AYB pasa a apuntar a productos_ayb/plato_insumos_ayb.
 router.get('/plato/:id', loginRequerido, async (req, res) => {
   const plato = await db.get2("SELECT * FROM platos_costo WHERE id=$1", [req.params.id]);
   if (!plato) return res.redirect('/costos');
-  const ingredientes = await db.all2(`
-    SELECT pi.*,i.nombre as insumo_nombre,i.precio_unitario
-    FROM plato_insumos pi JOIN insumos i ON pi.insumo_id=i.id WHERE pi.plato_id=$1
-  `, [req.params.id]);
-  const todosInsumos = await db.all2("SELECT * FROM insumos ORDER BY nombre");
-  const historial = await db.all2(`
-    SELECT hp.*,i.nombre as insumo_nombre FROM historial_precios hp
-    JOIN insumos i ON hp.insumo_id=i.id ORDER BY hp.fecha DESC LIMIT 20
-  `);
-  res.render('costos_plato', { plato, ingredientes, todosInsumos, historial });
+  const esAyb = plato.departamento === 'ayb';
+
+  const ingredientes = esAyb
+    ? await db.all2(`
+        SELECT pi.*, pr.nombre as insumo_nombre, pr.precio_unitario, pr.unidad_default
+        FROM plato_insumos_ayb pi JOIN productos_ayb pr ON pi.insumo_id=pr.id WHERE pi.plato_id=$1
+      `, [req.params.id])
+    : await db.all2(`
+        SELECT pi.*,i.nombre as insumo_nombre,i.precio_unitario
+        FROM plato_insumos pi JOIN insumos i ON pi.insumo_id=i.id WHERE pi.plato_id=$1
+      `, [req.params.id]);
+
+  const todosInsumos = esAyb
+    ? await db.all2("SELECT id, nombre, precio_unitario, unidad_default AS unidad FROM productos_ayb WHERE activo=true ORDER BY nombre")
+    : await db.all2("SELECT * FROM insumos ORDER BY nombre");
+
+  const historial = esAyb
+    ? await db.all2(`
+        SELECT hp.*, pr.nombre as insumo_nombre FROM historial_precios_ayb hp
+        JOIN productos_ayb pr ON hp.producto_id=pr.id ORDER BY hp.fecha DESC LIMIT 20
+      `)
+    : await db.all2(`
+        SELECT hp.*,i.nombre as insumo_nombre FROM historial_precios hp
+        JOIN insumos i ON hp.insumo_id=i.id ORDER BY hp.fecha DESC LIMIT 20
+      `);
+
+  res.render('costos_plato', { plato, ingredientes, todosInsumos, historial, esAyb });
 });
 
 router.post('/plato/:id/insumo', loginRequerido, async (req, res) => {
   const { insumo_id, cantidad, unidad } = req.body;
-  const insumo = await db.get2("SELECT * FROM insumos WHERE id=$1", [insumo_id]);
-  if (insumo) {
-    const costo_parcial = parseFloat(cantidad)*insumo.precio_unitario;
-    await db.run2(
-      "INSERT INTO plato_insumos (plato_id,insumo_id,cantidad,unidad,costo_parcial) VALUES ($1,$2,$3,$4,$5)",
-      [req.params.id, insumo_id, parseFloat(cantidad), unidad||insumo.unidad, costo_parcial]
-    );
-    await recalcularCostoPlato(req.params.id);
+  const plato = await db.get2("SELECT departamento FROM platos_costo WHERE id=$1", [req.params.id]);
+  if (!plato) return res.redirect('/costos');
+
+  if (plato.departamento === 'ayb') {
+    const producto = await db.get2("SELECT * FROM productos_ayb WHERE id=$1", [insumo_id]);
+    if (producto) {
+      const costo_parcial = parseFloat(cantidad)*producto.precio_unitario;
+      await db.run2(
+        "INSERT INTO plato_insumos_ayb (plato_id,insumo_id,cantidad,unidad,costo_parcial) VALUES ($1,$2,$3,$4,$5)",
+        [req.params.id, insumo_id, parseFloat(cantidad), unidad||producto.unidad_default, costo_parcial]
+      );
+      await recalcularCostoPlato(req.params.id);
+    }
+  } else {
+    const insumo = await db.get2("SELECT * FROM insumos WHERE id=$1", [insumo_id]);
+    if (insumo) {
+      const costo_parcial = parseFloat(cantidad)*insumo.precio_unitario;
+      await db.run2(
+        "INSERT INTO plato_insumos (plato_id,insumo_id,cantidad,unidad,costo_parcial) VALUES ($1,$2,$3,$4,$5)",
+        [req.params.id, insumo_id, parseFloat(cantidad), unidad||insumo.unidad, costo_parcial]
+      );
+      await recalcularCostoPlato(req.params.id);
+    }
   }
   res.redirect('/costos/plato/'+req.params.id);
 });
 
 router.post('/plato/:plato_id/insumo/:id/eliminar', loginRequerido, async (req, res) => {
-  await db.run2("DELETE FROM plato_insumos WHERE id=$1", [req.params.id]);
+  const plato = await db.get2("SELECT departamento FROM platos_costo WHERE id=$1", [req.params.plato_id]);
+  if (plato?.departamento === 'ayb') {
+    await db.run2("DELETE FROM plato_insumos_ayb WHERE id=$1", [req.params.id]);
+  } else {
+    await db.run2("DELETE FROM plato_insumos WHERE id=$1", [req.params.id]);
+  }
   await recalcularCostoPlato(req.params.plato_id);
   res.redirect('/costos/plato/'+req.params.plato_id);
 });
@@ -471,12 +512,17 @@ router.post('/plato/:plato_id/insumo/:id/eliminar', loginRequerido, async (req, 
 router.post('/plato/:plato_id/insumo/:id/cantidad', loginRequerido, async (req, res) => {
   const nuevaCantidad = parseFloat(req.body.cantidad);
   try {
-    const item = await db.get2("SELECT * FROM plato_insumos WHERE id=$1", [req.params.id]);
+    const plato = await db.get2("SELECT departamento FROM platos_costo WHERE id=$1", [req.params.plato_id]);
+    const esAyb = plato?.departamento === 'ayb';
+    const tablaLinea  = esAyb ? 'plato_insumos_ayb' : 'plato_insumos';
+    const tablaInsumo = esAyb ? 'productos_ayb' : 'insumos';
+
+    const item = await db.get2(`SELECT * FROM ${tablaLinea} WHERE id=$1`, [req.params.id]);
     if (item && !isNaN(nuevaCantidad) && nuevaCantidad >= 0) {
-      const insumo = await db.get2("SELECT * FROM insumos WHERE id=$1", [item.insumo_id]);
+      const insumo = await db.get2(`SELECT * FROM ${tablaInsumo} WHERE id=$1`, [item.insumo_id]);
       const costo_parcial = nuevaCantidad * (parseFloat(insumo?.precio_unitario) || 0);
       await db.run2(
-        "UPDATE plato_insumos SET cantidad=$1, costo_parcial=$2 WHERE id=$3",
+        `UPDATE ${tablaLinea} SET cantidad=$1, costo_parcial=$2 WHERE id=$3`,
         [nuevaCantidad, costo_parcial, req.params.id]
       );
       await recalcularCostoPlato(req.params.plato_id);
@@ -500,7 +546,11 @@ router.post('/plato/:id/margen', loginRequerido, async (req, res) => {
 });
 
 router.post('/plato/:id/eliminar', loginRequerido, async (req, res) => {
+  // Solo una de las dos tablas de líneas tiene filas para este plato (según
+  // sea de Cocina o de AYB) — borrar de las dos sin preguntar es más simple
+  // que ir a buscar el departamento primero, y no rompe nada de todos modos.
   await db.run2("DELETE FROM plato_insumos WHERE plato_id=$1", [req.params.id]);
+  await db.run2("DELETE FROM plato_insumos_ayb WHERE plato_id=$1", [req.params.id]);
   await db.run2("DELETE FROM platos_costo WHERE id=$1", [req.params.id]);
   res.redirect('/costos');
 });
@@ -582,8 +632,8 @@ const UMBRAL_AUTO_APLICAR = 0.90;
 // graben exactamente los mismos datos, sin duplicar la lógica.
 async function aplicarCambioPrecio({ insumoId, precioAnterior, precioNuevo, proveedor, facturaReferencia, usuario, confianza, automatico, esAyb }) {
   if (esAyb) {
-    // Igual mecánica, pero sobre productos_ayb/historial_precios_ayb — AYB no
-    // tiene platos armados, así que no hay nada que recalcular en cascada.
+    // Igual mecánica, pero sobre productos_ayb/historial_precios_ayb, con
+    // su propia cascada hacia los tragos que usan este producto.
     await db.run2(
       `INSERT INTO historial_precios_ayb
         (producto_id, precio_anterior, precio_nuevo, origen, proveedor, factura_referencia, usuario_id, usuario_nombre, confianza_match, aplicado_automaticamente)
@@ -592,6 +642,7 @@ async function aplicarCambioPrecio({ insumoId, precioAnterior, precioNuevo, prov
        usuario?.id || null, usuario?.nombre || null, confianza != null ? confianza : null, !!automatico]
     );
     await db.run2("UPDATE productos_ayb SET precio_unitario=$1 WHERE id=$2", [precioNuevo, insumoId]);
+    await recalcularPlatosAyb(insumoId);
     return;
   }
   await db.run2(
@@ -866,25 +917,66 @@ router.get('/platos/importar/resultado', loginRequerido, async (req, res) => {
   res.render('importar_platos_resultado', { resumen });
 });
 
+// Suma las líneas de AMBAS tablas (plato_insumos de Cocina y
+// plato_insumos_ayb de AYB) — un plato/trago dado solo tiene filas en una
+// de las dos, así que sumar las dos sin preguntar el departamento da el
+// mismo resultado que ramificar, con menos código.
 async function recalcularCostoPlato(plato_id) {
-  const items = await db.all2("SELECT * FROM plato_insumos WHERE plato_id=$1", [plato_id]);
-  const total = items.reduce((s,i) => s+(i.costo_parcial||0), 0);
+  const items = await db.all2("SELECT costo_parcial FROM plato_insumos WHERE plato_id=$1", [plato_id]);
+  const itemsAyb = await db.all2("SELECT costo_parcial FROM plato_insumos_ayb WHERE plato_id=$1", [plato_id]);
+  const total = [...items, ...itemsAyb].reduce((s,i) => s+(i.costo_parcial||0), 0);
   await db.run2("UPDATE platos_costo SET costo_total=$1 WHERE id=$2", [total, plato_id]);
 }
 
+// Antes esta función traía TODOS los platos que usan el insumo y, PARA
+// CADA UNO, hacía una consulta a la base y una actualización aparte, en un
+// ciclo secuencial (a veces varias consultas más por plato, vía
+// recalcularCostoPlato). Con una importación de CSV que cambia el precio
+// de muchos insumos a la vez (el caso real de uso: ver /insumos/importar
+// más abajo), esto disparaba cientos de consultas una atrás de la otra.
+// Mismo resultado final, pero ahora en 3 consultas en total sin importar
+// cuántos platos usen el insumo: una actualiza de una sola vez el
+// costo_parcial de TODAS las líneas que usan este insumo (mismo cálculo de
+// siempre, cantidad × precio_unitario), y la otra recalcula el
+// costo_total de todos los platos afectados de una sola vez, sumando sus
+// líneas de ambas tablas (igual que hacía recalcularCostoPlato, pero para
+// todos a la vez en vez de uno por uno).
 async function recalcularPlatos(insumo_id) {
   const platos = await db.all2("SELECT DISTINCT plato_id FROM plato_insumos WHERE insumo_id=$1", [insumo_id]);
-  const insumo = await db.get2("SELECT precio_unitario FROM insumos WHERE id=$1", [insumo_id]);
-  for (const p of platos) {
-    const items = await db.all2("SELECT * FROM plato_insumos WHERE plato_id=$1", [p.plato_id]);
-    for (const item of items) {
-      if (item.insumo_id == insumo_id) {
-        await db.run2("UPDATE plato_insumos SET costo_parcial=$1 WHERE id=$2",
-          [item.cantidad*insumo.precio_unitario, item.id]);
-      }
-    }
-    await recalcularCostoPlato(p.plato_id);
-  }
+  if (platos.length === 0) return;
+  const platoIds = platos.map(p => p.plato_id);
+  await db.run2(
+    `UPDATE plato_insumos SET costo_parcial = cantidad * (SELECT precio_unitario FROM insumos WHERE id=$1) WHERE insumo_id=$1`,
+    [insumo_id]
+  );
+  await db.run2(
+    `UPDATE platos_costo SET costo_total =
+       COALESCE((SELECT SUM(costo_parcial) FROM plato_insumos WHERE plato_insumos.plato_id = platos_costo.id), 0) +
+       COALESCE((SELECT SUM(costo_parcial) FROM plato_insumos_ayb WHERE plato_insumos_ayb.plato_id = platos_costo.id), 0)
+     WHERE id = ANY($1)`,
+    [platoIds]
+  );
+}
+
+// Igual que recalcularPlatos, pero para la cascada de AYB: cuando cambia el
+// precio de un producto de productos_ayb, hay que recalcular todos los
+// tragos que lo usan como ingrediente (plato_insumos_ayb). Misma
+// optimización que arriba, mismo motivo.
+async function recalcularPlatosAyb(producto_id) {
+  const platos = await db.all2("SELECT DISTINCT plato_id FROM plato_insumos_ayb WHERE insumo_id=$1", [producto_id]);
+  if (platos.length === 0) return;
+  const platoIds = platos.map(p => p.plato_id);
+  await db.run2(
+    `UPDATE plato_insumos_ayb SET costo_parcial = cantidad * (SELECT precio_unitario FROM productos_ayb WHERE id=$1) WHERE insumo_id=$1`,
+    [producto_id]
+  );
+  await db.run2(
+    `UPDATE platos_costo SET costo_total =
+       COALESCE((SELECT SUM(costo_parcial) FROM plato_insumos WHERE plato_insumos.plato_id = platos_costo.id), 0) +
+       COALESCE((SELECT SUM(costo_parcial) FROM plato_insumos_ayb WHERE plato_insumos_ayb.plato_id = platos_costo.id), 0)
+     WHERE id = ANY($1)`,
+    [platoIds]
+  );
 }
 
 // Se exporta además del router mismo (sin cambiar cómo se usa en server.js)

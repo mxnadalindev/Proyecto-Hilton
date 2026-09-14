@@ -153,126 +153,156 @@ router.get('/', loginRequerido, async (req, res) => {
 });
 
 router.get('/nueva', loginRequerido, requiereEdicion, async (req, res) => {
-  const { categorias, areas } = await getOpciones();
-  const todosInsumos = await db.all2('SELECT id, nombre, unidad, precio_unitario FROM insumos ORDER BY nombre');
-  res.render('receta_nueva', {
-    path: req.path, categorias, areas, receta: null,
-    ingredientesActuales: [], videos: [], fotos: [], todosInsumos,
-  });
+  try {
+    const { categorias, areas } = await getOpciones();
+    const todosInsumos = await db.all2('SELECT id, nombre, unidad, precio_unitario FROM insumos ORDER BY nombre');
+    res.render('receta_nueva', {
+      path: req.path, categorias, areas, receta: null,
+      ingredientesActuales: [], videos: [], fotos: [], todosInsumos,
+    });
+  } catch (e) {
+    console.error('Error cargando formulario de nueva receta:', e.message);
+    res.render('error', { mensaje: 'No se pudo cargar el formulario. Probá de nuevo — si vuelve a pasar, avisale al admin.', volver: '/recetas' });
+  }
 });
 
 router.post('/nueva', loginRequerido, requiereEdicion, upload.any(), async (req, res) => {
-  const categoria = req.body.categoria === 'otro' ? (req.body.categoria_otro || '').trim() : (req.body.categoria || '').trim();
-  const area = req.body.area === 'otro' ? (req.body.area_otro || '').trim() : (req.body.area || '').trim();
-  const nombre = req.body.nombre || '';
-  const procedimiento = req.body.procedimiento || '';
+  try {
+    const categoria = req.body.categoria === 'otro' ? (req.body.categoria_otro || '').trim() : (req.body.categoria || '').trim();
+    const area = req.body.area === 'otro' ? (req.body.area_otro || '').trim() : (req.body.area || '').trim();
+    const nombre = req.body.nombre || '';
+    const procedimiento = req.body.procedimiento || '';
 
-  const ingredientes = extraerIngredientes(req.body);
-  const videos = extraerVideos(req.body, req.files);
-  const fotos = extraerFotos(req.body, req.files);
-  const imagen = (req.files || []).find(f => f.fieldname === 'imagen')?.filename || null;
+    const ingredientes = extraerIngredientes(req.body);
+    const videos = extraerVideos(req.body, req.files);
+    const fotos = extraerFotos(req.body, req.files);
+    const imagen = (req.files || []).find(f => f.fieldname === 'imagen')?.filename || null;
 
-  const nueva = await db.get2(
-    `INSERT INTO recetas (nombre,categoria,procedimiento,imagen,area)
-     VALUES ($1,$2,$3,$4,$5) RETURNING id`,
-    [nombre, categoria, procedimiento, imagen, area]
-  );
-
-  await guardarIngredientes(nueva.id, ingredientes);
-  await guardarFotos(nueva.id, fotos);
-
-  for (const v of videos) {
-    await db.run2(
-      `INSERT INTO receta_videos (receta_id, clasificacion, origen, valor) VALUES ($1,$2,$3,$4)`,
-      [nueva.id, v.clasificacion, v.origen, v.valor]
+    const nueva = await db.get2(
+      `INSERT INTO recetas (nombre,categoria,procedimiento,imagen,area)
+       VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+      [nombre, categoria, procedimiento, imagen, area]
     );
-  }
 
-  res.redirect('/recetas/' + nueva.id);
+    await guardarIngredientes(nueva.id, ingredientes);
+    await guardarFotos(nueva.id, fotos);
+
+    for (const v of videos) {
+      await db.run2(
+        `INSERT INTO receta_videos (receta_id, clasificacion, origen, valor) VALUES ($1,$2,$3,$4)`,
+        [nueva.id, v.clasificacion, v.origen, v.valor]
+      );
+    }
+
+    res.redirect('/recetas/' + nueva.id);
+  } catch (e) {
+    console.error('Error creando receta:', e.message);
+    res.render('error', { mensaje: 'No se pudo guardar la receta. Probá de nuevo — si vuelve a pasar, avisale al admin.', volver: '/recetas' });
+  }
 });
 
 router.get('/:id/editar', loginRequerido, requiereEdicion, async (req, res) => {
-  const receta = await db.get2("SELECT * FROM recetas WHERE id=$1", [req.params.id]);
-  if (!receta) return res.redirect('/recetas');
+  try {
+    const receta = await db.get2("SELECT * FROM recetas WHERE id=$1", [req.params.id]);
+    if (!receta) return res.redirect('/recetas');
 
-  const videos = await db.all2("SELECT * FROM receta_videos WHERE receta_id=$1 ORDER BY orden, id", [req.params.id]);
-  const fotos = await db.all2("SELECT * FROM receta_fotos WHERE receta_id=$1 ORDER BY orden, id", [req.params.id]);
-  const ingredientesActuales = await db.all2(`
-    SELECT ri.insumo_id, ri.cantidad, ri.unidad, i.nombre AS insumo_nombre, i.precio_unitario
-    FROM receta_insumos ri JOIN insumos i ON i.id = ri.insumo_id
-    WHERE ri.receta_id=$1 ORDER BY ri.id`, [req.params.id]);
+    const videos = await db.all2("SELECT * FROM receta_videos WHERE receta_id=$1 ORDER BY orden, id", [req.params.id]);
+    const fotos = await db.all2("SELECT * FROM receta_fotos WHERE receta_id=$1 ORDER BY orden, id", [req.params.id]);
+    const ingredientesActuales = await db.all2(`
+      SELECT ri.insumo_id, ri.cantidad, ri.unidad, i.nombre AS insumo_nombre, i.precio_unitario
+      FROM receta_insumos ri JOIN insumos i ON i.id = ri.insumo_id
+      WHERE ri.receta_id=$1 ORDER BY ri.id`, [req.params.id]);
 
-  const { categorias, areas } = await getOpciones();
-  const todosInsumos = await db.all2('SELECT id, nombre, unidad, precio_unitario FROM insumos ORDER BY nombre');
+    const { categorias, areas } = await getOpciones();
+    const todosInsumos = await db.all2('SELECT id, nombre, unidad, precio_unitario FROM insumos ORDER BY nombre');
 
-  res.render('receta_nueva', {
-    path: req.path, categorias, areas, receta,
-    ingredientesActuales, videos, fotos, todosInsumos,
-  });
+    res.render('receta_nueva', {
+      path: req.path, categorias, areas, receta,
+      ingredientesActuales, videos, fotos, todosInsumos,
+    });
+  } catch (e) {
+    console.error('Error cargando edición de receta:', e.message);
+    res.render('error', { mensaje: 'No se pudo cargar la receta para editar. Probá de nuevo — si vuelve a pasar, avisale al admin.', volver: '/recetas' });
+  }
 });
 
 router.post('/:id/editar', loginRequerido, requiereEdicion, upload.any(), async (req, res) => {
-  const id = req.params.id;
-  const receta = await db.get2("SELECT * FROM recetas WHERE id=$1", [id]);
-  if (!receta) return res.redirect('/recetas');
+  try {
+    const id = req.params.id;
+    const receta = await db.get2("SELECT * FROM recetas WHERE id=$1", [id]);
+    if (!receta) return res.redirect('/recetas');
 
-  const categoria = req.body.categoria === 'otro' ? (req.body.categoria_otro || '').trim() : (req.body.categoria || '').trim();
-  const area = req.body.area === 'otro' ? (req.body.area_otro || '').trim() : (req.body.area || '').trim();
-  const nombre = req.body.nombre || '';
-  const procedimiento = req.body.procedimiento || '';
+    const categoria = req.body.categoria === 'otro' ? (req.body.categoria_otro || '').trim() : (req.body.categoria || '').trim();
+    const area = req.body.area === 'otro' ? (req.body.area_otro || '').trim() : (req.body.area || '').trim();
+    const nombre = req.body.nombre || '';
+    const procedimiento = req.body.procedimiento || '';
 
-  const ingredientes = extraerIngredientes(req.body);
-  const videosNuevos = extraerVideos(req.body, req.files);
-  const fotos = extraerFotos(req.body, req.files);
-  const nuevaImagen = (req.files || []).find(f => f.fieldname === 'imagen')?.filename;
-  const imagen = nuevaImagen || receta.imagen;
+    const ingredientes = extraerIngredientes(req.body);
+    const videosNuevos = extraerVideos(req.body, req.files);
+    const fotos = extraerFotos(req.body, req.files);
+    const nuevaImagen = (req.files || []).find(f => f.fieldname === 'imagen')?.filename;
+    const imagen = nuevaImagen || receta.imagen;
 
-  await db.run2(
-    `UPDATE recetas SET nombre=$1, categoria=$2, procedimiento=$3, imagen=$4, area=$5 WHERE id=$6`,
-    [nombre, categoria, procedimiento, imagen, area, id]
-  );
-
-  await guardarIngredientes(id, ingredientes);
-  await guardarFotos(id, fotos);
-
-  // Reemplaza los videos por los que se enviaron en el formulario (carga limpia)
-  await db.run2("DELETE FROM receta_videos WHERE receta_id=$1", [id]);
-  for (const v of videosNuevos) {
     await db.run2(
-      `INSERT INTO receta_videos (receta_id, clasificacion, origen, valor) VALUES ($1,$2,$3,$4)`,
-      [id, v.clasificacion, v.origen, v.valor]
+      `UPDATE recetas SET nombre=$1, categoria=$2, procedimiento=$3, imagen=$4, area=$5 WHERE id=$6`,
+      [nombre, categoria, procedimiento, imagen, area, id]
     );
-  }
 
-  res.redirect('/recetas/' + id);
+    await guardarIngredientes(id, ingredientes);
+    await guardarFotos(id, fotos);
+
+    // Reemplaza los videos por los que se enviaron en el formulario (carga limpia)
+    await db.run2("DELETE FROM receta_videos WHERE receta_id=$1", [id]);
+    for (const v of videosNuevos) {
+      await db.run2(
+        `INSERT INTO receta_videos (receta_id, clasificacion, origen, valor) VALUES ($1,$2,$3,$4)`,
+        [id, v.clasificacion, v.origen, v.valor]
+      );
+    }
+
+    res.redirect('/recetas/' + id);
+  } catch (e) {
+    console.error('Error editando receta:', e.message);
+    res.render('error', { mensaje: 'No se pudo guardar los cambios de la receta. Probá de nuevo — si vuelve a pasar, avisale al admin.', volver: '/recetas' });
+  }
 });
 
 router.get('/:id', loginRequerido, async (req, res) => {
-  const receta = await db.get2("SELECT * FROM recetas WHERE id=$1", [req.params.id]);
-  if (!receta) return res.redirect('/recetas');
+  try {
+    const receta = await db.get2("SELECT * FROM recetas WHERE id=$1", [req.params.id]);
+    if (!receta) return res.redirect('/recetas');
 
-  const videos = await db.all2("SELECT * FROM receta_videos WHERE receta_id=$1 ORDER BY orden, id", [req.params.id]);
-  const fotos = await db.all2("SELECT * FROM receta_fotos WHERE receta_id=$1 ORDER BY orden, id", [req.params.id]);
+    const videos = await db.all2("SELECT * FROM receta_videos WHERE receta_id=$1 ORDER BY orden, id", [req.params.id]);
+    const fotos = await db.all2("SELECT * FROM receta_fotos WHERE receta_id=$1 ORDER BY orden, id", [req.params.id]);
 
-  // Ingredientes con precio EN VIVO (tomado de insumos, no guardado a mano)
-  const ingredientes = await db.all2(`
-    SELECT ri.id, ri.cantidad, ri.unidad, i.nombre, i.precio_unitario
-    FROM receta_insumos ri JOIN insumos i ON i.id = ri.insumo_id
-    WHERE ri.receta_id=$1 ORDER BY ri.id`, [req.params.id]);
+    // Ingredientes con precio EN VIVO (tomado de insumos, no guardado a mano)
+    const ingredientes = await db.all2(`
+      SELECT ri.id, ri.cantidad, ri.unidad, i.nombre, i.precio_unitario
+      FROM receta_insumos ri JOIN insumos i ON i.id = ri.insumo_id
+      WHERE ri.receta_id=$1 ORDER BY ri.id`, [req.params.id]);
 
-  const costoTotal = ingredientes.reduce(
-    (acc, ing) => acc + (parseFloat(ing.cantidad) || 0) * (parseFloat(ing.precio_unitario) || 0), 0
-  );
+    const costoTotal = ingredientes.reduce(
+      (acc, ing) => acc + (parseFloat(ing.cantidad) || 0) * (parseFloat(ing.precio_unitario) || 0), 0
+    );
 
-  res.render('receta_detalle', {
-    receta, videos, fotos, ingredientes, costoTotal,
-    puedeEditar: esAdminOSupervisor(req),
-  });
+    res.render('receta_detalle', {
+      receta, videos, fotos, ingredientes, costoTotal,
+      puedeEditar: esAdminOSupervisor(req),
+    });
+  } catch (e) {
+    console.error('Error cargando receta:', e.message);
+    res.render('error', { mensaje: 'No se pudo cargar la receta. Probá de nuevo — si vuelve a pasar, avisale al admin.', volver: '/recetas' });
+  }
 });
 
 router.post('/:id/eliminar', loginRequerido, requiereEdicion, async (req, res) => {
-  await db.run2("DELETE FROM recetas WHERE id=$1", [req.params.id]);
-  res.redirect('/recetas');
+  try {
+    await db.run2("DELETE FROM recetas WHERE id=$1", [req.params.id]);
+    res.redirect('/recetas');
+  } catch (e) {
+    console.error('Error eliminando receta:', e.message);
+    res.render('error', { mensaje: 'No se pudo eliminar la receta. Probá de nuevo — si vuelve a pasar, avisale al admin.', volver: '/recetas' });
+  }
 });
 
 module.exports = router;

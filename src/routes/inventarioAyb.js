@@ -103,8 +103,18 @@ async function ajustarStock(productoId, modo, valor, nota, usuario) {
 }
 
 router.post('/producto/:id/ajustar', async (req, res) => {
+  // Si el pedido vino por fetch() desde la tabla de "Ver productos" (ver
+  // inventario_ayb.ejs), respondemos JSON y listo — nada de redirect ni
+  // recarga de página. Antes, guardar una cantidad SIEMPRE hacía un POST
+  // normal de formulario: la página entera se recargaba de cero (assets,
+  // partials, todo) y recién ahí el script volvía a abrir el modal en el
+  // mismo lugar — eso es lo que se veía como "parpadeo" y el salto de
+  // posición que reportó Maxi.
+  const esAjax = req.get('X-Requested-With') === 'fetch';
+
   const departamento = (req.session.usuario.departamento || '').toLowerCase();
   if (departamento && departamento !== 'ayb' && !esGestorAyb(req)) {
+    if (esAjax) return res.status(403).json({ ok: false, error: 'Sin acceso.' });
     return res.redirect('/inicio?msg=sin_acceso');
   }
   const volverAQr = req.body.volver_a_qr === '1';
@@ -128,12 +138,17 @@ router.post('/producto/:id/ajustar', async (req, res) => {
   try {
     const modo = req.body.modo || 'sumar'; // 'sumar' | 'restar' | 'establecer'
     const valor = parseFloat(req.body.cantidad);
-    if (isNaN(valor) || valor < 0) return redirigirCon('Cantidad inválida.');
+    if (isNaN(valor) || valor < 0) {
+      if (esAjax) return res.status(400).json({ ok: false, error: 'Cantidad inválida.' });
+      return redirigirCon('Cantidad inválida.');
+    }
 
     const { producto, nueva } = await ajustarStock(req.params.id, modo, valor, (req.body.nota || '').trim(), req.session.usuario);
+    if (esAjax) return res.json({ ok: true, producto: { ...producto, stock_actual: nueva } });
     redirigirCon(`${producto.nombre}: stock actualizado a ${nueva}.`);
   } catch (e) {
     console.error('Error ajustando stock de inventario AYB:', e.message);
+    if (esAjax) return res.status(500).json({ ok: false, error: e.message });
     redirigirCon('Error actualizando el stock: ' + e.message);
   }
 });
@@ -299,14 +314,34 @@ router.get('/', async (req, res) => {
 // busca"). Esta ruta consulta TODA la tabla igual que la de arriba, solo
 // que devuelve JSON en vez de renderizar la página entera, para que el
 // front la dispare solo con un debounce corto.
+// Ahora también sirve para cambiar de rubro (solapa) y para "Todos" sin
+// recargar la página entera — antes cada solapa era un <a href> que
+// navegaba de nuevo a /inventario-ayb, y eso hacía parpadear y saltar la
+// pantalla (se ve la página entera recargándose y el modal reabriéndose)
+// cada vez que se tocaba una solapa o se guardaba una cantidad. Con esta
+// misma ruta atendiendo los tres casos (buscar texto, filtrar por rubro,
+// o traer todos) el frontend puede reemplazar solo la tabla por JS.
 router.get('/productos/buscar-vivo', async (req, res) => {
   const q = (req.query.q || '').trim();
-  if (!q) return res.json({ productos: [] });
-  const productos = await db.all2(
-    `SELECT * FROM productos_ayb WHERE activo=true AND (nombre ILIKE $1 OR categoria ILIKE $1 OR codigo_barras ILIKE $1) ORDER BY categoria NULLS LAST, nombre LIMIT 200`,
-    [`%${q}%`]
-  );
-  res.json({ productos });
+  const rubro = (req.query.rubro || '').trim();
+
+  if (q) {
+    const productos = await db.all2(
+      `SELECT * FROM productos_ayb WHERE activo=true AND (nombre ILIKE $1 OR categoria ILIKE $1 OR codigo_barras ILIKE $1) ORDER BY categoria NULLS LAST, nombre LIMIT 200`,
+      [`%${q}%`]
+    );
+    return res.json({ productos, agruparPorCategoria: false });
+  }
+
+  if (rubro) {
+    const productos = rubro === 'Sin categoría'
+      ? await db.all2(`SELECT * FROM productos_ayb WHERE activo=true AND categoria IS NULL ORDER BY nombre`)
+      : await db.all2(`SELECT * FROM productos_ayb WHERE activo=true AND categoria=$1 ORDER BY nombre`, [rubro]);
+    return res.json({ productos, agruparPorCategoria: false });
+  }
+
+  const productos = await db.all2(`SELECT * FROM productos_ayb WHERE activo=true ORDER BY categoria NULLS LAST, nombre`);
+  res.json({ productos, agruparPorCategoria: true });
 });
 
 // ── Alta manual de un producto ─────────────────────────────────────
@@ -370,12 +405,15 @@ router.post('/producto/:id/editar', async (req, res) => {
 
 // ── Dar de baja un producto (soft delete — no se borra el historial) ──
 router.post('/producto/:id/eliminar', async (req, res) => {
+  const esAjax = req.get('X-Requested-With') === 'fetch';
   const qs = qsVolverListaProductos(req);
   try {
     await db.run2(`UPDATE productos_ayb SET activo=false WHERE id=$1`, [req.params.id]);
+    if (esAjax) return res.json({ ok: true });
     res.redirect('/inventario-ayb?msg=' + encodeURIComponent('Producto dado de baja.') + qs);
   } catch (e) {
     console.error('Error dando de baja producto de inventario AYB:', e.message);
+    if (esAjax) return res.status(500).json({ ok: false, error: e.message });
     res.redirect('/inventario-ayb?msg=' + encodeURIComponent('Error: ' + e.message) + qs);
   }
 });

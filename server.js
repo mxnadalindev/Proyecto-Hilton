@@ -1,9 +1,19 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
+const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+
+// Se necesita antes de configurar la sesión (más abajo), para poder
+// guardar las sesiones en esta misma base en vez de en la memoria del
+// proceso — ver el comentario junto a app.use(session(...)). Esto además
+// arranca la conexión a Postgres y la creación/actualización de tablas,
+// que antes se disparaba más abajo en este archivo; movido solo más
+// arriba, no cambia qué hace.
+const db = require('./src/db/database');
 
 ['uploads'].forEach(dir => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -27,8 +37,26 @@ process.on('uncaughtException', (err) => {
   console.error('⚠ Excepción sin capturar (el servidor sigue corriendo):', err);
 });
 
-app.use(express.urlencoded({ extended: true, limit: '2gb' }));
-app.use(express.json({ limit: '2gb' }));
+// El límite de 2GB (pensado para el upload de video de Recetas) estaba
+// puesto acá de forma GLOBAL — se aplicaba a TODAS las rutas del sistema,
+// no solo a la que realmente necesita subir algo pesado. Los uploads de
+// archivos (fotos, CSV, remitos, video) van por otro mecanismo (multer,
+// ver cada router) y no dependen de este límite en absoluto — este es
+// solo para formularios normales y pedidos JSON, que nunca necesitan
+// acercarse a ese tamaño. 5mb es de sobra hasta para el formulario más
+// grande del sitio (con muchos campos/checkboxes) y evita que cualquier
+// pedido a cualquier ruta pueda obligar al servidor a cargar en memoria
+// un cuerpo enorme.
+// Comprime (gzip) todo lo que el servidor manda al navegador — HTML, CSS,
+// JS, respuestas de las rutas de API. Antes no había nada de esto: cada
+// página se mandaba entera, sin comprimir. Se nota más en el celular con
+// la red del hotel. No afecta los uploads (van directo a disco por otro
+// camino) ni los archivos ya comprimidos (imágenes, video) — compression
+// los detecta y no pierde tiempo intentando comprimirlos de nuevo.
+app.use(compression());
+
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
+app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public'), {
   maxAge: '60s', // ayuda a que no se re-pida todo en cada página, sin arriesgar quedarse con CSS viejo por mucho tiempo mientras seguimos cambiando cosas
 }));
@@ -93,14 +121,33 @@ app.use((req, res, next) => {
   next();
 });
 
+if (!process.env.SESSION_SECRET) {
+  console.warn('⚠ SESSION_SECRET no está seteada en el .env — usando el valor por default (menos seguro). Para sacar este aviso, agregá SESSION_SECRET=... al .env con cualquier texto largo y aleatorio.');
+}
+
 app.use(session({
+  // Antes las sesiones se guardaban solo en la memoria (RAM) del proceso
+  // de Node (comportamiento por default de express-session si no se le
+  // indica un "store") — la propia documentación de express-session dice
+  // que eso no es apto para producción. En la práctica esto se notaba
+  // cada vez que reiniciábamos el servidor para instalar un arreglo: se
+  // desloguea a TODO el mundo, sin aviso, porque esa memoria se pierde al
+  // reiniciar. Ahora se guardan en la misma base PostgreSQL que ya usa el
+  // sistema (misma conexión — "pool" — que ya usan el resto de las
+  // consultas, no se abre una conexión aparte), así sobreviven a un
+  // reinicio del servidor. createTableIfMissing crea sola la tabla
+  // "session" la primera vez, mismo patrón que ya usa el resto del
+  // sistema para sus propias tablas (ver src/db/database.js).
+  store: new pgSession({ pool: db.pool, createTableIfMissing: true }),
   // Igual que la contraseña de la base: se puede fijar SESSION_SECRET en el
   // .env para no tener un secreto hardcodeado en el código fuente público
-  // del repo — si no está seteada, sigue usando la misma de siempre.
+  // del repo — si no está seteada, sigue usando la misma de siempre (no se
+  // fuerza un cambio de comportamiento acá tampoco — ver el aviso de
+  // consola más arriba, que sí avisa fuerte cuando falta).
   secret: process.env.SESSION_SECRET || 'hilton_ba_futurelab_2026',
   resave: false,
   saveUninitialized: false,
-  cookie: { 
+  cookie: {
     httpOnly: true,
     sameSite: 'lax'
     // Sin maxAge = cookie de sesión, se destruye al cerrar el navegador
@@ -109,8 +156,6 @@ app.use(session({
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-
-require('./src/db/database');
 
 app.use((req, res, next) => {
   res.locals.usuario = req.session.usuario || null;

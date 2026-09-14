@@ -7,6 +7,13 @@ const bcrypt = require('bcryptjs');
 // las instalaciones existentes. Importante: antes esto se imprimía en la
 // consola con cada arranque del servidor (contraseña en texto plano en los
 // logs) — se sacó ese console.log a propósito, es información sensible.
+// No se cambia este comportamiento (seguir funcionando sin .env) porque no
+// hay forma de saber desde acá si las dos instalaciones ya tienen
+// DB_PASSWORD configurado — pero si no lo tienen, es mejor que quede bien
+// visible en la consola al arrancar, en vez de en silencio.
+if (!process.env.DB_PASSWORD) {
+  console.warn('⚠ DB_PASSWORD no está seteada en el .env — usando la contraseña por default (menos seguro). Para sacar este aviso, agregá DB_PASSWORD=... al .env con la contraseña real de PostgreSQL.');
+}
 const DBPASS = process.env.DB_PASSWORD || 'hilton2026';
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
@@ -14,6 +21,15 @@ const pool = new Pool({
   database: process.env.DB_NAME || 'hilton_db',
   user: process.env.DB_USER || 'hilton_user',
   password: DBPASS,
+});
+
+// Sin esto, si una conexión inactiva del pool se corta sola (un corte de
+// red momentáneo, por ejemplo), Node podía terminar tratando ese error
+// como una excepción no capturada en vez de manejarlo acá, en el lugar
+// que corresponde — queda igual protegido por la red de contención
+// general de server.js, pero es mejor manejarlo puntualmente donde pasa.
+pool.on('error', (err) => {
+  console.error('⚠ Error en una conexión inactiva del pool de PostgreSQL:', err.message);
 });
 
 // Helpers — misma interfaz que antes para no tocar las rutas
@@ -619,6 +635,25 @@ const init = async () => {
   `);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_historial_precios_ayb_producto ON historial_precios_ayb (producto_id, fecha DESC)`);
 
+  // Tragos de AYB (Costos ahora arma recetas de barra igual que Cocina arma
+  // platos) — reusa platos_costo tal cual (ya tiene "departamento" para
+  // esto), pero para las LÍNEAS de ingrediente hace falta una tabla nueva
+  // en vez de reusar plato_insumos: esa apunta a insumos(id) (catálogo de
+  // Cocina), y un trago de AYB se arma con productos_ayb(id) (catálogo de
+  // AYB) — mismo motivo por el que ya existe productos_ayb en paralelo a
+  // insumos (ver comentario más arriba). Mismo shape que plato_insumos,
+  // solo cambia a qué catálogo referencia.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS plato_insumos_ayb (
+      id SERIAL PRIMARY KEY,
+      plato_id INTEGER NOT NULL REFERENCES platos_costo(id),
+      insumo_id INTEGER NOT NULL REFERENCES productos_ayb(id),
+      cantidad REAL DEFAULT 0,
+      unidad TEXT,
+      costo_parcial REAL DEFAULT 0
+    )
+  `);
+
   // eventos_ayb.descripcion: texto libre opcional del evento. A diferencia
   // de cupo/anotados (que nunca se le muestran al mozo — ver el fix del
   // bug en horarios.js), esto SÍ se le muestra: le da contexto de qué es
@@ -702,9 +737,25 @@ const init = async () => {
   console.log('✓ PostgreSQL listo');
 };
 
-init().catch(err => {
+// Guardamos la promesa de init() para que un script que recién arranca
+// (como scripts/migrar_tragos_ayb_septiembre2026.js) pueda esperar a que
+// TODAS las tablas ya estén creadas antes de usarlas — si no, hay una
+// carrera: require('./database') devuelve el objeto `db` al toque, pero
+// init() sigue corriendo en segundo plano creando tablas una por una, y un
+// script que empieza a insertar datos enseguida puede pisarle el pie y
+// fallar con "no existe la relación X" aunque el script esté bien escrito.
+const initPromise = init().catch(err => {
   console.error('Error iniciando DB:', err.message);
   process.exit(1);
 });
+
+db.listaParaUsar = initPromise;
+
+// Se expone el pool además de los helpers de siempre — lo necesita
+// server.js para guardar las sesiones de los usuarios logueados en esta
+// misma base (con connect-pg-simple) en vez de en la memoria del proceso,
+// así no se pierden todas las sesiones activas cada vez que se reinicia
+// el servidor. No cambia nada de cómo lo usan las rutas existentes.
+db.pool = pool;
 
 module.exports = db;

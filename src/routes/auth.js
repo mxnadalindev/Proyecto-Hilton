@@ -27,6 +27,22 @@ function registrarIntento(email, ok) {
   intentos.set(email, d);
 }
 
+// Antes este Map nunca se vaciaba de entradas viejas: cualquier email
+// probado (exista la cuenta o no) quedaba guardado ahí para siempre, aun
+// mucho después de que pasara el bloqueo de 15 minutos. Con el tiempo (o
+// si alguien probara muchos emails distintos a propósito) la memoria
+// usada por el servidor podía ir creciendo sin límite. Esta limpieza
+// periódica saca las entradas cuyo bloqueo ya venció — no cambia en nada
+// cómo funciona el bloqueo en sí: una entrada vencida ya se trataba como
+// "no bloqueada" en verificarBloqueo más arriba, esto solo libera la
+// memoria que ya no hacía falta.
+setInterval(() => {
+  const ahora = Date.now();
+  for (const [email, d] of intentos) {
+    if (ahora - d.tiempo > BLOQUEO_MS) intentos.delete(email);
+  }
+}, 30 * 60 * 1000).unref();
+
 function renderLogin(res, opts = {}) {
   res.render('login', {
     error:    opts.error    || null,
@@ -269,10 +285,24 @@ router.post('/registro', async (req, res) => {
     const existe = await db.get2('SELECT id FROM usuarios WHERE email = $1', [email]);
     if (existe) return renderLogin(res, { errorReg: 'Ese email ya está registrado.' });
 
-    // departamento='sistema' → no aparece en Personal (que filtra por sectores de cocina)
+    // El formulario de "Crear cuenta" (ver el <select name="departamento">
+    // en login.ejs) solo ofrece "Cocina" o "Compras" para elegir — antes
+    // acá se guardaba lo que viniera en req.body.departamento tal cual, sin
+    // validar contra nada. Eso significaba que cualquiera podía mandar el
+    // pedido de registro con OTRO valor ahí (por ejemplo "ayb") y quedar
+    // con acceso a secciones que no le corresponden, sin que ningún admin
+    // lo autorizara — el control de acceso por departamento (ver
+    // src/routes/middleware.js) confía en que esta columna sea confiable.
+    // Con esta lista, cualquier valor que no sea uno de los dos que el
+    // formulario realmente ofrece cae al default de siempre ("cocina").
+    const DEPARTAMENTOS_AUTOREGISTRO = ['cocina', 'compras'];
+    const departamentoElegido = DEPARTAMENTOS_AUTOREGISTRO.includes(req.body.departamento)
+      ? req.body.departamento
+      : 'cocina';
+
     await db.run2(
      'INSERT INTO usuarios (nombre, email, password, rol, departamento) VALUES ($1, $2, $3, $4, $5)',
-      [nombre, email, hash, 'empleado', req.body.departamento || 'cocina']
+      [nombre, email, hash, 'empleado', departamentoElegido]
     );
     renderLogin(res, { success: `Cuenta creada para ${nombre}. Ya podés iniciar sesión.` });
   } catch(e) {

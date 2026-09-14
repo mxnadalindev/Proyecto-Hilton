@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compras — Hilton</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css"></noscript>
+</head>
+<body>
+<div class="app-layout">
+
+  <%- include('partials/nav', { path: 'compras' }) %>
+
+  <main class="main-content main-content-ancho">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Compras</p>
+        <h1 class="seccion-titulo">Compras</h1>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
+      </div>
+    </div>
+
+    <!-- Antes esta ruta no tenía vista propia (views/compras.ejs no
+         existía) y entrar acá tiraba un error — esta pantalla es un
+         placeholder prolijo mientras se define qué va a manejar este
+         módulo, para que la sección deje de estar rota. No reemplaza
+         ninguna funcionalidad: no había ninguna cargada todavía. -->
+    <div style="background:var(--blanco);border-radius:16px;padding:48px 32px;text-align:center;box-shadow:var(--sombra);max-width:480px;margin:40px auto 0;">
+      <div style="width:64px;height:64px;background:var(--azul-claro);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:var(--azul);">
+        <i class="ti ti-shopping-cart" aria-hidden="true"></i>
+      </div>
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:400;color:var(--negro);margin-bottom:12px;">Próximamente</h2>
+      <p style="font-size:0.85rem;color:var(--gris-texto);line-height:1.6;">
+        Esta sección todavía se está armando. Cuando esté definido qué va a manejar Compras, va a aparecer acá.
+      </p>
+    </div>
+
+  </main>
+
+  <%- include('partials/mobile-nav', { path: 'compras' }) %>
+</div>
+</body>
+</html>

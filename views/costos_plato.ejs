@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"></noscript>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css"></noscript>
 <style>
 .form-card { background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px;box-shadow:var(--sombra); }
 .form-card-title { font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin-bottom:18px;display:flex;align-items:center;gap:7px; }
@@ -46,7 +46,7 @@
         <h1 class="seccion-titulo"><%= plato.nombre %></h1>
       </div>
       <form method="POST" action="/costos/plato/<%= plato.id %>/eliminar"
-            onsubmit="return confirm('¿Eliminar este plato?')">
+            onsubmit="return confirm('¿Eliminar est<%= esAyb ? 'e trago' : 'e plato' %>?')">
         <button type="submit" class="btn-danger"><i class="ti ti-trash"></i> Eliminar</button>
       </form>
     </div>
@@ -75,10 +75,28 @@
               <button type="submit" class="btn-sm" title="Guardar margen" style="padding:5px 8px;">✓</button>
             </form>
           </div>
+          <% if (esAyb) {
+               // Para tragos, "porciones" no dice nada (siempre es 1) — en su
+               // lugar se muestran rentabilidad y %costo, las mismas columnas
+               // que traía la planilla de Excel que este módulo reemplaza.
+               const ventaSugerida = parseFloat(plato.costo_total) * (1 + parseFloat(plato.margen_ganancia)/100);
+               const rentabilidad = ventaSugerida - parseFloat(plato.costo_total);
+               const pctCosto = ventaSugerida > 0 ? (parseFloat(plato.costo_total) / ventaSugerida) * 100 : 0;
+          %>
+          <div style="background:var(--gris-fondo);border-radius:10px;padding:16px;text-align:center;">
+            <p style="font-size:0.65rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px;">Rentabilidad</p>
+            <p style="font-size:1.5rem;font-weight:700;color:#16a34a;margin:0;">$<%= rentabilidad.toFixed(2) %></p>
+          </div>
+          <div style="background:var(--gris-fondo);border-radius:10px;padding:16px;text-align:center;">
+            <p style="font-size:0.65rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px;">% Costo</p>
+            <p style="font-size:1.5rem;font-weight:700;color:var(--negro);margin:0;"><%= pctCosto.toFixed(1) %>%</p>
+          </div>
+          <% } else { %>
           <div style="background:var(--gris-fondo);border-radius:10px;padding:16px;text-align:center;">
             <p style="font-size:0.65rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px;">Porciones</p>
             <p style="font-size:1.5rem;font-weight:700;color:var(--negro);margin:0;"><%= plato.porciones %></p>
           </div>
+          <% } %>
         </div>
 
         <% if (plato.porciones > 1 && plato.costo_total > 0) { %>
@@ -127,7 +145,7 @@
 
       <!-- Lista de ingredientes -->
       <div class="form-card" style="grid-column:1/-1;">
-        <p class="form-card-title"><i class="ti ti-list"></i> Ingredientes del plato</p>
+        <p class="form-card-title"><i class="ti ti-list"></i> Ingredientes del <%= esAyb ? 'trago' : 'plato' %></p>
         <% if (ingredientes.length > 0) { %>
         <div class="tabla-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
         <table class="tabla">

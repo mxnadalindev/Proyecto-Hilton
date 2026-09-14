@@ -23,6 +23,8 @@
     "@hapi/boom": "^9.1.4",
     "@whiskeysockets/baileys": "^6.7.24",
     "bcryptjs": "^2.4.3",
+    "compression": "^1.8.2",
+    "connect-pg-simple": "^10.0.0",
     "dotenv": "^17.4.2",
     "ejs": "^3.1.9",
     "exceljs": "^4.4.0",

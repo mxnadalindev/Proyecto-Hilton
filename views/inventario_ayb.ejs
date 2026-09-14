@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"></noscript>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css"></noscript>
   <style>
 .btn-icono{background:none;border:1px solid var(--gris-borde);border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gris-texto);transition:border-color .2s,color .2s;text-decoration:none;}
 .btn-icono:hover{border-color:var(--azul);color:var(--azul);}
@@ -61,7 +61,16 @@
 .modal-lista-titulo{font-size:0.95rem;font-weight:600;color:var(--negro);display:flex;align-items:center;gap:8px;margin:0;}
 .modal-lista-cerrar{background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);padding:4px;}
 .modal-lista-cerrar:hover{color:var(--negro);}
-.modal-lista-body{padding:18px 22px;overflow-y:auto;}
+/* min-width:0 acá es la pieza que faltaba: .modal-lista-body es un hijo de
+   .modal-lista-caja (que es flex-direction:column), y por default un hijo
+   de flex NO se achica más allá de lo que necesite su contenido más ancho
+   (en este caso, una tabla con muchas columnas + nombres largos). Sin
+   min-width:0, el modal entero se estiraba para hacerle lugar a esa tabla
+   en vez de quedarse en los 820px y dejar que la tabla scrollee sola
+   adentro (el overflow-x:auto de .tabla-wrap en style.css nunca llegaba a
+   activarse por esto — mismo patrón de bug que ya se había resuelto antes
+   en .main-content, ver el comentario ahí). */
+.modal-lista-body{padding:18px 22px;overflow-y:auto;min-width:0;}
 @media (max-width:700px){
   .modal-lista{padding:0;}
   .modal-lista-caja{max-width:100%;max-height:100vh;height:100vh;border-radius:0;}
@@ -79,6 +88,59 @@
 /* Encabezado de rubro dentro de la tabla, cuando se ven todos los
    productos juntos (sin buscar ni filtrar por un rubro puntual). */
 .fila-rubro td{background:var(--gris-fondo);font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--gris-texto);padding:7px 12px;}
+
+/* Esta tabla en particular (nombres de producto largos + una columna con
+   un formulario adentro + dos columnas de íconos al final) es de las más
+   angostas-de-margen que hay en el sitio. En vez de confiar en que el
+   texto se ajuste solo (que en algunos navegadores/fuentes termina
+   apretando tanto las columnas de los botones que quedan invisibles o
+   recortadas), le ponemos un ancho mínimo fijo — así, si no entra, se
+   activa el scroll horizontal de .tabla-wrap de forma predecible en vez
+   de "capaz entra, capaz no" según la pantalla de cada uno. */
+#modal-lista-productos .tabla{min-width:640px;}
+
+/* Solución definitiva para que Editar/Eliminar NUNCA queden escondidos:
+   en vez de depender de que el usuario sepa que puede hacer scroll para
+   el costado (algo que no es obvio y fue justo el problema reportado —
+   "en la categoría 300 no se ve Editar/Eliminar"), esta columna queda
+   "pegada" al borde derecho de la tabla todo el tiempo, sin importar cuán
+   ancha sea la tabla ni el ancho de pantalla de cada uno. El box-shadow
+   es solo una sombrita sutil para que se note que hay más contenido
+   scrolleable detrás, como en Google Sheets o Excel con paneles fijos. */
+#modal-lista-productos .tabla td.td-acciones,
+#modal-lista-productos .tabla th.th-acciones{
+  position:sticky;right:0;background:var(--blanco);
+  box-shadow:-6px 0 6px -6px rgba(0,0,0,0.18);
+}
+#modal-lista-productos .tabla thead th.th-acciones{background:var(--gris-fondo);}
+/* El verde de "fila con el mouse encima" (var(--azul-claro)) es un color
+   CON TRANSPARENCIA (10% de opacidad), no un verde sólido. Esta celda,
+   al estar "pegada" con position:sticky, queda dibujada arriba de la
+   tabla que sigue existiendo (y scrolleando) debajo suyo — como esa
+   tabla de abajo TAMBIÉN está pintada del mismo verde transparente en la
+   fila con el mouse encima, se terminan superponiendo dos capas del
+   mismo verde transparente una sobre la otra, y el resultado se ve más
+   oscuro/saturado que el resto de la fila (que tiene una sola capa). Por
+   eso acá, a diferencia de arriba, no usamos el verde transparente sino
+   el mismo color pero ya "resuelto" contra fondo blanco (sólido, sin
+   transparencia) — así no hay dos capas que sumar y queda parejo con el
+   resto de la fila. */
+#modal-lista-productos .tabla tbody tr:hover td.td-acciones{background:#e6f4f2;box-shadow:none;}
+#modal-lista-productos .tabla tr.fila-rubro td.td-acciones{background:var(--gris-fondo);box-shadow:none;}
+
+/* Transición suave de alto al cambiar de rubro/categoría — sin esto, pasar
+   de una categoría con muchos productos a una con pocos (ej. "280") hacía
+   que la lista se achicara de golpe, lo cual se nota como un salto aunque
+   ya no haya ninguna recarga real de por medio. */
+/* Antes se intentó animar el ALTO en píxeles al cambiar de categoría, pero
+   con tablas grandes (miles de píxeles) esa animación pasa casi entera
+   fuera de lo que se ve en pantalla y el resultado seguía sintiéndose como
+   un salto. Ahora en cambio se hace un fundido (fade): el contenido viejo
+   se desvanece, el cambio de alto pasa MIENTRAS está invisible, y recién
+   ahí aparece el contenido nuevo ya con su alto definitivo — mucho más
+   parecido a lo que se ve en apps como Notion o Linear al cambiar de
+   pestaña/filtro. */
+#contenedor-productos-lista{transition:opacity .18s ease;}
   </style>
 </head>
 <body>
@@ -130,29 +192,18 @@
     <!-- Resumen -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;">
       <div style="background:rgba(6,147,126,0.12);border:1px solid rgba(6,147,126,0.3);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
-        <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= totalProductos %></p>
+        <p id="contador-total-productos" style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= totalProductos %></p>
         <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Producto<%= totalProductos !== 1 ? 's' : '' %> activo<%= totalProductos !== 1 ? 's' : '' %></p>
       </div>
-      <div style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
-        <p style="font-size:1.8rem;font-weight:700;color:#dc2626;margin:0;"><%= bajoStock.length %></p>
+      <button type="button"
+              <% if (bajoStock.length > 0) { %>onclick="showModal('modal-stock-bajo')"<% } else { %>disabled<% } %>
+              title="<%= bajoStock.length > 0 ? 'Ver productos con stock bajo el mínimo' : 'No hay productos con stock bajo el mínimo' %>"
+              style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;font-family:inherit;width:100%;<%= bajoStock.length > 0 ? 'cursor:pointer;' : 'cursor:default;' %>transition:background .15s ease;"
+              <% if (bajoStock.length > 0) { %>onmouseover="this.style.background='rgba(220,38,38,0.16)'" onmouseout="this.style.background='rgba(220,38,38,0.10)'"<% } %>>
+        <p id="contador-stock-bajo" style="font-size:1.8rem;font-weight:700;color:#dc2626;margin:0;"><%= bajoStock.length %></p>
         <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#dc2626;margin:4px 0 0;">Con stock bajo el mínimo</p>
-      </div>
+      </button>
     </div>
-
-    <% if (bajoStock.length > 0) { %>
-    <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin-bottom:20px;">
-      <p style="font-size:0.75rem;font-weight:600;color:#854d0e;margin:0 0 6px;display:flex;align-items:center;gap:6px;">
-        <i class="ti ti-alert-triangle"></i> Por debajo del mínimo
-      </p>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;">
-        <% bajoStock.forEach(p => { %>
-        <span style="font-size:0.72rem;background:#fef08a;color:#713f12;padding:2px 8px;border-radius:20px;border:1px solid #fde047;">
-          <%= p.nombre %> (<%= p.stock_actual || 0 %>/<%= p.stock_minimo %> <%= p.unidad_default || '' %>)
-        </span>
-        <% }) %>
-      </div>
-    </div>
-    <% } %>
 
     <!-- Resumen de productos: la lista completa vive en el modal, separada
          por rubro — antes esto era una tabla siempre abierta debajo del
@@ -160,7 +211,7 @@
     <div class="tarjeta-resumen-lista">
       <div class="tarjeta-resumen-lista-icono"><i class="ti ti-bottle"></i></div>
       <p class="tarjeta-resumen-lista-titulo">Productos</p>
-      <p class="tarjeta-resumen-numero"><%= totalProductos %></p>
+      <p class="tarjeta-resumen-numero" id="contador-total-productos-tarjeta"><%= totalProductos %></p>
       <p class="tarjeta-resumen-lista-desc">producto<%= totalProductos !== 1 ? 's' : '' %> activo<%= totalProductos !== 1 ? 's' : '' %>, por rubro</p>
       <button type="button" class="btn-glass-verde" onclick="showModal('modal-lista-productos')">
         <i class="ti ti-list"></i> Ver productos
@@ -186,7 +237,7 @@
         <input type="text" name="buscar" id="buscar-productos-input" value="<%= buscar %>" placeholder="Buscar por nombre, categoría o código..."
                oninput="filtrarProductosEnVivo()"
                style="width:100%;padding:8px 32px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
-        <a href="/inventario-ayb#modal-lista-productos" title="Limpiar búsqueda" onclick="document.getElementById('buscar-productos-input').value='';filtrarProductosEnVivo();" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;<%= buscar ? '' : 'display:none;' %>" id="btn-limpiar-buscar-productos"><i class="ti ti-x"></i></a>
+        <a href="#" title="Limpiar búsqueda" onclick="event.preventDefault();document.getElementById('buscar-productos-input').value='';filtrarProductosEnVivo();" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;<%= buscar ? '' : 'display:none;' %>" id="btn-limpiar-buscar-productos"><i class="ti ti-x"></i></a>
       </form>
 
       <p id="contador-resultados-productos" style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;<%= buscar ? '' : 'display:none;' %>">
@@ -194,11 +245,15 @@
       </p>
 
       <!-- Rubros (categorías) — filtra la lista a un solo rubro por vez. Se
-           esconde mientras se está buscando, igual que antes. -->
+           esconde mientras se está buscando, igual que antes. Antes eran
+           <a href> que navegaban de nuevo a /inventario-ayb (recarga
+           entera de la página, con el parpadeo/salto que reportó Maxi);
+           ahora son botones que piden solo los datos por JS (ver
+           seleccionarRubro más abajo) y no navegan. -->
       <div class="solapas-rubros" id="solapas-rubros-productos" style="<%= buscar ? 'display:none;' : '' %>">
-        <a href="/inventario-ayb#modal-lista-productos" class="solapa-rubro <%= !rubro ? 'activa' : '' %>">Todos</a>
+        <button type="button" data-rubro="" class="solapa-rubro <%= !rubro ? 'activa' : '' %>" onclick="seleccionarRubro(this)">Todos</button>
         <% categoriasDisponibles.forEach(cat => { %>
-        <a href="/inventario-ayb?rubro=<%= encodeURIComponent(cat) %>#modal-lista-productos" class="solapa-rubro <%= rubro === cat ? 'activa' : '' %>"><%= cat %></a>
+        <button type="button" data-rubro="<%= cat %>" class="solapa-rubro <%= rubro === cat ? 'activa' : '' %>" onclick="seleccionarRubro(this)"><%= cat %></button>
         <% }) %>
       </div>
 
@@ -223,7 +278,7 @@
               <th>Stock actual</th>
               <th>Mínimo</th>
               <th></th>
-              <th></th>
+              <th class="th-acciones"></th>
             </tr>
           </thead>
           <tbody>
@@ -246,7 +301,7 @@
               </td>
               <td style="font-size:0.8rem;color:var(--gris-texto);"><%= p.categoria || '—' %></td>
               <td>
-                <form method="POST" action="/inventario-ayb/producto/<%= p.id %>/ajustar" style="display:flex;gap:4px;align-items:center;">
+                <form method="POST" action="/inventario-ayb/producto/<%= p.id %>/ajustar" class="form-ajustar-stock" data-bajo-actual="<%= bajo ? '1' : '0' %>" style="display:flex;gap:4px;align-items:center;">
                   <input type="hidden" name="modo" value="establecer">
                   <input type="hidden" name="volver_lista" value="1">
                   <input type="hidden" name="buscar_actual" value="<%= buscar %>">
@@ -261,9 +316,9 @@
               <td style="white-space:nowrap;">
                 <a href="/inventario-ayb/producto/<%= p.id %>/ajustar" class="btn-icono-glass-navy" title="Ver QR / ajuste rápido"><i class="ti ti-qrcode"></i></a>
               </td>
-              <td style="white-space:nowrap;">
-                <button type="button" class="btn-icono-glass-navy" title="Editar" onclick='abrirModalEditar(<%- JSON.stringify({id:p.id,nombre:p.nombre,categoria:p.categoria||"",unidad_default:p.unidad_default||"",stock_minimo:p.stock_minimo,codigo_barras:p.codigo_barras||""}) %>)'><i class="ti ti-pencil"></i></button>
-                <form method="POST" action="/inventario-ayb/producto/<%= p.id %>/eliminar" style="display:inline;" onsubmit="return confirm('¿Dar de baja este producto? No se borra el historial.');">
+              <td class="td-acciones" style="white-space:nowrap;">
+                <button type="button" class="btn-icono-glass-navy" title="Editar" onclick='abrirModalEditar(<%- JSON.stringify({id:p.id,nombre:p.nombre,categoria:p.categoria||"",unidad_default:p.unidad_default||"",stock_minimo:p.stock_minimo,codigo_barras:p.codigo_barras||""}).replace(/'/g, "&#39;") %>)'><i class="ti ti-pencil"></i></button>
+                <form method="POST" action="/inventario-ayb/producto/<%= p.id %>/eliminar" class="form-eliminar-producto" style="display:inline;">
                   <input type="hidden" name="volver_lista" value="1">
                   <input type="hidden" name="buscar_actual" value="<%= buscar %>">
                   <input type="hidden" name="rubro_actual" value="<%= rubro %>">
@@ -277,6 +332,50 @@
       </div>
       <% } %>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: productos con stock bajo el mínimo — se abre desde la tarjeta roja
+     "Con stock bajo el mínimo" de arriba. Antes esa info se mostraba siempre
+     abierta en un cartel amarillo debajo de las tarjetas; ahora la tarjeta
+     roja es un botón que abre esto en una ventana emergente y el cartel
+     amarillo se sacó. -->
+<div id="modal-stock-bajo" class="modal-lista" style="display:none;" onclick="if(event.target===this)hideModal('modal-stock-bajo')">
+  <div class="modal-lista-caja">
+    <div class="modal-lista-header">
+      <p class="modal-lista-titulo"><i class="ti ti-alert-triangle" style="color:#dc2626;"></i> Con stock bajo el mínimo</p>
+      <button onclick="hideModal('modal-stock-bajo')" class="modal-lista-cerrar"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-lista-body">
+      <% if (bajoStock.length === 0) { %>
+        <div style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
+          No hay productos con stock bajo el mínimo.
+        </div>
+      <% } else { %>
+      <div class="tabla-wrap">
+        <table class="tabla" style="width:100%;">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th>Stock actual</th>
+              <th>Mínimo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% bajoStock.forEach(p => { %>
+            <tr>
+              <td style="font-size:0.82rem;font-weight:500;"><%= p.nombre %></td>
+              <td style="font-size:0.8rem;color:var(--gris-texto);"><%= p.categoria || '—' %></td>
+              <td style="font-size:0.82rem;color:#dc2626;font-weight:600;"><%= p.stock_actual || 0 %> <%= p.unidad_default || '' %></td>
+              <td style="font-size:0.8rem;color:var(--gris-texto);"><%= p.stock_minimo != null ? p.stock_minimo : '—' %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
     </div>
   </div>
 </div>
@@ -365,8 +464,8 @@
     </div>
     <form method="POST" id="form-editar-producto" action="">
       <input type="hidden" name="volver_lista" id="edit-volver-lista" value="1">
-      <input type="hidden" name="buscar_actual" value="<%= buscar %>">
-      <input type="hidden" name="rubro_actual" value="<%= rubro %>">
+      <input type="hidden" name="buscar_actual" id="edit-buscar-actual" value="<%= buscar %>">
+      <input type="hidden" name="rubro_actual" id="edit-rubro-actual" value="<%= rubro %>">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="field" style="grid-column:1/-1;">
           <label>Producto</label>
@@ -404,17 +503,8 @@
   </div>
 </div>
 
+<script src="/js/ui-comun.js"></script>
 <script>
-function showModal(id){
-  document.getElementById(id).style.display='flex';
-  setTimeout(()=>{const f=document.querySelector('#'+id+' input:not([type=hidden])');if(f)f.focus();},100);
-}
-function hideModal(id){ document.getElementById(id).style.display='none'; }
-
-function toggleOtrasOpciones(ev) {
-  ev.stopPropagation();
-  document.getElementById('dropdown-otras-opciones').classList.toggle('abierto');
-}
 function hideOtrasOpciones() {
   document.getElementById('dropdown-otras-opciones').classList.remove('abierto');
 }
@@ -434,6 +524,11 @@ document.addEventListener('click', (ev) => {
 showModal('modal-lista-productos');
 <% } %>
 
+// Rubro que se está viendo ahora mismo en el modal — arranca con el que
+// vino del server (si se entró por un link con ?rubro=...), pero después
+// lo actualiza seleccionarRubro() sin recargar la página.
+let RUBRO_ACTUAL = <%- JSON.stringify(rubro || '') %>;
+
 function abrirModalEditar(p) {
   document.getElementById('form-editar-producto').action = '/inventario-ayb/producto/' + p.id + '/editar';
   document.getElementById('edit-nombre').value = p.nombre || '';
@@ -441,6 +536,12 @@ function abrirModalEditar(p) {
   document.getElementById('edit-unidad').value = p.unidad_default || 'unidad';
   document.getElementById('edit-stock-minimo').value = p.stock_minimo != null ? p.stock_minimo : '';
   document.getElementById('edit-codigo-barras').value = p.codigo_barras || '';
+  // Recién acá, no al cargar la página: si mientras tanto se cambió de
+  // rubro o se buscó algo (todo por JS, sin recargar), que "Guardar" en
+  // Editar vuelva a ese mismo lugar y no al que tenía la página al abrirse.
+  const inputBuscar = document.getElementById('buscar-productos-input');
+  document.getElementById('edit-buscar-actual').value = inputBuscar ? inputBuscar.value.trim() : '';
+  document.getElementById('edit-rubro-actual').value = RUBRO_ACTUAL || '';
   showModal('modal-editar');
 }
 
@@ -456,6 +557,8 @@ let _debounceProductos = null;
 let _pedidoProductosEnCurso = 0;
 let CONTENEDOR_PRODUCTOS_ORIGINAL = null;
 
+function esperar(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
 function escaparHtmlProductos(t) {
   const div = document.createElement('div');
   div.textContent = t == null ? '' : String(t);
@@ -464,10 +567,19 @@ function escaparHtmlProductos(t) {
 
 function filaProductoHtml(p) {
   const bajo = p.stock_minimo != null && (p.stock_actual || 0) <= p.stock_minimo;
+  // Ojo acá: esto va adentro de un atributo onclick='...' con comillas
+  // simples, así que cualquier nombre o categoría que traiga un apóstrofe
+  // (ej. "Baileys's", nombres con comilla tipeados en una importación)
+  // corta el atributo a la mitad y deja los botones de Editar/Eliminar de
+  // esa fila (y a veces de las que siguen) rotos — sin ningún error visible
+  // en consola. Por eso se reemplaza el apóstrofe por &#39; antes de meterlo
+  // en el HTML, además de escapar el resto con escaparHtmlProductos.
   const pJson = escaparHtmlProductos(JSON.stringify({
     id: p.id, nombre: p.nombre, categoria: p.categoria || '', unidad_default: p.unidad_default || '',
     stock_minimo: p.stock_minimo, codigo_barras: p.codigo_barras || ''
-  })).replace(/&quot;/g, '&#34;');
+  })).replace(/&quot;/g, '&#34;').replace(/'/g, '&#39;');
+  const buscarVal = escaparHtmlProductos(document.getElementById('buscar-productos-input').value);
+  const rubroVal = escaparHtmlProductos(RUBRO_ACTUAL || '');
   return `
     <tr>
       <td style="font-size:0.82rem;font-weight:500;">
@@ -476,11 +588,11 @@ function filaProductoHtml(p) {
       </td>
       <td style="font-size:0.8rem;color:var(--gris-texto);">${p.categoria ? escaparHtmlProductos(p.categoria) : '—'}</td>
       <td>
-        <form method="POST" action="/inventario-ayb/producto/${p.id}/ajustar" style="display:flex;gap:4px;align-items:center;">
+        <form method="POST" action="/inventario-ayb/producto/${p.id}/ajustar" class="form-ajustar-stock" data-bajo-actual="${bajo ? '1' : '0'}" style="display:flex;gap:4px;align-items:center;">
           <input type="hidden" name="modo" value="establecer">
           <input type="hidden" name="volver_lista" value="1">
-          <input type="hidden" name="buscar_actual" value="${escaparHtmlProductos(document.getElementById('buscar-productos-input').value)}">
-          <input type="hidden" name="rubro_actual" value="">
+          <input type="hidden" name="buscar_actual" value="${buscarVal}">
+          <input type="hidden" name="rubro_actual" value="${rubroVal}">
           <input type="number" name="cantidad" value="${p.stock_actual || 0}" step="0.01" min="0"
                  style="width:70px;background:${bajo ? '#fef3c7' : 'var(--gris-fondo)'};border:1px solid ${bajo ? '#fde68a' : 'var(--gris-borde)'};border-radius:6px;padding:5px 7px;font-size:0.8rem;">
           <span style="color:var(--gris-texto);">${p.unidad_default ? escaparHtmlProductos(p.unidad_default) : ''}</span>
@@ -491,12 +603,12 @@ function filaProductoHtml(p) {
       <td style="white-space:nowrap;">
         <a href="/inventario-ayb/producto/${p.id}/ajustar" class="btn-icono-glass-navy" title="Ver QR / ajuste rápido"><i class="ti ti-qrcode"></i></a>
       </td>
-      <td style="white-space:nowrap;">
+      <td class="td-acciones" style="white-space:nowrap;">
         <button type="button" class="btn-icono-glass-navy" title="Editar" onclick='abrirModalEditar(${pJson})'><i class="ti ti-pencil"></i></button>
-        <form method="POST" action="/inventario-ayb/producto/${p.id}/eliminar" style="display:inline;" onsubmit="return confirm('¿Dar de baja este producto? No se borra el historial.');">
+        <form method="POST" action="/inventario-ayb/producto/${p.id}/eliminar" class="form-eliminar-producto" style="display:inline;">
           <input type="hidden" name="volver_lista" value="1">
-          <input type="hidden" name="buscar_actual" value="${escaparHtmlProductos(document.getElementById('buscar-productos-input').value)}">
-          <input type="hidden" name="rubro_actual" value="">
+          <input type="hidden" name="buscar_actual" value="${buscarVal}">
+          <input type="hidden" name="rubro_actual" value="${rubroVal}">
           <button type="submit" class="btn-icono" title="Dar de baja" style="color:#dc2626;"><i class="ti ti-trash"></i></button>
         </form>
       </td>
@@ -504,11 +616,36 @@ function filaProductoHtml(p) {
   `;
 }
 
-function renderProductosBuscados(productos, texto) {
+function filaEncabezadoRubroHtml(categoria) {
+  return `<tr class="fila-rubro"><td colspan="6">${escaparHtmlProductos(categoria || 'Sin categoría')}</td></tr>`;
+}
+
+function renderProductosBuscados(productos, texto, opciones) {
+  opciones = opciones || {};
   const contenedor = document.getElementById('contenedor-productos-lista');
   if (productos.length === 0) {
-    contenedor.innerHTML = `<div style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">No se encontró ningún producto para "${escaparHtmlProductos(texto)}".</div>`;
+    const vacio = texto
+      ? `No se encontró ningún producto para "${escaparHtmlProductos(texto)}".`
+      : (opciones.rubroVacio ? `No hay productos en el rubro "${escaparHtmlProductos(opciones.rubroVacio)}".` : 'Todavía no hay ningún producto cargado.');
+    contenedor.innerHTML = `<div style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">${vacio}</div>`;
     return;
+  }
+  // "Todos" (sin buscar ni filtrar por un rubro puntual) agrupa con un
+  // encabezado por categoría, igual que el render del primer cargado de
+  // la página — la lista ya viene ordenada por categoría.
+  let filas;
+  if (opciones.agruparPorCategoria) {
+    let categoriaAnterior = null;
+    filas = productos.map(p => {
+      let encabezado = '';
+      if (p.categoria !== categoriaAnterior) {
+        encabezado = filaEncabezadoRubroHtml(p.categoria);
+        categoriaAnterior = p.categoria;
+      }
+      return encabezado + filaProductoHtml(p);
+    }).join('');
+  } else {
+    filas = productos.map(filaProductoHtml).join('');
   }
   contenedor.innerHTML = `
     <div class="tabla-wrap">
@@ -520,14 +657,142 @@ function renderProductosBuscados(productos, texto) {
             <th>Stock actual</th>
             <th>Mínimo</th>
             <th></th>
-            <th></th>
+            <th class="th-acciones"></th>
           </tr>
         </thead>
-        <tbody>${productos.map(filaProductoHtml).join('')}</tbody>
+        <tbody>${filas}</tbody>
       </table>
     </div>
   `;
 }
+
+// ── Cambiar de rubro (solapa) sin recargar la página ─────────────────
+// Antes cada solapa era un <a href="/inventario-ayb?rubro=..."> — eso
+// navegaba de nuevo a la página entera (todos los assets, el nav, todo) y
+// recién ahí el script de abajo volvía a abrir el modal: se veía como un
+// parpadeo/salto de la pantalla cada vez que se tocaba una solapa. Ahora
+// pide solo los productos de ese rubro por fetch y reemplaza la tabla.
+async function seleccionarRubro(el) {
+  const rubro = el.getAttribute('data-rubro') || '';
+  RUBRO_ACTUAL = rubro;
+
+  document.querySelectorAll('#solapas-rubros-productos .solapa-rubro').forEach(b => b.classList.remove('activa'));
+  el.classList.add('activa');
+
+  // El cambio de categoría se hace con un FUNDIDO: el contenido viejo se
+  // desvanece, mientras tanto se trae el nuevo y se reemplaza (el cambio
+  // de alto pasa acá, pero está invisible), y recién ahí aparece con su
+  // alto definitivo. Así el "salto" de alto nunca se ve, sin importar
+  // cuánto más chica o grande sea la categoría nueva — antes se intentó
+  // animar el alto en píxeles directamente, pero con tablas de miles de
+  // píxeles esa animación pasaba casi entera fuera de lo que se ve en
+  // pantalla y seguía sintiéndose como un salto.
+  const contenedor = document.getElementById('contenedor-productos-lista');
+  contenedor.style.pointerEvents = 'none';
+  contenedor.style.opacity = '0';
+
+  const [resultadoFetch] = await Promise.all([
+    fetch('/inventario-ayb/productos/buscar-vivo?rubro=' + encodeURIComponent(rubro))
+      .then(r => r.json())
+      .catch(() => null),
+    esperar(180), // le da tiempo al fundido de salida a que se termine de ver
+  ]);
+
+  if (!resultadoFetch) {
+    contenedor.innerHTML = '<div style="text-align:center;padding:32px;color:var(--gris-texto);">No se pudo cargar. Probá de nuevo.</div>';
+  } else {
+    renderProductosBuscados(resultadoFetch.productos || [], null, { agruparPorCategoria: resultadoFetch.agruparPorCategoria, rubroVacio: rubro });
+  }
+  // El contenido nuevo ya está adentro pero invisible — recién ahora se
+  // muestra, con un frame de por medio para que el navegador "registre" el
+  // opacity:0 antes de animar a 1 (si no, a veces salta directo a visible
+  // sin transición).
+  requestAnimationFrame(() => {
+    contenedor.style.opacity = '1';
+    contenedor.style.pointerEvents = '';
+  });
+
+  // Mantiene la URL sincronizada (útil si se comparte el link o se recarga
+  // la página estando en ese rubro) sin disparar una navegación real.
+  const url = new URL(window.location.href.split('#')[0]);
+  if (rubro) url.searchParams.set('rubro', rubro); else url.searchParams.delete('rubro');
+  url.searchParams.delete('buscar');
+  history.replaceState(null, '', url.toString() + '#modal-lista-productos');
+}
+
+// ── Guardar cantidad / dar de baja sin recargar la página ────────────
+// Antes ambos formularios eran POST normales: el navegador recargaba la
+// página entera (aunque el modal se reabriera después por JS, se veía el
+// parpadeo de la recarga completa). Ahora se interceptan acá y se mandan
+// por fetch — la página nunca navega. La cabecera X-Requested-With le avisa
+// a la ruta en el server que responda JSON en vez de hacer un redirect.
+document.getElementById('contenedor-productos-lista').addEventListener('submit', async (ev) => {
+  const form = ev.target;
+  if (!(form instanceof HTMLFormElement)) return;
+
+  if (form.classList.contains('form-ajustar-stock')) {
+    ev.preventDefault();
+    const boton = form.querySelector('button[type="submit"]');
+    const iconoOriginal = boton.innerHTML;
+    boton.disabled = true;
+    try {
+      const resp = await fetch(form.action, { method: 'POST', headers: { 'X-Requested-With': 'fetch' }, body: new URLSearchParams(new FormData(form)) });
+      const data = await resp.json();
+      boton.innerHTML = data.ok ? '<i class="ti ti-check"></i>' : '<i class="ti ti-alert-circle"></i>';
+      if (!data.ok) {
+        alert(data.error || 'No se pudo guardar la cantidad.');
+      } else if (data.producto) {
+        // Recalcular el color de "stock bajo" de esta fila y el contador de
+        // arriba con el dato que acaba de confirmar el server — antes esto
+        // solo se veía bien después de recargar toda la página (que era
+        // justo lo que dejamos de hacer), así que quedaba desactualizado.
+        const p = data.producto;
+        const inputCantidad = form.querySelector('input[name="cantidad"]');
+        const bajoAhora = p.stock_minimo != null && (p.stock_actual || 0) <= p.stock_minimo;
+        inputCantidad.style.background = bajoAhora ? '#fef3c7' : 'var(--gris-fondo)';
+        inputCantidad.style.borderColor = bajoAhora ? '#fde68a' : 'var(--gris-borde)';
+
+        const bajoAntes = form.dataset.bajoActual === '1';
+        if (bajoAhora !== bajoAntes) {
+          form.dataset.bajoActual = bajoAhora ? '1' : '0';
+          const contador = document.getElementById('contador-stock-bajo');
+          if (contador) contador.textContent = Math.max(0, parseInt(contador.textContent, 10) + (bajoAhora ? 1 : -1));
+        }
+      }
+    } catch (e) {
+      boton.innerHTML = '<i class="ti ti-alert-circle"></i>';
+      alert('No se pudo guardar (sin conexión).');
+    }
+    setTimeout(() => { boton.innerHTML = iconoOriginal; boton.disabled = false; }, 1200);
+    return;
+  }
+
+  if (form.classList.contains('form-eliminar-producto')) {
+    ev.preventDefault();
+    if (!confirm('¿Dar de baja este producto? No se borra el historial.')) return;
+    try {
+      const resp = await fetch(form.action, { method: 'POST', headers: { 'X-Requested-With': 'fetch' }, body: new URLSearchParams(new FormData(form)) });
+      const data = await resp.json();
+      if (data.ok) {
+        const fila = form.closest('tr');
+        const estabaBajo = fila && fila.querySelector('.form-ajustar-stock')?.dataset.bajoActual === '1';
+        if (fila) fila.remove();
+        ['contador-total-productos', 'contador-total-productos-tarjeta'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = Math.max(0, parseInt(el.textContent, 10) - 1);
+        });
+        if (estabaBajo) {
+          const contador = document.getElementById('contador-stock-bajo');
+          if (contador) contador.textContent = Math.max(0, parseInt(contador.textContent, 10) - 1);
+        }
+      } else {
+        alert(data.error || 'No se pudo dar de baja el producto.');
+      }
+    } catch (e) {
+      alert('No se pudo dar de baja (sin conexión).');
+    }
+  }
+});
 
 function filtrarProductosEnVivo() {
   const input = document.getElementById('buscar-productos-input');
