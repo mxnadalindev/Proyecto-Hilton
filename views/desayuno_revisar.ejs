@@ -27,9 +27,17 @@
         <p class="seccion-label">Desayuno</p>
         <h1 class="seccion-titulo">Revisar antes de cargar</h1>
       </div>
-      <form method="POST" action="/desayuno/cancelar" style="margin:0;">
-        <button type="submit" class="btn-secondary"><i class="ti ti-arrow-left"></i> Cancelar y volver</button>
-      </form>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        <a href="/inicio" class="btn-secondary" title="Volver al inicio"><i class="ti ti-home"></i></a>
+        <form method="POST" action="/desayuno/cancelar" style="margin:0;">
+          <button type="submit" class="btn-secondary"><i class="ti ti-arrow-left"></i> Cancelar y volver</button>
+        </form>
+        <% if (totalFilas > 0) { %>
+        <form method="POST" action="/desayuno/aplicar" style="margin:0;">
+          <button type="submit" class="btn-primary"><i class="ti ti-check"></i> Confirmar y cargar <%= totalFilas %> habitaciones</button>
+        </form>
+        <% } %>
+      </div>
     </div>
 
     <% if (totalFilas === 0) { %>
@@ -77,12 +85,6 @@
           </tbody>
         </table>
       </div>
-
-      <form method="POST" action="/desayuno/aplicar">
-        <div style="display:flex;justify-content:flex-end;gap:10px;">
-          <button type="submit" class="btn-primary"><i class="ti ti-check"></i> Confirmar y cargar <%= totalFilas %> habitaciones</button>
-        </div>
-      </form>
 
     <% } %>
 

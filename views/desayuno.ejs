@@ -40,6 +40,26 @@
 .dropdown-otras-item:hover{background:var(--gris-fondo);}
 .dropdown-otras-item i{font-size:16px;color:var(--gris-texto);}
 .menu-otras-opciones{position:relative;}
+
+/* Modal de confirmación (mismo patrón que ya se usa en Configuración y en
+   Costos para eliminar) — acá se usa DOS VECES seguidas para "Eliminar
+   todo lo cargado", a pedido explícito: es una acción destructiva (borra
+   todas las habitaciones del reporte actual) y no tiene vuelta atrás. */
+.modal-confirmar{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.2s ease, background 0.2s ease;}
+.modal-confirmar.mostrar{opacity:1;pointer-events:auto;background:rgba(0,0,0,0.45);}
+.modal-confirmar-caja{background:var(--blanco);border-radius:16px;width:100%;max-width:380px;padding:26px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;transform:scale(0.9);transition:transform 0.2s cubic-bezier(.22,1,.36,1);}
+.modal-confirmar.mostrar .modal-confirmar-caja{transform:scale(1);}
+.modal-confirmar-icono{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.4rem;background:var(--azul-claro);color:var(--azul);}
+.modal-confirmar-caja.peligro .modal-confirmar-icono{background:#fef2f2;color:#dc2626;}
+.modal-confirmar-msg{font-size:0.88rem;color:var(--negro);font-weight:500;margin:0 0 22px;line-height:1.5;}
+.modal-confirmar-botones{display:flex;gap:10px;justify-content:center;}
+.modal-confirmar-botones button{font-size:0.78rem;font-weight:600;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:var(--font-sans);}
+.modal-confirmar-cancelar{background:none;border:1px solid var(--gris-borde);color:var(--gris-texto);}
+.modal-confirmar-cancelar:hover{background:var(--gris-fondo);}
+.modal-confirmar-aceptar{background:var(--azul);border:1px solid var(--azul);color:#fff;}
+.modal-confirmar-aceptar:hover{background:var(--azul-hover);}
+.modal-confirmar-caja.peligro .modal-confirmar-aceptar{background:#dc2626;border-color:#dc2626;}
+.modal-confirmar-caja.peligro .modal-confirmar-aceptar:hover{background:#b91c1c;}
   </style>
 </head>
 <body>
@@ -61,6 +81,11 @@
           <button type="button" class="dropdown-otras-item" onclick="showModal('modal-subir-reporte')">
             <i class="ti ti-upload"></i> Subir reporte del día
           </button>
+          <% if (fechaReporte) { %>
+          <button type="button" class="dropdown-otras-item" style="color:#dc2626;" onclick="document.getElementById('dropdown-otras-opciones-desayuno').classList.remove('abierto'); confirmarEliminarTodo()">
+            <i class="ti ti-trash" style="color:#dc2626;"></i> Eliminar todo lo cargado
+          </button>
+          <% } %>
         </div>
       </div>
     </div>
@@ -68,6 +93,10 @@
     <% if (msg === 'importado') { %>
       <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;color:#16a34a;font-weight:600;margin-bottom:20px;">
         <i class="ti ti-circle-check"></i> Reporte importado correctamente.
+      </div>
+    <% } else if (msg === 'eliminado') { %>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;color:#16a34a;font-weight:600;margin-bottom:20px;">
+        <i class="ti ti-circle-check"></i> Se eliminó todo lo que estaba cargado.
       </div>
     <% } else if (msg) { %>
       <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 18px;color:#dc2626;font-weight:600;margin-bottom:20px;">
@@ -128,6 +157,34 @@
   </div>
 </div>
 
+<!-- Formulario oculto que efectivamente borra — se manda por JS recién
+     después de las dos confirmaciones, nunca por un click directo. -->
+<form id="form-eliminar-todo-desayuno" method="POST" action="/desayuno/eliminar-todo" style="display:none;"></form>
+
+<!-- Confirmación 1 de 2 -->
+<div class="modal-confirmar" id="modal-confirmar-desayuno-1" onclick="if(event.target===this) cerrarConfirmarDesayuno(1)">
+  <div class="modal-confirmar-caja peligro">
+    <div class="modal-confirmar-icono"><i class="ti ti-alert-triangle"></i></div>
+    <p class="modal-confirmar-msg">¿Eliminar todo lo cargado de Desayuno? Se van a borrar las <%= typeof totalHabitaciones !== 'undefined' ? totalHabitaciones : '' %> habitaciones del reporte actual.</p>
+    <div class="modal-confirmar-botones">
+      <button type="button" class="modal-confirmar-cancelar" onclick="cerrarConfirmarDesayuno(1)">Cancelar</button>
+      <button type="button" class="modal-confirmar-aceptar" onclick="pasarASegundaConfirmacionDesayuno()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmación 2 de 2 -->
+<div class="modal-confirmar" id="modal-confirmar-desayuno-2" onclick="if(event.target===this) cerrarConfirmarDesayuno(2)">
+  <div class="modal-confirmar-caja peligro">
+    <div class="modal-confirmar-icono"><i class="ti ti-alert-triangle"></i></div>
+    <p class="modal-confirmar-msg">Esta acción no se puede deshacer. ¿Confirmás de nuevo que querés eliminar todo lo cargado?</p>
+    <div class="modal-confirmar-botones">
+      <button type="button" class="modal-confirmar-cancelar" onclick="cerrarConfirmarDesayuno(2)">Cancelar</button>
+      <button type="button" class="modal-confirmar-aceptar" onclick="eliminarTodoDesayuno()">Sí, eliminar definitivamente</button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/ui-comun.js"></script>
 <script>
 document.addEventListener('click', (ev) => {
@@ -137,6 +194,24 @@ document.addEventListener('click', (ev) => {
     dropdown.classList.remove('abierto');
   }
 });
+
+// "Eliminar todo lo cargado" — pide confirmación DOS VECES seguidas antes
+// de mandar el POST que borra, justamente por ser una acción destructiva
+// sin vuelta atrás (borra todas las habitaciones del reporte actual).
+function confirmarEliminarTodo() {
+  document.getElementById('modal-confirmar-desayuno-1').classList.add('mostrar');
+}
+function cerrarConfirmarDesayuno(n) {
+  document.getElementById('modal-confirmar-desayuno-' + n).classList.remove('mostrar');
+}
+function pasarASegundaConfirmacionDesayuno() {
+  cerrarConfirmarDesayuno(1);
+  document.getElementById('modal-confirmar-desayuno-2').classList.add('mostrar');
+}
+function eliminarTodoDesayuno() {
+  cerrarConfirmarDesayuno(2);
+  document.getElementById('form-eliminar-todo-desayuno').submit();
+}
 
 const inputHabitacion = document.getElementById('input-habitacion');
 const contResultados = document.getElementById('resultados-desayuno');

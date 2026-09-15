@@ -243,4 +243,15 @@ router.post('/cancelar', (req, res) => {
   res.redirect('/desayuno');
 });
 
+// ── Eliminar todo lo cargado ──
+// Borra TODAS las habitaciones guardadas (de cualquier fecha de reporte),
+// dejando el módulo como recién instalado. Es una acción destructiva sin
+// vuelta atrás, por eso en la pantalla (desayuno.ejs) se pide confirmación
+// dos veces seguidas antes de mandar este POST — acá en el servidor no se
+// vuelve a preguntar nada, ya llega confirmado.
+router.post('/eliminar-todo', async (req, res) => {
+  await db.run2('DELETE FROM desayuno_habitaciones');
+  res.redirect('/desayuno?msg=eliminado');
+});
+
 module.exports = router;
