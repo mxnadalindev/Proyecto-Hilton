@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css"></noscript>
+  <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
 <style>
 .main-content-ancho{max-width:1600px;}
 .puesto-badge{font-size:0.68rem;font-weight:500;color:var(--azul);background:var(--azul-claro);padding:2px 8px;border-radius:20px;}
@@ -134,6 +134,41 @@
 .carousel-dots{display:flex;gap:7px;}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--gris-borde);cursor:pointer;transition:background 0.2s, transform 0.2s;}
 .dot.activa{background:var(--azul);transform:scale(1.3);}
+
+/* "Otras opciones" — mismas clases que ya usan Horas Extra/Horarios/Personal
+   (viven en su propio <style> ahí también, no en style.css global). */
+.dropdown-otras-opciones{
+  display:none;
+  position:absolute; right:0; top:calc(100% + 6px); z-index:200;
+  background:var(--blanco); border:1px solid var(--gris-borde); border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.15);
+  min-width:230px; padding:6px;
+}
+.dropdown-otras-opciones.abierto{ display:flex; flex-direction:column; gap:2px; }
+.dropdown-otras-item{
+  display:flex; align-items:center; gap:8px; width:100%;
+  background:none; border:none; padding:9px 12px;
+  font-family:var(--font-sans); font-size:0.78rem; font-weight:500;
+  color:var(--negro); text-decoration:none; cursor:pointer;
+  border-radius:6px; text-align:left;
+}
+.dropdown-otras-item:hover{ background:var(--gris-fondo); }
+.dropdown-otras-item i{ font-size:15px; color:var(--gris-texto); flex-shrink:0; }
+.dropdown-otras-item-excel{ color:#15803d; }
+.dropdown-otras-item-excel i{ color:#16a34a; }
+.dropdown-otras-item-excel:hover{ background:#f0fdf4; }
+
+/* Cartel de aviso propio de la app (reemplaza mostrar un mensaje suelto o
+   nada de nada) — se usa para confirmar "Trago/plato guardado" al volver
+   acá después de apretar Guardar en la pantalla de un trago/plato. */
+.modal-aviso{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.2s ease, background 0.2s ease;}
+.modal-aviso.mostrar{opacity:1;pointer-events:auto;background:rgba(0,0,0,0.45);}
+.modal-aviso-caja{background:var(--blanco);border-radius:16px;width:100%;max-width:380px;padding:26px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;transform:scale(0.9);transition:transform 0.2s cubic-bezier(.22,1,.36,1);}
+.modal-aviso.mostrar .modal-aviso-caja{transform:scale(1);}
+.modal-aviso-icono{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.4rem;background:#f0fdf4;color:#16a34a;}
+.modal-aviso-msg{font-size:0.88rem;color:var(--negro);font-weight:500;margin:0 0 22px;line-height:1.5;}
+.modal-aviso-aceptar{background:var(--azul);border:1px solid var(--azul);color:#fff;font-size:0.78rem;font-weight:600;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:var(--font-sans);}
+.modal-aviso-aceptar:hover{background:var(--azul-hover);}
 </style>
 </head>
 <body>
@@ -160,13 +195,33 @@
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
+
+        <!-- "Otras opciones": exportar a Excel las listas de insumos y de
+             costeo — mismo patrón (y mismas clases) que ya usan Horas
+             Extra/Horarios/Personal. -->
+        <div class="menu-otras-opciones" style="position:relative;">
+          <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
+            <i class="ti ti-dots"></i> Otras opciones <i class="ti ti-chevron-down" style="font-size:12px;"></i>
+          </button>
+          <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
+            <a href="/costos/insumos/excel<%= (typeof esAyb !== 'undefined' && esAyb) ? '?depto=ayb' : '' %>" class="dropdown-otras-item dropdown-otras-item-excel">
+              <i class="ti ti-file-spreadsheet"></i> Excel de insumos
+            </a>
+            <a href="/costos/platos/excel<%= (typeof esAyb !== 'undefined' && esAyb) ? '?depto=ayb' : '' %>" class="dropdown-otras-item dropdown-otras-item-excel">
+              <i class="ti ti-file-spreadsheet"></i> Excel de costeo (<%= (typeof esAyb !== 'undefined' && esAyb) ? 'tragos' : 'platos' %>)
+            </a>
+            <% if (typeof esAyb !== 'undefined' && esAyb) { %>
+            <button type="button" class="dropdown-otras-item" onclick="document.getElementById('dropdown-otras-opciones').classList.remove('abierto');showModal('modal-plato')">
+              <i class="ti ti-glass"></i> Nuevo trago
+            </button>
+            <% } %>
+          </div>
+        </div>
+
         <% if (typeof esAyb !== 'undefined' && esAyb) { %>
         <a href="/inventario-ayb" class="btn-secondary">
           <i class="ti ti-package"></i> Gestionar productos
         </a>
-        <button onclick="showModal('modal-plato')" class="btn-primary">
-          <i class="ti ti-glass"></i> Nuevo trago
-        </button>
         <% } else { %>
         <button onclick="showModal('modal-insumo')" class="btn-secondary">
           <i class="ti ti-plus"></i> Nuevo insumo
@@ -344,7 +399,7 @@
       </div>
 
       <p id="contador-resultados-insumos" style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;<%= buscar ? '' : 'display:none;' %>">
-        <%= totalInsumos %> resultado<%= totalInsumos !== 1 ? 's' : '' %> para "<%= buscar %>"
+        <%= resultadosInsumos %> resultado<%= resultadosInsumos !== 1 ? 's' : '' %> para "<%= buscar %>"
       </p>
 
       <div id="solapas-letras-insumos" class="solapas-letras" style="<%= buscar ? 'display:none;' : '' %>">
@@ -453,7 +508,8 @@
              // ese contexto al buscar — una cuenta de Cocina/AYB no lo necesita
              // (departamentoEfectivo ignora este parámetro para ellas). %>
           <% if (typeof depto !== 'undefined' && depto === 'ayb') { %><input type="hidden" name="depto" value="ayb"><% } %>
-          <input type="text" name="buscarPlato" value="<%= buscarPlato %>" placeholder="Buscar <%= palabraItem %> por nombre..."
+          <input type="text" name="buscarPlato" id="buscar-platos-input" value="<%= buscarPlato %>" placeholder="Buscar <%= palabraItem %> por nombre..."
+                 oninput="filtrarPlatosEnVivo()"
                  style="width:100%;padding:8px 32px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
           <% if (buscarPlato) { %>
           <a href="/costos<%= depto === 'ayb' ? '?depto=ayb' : '' %>#modal-lista-platos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
@@ -461,20 +517,16 @@
         </form>
       </div>
 
-      <% if (buscarPlato) { %>
-        <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;">
-          <%= totalPlatos %> resultado<%= totalPlatos !== 1 ? 's' : '' %> para "<%= buscarPlato %>"
-        </p>
-      <% } %>
+      <p id="contador-resultados-platos" style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;<%= buscarPlato ? '' : 'display:none;' %>">
+        <%= resultadosPlatos %> resultado<%= resultadosPlatos !== 1 ? 's' : '' %> para "<%= buscarPlato %>"
+      </p>
 
-      <% if (!buscarPlato) { %>
-      <div class="solapas-letras">
+      <div id="solapas-letras-platos" class="solapas-letras" style="<%= buscarPlato ? 'display:none;' : '' %>">
         <a href="/costos<%= depto === 'ayb' ? '?depto=ayb' : '' %>" class="solapa-letra <%= !letraPlato ? 'activa' : '' %>">Todos</a>
         <% 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => { %>
         <a href="/costos?letraPlato=<%= l %><%= depto === 'ayb' ? '&depto=ayb' : '' %>" class="solapa-letra <%= letraPlato === l ? 'activa' : '' %>"><%= l %></a>
         <% }) %>
       </div>
-      <% } %>
 
       <div class="tabla-wrap">
         <table class="tabla">
@@ -487,7 +539,7 @@
               <th></th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="tabla-platos-body">
             <% if (platos.length > 0) { %>
               <% platos.forEach(p => { %>
               <tr>
@@ -728,9 +780,42 @@
   </div>
 </div>
 
+<div id="modal-aviso" class="modal-aviso" onclick="if(event.target===this) cerrarAvisoCostos()">
+  <div class="modal-aviso-caja">
+    <div class="modal-aviso-icono"><i class="ti ti-circle-check"></i></div>
+    <p class="modal-aviso-msg" id="modalAvisoMsg"></p>
+    <button type="button" class="modal-aviso-aceptar" onclick="cerrarAvisoCostos()">Aceptar</button>
+  </div>
+</div>
 
 <script src="/js/ui-comun.js"></script>
 <script>
+// Cartel de "guardado": aparece al volver acá después de apretar "Guardar"
+// en la pantalla de un trago/plato (ver /costos/plato/:id/guardar).
+function cerrarAvisoCostos() {
+  document.getElementById('modal-aviso').classList.remove('mostrar');
+}
+(function () {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('guardado')) {
+    document.getElementById('modalAvisoMsg').textContent = 'Guardado correctamente.';
+    document.getElementById('modal-aviso').classList.add('mostrar');
+    params.delete('guardado');
+    const query = params.toString();
+    window.history.replaceState({}, '', window.location.pathname + (query ? '?' + query : ''));
+  }
+})();
+
+// Menú "Otras opciones" (mismo patrón que Horas Extra/Horarios/Personal):
+// cerrar el desplegable si se hace clic afuera.
+document.addEventListener('click', (ev) => {
+  const dropdown = document.getElementById('dropdown-otras-opciones');
+  const boton = document.getElementById('btn-otras-opciones');
+  if (dropdown && dropdown.classList.contains('abierto') && !dropdown.contains(ev.target) && ev.target !== boton && !boton.contains(ev.target)) {
+    dropdown.classList.remove('abierto');
+  }
+});
+
 // Búsqueda de insumos en vivo (sin esperar Enter ni recargar la página).
 // OJO: la pantalla principal solo trae los primeros 200 insumos por
 // defecto (para no cargar toda la tabla de una) — así que filtrar nomás
@@ -836,6 +921,77 @@ function filtrarInsumosEnVivo() {
     tbody.innerHTML = insumos.length > 0
       ? insumos.map(filaInsumoHtml).join('')
       : `<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">No se encontraron insumos para "${escaparHtml(texto)}".</td></tr>`;
+  }, 300);
+}
+
+// Búsqueda de platos/tragos en vivo — mismo patrón y mismo motivo que
+// filtrarInsumosEnVivo() de arriba (antes esta lista solo buscaba con
+// Enter, recargando toda la página: además de no "ir tirando" resultados
+// mientras se escribe, cada letra tipeada armaba una navegación completa,
+// lo que hacía que la tarjeta se viera parpadear y cambiar de tamaño de
+// golpe con cada resultado).
+const PALABRA_ITEM = '<%= palabraItem %>';
+let TBODY_PLATOS_ORIGINAL = null;
+let _debouncePlatos = null;
+let _pedidoPlatosEnCurso = 0;
+
+function filaPlatoHtml(p) {
+  const costo = parseFloat(p.costo_total) || 0;
+  const margen = parseFloat(p.margen_ganancia) || 0;
+  const precioVenta = costo * (1 + margen / 100);
+  return `
+    <tr>
+      <td style="font-weight:500;">
+        <a href="/costos/plato/${p.id}" style="color:var(--negro);text-decoration:none;">${escaparHtml(p.nombre)}</a>
+        ${p.categoria ? `<span style="display:block;font-size:0.65rem;color:var(--gris-texto);">${escaparHtml(p.categoria)}</span>` : ''}
+      </td>
+      <td style="color:var(--azul);font-weight:600;">$${costo.toFixed(2)}</td>
+      <td><span style="font-size:0.72rem;background:var(--azul-claro);color:var(--azul);padding:2px 8px;border-radius:20px;font-weight:500;">${margen}%</span></td>
+      <td style="font-weight:600;color:#16a34a;">$${precioVenta.toFixed(2)}</td>
+      <td><a href="/costos/plato/${p.id}" class="btn-sm">Ver</a></td>
+    </tr>
+  `;
+}
+
+function filtrarPlatosEnVivo() {
+  const input = document.getElementById('buscar-platos-input');
+  const tbody = document.getElementById('tabla-platos-body');
+  if (TBODY_PLATOS_ORIGINAL === null) TBODY_PLATOS_ORIGINAL = tbody.innerHTML;
+
+  const texto = input.value.trim();
+  const solapas = document.getElementById('solapas-letras-platos');
+  const contador = document.getElementById('contador-resultados-platos');
+
+  clearTimeout(_debouncePlatos);
+
+  if (!texto) {
+    tbody.innerHTML = TBODY_PLATOS_ORIGINAL;
+    if (solapas) solapas.style.display = '';
+    if (contador) contador.style.display = 'none';
+    return;
+  }
+
+  if (solapas) solapas.style.display = 'none';
+
+  _debouncePlatos = setTimeout(async () => {
+    const idPedido = ++_pedidoPlatosEnCurso;
+    let data;
+    try {
+      const resp = await fetch('/costos/platos/buscar-vivo?q=' + encodeURIComponent(texto) + (ES_AYB ? '&depto=ayb' : ''));
+      data = await resp.json();
+    } catch (e) {
+      return;
+    }
+    if (idPedido !== _pedidoPlatosEnCurso) return;
+
+    const platos = data.platos || [];
+    if (contador) {
+      contador.style.display = '';
+      contador.textContent = platos.length + ' resultado' + (platos.length !== 1 ? 's' : '') + ' para "' + texto + '"';
+    }
+    tbody.innerHTML = platos.length > 0
+      ? platos.map(filaPlatoHtml).join('')
+      : `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">No se encontraron ${PALABRA_ITEM}s para "${escaparHtml(texto)}".</td></tr>`;
   }, 300);
 }
 

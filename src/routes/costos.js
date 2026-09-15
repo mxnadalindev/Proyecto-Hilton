@@ -119,6 +119,108 @@ router.get('/insumos/buscar-vivo', loginRequerido, async (req, res) => {
   res.json({ insumos, esAyb });
 });
 
+// Mismo patrón que /insumos/buscar-vivo: búsqueda en vivo de platos/tragos
+// para el modal de "Costeo de platos", sin recargar la página completa.
+router.get('/platos/buscar-vivo', loginRequerido, async (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (!q) return res.json({ platos: [] });
+  const depto = departamentoEfectivo(req);
+  const platos = await db.all2(
+    "SELECT * FROM platos_costo WHERE departamento=$1 AND nombre ILIKE $2 ORDER BY nombre LIMIT 300",
+    [depto, `%${q}%`]
+  );
+  res.json({ platos });
+});
+
+function estilizarTituloExcel(ws, rango, texto) {
+  ws.mergeCells(rango);
+  const titulo = ws.getCell(rango.split(':')[0]);
+  titulo.value = texto;
+  titulo.font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
+  titulo.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
+  titulo.alignment = { horizontal: 'center', vertical: 'middle' };
+  ws.getRow(1).height = 28;
+}
+function estilizarEncabezadoExcel(row) {
+  row.eachCell(c => {
+    c.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+    c.alignment = { horizontal: 'center', vertical: 'middle' };
+  });
+  row.height = 22;
+}
+
+// Exportar a Excel la lista completa de insumos/productos (con precio),
+// mismo patrón que ya usan Horas Extra y Personal ("Otras opciones" →
+// Excel). Trae TODOS los insumos, no solo los primeros 200 que se ven en
+// pantalla por defecto.
+router.get('/insumos/excel', loginRequerido, async (req, res) => {
+  try {
+    const esAyb = departamentoEfectivo(req) === 'ayb';
+    const insumos = esAyb
+      ? await db.all2(`SELECT ${SELECT_PRODUCTOS_AYB_COMO_INSUMO} FROM productos_ayb WHERE activo=true ORDER BY categoria NULLS LAST, nombre`)
+      : await db.all2("SELECT * FROM insumos ORDER BY categoria, nombre");
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Insumos');
+    estilizarTituloExcel(ws, 'A1:D1', `INSUMOS / INGREDIENTES — ${esAyb ? 'AYB' : 'COCINA'}`);
+    estilizarEncabezadoExcel(ws.addRow(['CÓDIGO', 'INSUMO', 'CATEGORÍA', 'PRECIO UNITARIO']));
+    insumos.forEach(ins => {
+      const row = ws.addRow([ins.codigo || '', ins.nombre, ins.categoria || '', Number(ins.precio_unitario) || 0]);
+      row.eachCell((c, col) => {
+        c.font = { size: 10 };
+        c.alignment = { horizontal: col === 2 ? 'left' : 'center', vertical: 'middle' };
+        c.border = { bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+        if (col === 4) c.numFmt = '"$"#,##0.00';
+      });
+    });
+    ws.columns = [{ width: 14 }, { width: 34 }, { width: 20 }, { width: 16 }];
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=insumos_${esAyb ? 'ayb' : 'cocina'}.xlsx`);
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('Error exportando insumos a Excel:', err.message);
+    res.status(500).render('error', { mensaje: 'No se pudo generar el Excel de insumos.', volver: '/costos' });
+  }
+});
+
+// Exportar a Excel el costeo completo de platos/tragos (costo, margen,
+// precio de venta) — mismo criterio que insumos/excel.
+router.get('/platos/excel', loginRequerido, async (req, res) => {
+  try {
+    const depto = departamentoEfectivo(req);
+    const esAyb = depto === 'ayb';
+    const platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 ORDER BY nombre", [depto]);
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Costeo');
+    estilizarTituloExcel(ws, 'A1:E1', `COSTEO DE ${esAyb ? 'TRAGOS' : 'PLATOS'} — ${esAyb ? 'AYB' : 'COCINA'}`);
+    estilizarEncabezadoExcel(ws.addRow([(esAyb ? 'TRAGO' : 'PLATO').toUpperCase(), 'CATEGORÍA', 'COSTO', 'MARGEN %', 'PRECIO VENTA']));
+    platos.forEach(p => {
+      const costo = parseFloat(p.costo_total) || 0;
+      const margen = parseFloat(p.margen_ganancia) || 0;
+      const precioVenta = costo * (1 + margen / 100);
+      const row = ws.addRow([p.nombre, p.categoria || '', costo, margen / 100, precioVenta]);
+      row.eachCell((c, col) => {
+        c.font = { size: 10 };
+        c.alignment = { horizontal: col === 1 ? 'left' : 'center', vertical: 'middle' };
+        c.border = { bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+        if (col === 3 || col === 5) c.numFmt = '"$"#,##0.00';
+        if (col === 4) c.numFmt = '0.0%';
+      });
+    });
+    ws.columns = [{ width: 30 }, { width: 20 }, { width: 14 }, { width: 12 }, { width: 16 }];
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=costeo_${esAyb ? 'tragos_ayb' : 'platos_cocina'}.xlsx`);
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('Error exportando costeo a Excel:', err.message);
+    res.status(500).render('error', { mensaje: 'No se pudo generar el Excel de costeo.', volver: '/costos' });
+  }
+});
+
 router.get('/', loginRequerido, async (req, res) => {
   const buscar = (req.query.buscar || '').trim();
   const letra  = (req.query.letra || '').trim().toUpperCase().slice(0, 1);
@@ -131,64 +233,79 @@ router.get('/', loginRequerido, async (req, res) => {
   // ── Insumos/Ingredientes: para Cocina es la tabla "insumos" de siempre.
   //    Para AYB, pasan a ser los productos de Inventario AYB (misma lista,
   //    un solo lugar donde se cargan) — no una lista aparte para Costos.
-  let insumos, totalInsumos;
+  //
+  // totalInsumos SIEMPRE es el total real de la tabla (filtrando o no) —
+  // antes, al buscar o filtrar por letra, esta variable pasaba a valer
+  // "cuántos insumos matchean el filtro" en vez del total real, y como es
+  // la misma variable que arma la tarjeta de resumen ("N insumos
+  // cargados"), si alguien filtraba por una letra y se iba sin limpiar el
+  // filtro, esa tarjeta quedaba mostrando un número mucho más chico que el
+  // real (parecía que "se habían perdido" insumos, cuando en realidad
+  // seguían todos ahí). resultadosInsumos es aparte: solo se usa para el
+  // cartelito "X resultados para ..." adentro del buscador.
+  let insumos, resultadosInsumos;
+  const totalInsumosRow = esAyb
+    ? await db.get2("SELECT COUNT(*)::int AS total FROM productos_ayb WHERE activo=true")
+    : await db.get2("SELECT COUNT(*)::int AS total FROM insumos");
+  const totalInsumos = totalInsumosRow?.total || 0;
   if (esAyb) {
     if (buscar) {
       insumos = await db.all2(
         `SELECT ${SELECT_PRODUCTOS_AYB_COMO_INSUMO} FROM productos_ayb WHERE activo=true AND (nombre ILIKE $1 OR codigo_barras ILIKE $1) ORDER BY categoria NULLS LAST, nombre LIMIT 500`,
         [`%${buscar}%`]
       );
-      totalInsumos = insumos.length;
+      resultadosInsumos = insumos.length;
     } else if (letra) {
       insumos = await db.all2(
         `SELECT ${SELECT_PRODUCTOS_AYB_COMO_INSUMO} FROM productos_ayb WHERE activo=true AND nombre ILIKE $1 ORDER BY nombre LIMIT 500`,
         [`${letra}%`]
       );
-      totalInsumos = insumos.length;
+      resultadosInsumos = insumos.length;
     } else {
-      const totalRow = await db.get2("SELECT COUNT(*)::int AS total FROM productos_ayb WHERE activo=true");
-      totalInsumos = totalRow?.total || 0;
       insumos = await db.all2(
         `SELECT ${SELECT_PRODUCTOS_AYB_COMO_INSUMO} FROM productos_ayb WHERE activo=true ORDER BY categoria NULLS LAST, nombre LIMIT $1`,
         [LIMITE_SIN_BUSQUEDA]
       );
+      resultadosInsumos = totalInsumos;
     }
   } else if (buscar) {
     insumos = await db.all2(
       "SELECT * FROM insumos WHERE nombre ILIKE $1 OR codigo ILIKE $1 ORDER BY categoria, nombre LIMIT 500",
       [`%${buscar}%`]
     );
-    totalInsumos = insumos.length;
+    resultadosInsumos = insumos.length;
   } else if (letra) {
     insumos = await db.all2(
       "SELECT * FROM insumos WHERE nombre ILIKE $1 ORDER BY nombre LIMIT 500",
       [`${letra}%`]
     );
-    totalInsumos = insumos.length;
+    resultadosInsumos = insumos.length;
   } else {
-    const totalRow = await db.get2("SELECT COUNT(*)::int AS total FROM insumos");
-    totalInsumos = totalRow?.total || 0;
     insumos = await db.all2(
       "SELECT * FROM insumos ORDER BY categoria, nombre LIMIT $1",
       [LIMITE_SIN_BUSQUEDA]
     );
+    resultadosInsumos = totalInsumos;
   }
 
   // ── Costeo de platos/tragos: cada departamento ve los suyos
   //    (platos_costo.departamento). AYB los llama "tragos" en la vista,
   //    pero es la misma tabla y las mismas consultas que Cocina.
+  // Mismo criterio que con insumos: totalPlatos es SIEMPRE el total real
+  // (sirve para la tarjeta de resumen), resultadosPlatos es el conteo de
+  // la búsqueda/filtro actual (sirve para el cartelito de resultados).
   const buscarPlato = (req.query.buscarPlato || '').trim();
   const letraPlato  = (req.query.letraPlato || '').trim().toUpperCase().slice(0, 1);
-  let platos = [], totalPlatos = 0;
+  const totalPlatosRow = await db.get2("SELECT COUNT(*)::int AS total FROM platos_costo WHERE departamento=$1", [depto]);
+  const totalPlatos = totalPlatosRow?.total || 0;
+  let platos = [], resultadosPlatos = totalPlatos;
   if (buscarPlato) {
     platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 AND nombre ILIKE $2 ORDER BY nombre LIMIT 300", [depto, `%${buscarPlato}%`]);
-    totalPlatos = platos.length;
+    resultadosPlatos = platos.length;
   } else if (letraPlato) {
     platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 AND nombre ILIKE $2 ORDER BY nombre LIMIT 300", [depto, `${letraPlato}%`]);
-    totalPlatos = platos.length;
+    resultadosPlatos = platos.length;
   } else {
-    const totalPlatosRow = await db.get2("SELECT COUNT(*)::int AS total FROM platos_costo WHERE departamento=$1", [depto]);
-    totalPlatos = totalPlatosRow?.total || 0;
     platos = await db.all2("SELECT * FROM platos_costo WHERE departamento=$1 ORDER BY nombre LIMIT 300", [depto]);
   }
   const categorias = [...new Set(insumos.map(i=>i.categoria))];
@@ -210,8 +327,8 @@ router.get('/', loginRequerido, async (req, res) => {
 
   res.render('costos', {
     insumos, platos, categorias, msg, geminiConfigurado,
-    buscar, letra, totalInsumos,
-    buscarPlato, totalPlatos, letraPlato,
+    buscar, letra, totalInsumos, resultadosInsumos,
+    buscarPlato, totalPlatos, letraPlato, resultadosPlatos,
     mostrandoLimitado: !buscar && totalInsumos > LIMITE_SIN_BUSQUEDA,
     limiteSinBusqueda: LIMITE_SIN_BUSQUEDA,
     variacionPrecios, diasVariacion, tipoVariacion,
@@ -425,11 +542,32 @@ router.post('/insumo/:id/eliminar', loginRequerido, async (req, res) => {
 router.post('/plato/nuevo', loginRequerido, async (req, res) => {
   const { nombre, categoria, porciones, precio_venta, margen_ganancia } = req.body;
   const depto = departamentoEfectivo(req);
-  await db.run2(
-    "INSERT INTO platos_costo (nombre,categoria,porciones,precio_venta,margen_ganancia,departamento) VALUES ($1,$2,$3,$4,$5,$6)",
+  const resultado = await db.run2(
+    "INSERT INTO platos_costo (nombre,categoria,porciones,precio_venta,margen_ganancia,departamento) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id",
     [nombre, categoria||'', parseInt(porciones)||1, parseFloat(precio_venta)||0, parseFloat(margen_ganancia)||30, depto]
   );
-  res.redirect('/costos' + (depto === 'ayb' ? '?depto=ayb' : ''));
+  if (resultado && resultado.lastID) {
+    // Va directo a la pantalla del trago/plato recién creado (que ya tiene
+    // el formulario de "Agregar ingrediente") pero sin mostrar todavía
+    // ningún cartel de "creado" — el cartel aparece recién cuando el
+    // usuario terminó de cargar los ingredientes y apretó "Guardar" (ver
+    // ruta /plato/:id/guardar más abajo).
+    res.redirect('/costos/plato/' + resultado.lastID);
+  } else {
+    res.redirect('/costos' + (depto === 'ayb' ? '?depto=ayb' : ''));
+  }
+});
+
+// Botón "Guardar" de la pantalla de detalle: no cambia ningún dato (los
+// campos de esa pantalla ya se guardan solos, como el margen), pero le
+// confirma al usuario con un cartel propio que el trago/plato quedó
+// guardado, y lo devuelve a la lista de Costos — así el flujo completo es
+// crear → cargar ingredientes → Guardar → confirmación → vuelta a la lista.
+router.post('/plato/:id/guardar', loginRequerido, async (req, res) => {
+  const plato = await db.get2("SELECT id, departamento FROM platos_costo WHERE id=$1", [req.params.id]);
+  if (!plato) return res.redirect('/costos');
+  const esAybGuardado = plato.departamento === 'ayb';
+  res.redirect('/costos' + (esAybGuardado ? '?depto=ayb&guardado=1' : '?guardado=1'));
 });
 
 // Un plato de Cocina y un trago de AYB viven en la misma fila de
@@ -453,8 +591,8 @@ router.get('/plato/:id', loginRequerido, async (req, res) => {
       `, [req.params.id]);
 
   const todosInsumos = esAyb
-    ? await db.all2("SELECT id, nombre, precio_unitario, unidad_default AS unidad FROM productos_ayb WHERE activo=true ORDER BY nombre")
-    : await db.all2("SELECT * FROM insumos ORDER BY nombre");
+    ? await db.all2("SELECT id, nombre, categoria, precio_unitario, unidad_default AS unidad FROM productos_ayb WHERE activo=true ORDER BY categoria NULLS LAST, nombre")
+    : await db.all2("SELECT * FROM insumos ORDER BY categoria NULLS LAST, nombre");
 
   const historial = esAyb
     ? await db.all2(`

@@ -1,0 +1,832 @@
+[
+  {
+    "nombre": "Gin Tonic",
+    "ingredientes": [
+      {
+        "nombre": "Gin Heredero",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Tonica",
+        "cantidad": 1,
+        "unidad_compra": "lata"
+      },
+      {
+        "nombre": "Lima",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Negroni",
+    "ingredientes": [
+      {
+        "nombre": "Vermouth",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Campari",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Gin Heredero",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Piel de Naranja",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Tom Collins",
+    "ingredientes": [
+      {
+        "nombre": "Gin Heredero",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo Naranja o Limón",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Azucar",
+        "cantidad": 20,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Limón",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      },
+      {
+        "nombre": "Soda",
+        "cantidad": 1,
+        "unidad_compra": "bot"
+      }
+    ]
+  },
+  {
+    "nombre": "Gimlet",
+    "ingredientes": [
+      {
+        "nombre": "Gin Heredero",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo Naranja o Limón",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Miel",
+        "cantidad": 20,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Limón",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Bulldog",
+    "ingredientes": [
+      {
+        "nombre": "Gin Heredero",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo de Naranja",
+        "cantidad": 200,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Piel de Naranja",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Screwdriver",
+    "ingredientes": [
+      {
+        "nombre": "Vodka Sernova",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo de Naranja",
+        "cantidad": 330,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Naranja",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Vodka Tonic",
+    "ingredientes": [
+      {
+        "nombre": "Vodka Sernova",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Tonica",
+        "cantidad": 1,
+        "unidad_compra": "lata"
+      },
+      {
+        "nombre": "Lima",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Cosmopolitan",
+    "ingredientes": [
+      {
+        "nombre": "Vodka Sernova",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo de Arandanos",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo de Limon",
+        "cantidad": 30,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Triple sec",
+        "cantidad": 30,
+        "unidad_compra": "bot"
+      }
+    ]
+  },
+  {
+    "nombre": "Moscow Mule",
+    "ingredientes": [
+      {
+        "nombre": "Vodka Sernova",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo de Limon",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Cerveza Quilmes lata",
+        "cantidad": 1,
+        "unidad_compra": "lata"
+      },
+      {
+        "nombre": "Lima",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      },
+      {
+        "nombre": "Azucar",
+        "cantidad": 20,
+        "unidad_compra": "gr"
+      }
+    ]
+  },
+  {
+    "nombre": "Caipiroska",
+    "ingredientes": [
+      {
+        "nombre": "Vodka Sernova",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Lima",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      },
+      {
+        "nombre": "Azucar",
+        "cantidad": 20,
+        "unidad_compra": "gr"
+      }
+    ]
+  },
+  {
+    "nombre": "Pennicilin",
+    "ingredientes": [
+      {
+        "nombre": "Whisky JW Red",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo de Limon",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Miel",
+        "cantidad": 20,
+        "unidad_compra": "gr"
+      },
+      {
+        "nombre": "Jengibre",
+        "cantidad": 50,
+        "unidad_compra": "gr"
+      },
+      {
+        "nombre": "Lima",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Manhattan",
+    "ingredientes": [
+      {
+        "nombre": "Whisky Jim Beam",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Vermouth",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Bitter de Angostura",
+        "cantidad": 5,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Naranja",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Jhon Collins",
+    "ingredientes": [
+      {
+        "nombre": "Whisky Jim Beam",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo de Limon",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Soda",
+        "cantidad": 1,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Naranja",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Boulivardier",
+    "ingredientes": [
+      {
+        "nombre": "Whisky JW Red",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Campari",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Vermouth",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Naranja",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "New York Sour",
+    "ingredientes": [
+      {
+        "nombre": "Whisky JW Red",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo de Limon",
+        "cantidad": 30,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Salaentein Malbec",
+        "cantidad": 30,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Naranja",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Cuba Libre",
+    "ingredientes": [
+      {
+        "nombre": "Ron Bacardi Blanco",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Coca Cola lata",
+        "cantidad": 330,
+        "unidad_compra": "lata"
+      },
+      {
+        "nombre": "Bitter de Angostura",
+        "cantidad": 3,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Limón",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Mojito",
+    "ingredientes": [
+      {
+        "nombre": "Ron Bacardi Blanco",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Menta",
+        "cantidad": 30,
+        "unidad_compra": "gr"
+      },
+      {
+        "nombre": "Jugo de Limón",
+        "cantidad": 30,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Agua con gas",
+        "cantidad": 1,
+        "unidad_compra": "cc"
+      }
+    ]
+  },
+  {
+    "nombre": "Zombie",
+    "ingredientes": [
+      {
+        "nombre": "Ron Bacardi Blanco",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo de Naranja",
+        "cantidad": 60,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Jugo de Manzana",
+        "cantidad": 60,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Hesperidina",
+        "cantidad": 30,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Naranja",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Caipiriña",
+    "ingredientes": [
+      {
+        "nombre": "Cachaza",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Azucar",
+        "cantidad": 30,
+        "unidad_compra": "gr"
+      },
+      {
+        "nombre": "Limon",
+        "cantidad": 2,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Margarita",
+    "ingredientes": [
+      {
+        "nombre": "Tequila Cuervo Blanco",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo de Limon",
+        "cantidad": 60,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Azucar",
+        "cantidad": 20,
+        "unidad_compra": "gr"
+      }
+    ]
+  },
+  {
+    "nombre": "Tequila Sonrise",
+    "ingredientes": [
+      {
+        "nombre": "Tequila Cuervo Dorado",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Granadina",
+        "cantidad": 20,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Jugo de Naranja",
+        "cantidad": 200,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Naranja",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Paloma",
+    "ingredientes": [
+      {
+        "nombre": "Tequila Cuervo Dorado",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo de Pomelo",
+        "cantidad": 200,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Miel",
+        "cantidad": 20,
+        "unidad_compra": "gr"
+      },
+      {
+        "nombre": "Pomelo",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Aperol Spritz",
+    "ingredientes": [
+      {
+        "nombre": "Aperol",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Salentein EB",
+        "cantidad": 200,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Agua con gas",
+        "cantidad": 20,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Naranja",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Aperol Citric",
+    "ingredientes": [
+      {
+        "nombre": "Aperol",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Salentein Chardonnay",
+        "cantidad": 200,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Agua con gas",
+        "cantidad": 20,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Naranja",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Garibaldi",
+    "ingredientes": [
+      {
+        "nombre": "Campari",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo de Naranja",
+        "cantidad": 200,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Naranja",
+        "cantidad": 1,
+        "unidad_compra": "unid"
+      }
+    ]
+  },
+  {
+    "nombre": "Fernet Cola",
+    "ingredientes": [
+      {
+        "nombre": "Fernet",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Coca Cola",
+        "cantidad": 200,
+        "unidad_compra": "cc"
+      }
+    ]
+  },
+  {
+    "nombre": "Cynar Julep",
+    "ingredientes": [
+      {
+        "nombre": "Cynar",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Jugo de Pomelo",
+        "cantidad": 180,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Azucar",
+        "cantidad": 20,
+        "unidad_compra": "gr"
+      },
+      {
+        "nombre": "Menta",
+        "cantidad": 20,
+        "unidad_compra": "gr"
+      }
+    ]
+  },
+  {
+    "nombre": "Cynar Biere",
+    "ingredientes": [
+      {
+        "nombre": "Cynar",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Quilmes lata",
+        "cantidad": 1,
+        "unidad_compra": "lata"
+      },
+      {
+        "nombre": "Jugo de Limon",
+        "cantidad": 30,
+        "unidad_compra": "gr"
+      },
+      {
+        "nombre": "Miel",
+        "cantidad": 20,
+        "unidad_compra": "gr"
+      }
+    ]
+  },
+  {
+    "nombre": "Bitter Giuseppe",
+    "ingredientes": [
+      {
+        "nombre": "Cynar",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Vermouth Rosso",
+        "cantidad": 30,
+        "unidad_compra": "unid"
+      },
+      {
+        "nombre": "Jugo de Limon",
+        "cantidad": 30,
+        "unidad_compra": "gr"
+      }
+    ]
+  },
+  {
+    "nombre": "Old Fashioned",
+    "ingredientes": [
+      {
+        "nombre": "Whisky Jim Beam",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "bitter angostura",
+        "cantidad": 5,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "azucar",
+        "cantidad": 30,
+        "unidad_compra": "gr"
+      }
+    ]
+  },
+  {
+    "nombre": "Soltice Sour",
+    "ingredientes": [
+      {
+        "nombre": "Gin Heredero",
+        "cantidad": 30,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Amaretto",
+        "cantidad": 15,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Aperol",
+        "cantidad": 15,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "jugo de limon",
+        "cantidad": 15,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "pulpa de maracuya",
+        "cantidad": 15,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "almibar",
+        "cantidad": 30,
+        "unidad_compra": "cc"
+      }
+    ]
+  },
+  {
+    "nombre": "Passion Play",
+    "ingredientes": [
+      {
+        "nombre": "Tequila Cuervo blanco",
+        "cantidad": 45,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "pulpa de maracuya",
+        "cantidad": 30,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "jugo de limon",
+        "cantidad": 30,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "almibar simple",
+        "cantidad": 30,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "Salentein EB",
+        "cantidad": 30,
+        "unidad_compra": "cc"
+      }
+    ]
+  },
+  {
+    "nombre": "Two Smoking Barrels",
+    "ingredientes": [
+      {
+        "nombre": "jack daniel",
+        "cantidad": 60,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "Fernet",
+        "cantidad": 5,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "campari",
+        "cantidad": 5,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "oleo calcareo",
+        "cantidad": 30,
+        "unidad_compra": "cc"
+      }
+    ]
+  },
+  {
+    "nombre": "Bananila",
+    "ingredientes": [
+      {
+        "nombre": "Bacardi gold",
+        "cantidad": 45,
+        "unidad_compra": "bot"
+      },
+      {
+        "nombre": "bacardi silver",
+        "cantidad": 45,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "bitter angostura",
+        "cantidad": 5,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "almibar",
+        "cantidad": 60,
+        "unidad_compra": "cc"
+      },
+      {
+        "nombre": "jugo de limon",
+        "cantidad": 30,
+        "unidad_compra": "cc"
+      }
+    ]
+  }
+]

@@ -743,6 +743,33 @@ const init = async () => {
   `);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_whatsapp_outbox_pendientes ON whatsapp_outbox (enviado, creado_en)`);
 
+  // Módulo Desayuno (AYB): una fila por habitación del reporte "Breakfast
+  // Package" que se sube cada día (ver src/routes/desayuno.js). Se guarda
+  // con su fecha_reporte para poder tener el historial de días anteriores
+  // y no perder nada al volver a subir el reporte del día siguiente —
+  // cada importación borra e inserta de nuevo SOLO las filas de esa misma
+  // fecha_reporte, nunca las de otro día.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS desayuno_habitaciones (
+      id SERIAL PRIMARY KEY,
+      fecha_reporte DATE NOT NULL,
+      habitacion TEXT NOT NULL,
+      nombre_huesped TEXT,
+      membership_level TEXT,
+      adultos INTEGER DEFAULT 0,
+      ninos INTEGER DEFAULT 0,
+      fecha_llegada DATE,
+      fecha_salida DATE,
+      estado_reserva TEXT,
+      group_name TEXT,
+      company_name TEXT,
+      special_request TEXT,
+      ttl_pkg_amt REAL DEFAULT 0,
+      creado_en TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_desayuno_habitacion ON desayuno_habitaciones (fecha_reporte, habitacion)`);
+
   // Admin por defecto
   const admin = await db.get2(
     "SELECT id FROM usuarios WHERE email = $1", ['admin@hilton.com']

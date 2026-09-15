@@ -179,6 +179,7 @@ app.use('/horas-extra', require('./src/routes/horasExtra'));  // ← NUEVO — C
 app.use('/compras',  require('./src/routes/compras'));   // ← NUEVO
 app.use('/croutons', require('./src/routes/croutons'));  // ← NUEVO — AYB: carga de mercadería y vencimientos
 app.use('/inventario-ayb', require('./src/routes/inventarioAyb'));  // ← NUEVO — AYB: stock de barra, separado de Croutons
+app.use('/desayuno', require('./src/routes/desayuno'));  // ← NUEVO — AYB: reporte de desayuno por habitación (hostess)
 app.use('/asistente', require('./src/routes/asistente'));
 
 // Escalamiento automático de convocatorias de AYB (fijos → eventuales →

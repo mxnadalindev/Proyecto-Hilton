@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desayuno — Hilton</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
+  <style>
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:0.72rem;font-weight:600;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.04em;}
+.field input{border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;background:var(--gris-fondo);}
+.field input:focus{border-color:var(--azul);background:var(--blanco);}
+
+.desayuno-buscador{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:28px;box-shadow:var(--sombra);margin-bottom:20px;}
+.desayuno-buscador-input{font-size:1.6rem;font-weight:700;text-align:center;letter-spacing:0.06em;padding:16px;border-radius:10px;}
+.desayuno-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.desayuno-stat{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:16px;text-align:center;}
+.desayuno-stat p:first-child{font-size:0.62rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;}
+.desayuno-stat p:last-child{font-size:1.4rem;font-weight:700;color:var(--negro);margin:0;}
+@media (max-width:700px){.desayuno-stats{grid-template-columns:repeat(2,1fr);}}
+
+.desayuno-resultado{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:24px;box-shadow:var(--sombra);}
+.desayuno-resultado-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--gris-borde);}
+.desayuno-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
+.badge-si{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;}
+.badge-no{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;}
+.desayuno-filas{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:600px){.desayuno-filas{grid-template-columns:1fr;}}
+.desayuno-dato p:first-child{font-size:0.62rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px;}
+.desayuno-dato p:last-child{font-size:0.9rem;color:var(--negro);margin:0;font-weight:500;}
+.desayuno-aviso-tr{margin-top:16px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:10px;padding:12px 16px;font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:8px;}
+
+.dropdown-otras-opciones{position:absolute;right:0;top:calc(100% + 6px);background:var(--blanco);border:1px solid var(--gris-borde);border-radius:10px;box-shadow:var(--sombra-md);padding:6px;min-width:240px;display:none;flex-direction:column;gap:2px;z-index:50;}
+.dropdown-otras-opciones.abierto{display:flex;}
+.dropdown-otras-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;font-size:0.83rem;color:var(--negro);text-decoration:none;transition:background .15s;border:none;background:none;width:100%;text-align:left;cursor:pointer;font-family:var(--font-sans);}
+.dropdown-otras-item:hover{background:var(--gris-fondo);}
+.dropdown-otras-item i{font-size:16px;color:var(--gris-texto);}
+.menu-otras-opciones{position:relative;}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: 'desayuno' }) %>
+
+  <main class="main-content">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">AYB</p>
+        <h1 class="seccion-titulo">Desayuno</h1>
+      </div>
+      <div class="menu-otras-opciones">
+        <button type="button" class="btn-secondary" id="btn-otras-opciones-desayuno" onclick="document.getElementById('dropdown-otras-opciones-desayuno').classList.toggle('abierto')">
+          <i class="ti ti-dots"></i> Otras opciones
+        </button>
+        <div class="dropdown-otras-opciones" id="dropdown-otras-opciones-desayuno">
+          <button type="button" class="dropdown-otras-item" onclick="showModal('modal-subir-reporte')">
+            <i class="ti ti-upload"></i> Subir reporte del día
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <% if (msg === 'importado') { %>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;color:#16a34a;font-weight:600;margin-bottom:20px;">
+        <i class="ti ti-circle-check"></i> Reporte importado correctamente.
+      </div>
+    <% } else if (msg) { %>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 18px;color:#dc2626;font-weight:600;margin-bottom:20px;">
+        <i class="ti ti-alert-triangle"></i> <%= msg %>
+      </div>
+    <% } %>
+
+    <% if (!fechaReporte) { %>
+      <div style="background:var(--gris-fondo);border:1px dashed var(--gris-borde);border-radius:14px;padding:40px;text-align:center;color:var(--gris-texto);">
+        <i class="ti ti-coffee" style="font-size:32px;display:block;margin-bottom:10px;"></i>
+        Todavía no se subió ningún reporte de desayuno.<br>
+        Usá "Otras opciones → Subir reporte del día" para cargar el primero.
+      </div>
+    <% } else { %>
+
+      <div class="desayuno-stats">
+        <div class="desayuno-stat"><p>Habitaciones</p><p><%= totalHabitaciones %></p></div>
+        <div class="desayuno-stat"><p>Sin desayuno incluido</p><p><%= sinDesayuno %></p></div>
+        <div class="desayuno-stat"><p>Tripulación</p><p><%= tripulacion %></p></div>
+        <div class="desayuno-stat"><p>Con pedido TR</p><p><%= conTR %></p></div>
+      </div>
+      <p style="font-size:0.75rem;color:var(--gris-texto);margin:-12px 0 20px;">Reporte del <%= fechaReporte.split('-').reverse().join('-') %></p>
+
+      <div class="desayuno-buscador">
+        <div class="field">
+          <label>Número de habitación</label>
+          <input type="text" id="input-habitacion" class="desayuno-buscador-input" placeholder="Ej: 0234" autocomplete="off" autofocus>
+        </div>
+      </div>
+
+      <div id="resultados-desayuno"></div>
+
+    <% } %>
+
+  </main>
+  <%- include('partials/mobile-nav', { path: 'desayuno' }) %>
+</div>
+
+<!-- Modal: subir reporte -->
+<div class="modal" id="modal-subir-reporte" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--blanco);border-radius:14px;padding:28px;max-width:460px;width:100%;box-shadow:var(--sombra-lg);">
+    <p class="form-card-title" style="font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin-bottom:16px;"><i class="ti ti-upload"></i> Subir reporte del día</p>
+    <form method="POST" action="/desayuno/importar" enctype="multipart/form-data">
+      <div class="field" style="margin-bottom:16px;">
+        <label>Archivo (Excel, CSV o PDF)</label>
+        <input type="file" name="archivo" accept=".xlsx,.xls,.csv,.pdf" required style="padding:10px;">
+      </div>
+      <p style="font-size:0.76rem;color:var(--gris-texto);margin-bottom:20px;line-height:1.5;">
+        Si es Excel o CSV, se lee directo (más confiable). Si es PDF, lo lee la IA —
+        con reportes muy largos puede tardar un rato. En los dos casos, antes de
+        cargarlo a la base te muestro un resumen para que confirmes.
+      </p>
+      <div style="display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" onclick="hideModal('modal-subir-reporte')" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-upload"></i> Subir y revisar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/ui-comun.js"></script>
+<script>
+document.addEventListener('click', (ev) => {
+  const dropdown = document.getElementById('dropdown-otras-opciones-desayuno');
+  const boton = document.getElementById('btn-otras-opciones-desayuno');
+  if (dropdown && dropdown.classList.contains('abierto') && !dropdown.contains(ev.target) && ev.target !== boton && !boton.contains(ev.target)) {
+    dropdown.classList.remove('abierto');
+  }
+});
+
+const inputHabitacion = document.getElementById('input-habitacion');
+const contResultados = document.getElementById('resultados-desayuno');
+let _debounceHab, _pedidoHabEnCurso = 0;
+
+function escaparHtml(s) {
+  return (s || '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function tarjetaHabitacion(f) {
+  const badgeBkf = f.bkfIncluido
+    ? '<span class="desayuno-badge badge-si"><i class="ti ti-check"></i> Desayuno incluido</span>'
+    : '<span class="desayuno-badge badge-no"><i class="ti ti-x"></i> Desayuno NO incluido</span>';
+
+  let tripuHtml = '';
+  if (f.tripulacionDe) {
+    tripuHtml = `<div class="desayuno-dato"><p>Tripulación</p><p>${escaparHtml(f.tripulacionDe)}` +
+      (f.tripulacionBkfSegunRegla !== null
+        ? ` <span style="font-size:0.72rem;color:var(--gris-texto);">(regla: ${f.tripulacionBkfSegunRegla ? 'bkf incluido' : 'bkf NO incluido'})</span>`
+        : '') + `</p></div>`;
+  }
+
+  const trHtml = f.tieneTR
+    ? `<div class="desayuno-aviso-tr"><i class="ti ti-alert-triangle"></i> Esta habitación tiene pedido especial "TR"</div>`
+    : '';
+
+  return `
+    <div class="desayuno-resultado">
+      <div class="desayuno-resultado-header">
+        <div>
+          <p style="font-size:0.62rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px;">Habitación ${escaparHtml(f.habitacion)}</p>
+          <p style="font-size:1.15rem;font-weight:700;margin:0;">${escaparHtml(f.nombre_huesped || '(sin nombre)')}</p>
+        </div>
+        ${badgeBkf}
+      </div>
+      <div class="desayuno-filas">
+        <div class="desayuno-dato"><p>Nivel de membresía</p><p>${f.membershipLabel ? escaparHtml(f.membershipLabel) : '—'}</p></div>
+        <div class="desayuno-dato"><p>Adultos / Niños</p><p>${f.adultos ?? 0} / ${f.ninos ?? 0}</p></div>
+        <div class="desayuno-dato"><p>Llegada / Salida</p><p>${escaparHtml(f.fecha_llegada || '—')} → ${escaparHtml(f.fecha_salida || '—')}</p></div>
+        <div class="desayuno-dato"><p>Estado</p><p>${escaparHtml(f.estado_reserva || '—')}</p></div>
+        <div class="desayuno-dato"><p>Grupo</p><p>${escaparHtml(f.group_name || '—')}</p></div>
+        <div class="desayuno-dato"><p>Empresa</p><p>${escaparHtml(f.company_name || '—')}</p></div>
+        ${tripuHtml}
+        <div class="desayuno-dato"><p>Pedido especial</p><p>${f.special_request ? escaparHtml(f.special_request) : '—'}</p></div>
+      </div>
+      ${trHtml}
+    </div>
+  `;
+}
+
+function buscarHabitacion() {
+  const q = inputHabitacion.value.trim();
+  if (!q) { contResultados.innerHTML = ''; return; }
+  const idPedido = ++_pedidoHabEnCurso;
+  fetch('/desayuno/buscar?habitacion=' + encodeURIComponent(q))
+    .then(r => r.json())
+    .then(data => {
+      if (idPedido !== _pedidoHabEnCurso) return; // respuesta vieja, descartar
+      if (!data.resultados || data.resultados.length === 0) {
+        contResultados.innerHTML = '<p style="color:var(--gris-texto);font-size:0.85rem;padding:16px 0;">Sin resultados para "' + escaparHtml(q) + '".</p>';
+        return;
+      }
+      contResultados.innerHTML = data.resultados.map(tarjetaHabitacion).join('<div style="height:14px;"></div>');
+    })
+    .catch(() => { contResultados.innerHTML = '<p style="color:#dc2626;font-size:0.85rem;">Error buscando la habitación.</p>'; });
+}
+
+if (inputHabitacion) {
+  inputHabitacion.addEventListener('input', () => {
+    clearTimeout(_debounceHab);
+    _debounceHab = setTimeout(buscarHabitacion, 250);
+  });
+}
+</script>
+
+</body>
+</html>

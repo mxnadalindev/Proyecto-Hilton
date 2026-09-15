@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#0f172a">
   <title>Acceso — Hilton Buenos Aires</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css"></noscript>
+  <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -150,7 +150,8 @@
     .input-wrap input::placeholder { color: rgba(255,255,255,0.6); }
     .input-wrap select option { color: var(--navy); }
     .input-wrap input:focus, .input-wrap select:focus { background: rgba(255,255,255,0.24); border-color: rgba(255,255,255,0.7); box-shadow: 0 0 0 3px rgba(255,255,255,0.14); }
-    .toggle-pass { position: absolute; right: 12px; background: none; border: none; font-size: 16px; color: rgba(255,255,255,0.65); cursor: pointer; padding: 4px; }
+    .toggle-pass { position: absolute; right: 12px; background: none; border: none; font-size: 16px; color: rgba(255,255,255,0.65); cursor: pointer; padding: 4px; display: flex; align-items: center; }
+    .toggle-pass svg { width: 16px; height: 16px; display: block; }
     .field-valid .input-wrap input { border-color: var(--success); }
     .field-error .input-wrap input { border-color: #fca5a5; background: rgba(239,68,68,0.16); }
 
@@ -385,7 +386,7 @@
             <i class="ti ti-lock input-icon"></i>
             <input type="password" name="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
             <button type="button" class="toggle-pass" onclick="togglePass('password','eye1')">
-              <i class="ti ti-eye" id="eye1"></i>
+              <svg id="eye1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg>
             </button>
           </div>
         </div>
@@ -464,7 +465,7 @@
             <i class="ti ti-lock input-icon"></i>
             <input type="password" name="password" id="pass-reg" placeholder="••••••••" required>
             <button type="button" class="toggle-pass" onclick="togglePass('pass-reg','eye2')">
-              <i class="ti ti-eye" id="eye2"></i>
+              <svg id="eye2" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg>
             </button>
           </div>
           <p class="pass-hint" data-i18n>Mínimo 8 caracteres, una mayúscula y un número.</p>
@@ -576,12 +577,21 @@ function setMode(mode) {
   document.getElementById('authShell').classList.toggle('mode-registro', mode === 'registro');
 }
 
+// El ícono del ojito se dibuja con SVG en línea (no con la tipografía de
+// íconos que se carga del CDN) justo por ser el único control clickeable
+// de esta pantalla que depende de un ícono: si el CDN de íconos no carga
+// (una red que lo bloquee, un corte puntual), antes el botón quedaba
+// completamente invisible y sin forma de saber que estaba ahí. Con el SVG
+// en línea, el ojito siempre se ve, pase lo que pase con la red.
+const OJO_ABIERTO = '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />';
+const OJO_CERRADO = '<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" /><path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" /><path d="M3 3l18 18" />';
+
 function togglePass(inputId, iconId) {
   const input = document.getElementById(inputId);
   const icon  = document.getElementById(iconId);
   const visible = input.type === 'text';
   input.type = visible ? 'password' : 'text';
-  icon.className = visible ? 'ti ti-eye' : 'ti ti-eye-off';
+  icon.innerHTML = visible ? OJO_ABIERTO : OJO_CERRADO;
 }
 
 const emailInput = document.getElementById('email');

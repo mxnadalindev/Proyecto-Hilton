@@ -7,7 +7,7 @@ function loginRequerido(req, res, next) {
 const RUTAS_POR_DEPARTAMENTO = {
   cocina:   ['/eventos', '/personal', '/recetas', '/horarios', '/costos', '/horas-extra'],
   compras:  ['/compras'],
-  ayb:      ['/personal', '/horarios', '/croutons', '/inventario-ayb', '/costos'],
+  ayb:      ['/personal', '/horarios', '/croutons', '/inventario-ayb', '/costos', '/desayuno'],
 };
 
 function requiereDepartamento(prefijo) {

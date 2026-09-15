@@ -516,4 +516,129 @@ function mensajeErrorGemini(e) {
 // (src/routes/asistente.js) la reusa para sus propias llamadas a Gemini,
 // en vez de reimplementar el reintento con 503 por su cuenta y arriesgarse
 // a que las dos versiones se desincronicen con el tiempo.
-module.exports = { analizarFactura, analizarRemitoCroutons, analizarPlanillaMozos, analizarBotellaAyb, mensajeErrorGemini, llamarGeminiConReintentos };
+// ── Reporte de desayuno (Breakfast Package) para el módulo Desayuno ────
+// El reporte que exporta el sistema de reservas (PMS) del hotel: una fila
+// por habitación con hasta 15 páginas, nombres y "group name" que a veces
+// se cortan en varias líneas dentro de la celda. Igual patrón que
+// analizarPlanillaMozos: siempre devuelve una lista para revisar antes de
+// aplicarla, nunca escribe directo en la base.
+const PROMPT_REPORTE_DESAYUNO = `Sos un asistente que lee el reporte "Breakfast Package" de un hotel (Hilton Buenos Aires), generado por su sistema de reservas (PMS). El documento es una tabla de varias páginas, una fila por habitación, con estas columnas (en este orden, de izquierda a derecha): Room No., Full Name, Membership Level, Adults, Children, Arrival Date, Departure Date, Resv Status, Group Name, Company Name, Special Request, Ttl Pkg. Amt.
+
+OJO: en el documento original, el texto de "Full Name" y de "Group Name" a veces se corta en dos o tres líneas dentro de la misma celda (por ejemplo, un nombre de grupo como "Air France Septiembre 2026" puede aparecer partido en dos renglones). Tenés que unir esas líneas cortadas en un solo valor de texto para esa fila, sin perder ninguna palabra.
+
+Devolvé ÚNICAMENTE un JSON, sin texto adicional, sin explicación, sin markdown ni backticks, con este formato exacto:
+
+{"tipo_documento": "...", "fecha_reporte": "YYYY-MM-DD", "filas": [...]}
+
+PASO 1 — Identificá "tipo_documento":
+- "reporte_desayuno": el documento es (o se parece a) este reporte de habitaciones con desayuno.
+- "otro": cualquier otra cosa.
+
+PASO 2 — "fecha_reporte": la fecha del reporte que figura arriba a la derecha de la primera página (formato dd-mm-aa, por ejemplo "15-09-26" es 15 de septiembre de 2026), convertida a "YYYY-MM-DD". Si no la encontrás, dejala como "".
+
+PASO 3 — Si "tipo_documento" es "otro", "filas" va vacío: []. Si es "reporte_desayuno", incluí TODAS las filas de TODAS las páginas del documento, sin saltear ninguna ni inventar filas nuevas — cada elemento de "filas" es una habitación, con estos campos:
+  - "habitacion": el número de habitación tal como figura en "Room No." (string, obligatorio).
+  - "nombre": el nombre completo del huésped, columna "Full Name" (string, uniendo las líneas cortadas si hace falta).
+  - "membership_level": el código de la columna "Membership Level" tal como aparece (una letra o vacío) — NO lo traduzcas ni inventes qué significa, copialo tal cual o dejalo "" si está vacío.
+  - "adultos": número de la columna "Adults" (entero, 0 si no figura).
+  - "ninos": número de la columna "Children" (entero, 0 si no figura).
+  - "fecha_llegada": columna "Arrival Date", convertida de dd-mm-aa a "YYYY-MM-DD". "" si no figura.
+  - "fecha_salida": columna "Departure Date", convertida igual. "" si no figura.
+  - "estado": columna "Resv Status" tal como figura (ej: "CHECKED IN", "DUE OUT").
+  - "group_name": columna "Group Name" tal como figura, uniendo líneas cortadas (string, "" si está vacía).
+  - "company_name": columna "Company Name" tal como figura ("" si está vacía).
+  - "special_request": columna "Special Request" tal como figura, con las comas tal cual las separa el documento (ej: "TR,Z1") ("" si está vacía).
+  - "ttl_pkg_amt": columna "Ttl Pkg. Amt.", como número (sin separador de miles). Si dice "0" o está vacía, poné 0.
+
+No te olvides de ninguna fila de ninguna página, incluida la última.`;
+
+/**
+ * Analiza el reporte "Breakfast Package" (PDF exportado del sistema de
+ * reservas) con Gemini, extrayendo una fila normalizada por habitación.
+ * Igual patrón que analizarPlanillaMozos: siempre devuelve una lista para
+ * revisar en pantalla antes de aplicarla, nunca escribe directo en la base.
+ *
+ * maxOutputTokens explícito y alto: este reporte puede traer varios
+ * cientos de filas (el de referencia trae 429, en 15 páginas) — con el
+ * límite por default de la API, la respuesta se cortaba a mitad de camino
+ * y quedaba un JSON incompleto.
+ *
+ * @param {string} rutaArchivo - ruta al PDF ya subido
+ * @param {string} [mimeTypeReal] - mimetype que reportó el navegador al subir
+ * @returns {Promise<{tipoDocumento: string, fechaReporte: string, filas: Array}>}
+ */
+async function analizarReporteDesayuno(rutaArchivo, mimeTypeReal) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Falta GEMINI_API_KEY en el archivo .env');
+  }
+
+  const bytes = fs.readFileSync(rutaArchivo);
+  const base64 = bytes.toString('base64');
+  const mimeType = mimeParaGemini(rutaArchivo, mimeTypeReal);
+
+  const body = {
+    contents: [{
+      parts: [
+        { text: PROMPT_REPORTE_DESAYUNO },
+        { inline_data: { mime_type: mimeType, data: base64 } }
+      ]
+    }],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      temperature: 0.1,
+      maxOutputTokens: 65536
+    }
+  };
+
+  const resp = await llamarGeminiConReintentos(`${URL_BASE}?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  const data = await resp.json();
+  const textoRespuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!textoRespuesta) {
+    // finishReason=MAX_TOKENS es la pista de que se cortó por el límite de
+    // salida en vez de terminar el JSON — vale la pena distinguirlo en el
+    // mensaje de error para no confundirlo con "Gemini no respondió nada".
+    const razon = data?.candidates?.[0]?.finishReason;
+    if (razon === 'MAX_TOKENS') {
+      throw new Error('El reporte es demasiado largo para leerlo de una sola vez con IA — probá dividirlo en partes más chicas, o cargalo en Excel/CSV.');
+    }
+    throw new Error('Gemini no devolvió contenido legible.');
+  }
+
+  let respuesta;
+  try {
+    respuesta = JSON.parse(textoRespuesta);
+  } catch (e) {
+    throw new Error('No se pudo interpretar la respuesta de Gemini como JSON (puede que el reporte sea muy largo y se haya cortado a mitad de camino): ' + textoRespuesta.slice(0, 200));
+  }
+
+  const tipoDocumento = respuesta?.tipo_documento || 'otro';
+  const fechaReporte = String(respuesta?.fecha_reporte || '').trim();
+  const filasCrudas = Array.isArray(respuesta?.filas) ? respuesta.filas : [];
+
+  const filas = filasCrudas
+    .filter(f => f && f.habitacion && String(f.habitacion).trim())
+    .map(f => ({
+      habitacion: String(f.habitacion).trim(),
+      nombre: f.nombre ? String(f.nombre).trim() : '',
+      membershipLevel: f.membership_level ? String(f.membership_level).trim() : '',
+      adultos: parseInt(f.adultos) || 0,
+      ninos: parseInt(f.ninos) || 0,
+      fechaLlegada: f.fecha_llegada ? String(f.fecha_llegada).trim() : '',
+      fechaSalida: f.fecha_salida ? String(f.fecha_salida).trim() : '',
+      estado: f.estado ? String(f.estado).trim() : '',
+      groupName: f.group_name ? String(f.group_name).trim() : '',
+      companyName: f.company_name ? String(f.company_name).trim() : '',
+      specialRequest: f.special_request ? String(f.special_request).trim() : '',
+      ttlPkgAmt: parseFloat(f.ttl_pkg_amt) || 0,
+    }));
+
+  return { tipoDocumento, fechaReporte, filas };
+}
+
+module.exports = { analizarFactura, analizarRemitoCroutons, analizarPlanillaMozos, analizarBotellaAyb, analizarReporteDesayuno, mensajeErrorGemini, llamarGeminiConReintentos };

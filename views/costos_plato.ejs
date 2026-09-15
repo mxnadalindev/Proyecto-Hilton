@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css"></noscript>
+  <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
 <style>
 .form-card { background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px;box-shadow:var(--sombra); }
 .form-card-title { font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--azul);margin-bottom:18px;display:flex;align-items:center;gap:7px; }
@@ -16,11 +16,36 @@
 .field label { display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px; }
 .field input { width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none; }
 .field input:focus { border-color:var(--azul);background:var(--blanco); }
-.btn-danger { background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-family:var(--font-sans);font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s; }
+/* height:40px fijo (en vez de depender del padding) para que quede a la
+   misma altura que .btn-primary — ver el comentario junto a .btn-primary
+   en style.css sobre por qué esos botones tienen altura fija: el mismo
+   desfasaje que resolvieron ahí pasaba acá entre "Guardar" y "Eliminar". */
+.btn-danger { background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-family:var(--font-sans);font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;padding:0 16px;height:40px;box-sizing:border-box;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s; }
 .btn-danger:hover { background:#dc2626;color:#fff; }
 
 .costos-plato-grid{grid-template-columns:1fr 1fr;}
 .costos-plato-stats{grid-template-columns:1fr 1fr;}
+
+.combo-resultados{display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:8px;max-height:260px;overflow-y:auto;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,0.14);}
+.combo-resultados.mostrar{display:block;}
+.combo-grupo-titulo{font-size:0.65rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--gris-texto);background:var(--gris-fondo);padding:6px 12px;position:sticky;top:0;}
+.combo-item{padding:8px 12px;font-size:0.82rem;cursor:pointer;display:flex;justify-content:space-between;gap:8px;}
+.combo-item:hover, .combo-item.activo{background:var(--azul-claro);}
+.combo-item-precio{color:var(--gris-texto);font-size:0.76rem;white-space:nowrap;}
+.combo-sin-resultados{padding:12px;font-size:0.8rem;color:var(--gris-texto);text-align:center;}
+
+.modal-confirmar{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.2s ease, background 0.2s ease;}
+.modal-confirmar.mostrar{opacity:1;pointer-events:auto;background:rgba(0,0,0,0.45);}
+.modal-confirmar-caja{background:var(--blanco);border-radius:16px;width:100%;max-width:380px;padding:26px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;transform:scale(0.9);transition:transform 0.2s cubic-bezier(.22,1,.36,1);}
+.modal-confirmar.mostrar .modal-confirmar-caja{transform:scale(1);}
+.modal-confirmar-icono{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.4rem;background:#fef2f2;color:#dc2626;}
+.modal-confirmar-msg{font-size:0.88rem;color:var(--negro);font-weight:500;margin:0 0 22px;line-height:1.5;}
+.modal-confirmar-botones{display:flex;gap:10px;justify-content:center;}
+.modal-confirmar-botones button{font-size:0.78rem;font-weight:600;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:var(--font-sans);}
+.modal-confirmar-cancelar{background:none;border:1px solid var(--gris-borde);color:var(--gris-texto);}
+.modal-confirmar-cancelar:hover{background:var(--gris-fondo);}
+.modal-confirmar-aceptar{background:#dc2626;border:1px solid #dc2626;color:#fff;}
+.modal-confirmar-aceptar:hover{background:#b91c1c;}
 
 /* ── Responsive: celulares chicos (320-428px típicos) ── */
 @media (max-width: 600px) {
@@ -45,10 +70,15 @@
         <p class="seccion-label"><a href="/costos" style="color:var(--gris-texto);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;"><i class="ti ti-arrow-left"></i> Costos</a></p>
         <h1 class="seccion-titulo"><%= plato.nombre %></h1>
       </div>
-      <form method="POST" action="/costos/plato/<%= plato.id %>/eliminar"
-            onsubmit="return confirm('¿Eliminar est<%= esAyb ? 'e trago' : 'e plato' %>?')">
-        <button type="submit" class="btn-danger"><i class="ti ti-trash"></i> Eliminar</button>
-      </form>
+      <div style="display:flex;gap:10px;">
+        <form method="POST" action="/costos/plato/<%= plato.id %>/guardar" style="margin:0;">
+          <button type="submit" class="btn-primary"><i class="ti ti-device-floppy"></i> Guardar</button>
+        </form>
+        <form method="POST" action="/costos/plato/<%= plato.id %>/eliminar" id="form-eliminar-plato"
+              onsubmit="return confirmarAccion(event, this)">
+          <button type="submit" class="btn-danger" data-confirm-msg="¿Eliminar est<%= esAyb ? 'e trago' : 'e plato' %>?"><i class="ti ti-trash"></i> Eliminar</button>
+        </form>
+      </div>
     </div>
 
     <div class="costos-plato-grid" style="display:grid;gap:20px;">
@@ -112,14 +142,12 @@
       <div class="form-card">
         <p class="form-card-title"><i class="ti ti-plus"></i> Agregar ingrediente</p>
         <form method="POST" action="/costos/plato/<%= plato.id %>/insumo">
-          <div class="field" style="margin-bottom:12px;">
+          <div class="field" style="margin-bottom:12px;position:relative;">
             <label>Insumo</label>
-            <select name="insumo_id" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
-              <option value="">Seleccionar insumo...</option>
-              <% todosInsumos.forEach(ins => { %>
-                <option value="<%= ins.id %>"><%= ins.nombre %> ($<%= parseFloat(ins.precio_unitario).toFixed(2) %>/<%= ins.unidad %>)</option>
-              <% }) %>
-            </select>
+            <input type="text" id="insumo-buscar" placeholder="Buscar insumo..." autocomplete="off"
+                   style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
+            <input type="hidden" name="insumo_id" id="insumo-id-elegido">
+            <div id="insumo-resultados" class="combo-resultados"></div>
           </div>
           <div class="costos-plato-stats" style="display:grid;gap:10px;margin-bottom:12px;">
             <div class="field">
@@ -200,6 +228,128 @@
   <%- include('partials/mobile-nav', { path: 'costos' }) %>
 </div>
 
+<div id="modal-confirmar" class="modal-confirmar" onclick="if(event.target===this) cerrarConfirmar()">
+  <div class="modal-confirmar-caja">
+    <div class="modal-confirmar-icono"><i class="ti ti-alert-triangle"></i></div>
+    <p class="modal-confirmar-msg" id="modalConfirmarMsg"></p>
+    <div class="modal-confirmar-botones">
+      <button type="button" class="modal-confirmar-cancelar" onclick="cerrarConfirmar()">Cancelar</button>
+      <button type="button" class="modal-confirmar-aceptar" onclick="aceptarConfirmar()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Confirmación de acciones (reemplaza el confirm() nativo del navegador
+// por un cartel propio de la aplicación) ──
+let _formConfirmarPendiente = null;
+
+function confirmarAccion(event, form) {
+  if (form.dataset.confirmado === '1') { form.dataset.confirmado = ''; return true; }
+  event.preventDefault();
+  const boton = form.querySelector('[data-confirm-msg]');
+  document.getElementById('modalConfirmarMsg').textContent = boton ? boton.dataset.confirmMsg : '¿Confirmás esta acción?';
+  _formConfirmarPendiente = form;
+  document.getElementById('modal-confirmar').classList.add('mostrar');
+  return false;
+}
+
+function cerrarConfirmar() {
+  document.getElementById('modal-confirmar').classList.remove('mostrar');
+  _formConfirmarPendiente = null;
+}
+
+function aceptarConfirmar() {
+  const form = _formConfirmarPendiente;
+  document.getElementById('modal-confirmar').classList.remove('mostrar');
+  if (form) {
+    form.dataset.confirmado = '1';
+    form.requestSubmit ? form.requestSubmit() : form.submit();
+  }
+  _formConfirmarPendiente = null;
+}
+
+// ── Selector de insumo buscable (reemplaza el <select> nativo, que con
+// listas largas hacía que cada letra tipeada "saltara" a otro producto
+// distinto en vez de dejar buscar por nombre) ──
+const TODOS_INSUMOS = <%- JSON.stringify(todosInsumos.map(i => ({
+  id: i.id,
+  nombre: i.nombre,
+  categoria: (i.categoria || '').trim() || 'Sin categoría',
+  precio: parseFloat(i.precio_unitario) || 0,
+  unidad: i.unidad
+}))) %>;
+
+const inputBuscar = document.getElementById('insumo-buscar');
+const inputElegido = document.getElementById('insumo-id-elegido');
+const cajaResultados = document.getElementById('insumo-resultados');
+
+function normalizar(txt) {
+  return (txt || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
+function renderResultadosInsumo(filtro) {
+  const q = normalizar(filtro);
+  const filtrados = TODOS_INSUMOS.filter(i => normalizar(i.nombre).includes(q));
+
+  if (filtrados.length === 0) {
+    cajaResultados.innerHTML = '<div class="combo-sin-resultados">Sin resultados</div>';
+    cajaResultados.classList.add('mostrar');
+    return;
+  }
+
+  // Agrupados por categoría, cada grupo ordenado alfabéticamente.
+  const grupos = {};
+  filtrados.forEach(i => {
+    if (!grupos[i.categoria]) grupos[i.categoria] = [];
+    grupos[i.categoria].push(i);
+  });
+
+  let html = '';
+  Object.keys(grupos).sort((a, b) => a.localeCompare(b, 'es')).forEach(cat => {
+    html += '<div class="combo-grupo-titulo">' + cat + '</div>';
+    grupos[cat].forEach(i => {
+      html += '<div class="combo-item" data-id="' + i.id + '">'
+        + '<span>' + i.nombre + '</span>'
+        + '<span class="combo-item-precio">$' + i.precio.toFixed(2) + '/' + i.unidad + '</span>'
+        + '</div>';
+    });
+  });
+  cajaResultados.innerHTML = html;
+  cajaResultados.classList.add('mostrar');
+}
+
+inputBuscar.addEventListener('focus', () => renderResultadosInsumo(inputBuscar.value));
+inputBuscar.addEventListener('input', () => {
+  inputElegido.value = '';
+  renderResultadosInsumo(inputBuscar.value);
+});
+
+cajaResultados.addEventListener('click', (ev) => {
+  const item = ev.target.closest('.combo-item');
+  if (!item) return;
+  const insumo = TODOS_INSUMOS.find(i => String(i.id) === item.dataset.id);
+  if (!insumo) return;
+  inputBuscar.value = insumo.nombre;
+  inputElegido.value = insumo.id;
+  cajaResultados.classList.remove('mostrar');
+});
+
+document.addEventListener('click', (ev) => {
+  if (!ev.target.closest('#insumo-buscar') && !ev.target.closest('#insumo-resultados')) {
+    cajaResultados.classList.remove('mostrar');
+  }
+});
+
+document.querySelector('form[action$="/insumo"]').addEventListener('submit', (ev) => {
+  if (!inputElegido.value) {
+    ev.preventDefault();
+    inputBuscar.style.borderColor = '#dc2626';
+    inputBuscar.focus();
+    renderResultadosInsumo(inputBuscar.value);
+  }
+});
+</script>
 
 </body>
 </html>

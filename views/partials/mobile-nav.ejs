@@ -22,6 +22,7 @@
     <a href="/miembros-de-equipo" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'personal') ? 'activo' : '' %>"><i class="ti ti-users"></i><span data-i18n>Miembro de equipo</span></a>
     <% } %>
     <a href="/horarios" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>"><i class="ti ti-clock"></i><span data-i18n>Horarios</span></a>
+    <a href="/desayuno" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'desayuno') ? 'activo' : '' %>"><i class="ti ti-coffee"></i><span data-i18n>Desayuno</span></a>
     <% if (_rm === 'admin' || _rm === 'supervisor') { %>
     <a href="/croutons" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>"><i class="ti ti-package"></i><span data-i18n>Croutons</span></a>
     <a href="/inventario-ayb" class="mobile-nav-link <%= (typeof path !== 'undefined' && path === 'inventario-ayb') ? 'activo' : '' %>"><i class="ti ti-bottle"></i><span data-i18n>Inventario</span></a>

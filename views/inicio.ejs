@@ -12,8 +12,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.46.0/tabler-icons.min.css"></noscript>
+  <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
 <style>
 /* ── Coverflow 3D: cartas en abanico con perspectiva, sin librerías externas ── */
 .deck {
@@ -191,6 +191,8 @@
                 detalle: 'Gestioná el equipo de Alimentos y Bebidas: altas y bajas de empleados, puesto y sector, y carga de horarios o estados especiales (vacaciones, francos, licencias) día por día, para cualquier rango de fechas.' },
               { href: '/horarios', icon: 'ti-clock', nombre: 'Horarios', desc: 'Turnos del sector', tono:'navy',
                 detalle: 'Visualizá la grilla completa de turnos de Alimentos y Bebidas, con alertas si algún sector queda sin cobertura, y exportá el período a Excel para imprimir o compartir.' },
+              { href: '/desayuno', icon: 'ti-coffee', nombre: 'Desayuno', desc: 'Habitación por habitación', tono:'verde',
+                detalle: 'Subí el reporte de desayuno del día y después alcanza con escribir el número de habitación: mostrá al instante si tiene el desayuno incluido, si es tripulación (y de qué aerolínea), si es socio Hilton Honors y si tiene algún pedido especial — sin revisar el reporte página por página.' },
               { href: '/croutons', icon: 'ti-package', nombre: 'Croutons', desc: 'Stock y vencimientos', tono:'verde',
                 detalle: 'Cargá cada ingreso de mercadería de croutons con su fecha de vencimiento — a mano, subiendo una foto del remito o el catálogo del proveedor — y recibí un aviso 15 días antes de que venza cada lote.' },
               { href: '/inventario-ayb', icon: 'ti-bottle', nombre: 'Inventario', desc: 'Stock de bebidas', tono:'navy',
@@ -212,6 +214,8 @@
             modulos = [
               { href: '/horarios', icon: 'ti-clock', nombre: 'Horarios', desc: 'Tu disponibilidad', tono:'verde',
                 detalle: 'Cargá los días y horarios en los que podés trabajar, y anotate a los eventos que necesiten mozos.' },
+              { href: '/desayuno', icon: 'ti-coffee', nombre: 'Desayuno', desc: 'Habitación por habitación', tono:'navy',
+                detalle: 'Escribí el número de habitación del huésped y mostrá al instante si tiene el desayuno incluido, si es tripulación (y de qué aerolínea), si es socio Hilton Honors y si tiene algún pedido especial.' },
             ];
           }
         } else if (depto === 'compras') {
@@ -343,6 +347,15 @@
                 <rect x="80" y="128" width="30" height="44" rx="2" fill="currentColor" fill-opacity="0.494"/>
                 <circle cx="55" cy="150" r="4" fill="currentColor" fill-opacity="0.537"/>
                 <circle cx="132" cy="140" r="3" fill="currentColor" fill-opacity="0.506"/>
+              </svg>`;
+            case 'Desayuno':
+              return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="90" cy="168" rx="46" ry="10" fill="currentColor" fill-opacity="0.37"/>
+                <path d="M55 108 h62 l-6 46 q-2 18 -25 18 h-6 q-23 0 -25 -18 z" fill="currentColor" fill-opacity="0.89"/>
+                <path d="M117 118 q22 -4 22 16 q0 20 -22 18" fill="none" stroke="currentColor" stroke-opacity="0.661" stroke-width="7" stroke-linecap="round"/>
+                <path d="M68 100 q-4 -12 4 -20" fill="none" stroke="currentColor" stroke-opacity="0.56" stroke-width="4" stroke-linecap="round"/>
+                <path d="M86 100 q-4 -14 4 -22" fill="none" stroke="currentColor" stroke-opacity="0.56" stroke-width="4" stroke-linecap="round"/>
+                <path d="M104 100 q-4 -12 4 -20" fill="none" stroke="currentColor" stroke-opacity="0.56" stroke-width="4" stroke-linecap="round"/>
               </svg>`;
             case 'Horas extra':
               return `<svg class="card__ilustracion" viewBox="0 0 190 260" xmlns="http://www.w3.org/2000/svg">

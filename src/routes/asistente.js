@@ -142,6 +142,19 @@ const HERRAMIENTAS = [{
       },
     },
     {
+      name: 'consultar_consumo_ayb',
+      description: 'Devuelve un ranking de los productos de Inventario AYB (bebidas) más consumidos en un período reciente, usando el historial real de movimientos de stock (los ajustes de tipo "restar"). Útil para preguntas como "qué se vendió más la semana pasada", "cuál es el producto más consumido este mes", o "cuánto se consumió de Fernet en los últimos 15 días".',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          dias: { type: 'NUMBER', description: 'Cantidad de días hacia atrás a considerar. Si no lo dice, usar 7 ("la semana pasada"/"últimos días"). Para "este mes" usar 30.' },
+          nombre_producto: { type: 'STRING', description: 'Nombre (o parte del nombre) de un producto puntual, si preguntan por uno solo. Opcional — si no lo dice, traer el ranking de todos.' },
+          limite: { type: 'NUMBER', description: 'Cantidad de productos a devolver en el ranking. Si no lo dice, usar 10.' },
+        },
+        required: [],
+      },
+    },
+    {
       name: 'consultar_horas_extra',
       description: 'Solo para administradores. Devuelve las horas extra cargadas de un empleado de Cocina en un mes (o, si no se especifica empleado, el ranking de todos los que tienen horas extra cargadas ese mes). Útil para preguntas como "cuántas horas extra tiene Juan este mes" o "quién tiene más horas extra cargadas".',
       parameters: {
@@ -227,6 +240,7 @@ Novedades recientes del sistema (por si el usuario pregunta "qué cambió", "qu�
 - Nuevo módulo "Inventario" (Alimentos y Bebidas): permite ajustar el stock de bebidas a mano (Sumar/Restar/Fijar), o sacándole una foto a la botella para que la IA la reconozca y sume 1 unidad sola. Cada producto tiene una etiqueta QR imprimible para hacer el ajuste rápido desde el celular, escaneándola en el bar.
 - Dentro de Inventario hay una sección "Reportes de consumo": muestra mes a mes, por producto, cuánto se consumió, cuánto se repuso y las correcciones manuales (Fijar), usando el historial real de movimientos.
 - El sistema avisa automáticamente cuando algún producto de Inventario está por debajo del stock mínimo cargado (se muestra como alerta acá mismo, en este chat, y también como aviso en la pantalla de Inventario).
+- Este chat ahora también puede armar un ranking de los productos de Inventario AYB más consumidos en un período (por ejemplo "qué se vendió más la semana pasada" o "cuánto se consumió de Fernet este mes").
 - En Miembro de equipo (Alimentos y Bebidas) las opciones secundarias (Ver en Horarios, Importar mozos por CSV, Cargar con foto) ahora están agrupadas en un botón "Otras opciones", igual que ya funcionaba en Horarios.
 - La sección que antes decía "Eventos de Alimentos y Bebidas" ahora se llama simplemente "Horarios".
 - Nuevo módulo "Horas extra" (Cocina, solo admin): permite cargar las horas extra de cada empleado por fecha puntual, con nota opcional, y ver el informe acumulado por persona en el mes.
@@ -251,7 +265,7 @@ Módulos y funcionalidades del sistema (para responder preguntas generales sobre
 - Horas extra (Cocina, solo administradores): carga de horas extra por empleado y fecha puntual, con nota opcional, e informe acumulado por persona y mes — pensado para liquidación de sueldos.
 - Configuración (solo administradores): administración de las cuentas/usuarios del sistema.
 - Selector de idioma: arriba a la izquierda, al lado de la palabra "Hilton", hay banderitas para ver todo el sitio en español, inglés o portugués.
-- Este asistente (el chat, ese mismo con el que está hablando el usuario ahora): además de explicar cómo funciona cada módulo, puede CONSULTAR datos reales del sistema (insumos sin precio cargado, quién trabaja tal día, horas trabajadas de un empleado en un mes, variación de precios de insumos, qué recetas usan un insumo puntual, ranking de insumos más usados en platos, stock de Inventario AYB, horas extra cargadas) y hacer algunas ACCIONES puntuales que siempre piden confirmación antes de aplicarse (actualizar el precio de un insumo, poner o sacar RECOFF a un empleado en una fecha, cargar horas extra).
+- Este asistente (el chat, ese mismo con el que está hablando el usuario ahora): además de explicar cómo funciona cada módulo, puede CONSULTAR datos reales del sistema (insumos sin precio cargado, quién trabaja tal día, horas trabajadas de un empleado en un mes, variación de precios de insumos, qué recetas usan un insumo puntual, ranking de insumos más usados en platos, stock de Inventario AYB, ranking de los productos de Inventario AYB más consumidos en un período —por ejemplo "qué se vendió más la semana pasada"—, horas extra cargadas) y hacer algunas ACCIONES puntuales que siempre piden confirmación antes de aplicarse (actualizar el precio de un insumo, poner o sacar RECOFF a un empleado en una fecha, cargar horas extra).
 `;
 
 function armarSystemPrompt(idioma) {
@@ -400,6 +414,43 @@ async function ejecutarConsulta(nombre, args, idioma) {
         stock_actual: r.stock_actual || 0, stock_minimo: r.stock_minimo,
         bajo_stock: r.stock_minimo != null && (r.stock_actual || 0) <= r.stock_minimo,
       })),
+    };
+  }
+
+  if (nombre === 'consultar_consumo_ayb') {
+    const dias = Number.isFinite(args.dias) && args.dias > 0 ? Math.min(args.dias, 365) : 7;
+    const limite = Number.isFinite(args.limite) && args.limite > 0 ? Math.min(args.limite, 30) : 10;
+
+    const params = [dias];
+    let filtroNombre = '';
+    if (args.nombre_producto) { filtroNombre = 'AND p.nombre ILIKE $2'; params.push(`%${args.nombre_producto}%`); }
+
+    const filas = await db.all2(`
+      SELECT p.nombre, p.categoria, p.unidad_default,
+        COALESCE(SUM(m.cantidad) FILTER (WHERE m.tipo = 'restar'), 0) AS consumido
+      FROM inventario_ayb_movimientos m
+      JOIN productos_ayb p ON p.id = m.producto_id
+      WHERE m.creado_en >= NOW() - ($1 || ' days')::interval ${filtroNombre}
+      GROUP BY p.nombre, p.categoria, p.unidad_default
+      HAVING COALESCE(SUM(m.cantidad) FILTER (WHERE m.tipo = 'restar'), 0) > 0
+      ORDER BY consumido DESC
+      LIMIT $${params.length + 1}
+    `, [...params, limite]);
+
+    if (filas.length === 0) {
+      return {
+        dias,
+        mensaje: args.nombre_producto
+          ? msj(idioma,
+              `No encontré consumo registrado de "${args.nombre_producto}" en los últimos ${dias} días.`,
+              `I couldn't find any recorded consumption of "${args.nombre_producto}" in the last ${dias} days.`,
+              `Não encontrei consumo registrado de "${args.nombre_producto}" nos últimos ${dias} dias.`)
+          : msj(idioma, `No hay consumo registrado de Inventario AYB en los últimos ${dias} días.`, `There's no recorded AYB Inventory consumption in the last ${dias} days.`, `Não há consumo registrado do Inventário AYB nos últimos ${dias} dias.`),
+      };
+    }
+    return {
+      dias,
+      ranking: filas.map(f => ({ producto: f.nombre, categoria: f.categoria, unidad: f.unidad_default, consumido: Math.round(Number(f.consumido) * 10) / 10 })),
     };
   }
 

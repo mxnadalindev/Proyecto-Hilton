@@ -68,6 +68,13 @@
       <a href="/horarios" class="nav-item <%= (typeof path !== 'undefined' && path === 'horarios') ? 'activo' : '' %>" title="Horarios" data-i18n-title="Horarios">
         <i class="ti ti-clock" aria-hidden="true"></i><span class="nav-label" data-i18n>Horarios</span>
       </a>
+      <% // Desayuno lo usa la hostess a diario (buscar habitación → ver si
+         // tiene el desayuno incluido, tripulación, socio HH, pedidos
+         // especiales) — visible para cualquiera de AYB, no solo admin/
+         // supervisor, igual que Horarios. %>
+      <a href="/desayuno" class="nav-item <%= (typeof path !== 'undefined' && path === 'desayuno') ? 'activo' : '' %>" title="Desayuno" data-i18n-title="Desayuno">
+        <i class="ti ti-coffee" aria-hidden="true"></i><span class="nav-label" data-i18n>Desayuno</span>
+      </a>
       <% if (_r === 'admin' || _r === 'supervisor') { %>
       <a href="/croutons" class="nav-item <%= (typeof path !== 'undefined' && path === 'croutons') ? 'activo' : '' %>" title="Croutons" data-i18n-title="Croutons">
         <i class="ti ti-package" aria-hidden="true"></i><span class="nav-label" data-i18n>Croutons</span>

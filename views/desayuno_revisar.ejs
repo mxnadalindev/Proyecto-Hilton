@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revisar reporte de desayuno — Hilton</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
+  <style>
+.desayuno-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.desayuno-stat{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:16px;text-align:center;}
+.desayuno-stat p:first-child{font-size:0.62rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;}
+.desayuno-stat p:last-child{font-size:1.4rem;font-weight:700;color:var(--negro);margin:0;}
+@media (max-width:700px){.desayuno-stats{grid-template-columns:repeat(2,1fr);}}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: 'desayuno' }) %>
+
+  <main class="main-content">
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Desayuno</p>
+        <h1 class="seccion-titulo">Revisar antes de cargar</h1>
+      </div>
+      <form method="POST" action="/desayuno/cancelar" style="margin:0;">
+        <button type="submit" class="btn-secondary"><i class="ti ti-arrow-left"></i> Cancelar y volver</button>
+      </form>
+    </div>
+
+    <% if (totalFilas === 0) { %>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;color:#dc2626;">
+        No hay ningún reporte pendiente de revisión. <a href="/desayuno">Volver a Desayuno</a>.
+      </div>
+    <% } else { %>
+
+      <p style="font-size:0.85rem;color:var(--gris-texto);margin-bottom:16px;line-height:1.5;">
+        Archivo: <strong><%= nombreArchivo %></strong> — reporte del <strong><%= fechaReporte.split('-').reverse().join('-') %></strong>.
+        <% if (reemplazaFilas > 0) { %>
+          <br><span style="color:#b45309;"><i class="ti ti-alert-triangle"></i> Ya hay <%= reemplazaFilas %> habitación(es) cargadas para esa fecha — al confirmar, se reemplazan por estas.</span>
+        <% } %>
+      </p>
+
+      <div class="desayuno-stats">
+        <div class="desayuno-stat"><p>Habitaciones leídas</p><p><%= totalFilas %></p></div>
+        <div class="desayuno-stat"><p>Sin desayuno incluido</p><p><%= sinDesayuno %></p></div>
+        <div class="desayuno-stat"><p>Tripulación</p><p><%= tripulacion %></p></div>
+        <div class="desayuno-stat"><p>Con pedido TR</p><p><%= conTR %></p></div>
+      </div>
+
+      <p style="font-size:0.78rem;color:var(--gris-texto);margin-bottom:10px;">
+        Vista previa de las primeras 40 (de <%= totalFilas %>) — la carga completa incluye todas.
+      </p>
+
+      <div class="tabla-wrap" style="margin-bottom:20px;">
+        <table class="tabla" style="width:100%;">
+          <thead>
+            <tr>
+              <th>Hab.</th><th>Nombre</th><th>Membresía</th><th>Grupo</th><th>Pedido esp.</th><th>Bkf</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% filas.slice(0, 40).forEach(f => { %>
+            <tr>
+              <td><%= f.habitacion %></td>
+              <td><%= f.nombre %></td>
+              <td><%= f.membershipLevel || '—' %></td>
+              <td><%= f.groupName || '—' %></td>
+              <td><%= f.specialRequest || '—' %></td>
+              <td><%= f.bkfIncluido ? '✓' : '—' %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <form method="POST" action="/desayuno/aplicar">
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button type="submit" class="btn-primary"><i class="ti ti-check"></i> Confirmar y cargar <%= totalFilas %> habitaciones</button>
+        </div>
+      </form>
+
+    <% } %>
+
+  </main>
+  <%- include('partials/mobile-nav', { path: 'desayuno' }) %>
+</div>
+
+</body>
+</html>
