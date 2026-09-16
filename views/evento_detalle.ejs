@@ -79,12 +79,17 @@
     <p class="seccion-label"><a href="/eventos" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> Eventos</a></p>
     <h1 class="seccion-titulo"><%= evento.nombre %></h1>
   </div>
-  <form method="POST" action="/eventos/<%= evento.id %>/eliminar"
-        onsubmit="return confirm('¿Eliminar este evento?')">
-    <button type="submit" class="btn-danger">
-      <i class="ti ti-trash" aria-hidden="true"></i> Eliminar
-    </button>
-  </form>
+  <div style="display:flex;gap:8px;">
+    <a href="/eventos/<%= evento.id %>/beo" class="btn-secondary">
+      <i class="ti ti-file-text" aria-hidden="true"></i> Orden de evento (BEO)
+    </a>
+    <form method="POST" action="/eventos/<%= evento.id %>/eliminar"
+          onsubmit="return confirm('¿Eliminar este evento?')">
+      <button type="submit" class="btn-danger">
+        <i class="ti ti-trash" aria-hidden="true"></i> Eliminar
+      </button>
+    </form>
+  </div>
 </div>
 
 <div class="detalle-grid">
@@ -101,6 +106,10 @@
         </span>
       </div>
       <div class="info-row"><span class="info-label">Hs. producción</span><span class="info-val"><%= evento.horas_produccion || 0 %> hs</span></div>
+      <% if (evento.comensales) { %>
+      <div class="info-row"><span class="info-label">Comensales</span><span class="info-val"><%= evento.comensales %></span></div>
+      <div class="info-row"><span class="info-label">Personal requerido</span><span class="info-val"><%= evento.personal_servicio_requerido || 0 %> servicio + <%= evento.personal_produccion_requerido || 0 %> producción</span></div>
+      <% } %>
       <div class="info-row"><span class="info-label">Miembros de equipo</span><span class="info-val"><%= evento.cantidad_personal %> personas</span></div>
       <div class="info-row"><span class="info-label">Costo total</span><span class="info-val costo-grande">$<%= parseFloat(evento.costo_total).toFixed(2) %></span></div>
       <% if (evento.descripcion) { %>
@@ -110,76 +119,31 @@
     </div>
   </div>
 
-  <!-- Platos -->
+  <% if (bocaditos.length > 0) { %>
+  <!-- Bocaditos -->
   <div class="detalle-card">
-    <p class="detalle-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Platos del menú</p>
-
-    <% if (menus.length > 0) { %>
-    <form method="POST" action="/eventos/<%= evento.id %>/menu" class="add-plato-row">
-      <select name="menu_id" required>
-        <option value="">— Cargar un menú completo —</option>
-        <% menus.forEach(m => { %>
-        <option value="<%= m.id %>"><%= m.nombre %> (<%= m.platos.length %> plato<%= m.platos.length !== 1 ? 's' : '' %>)</option>
+    <p class="detalle-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Bocaditos calculados</p>
+    <table class="tabla-interna">
+      <thead><tr><th>Plato</th><th>Categoría</th><th>Bocados</th><th>Vajilla</th><th>Costo</th></tr></thead>
+      <tbody>
+        <% const NOMBRES_CATEGORIA_DET = { frios: 'Fríos', calientes: 'Calientes', principales: 'Plato principal', postres: 'Postre' }; %>
+        <% bocaditos.forEach(b => { %>
+        <tr>
+          <td><%= b.nombre %></td>
+          <td><%= NOMBRES_CATEGORIA_DET[b.categoria] || b.categoria %></td>
+          <td style="font-weight:600;color:var(--azul)"><%= b.bocados_totales %></td>
+          <td><%= b.vajilla_texto ? (b.vajilla_cantidad + ' × ' + b.vajilla_texto) : '—' %></td>
+          <td>$<%= parseFloat(b.costo_total || 0).toFixed(2) %></td>
+        </tr>
         <% }) %>
-      </select>
-      <button type="submit" class="btn-add" title="Agregar todos los platos del menú"><i class="ti ti-playlist-add" aria-hidden="true"></i></button>
-    </form>
-    <% } %>
-
-    <% if (platosConCosto.length > 0) { %>
-    <form method="POST" id="form-plato-cargado" action="/eventos/<%= evento.id %>/plato" class="add-plato-row">
-      <select id="plato-select-detalle" onchange="elegirPlatoCargadoDetalle()">
-        <option value="">— Elegir plato de Costos —</option>
-        <% platosConCosto.forEach(p => { %>
-        <option value="<%= p.nombre %>"
-                data-porciones="<%= p.porciones || 1 %>"
-                data-costo="<%= (parseFloat(p.costo_total) / (p.porciones || 1)).toFixed(2) %>">
-          <%= p.nombre %> ($<%= (parseFloat(p.costo_total) / (p.porciones || 1)).toFixed(2) %>/porción)
-        </option>
-        <% }) %>
-      </select>
-      <input type="hidden" name="plato_nombre" id="dp-nombre">
-      <input type="number" name="cantidad_porciones" id="dp-porciones" placeholder="Porciones" min="1" value="1">
-      <input type="number" name="costo_porcion" id="dp-costo" placeholder="Costo/porc. $" min="0" step="0.01">
-      <button type="submit" class="btn-add" title="Agregar al evento"><i class="ti ti-plus" aria-hidden="true"></i></button>
-    </form>
-    <% } %>
-
-    <form method="POST" action="/eventos/<%= evento.id %>/plato" class="add-plato-row">
-      <input type="text" name="plato_nombre" placeholder="O escribir un plato suelto" required style="flex:2;">
-      <input type="number" name="cantidad_porciones" placeholder="Porciones" min="1" value="1">
-      <input type="number" name="costo_porcion" placeholder="Costo/porc. $" min="0" step="0.01">
-      <button type="submit" class="btn-add" title="Agregar al evento"><i class="ti ti-plus" aria-hidden="true"></i></button>
-    </form>
-
-    <% if (platos.length > 0) { %>
-      <table class="tabla-interna">
-        <thead><tr><th>Plato</th><th>Porciones</th><th>Costo/porc.</th><th>Subtotal</th><th></th></tr></thead>
-        <tbody>
-          <% platos.forEach(p => { %>
-          <tr>
-            <td><%= p.plato_nombre %></td>
-            <td><%= p.cantidad_porciones %></td>
-            <td>$<%= parseFloat(p.costo_porcion).toFixed(2) %></td>
-            <td style="font-weight:600;color:var(--azul)">$<%= parseFloat(p.subtotal).toFixed(2) %></td>
-            <td>
-              <form method="POST" action="/eventos/<%= evento.id %>/plato/<%= p.id %>/eliminar" style="margin:0;"
-                    onsubmit="return confirm('¿Quitar este plato del evento?')">
-                <button type="submit" class="btn-remove" title="Quitar"><i class="ti ti-x" aria-hidden="true"></i></button>
-              </form>
-            </td>
-          </tr>
-          <% }) %>
-        </tbody>
-      </table>
-      <div class="total-row">
-        <span>Total platos:</span>
-        <strong>$<%= parseFloat(evento.costo_total).toFixed(2) %></strong>
-      </div>
-    <% } else { %>
-      <p class="list-empty">Sin platos registrados.</p>
-    <% } %>
+      </tbody>
+    </table>
+    <div class="total-row">
+      <span>Costo bocaditos:</span>
+      <strong>$<%= parseFloat(evento.costo_bocaditos || 0).toFixed(2) %></strong>
+    </div>
   </div>
+  <% } %>
 
   <!-- Personal -->
   <div class="detalle-card">
@@ -221,17 +185,6 @@
 </div>
 
 
-
-<script>
-function elegirPlatoCargadoDetalle() {
-  const sel = document.getElementById('plato-select-detalle');
-  const opt = sel.options[sel.selectedIndex];
-  if (!opt || !opt.value) return;
-  document.getElementById('dp-nombre').value = opt.value;
-  document.getElementById('dp-porciones').value = opt.dataset.porciones;
-  document.getElementById('dp-costo').value = opt.dataset.costo;
-}
-</script>
 
   </main>
   <%- include('partials/mobile-nav', { path: path }) %>

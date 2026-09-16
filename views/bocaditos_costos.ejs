@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Costos de bocaditos — Hilton</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
+<style>
+.form-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); margin-bottom: 20px; }
+.form-card-title { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
+.costo-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--gris-borde); }
+.costo-row:last-child { border-bottom: none; }
+.costo-nombre { flex: 1; font-size: 0.85rem; color: var(--negro); }
+.costo-input-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.costo-input-wrap span { font-size: 0.82rem; color: var(--gris-texto); }
+.costo-input-wrap input {
+  width: 100px; background: var(--gris-fondo); border: 1px solid var(--gris-borde);
+  border-radius: 8px; padding: 8px 10px; font-family: var(--font-sans);
+  font-size: 0.85rem; color: var(--negro); outline: none; text-align: right;
+}
+.costo-input-wrap input:focus { border-color: var(--azul); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: var(--blanco); }
+.form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+.back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: flex; align-items: center; gap: 4px; }
+.back-link:hover { color: var(--azul); }
+.success-banner { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; border-radius: 10px; padding: 11px 14px; margin-bottom: 20px; font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
+
+@media (max-width: 600px) {
+  .form-card { padding: 16px; }
+  .costo-row { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('partials/nav', { path: path }) %>
+  <main class="main-content">
+
+<div class="seccion-header">
+  <div class="seccion-header-left">
+    <p class="seccion-label"><a href="/eventos" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> Eventos</a></p>
+    <h1 class="seccion-titulo">Costos de bocaditos</h1>
+  </div>
+</div>
+
+<% if (typeof guardado !== 'undefined' && guardado) { %>
+<div class="success-banner"><i class="ti ti-check" aria-hidden="true"></i> Costos guardados.</div>
+<% } %>
+
+<p style="font-size:0.8rem;color:var(--gris-texto);margin-bottom:20px;">
+  Costo de UN bocado de cada plato. Se usa para calcular el costo estimado de cada evento nuevo
+  (cantidad de bocados que hacen falta × este costo). Los eventos que ya están creados no cambian
+  con lo que edites acá.
+</p>
+
+<form method="POST" action="/eventos/bocaditos-costos">
+  <% const NOMBRES_CATEGORIA = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
+  <% ['frios','calientes','principales','postres'].forEach(cat => { %>
+  <div class="form-card">
+    <p class="form-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> <%= NOMBRES_CATEGORIA[cat] %></p>
+    <% (catalogoBocaditos[cat] || []).forEach(b => { %>
+    <div class="costo-row">
+      <span class="costo-nombre"><%= b.nombre %></span>
+      <label class="costo-input-wrap">
+        <span>$</span>
+        <input type="number" name="costo_<%= b.id %>" min="0" step="0.01" value="<%= parseFloat(b.costo_unitario || 0).toFixed(2) %>">
+        <span>/bocado</span>
+      </label>
+    </div>
+    <% }) %>
+    <% if (!(catalogoBocaditos[cat] || []).length) { %>
+    <p style="font-size:0.78rem;color:var(--gris-texto);font-style:italic;">Sin platos cargados en esta categoría.</p>
+    <% } %>
+  </div>
+  <% }) %>
+
+  <div class="form-actions">
+    <a href="/eventos" class="btn-secondary">Cancelar</a>
+    <button type="submit" class="btn-primary">
+      <i class="ti ti-device-floppy" aria-hidden="true"></i> Guardar costos
+    </button>
+  </div>
+</form>
+
+  </main>
+  <%- include('partials/mobile-nav', { path: path }) %>
+</div>
+</body>
+</html>

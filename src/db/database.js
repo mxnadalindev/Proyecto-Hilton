@@ -436,6 +436,73 @@ const init = async () => {
     )
   `);
 
+  // Catálogo de bocaditos de Eventos (Cocina) — reemplaza, para armar un
+  // evento nuevo, al viejo selector de platos de Costos (platos_costo):
+  // en vez de elegir platos costeados uno por uno, acá se tilda del
+  // catálogo fijo de bocaditos (fríos/calientes/principales/postres,
+  // cargado una sola vez desde scripts/cargar_bocaditos_cocina.js) y el
+  // sistema calcula solo cuántos bocados, cuánta vajilla y cuánto personal
+  // hacen falta según la cantidad de comensales. Los eventos ya creados
+  // con el sistema viejo (evento_platos) siguen intactos — esto no borra
+  // ni reemplaza esa tabla, solo deja de usarse desde el formulario nuevo.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS bocaditos_catalogo (
+      id SERIAL PRIMARY KEY,
+      categoria TEXT NOT NULL,
+      nombre TEXT NOT NULL,
+      vajilla_texto TEXT,
+      vajilla_capacidad INTEGER DEFAULT 1,
+      creado_en TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  // Migración: "Menús" ahora se arma con el catálogo de Bocaditos de Eventos
+  // (fríos/calientes/principales/postres) en vez de la base general de
+  // Costos, a pedido explícito del dueño (los eventos ya solo se costean con
+  // Bocaditos, así que "Menús" tenía que pasar a usar la misma fuente).
+  // menu_platos.plato_id apuntaba con una FK a platos_costo; acá se la
+  // redirige a bocaditos_catalogo. Solo se hace si todavía no hay ningún
+  // plato cargado en ningún menú, para no romper datos reales si ya se
+  // armó algo con el sistema viejo — en ese caso se deja la FK como estaba
+  // y no se toca nada.
+  const { rows: menuPlatosExistentes } = await pool.query('SELECT COUNT(*) AS n FROM menu_platos');
+  if (parseInt(menuPlatosExistentes[0].n, 10) === 0) {
+    await pool.query(`ALTER TABLE menu_platos DROP CONSTRAINT IF EXISTS menu_platos_plato_id_fkey`);
+    await pool.query(`ALTER TABLE menu_platos ADD CONSTRAINT menu_platos_plato_id_fkey FOREIGN KEY (plato_id) REFERENCES bocaditos_catalogo(id) ON DELETE CASCADE`);
+  }
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS evento_bocaditos (
+      id SERIAL PRIMARY KEY,
+      evento_id INTEGER NOT NULL REFERENCES eventos(id) ON DELETE CASCADE,
+      bocadito_id INTEGER REFERENCES bocaditos_catalogo(id),
+      categoria TEXT NOT NULL,
+      nombre TEXT NOT NULL,
+      bocados_totales INTEGER NOT NULL DEFAULT 0,
+      vajilla_texto TEXT,
+      vajilla_cantidad INTEGER DEFAULT 0
+    )
+  `);
+  // "comensales" en eventos: cantidad de invitados del evento — hace
+  // falta guardarla para poder recalcular/mostrar de dónde salieron los
+  // bocados/vajilla/personal calculados. ADD COLUMN IF NOT EXISTS porque
+  // "eventos" ya existía antes de este cambio.
+  await pool.query(`ALTER TABLE eventos ADD COLUMN IF NOT EXISTS comensales INTEGER`);
+  await pool.query(`ALTER TABLE eventos ADD COLUMN IF NOT EXISTS personal_servicio_requerido INTEGER DEFAULT 0`);
+  await pool.query(`ALTER TABLE eventos ADD COLUMN IF NOT EXISTS personal_produccion_requerido INTEGER DEFAULT 0`);
+
+  // Costeo de bocaditos: cada plato del catálogo puede tener un costo por
+  // bocado (se carga/edita desde /eventos/bocaditos-costos). Al crear un
+  // evento, el total de bocaditos (bocados_totales × costo_unitario de
+  // cada plato) se guarda aparte en eventos.costo_bocaditos, SIN pisar
+  // eventos.costo_total — ese sigue siendo, como antes, "costo de platos +
+  // costo de bocaditos" (ver recalcularCostoEvento en eventos.js), para no
+  // romper el cálculo viejo de platos-desde-Costos que se sigue usando en
+  // el detalle de eventos ya creados.
+  await pool.query(`ALTER TABLE bocaditos_catalogo ADD COLUMN IF NOT EXISTS costo_unitario NUMERIC DEFAULT 0`);
+  await pool.query(`ALTER TABLE evento_bocaditos ADD COLUMN IF NOT EXISTS costo_unitario NUMERIC DEFAULT 0`);
+  await pool.query(`ALTER TABLE evento_bocaditos ADD COLUMN IF NOT EXISTS costo_total NUMERIC DEFAULT 0`);
+  await pool.query(`ALTER TABLE eventos ADD COLUMN IF NOT EXISTS costo_bocaditos NUMERIC DEFAULT 0`);
+
   // Recetas — mejoras (antes migración 006 aparte): "pasos" pasa a llamarse
   // "procedimiento" (se conserva el contenido si ya tenía), se suma
   // ingredientes_json para el formato estructurado, y receta_videos permite

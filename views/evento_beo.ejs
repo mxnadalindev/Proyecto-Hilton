@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orden de evento — <%= evento.nombre %></title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: var(--font-sans); color: var(--negro); margin: 0; background: var(--gris-fondo); }
+  .hoja { max-width: 800px; margin: 24px auto; background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 10px; padding: 36px 40px; box-shadow: var(--sombra); }
+  .barra-acciones { max-width: 800px; margin: 16px auto 0; display: flex; justify-content: space-between; align-items: center; padding: 0 4px; }
+
+  /* Mismo estilo "vidrio" azul/verde traslúcido que .btn-secondary/.btn-primary
+     en style.css (usado en Horas Extra, Inventario AYB, etc.): volver = azul
+     traslúcido, imprimir (acción principal de esta pantalla) = verde traslúcido. */
+  .btn-volver-beo {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: rgba(0,47,97,0.12); color: #002f61;
+    border: 1px solid rgba(0,47,97,0.28); border-radius: 8px;
+    padding: 0 18px; box-sizing: border-box; height: 40px;
+    font-family: var(--font-sans); font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+    cursor: pointer; transition: all var(--tr);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  }
+  .btn-volver-beo:hover { background: rgba(0,47,97,0.20); }
+
+  .btn-imprimir {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: rgba(6,147,126,0.14); color: #06937e;
+    border: 1px solid rgba(6,147,126,0.32); border-radius: 8px;
+    padding: 0 18px; box-sizing: border-box; height: 40px;
+    font-family: var(--font-sans); font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+    cursor: pointer; transition: all var(--tr);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  }
+  .btn-imprimir:hover { background: rgba(6,147,126,0.24); }
+
+  .encabezado { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid var(--azul); padding-bottom: 16px; margin-bottom: 20px; }
+  .encabezado h1 { font-size: 1.5rem; margin: 0 0 4px; color: var(--azul); }
+  .encabezado .subtitulo { font-size: 0.8rem; color: var(--gris-texto); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+  .encabezado .hotel { text-align: right; font-size: 0.78rem; color: var(--gris-texto); }
+  .encabezado .hotel strong { display: block; color: var(--azul); font-size: 0.92rem; margin-bottom: 2px; }
+
+  .datos-evento { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .dato { background: var(--gris-fondo); border-radius: 8px; padding: 10px 12px; }
+  .dato-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris-texto); margin-bottom: 3px; }
+  .dato-valor { font-size: 0.95rem; font-weight: 600; color: var(--negro); }
+
+  .seccion { margin-bottom: 22px; }
+  .seccion-titulo { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--azul); border-bottom: 1px solid var(--gris-borde); padding-bottom: 6px; margin-bottom: 10px; }
+  .categoria-titulo { font-size: 0.7rem; font-weight: 700; color: var(--gris-texto); text-transform: uppercase; letter-spacing: 0.06em; margin: 10px 0 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th { text-align: left; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gris-texto); padding: 5px 6px; border-bottom: 1px solid var(--gris-borde); }
+  td { padding: 7px 6px; border-bottom: 1px solid var(--gris-borde); color: var(--negro); }
+  tr:last-child td { border-bottom: none; }
+  .num { text-align: right; white-space: nowrap; }
+  .lista-simple { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.85rem; }
+  .lista-simple span { display: inline-flex; gap: 4px; }
+  .lista-simple .rol { color: var(--gris-texto); font-size: 0.75rem; }
+  .vacio { font-size: 0.8rem; color: var(--gris-texto); font-style: italic; }
+
+  .total-final { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 6px; padding-top: 10px; border-top: 2px solid var(--azul); }
+  .total-final .num-total { font-size: 1.3rem; font-weight: 700; color: var(--azul); }
+
+  .pie { margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--gris-borde); font-size: 0.68rem; color: var(--gris-texto); display: flex; justify-content: space-between; }
+
+  @media print {
+    body { background: #fff; }
+    .barra-acciones { display: none; }
+    .hoja { box-shadow: none; border: none; margin: 0; max-width: none; padding: 0; }
+    @page { margin: 14mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="barra-acciones">
+  <a href="/eventos/<%= evento.id %>" class="btn-volver-beo"><i class="ti ti-arrow-left" aria-hidden="true"></i> Volver al evento</a>
+  <button class="btn-imprimir" onclick="window.print()"><i class="ti ti-printer" aria-hidden="true"></i> Imprimir / Guardar PDF</button>
+</div>
+
+<div class="hoja">
+
+  <div class="encabezado">
+    <div>
+      <p class="subtitulo">Orden de evento (BEO)</p>
+      <h1><%= evento.nombre %></h1>
+    </div>
+    <div class="hotel">
+      <strong>Hilton Buenos Aires</strong>
+      Emitido el <%= new Date().toLocaleDateString('es-AR') %>
+    </div>
+  </div>
+
+  <div class="datos-evento">
+    <div class="dato">
+      <div class="dato-label">Fecha</div>
+      <div class="dato-valor"><%= evento.fecha %></div>
+    </div>
+    <div class="dato">
+      <div class="dato-label">Horario</div>
+      <div class="dato-valor"><%= evento.hora_inicio ? evento.hora_inicio + (evento.hora_fin ? ' – ' + evento.hora_fin : '') : '—' %></div>
+    </div>
+    <div class="dato">
+      <div class="dato-label">Comensales</div>
+      <div class="dato-valor"><%= evento.comensales || '—' %></div>
+    </div>
+    <div class="dato">
+      <div class="dato-label">Personal requerido</div>
+      <div class="dato-valor">
+        <% if (evento.comensales) { %>
+          <%= evento.personal_servicio_requerido || 0 %> serv. + <%= evento.personal_produccion_requerido || 0 %> prod.
+        <% } else { %>—<% } %>
+      </div>
+    </div>
+  </div>
+
+  <% if (bocaditos.length > 0) { %>
+  <div class="seccion">
+    <p class="seccion-titulo"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Menú — bocaditos</p>
+    <% const NOMBRES_CATEGORIA_BEO = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
+    <% ['frios','calientes','principales','postres'].forEach(cat => { %>
+      <% const items = bocaditos.filter(b => b.categoria === cat); %>
+      <% if (items.length > 0) { %>
+      <p class="categoria-titulo"><%= NOMBRES_CATEGORIA_BEO[cat] %></p>
+      <table>
+        <thead><tr><th>Plato</th><th class="num">Bocados</th><th>Vajilla</th></tr></thead>
+        <tbody>
+          <% items.forEach(b => { %>
+          <tr>
+            <td><%= b.nombre %></td>
+            <td class="num"><%= b.bocados_totales %></td>
+            <td><%= b.vajilla_texto ? (b.vajilla_cantidad + ' × ' + b.vajilla_texto) : '—' %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% } %>
+    <% }) %>
+  </div>
+  <% } %>
+
+  <% if (platos.length > 0) { %>
+  <div class="seccion">
+    <p class="seccion-titulo"><i class="ti ti-list-details" aria-hidden="true"></i> Otros platos del menú</p>
+    <table>
+      <thead><tr><th>Plato</th><th class="num">Porciones</th><th class="num">Subtotal</th></tr></thead>
+      <tbody>
+        <% platos.forEach(p => { %>
+        <tr>
+          <td><%= p.plato_nombre %></td>
+          <td class="num"><%= p.cantidad_porciones %></td>
+          <td class="num">$<%= parseFloat(p.subtotal).toFixed(2) %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+
+  <div class="seccion">
+    <p class="seccion-titulo"><i class="ti ti-bowl" aria-hidden="true"></i> Vajilla necesaria</p>
+    <% if (vajilla.length > 0) { %>
+      <table>
+        <thead><tr><th>Vajilla</th><th class="num">Cantidad</th></tr></thead>
+        <tbody>
+          <% vajilla.forEach(v => { %>
+          <tr><td><%= v.vajilla_nombre %></td><td class="num"><%= v.cantidad %></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p class="vacio">Sin vajilla registrada.</p>
+    <% } %>
+  </div>
+
+  <div class="seccion">
+    <p class="seccion-titulo"><i class="ti ti-users" aria-hidden="true"></i> Personal asignado</p>
+    <% if (personal.length > 0) { %>
+      <div class="lista-simple">
+        <% personal.forEach(p => { %>
+        <span><%= p.nombre %> <span class="rol">(<%= p.rol %>)</span></span>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <p class="vacio">Sin personal asignado.</p>
+    <% } %>
+  </div>
+
+  <% if (evento.descripcion) { %>
+  <div class="seccion">
+    <p class="seccion-titulo"><i class="ti ti-note" aria-hidden="true"></i> Notas</p>
+    <p style="font-size:0.85rem;"><%= evento.descripcion %></p>
+  </div>
+  <% } %>
+
+  <div class="total-final">
+    <span style="font-size:0.78rem;color:var(--gris-texto);">Costo total del evento</span>
+    <span class="num-total">$<%= parseFloat(evento.costo_total || 0).toFixed(2) %></span>
+  </div>
+
+  <div class="pie">
+    <span>Cargado por <%= evento.creador || '—' %></span>
+    <span>Portal interno Hilton Buenos Aires</span>
+  </div>
+
+</div>
+
+</body>
+</html>

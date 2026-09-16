@@ -15,16 +15,21 @@
 .field label{display:block;font-size:0.68rem;font-weight:500;color:var(--negro);margin-bottom:6px;}
 .field input{width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;}
 .field input:focus{border-color:var(--azul);background:var(--blanco);}
+.categoria-bloque{margin-bottom:18px;}
+.categoria-bloque:last-child{margin-bottom:0;}
+.categoria-titulo{font-size:0.68rem;font-weight:700;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.08em;margin:0 0 8px;}
 .buscador-platos{width:100%;padding:9px 12px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);margin-bottom:14px;}
-.platos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px;max-height:420px;overflow-y:auto;}
+.platos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px;}
 .plato-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background 0.15s;}
 .plato-item:hover{background:var(--azul-claro);}
 .plato-item input{width:16px;height:16px;accent-color:var(--azul);flex-shrink:0;}
 .plato-nombre{flex:1;font-size:0.8rem;color:var(--negro);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .plato-costo{font-size:0.7rem;color:var(--gris-texto);flex-shrink:0;}
+.sin-resultados{font-size:0.8rem;color:var(--gris-texto);font-style:italic;padding:6px 2px;display:none;}
 
 @media (max-width: 600px) {
   .form-card{padding:16px;}
+  .platos-grid{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -52,22 +57,36 @@
       </div>
 
       <div class="form-card">
-        <p class="form-card-title"><i class="ti ti-tools-kitchen-2"></i> Elegí los platos que lo componen</p>
+        <p class="form-card-title"><i class="ti ti-tools-kitchen-2"></i> Elegí los bocaditos que lo componen</p>
 
-        <% if (platosConCosto.length > 0) { %>
-        <input type="text" id="buscador-platos" placeholder="Buscar plato..." class="buscador-platos"
+        <% const NOMBRES_CATEGORIA_MENU = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
+        <% const hayAlgunPlato = ['frios','calientes','principales','postres'].some(cat => (catalogoBocaditos[cat]||[]).length > 0); %>
+
+        <% if (hayAlgunPlato) { %>
+        <input type="text" id="buscador-platos" placeholder="Buscar bocadito..." class="buscador-platos"
                oninput="filtrarPlatos(this.value)">
-        <div class="platos-grid" id="platos-grid">
-          <% platosConCosto.forEach(p => { %>
-          <label class="plato-item" data-nombre="<%= p.nombre.toLowerCase() %>">
-            <input type="checkbox" name="platos" value="<%= p.id %>">
-            <span class="plato-nombre"><%= p.nombre %></span>
-            <span class="plato-costo">$<%= (parseFloat(p.costo_total)/(p.porciones||1)).toFixed(2) %>/porc.</span>
-          </label>
+        <div id="platos-contenedor">
+          <% ['frios','calientes','principales','postres'].forEach(cat => { %>
+            <% const items = catalogoBocaditos[cat] || []; %>
+            <% if (items.length > 0) { %>
+            <div class="categoria-bloque" data-categoria-bloque="<%= cat %>">
+              <p class="categoria-titulo"><%= NOMBRES_CATEGORIA_MENU[cat] %></p>
+              <div class="platos-grid">
+                <% items.forEach(b => { %>
+                <label class="plato-item" data-nombre="<%= b.nombre.toLowerCase() %>">
+                  <input type="checkbox" name="platos" value="<%= b.id %>">
+                  <span class="plato-nombre"><%= b.nombre %></span>
+                  <span class="plato-costo">$<%= parseFloat(b.costo_unitario || 0).toFixed(2) %>/bocado</span>
+                </label>
+                <% }) %>
+              </div>
+            </div>
+            <% } %>
           <% }) %>
+          <p class="sin-resultados" id="sin-resultados">Sin resultados para esa búsqueda.</p>
         </div>
         <% } else { %>
-        <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;">No hay platos costeados en Costos todavía — cargalos ahí primero.</p>
+        <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;">No hay bocaditos cargados en el catálogo de Eventos todavía.</p>
         <% } %>
       </div>
 
@@ -84,9 +103,19 @@
 <script>
 function filtrarPlatos(texto) {
   const q = texto.toLowerCase();
-  document.querySelectorAll('.plato-item').forEach(el => {
-    el.style.display = el.dataset.nombre.includes(q) ? '' : 'none';
+  let algunoVisible = false;
+  document.querySelectorAll('.categoria-bloque').forEach(bloque => {
+    let algunoEnBloque = false;
+    bloque.querySelectorAll('.plato-item').forEach(el => {
+      const visible = el.dataset.nombre.includes(q);
+      el.style.display = visible ? '' : 'none';
+      if (visible) algunoEnBloque = true;
+    });
+    bloque.style.display = algunoEnBloque ? '' : 'none';
+    if (algunoEnBloque) algunoVisible = true;
   });
+  const sinResultados = document.getElementById('sin-resultados');
+  if (sinResultados) sinResultados.style.display = algunoVisible ? 'none' : 'block';
 }
 </script>
 </body>

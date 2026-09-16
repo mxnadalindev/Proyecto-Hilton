@@ -36,18 +36,26 @@
         <h1 class="seccion-titulo"><%= menu.nombre %></h1>
         <% if (menu.descripcion) { %><p style="font-size:0.82rem;color:var(--gris-texto);margin:4px 0 0;"><%= menu.descripcion %></p><% } %>
       </div>
-      <form method="POST" action="/eventos/menus/<%= menu.id %>/eliminar" onsubmit="return confirm('¿Eliminar este menú? Los platos no se borran, solo se desvinculan.')">
+      <form method="POST" action="/eventos/menus/<%= menu.id %>/eliminar" onsubmit="return confirm('¿Eliminar este menú? Los bocaditos del catálogo no se borran, solo se desvinculan.')">
         <button type="submit" class="btn-danger"><i class="ti ti-trash"></i> Eliminar menú</button>
       </form>
     </div>
 
     <div class="form-card" style="margin-bottom:20px;">
-      <p class="form-card-title"><i class="ti ti-plus"></i> Agregar plato al menú</p>
+      <p class="form-card-title"><i class="ti ti-plus"></i> Agregar bocadito al menú</p>
       <form method="POST" action="/eventos/menus/<%= menu.id %>/plato" style="display:flex;gap:8px;">
+        <% const NOMBRES_CATEGORIA_MD = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
         <select name="plato_id" required style="flex:1;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
-          <option value="">Seleccionar plato...</option>
-          <% todosPlatos.forEach(p => { %>
-          <option value="<%= p.id %>"><%= p.nombre %> ($<%= (parseFloat(p.costo_total)/(p.porciones||1)).toFixed(2) %>/porc.)</option>
+          <option value="">Seleccionar bocadito...</option>
+          <% ['frios','calientes','principales','postres'].forEach(cat => { %>
+            <% const items = catalogoBocaditos[cat] || []; %>
+            <% if (items.length > 0) { %>
+            <optgroup label="<%= NOMBRES_CATEGORIA_MD[cat] %>">
+              <% items.forEach(b => { %>
+              <option value="<%= b.id %>"><%= b.nombre %> ($<%= parseFloat(b.costo_unitario || 0).toFixed(2) %>/bocado)</option>
+              <% }) %>
+            </optgroup>
+            <% } %>
           <% }) %>
         </select>
         <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> Agregar</button>
@@ -55,15 +63,16 @@
     </div>
 
     <div class="form-card">
-      <p class="form-card-title"><i class="ti ti-tools-kitchen-2"></i> Platos de este menú (<%= platosDelMenu.length %>)</p>
+      <p class="form-card-title"><i class="ti ti-tools-kitchen-2"></i> Bocaditos de este menú (<%= platosDelMenu.length %>)</p>
       <% if (platosDelMenu.length > 0) { %>
       <table class="tabla-interna">
-        <thead><tr><th>Plato</th><th>Costo/porc.</th><th></th></tr></thead>
+        <thead><tr><th>Bocadito</th><th>Categoría</th><th>Costo/bocado</th><th></th></tr></thead>
         <tbody>
           <% platosDelMenu.forEach(p => { %>
           <tr>
             <td><%= p.nombre %></td>
-            <td style="color:var(--azul);font-weight:600;">$<%= (parseFloat(p.costo_total)/(p.porciones_base||1)).toFixed(2) %></td>
+            <td><%= NOMBRES_CATEGORIA_MD[p.categoria] || p.categoria %></td>
+            <td style="color:var(--azul);font-weight:600;">$<%= parseFloat(p.costo_unitario || 0).toFixed(2) %></td>
             <td>
               <form method="POST" action="/eventos/menus/<%= menu.id %>/plato/<%= p.menu_plato_id %>/eliminar" style="margin:0;">
                 <button type="submit" class="btn-remove" title="Quitar del menú"><i class="ti ti-x"></i></button>
@@ -74,7 +83,7 @@
         </tbody>
       </table>
       <% } else { %>
-      <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;">Sin platos todavía. Agregá el primero arriba.</p>
+      <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;">Sin bocaditos todavía. Agregá el primero arriba.</p>
       <% } %>
     </div>
   </main>

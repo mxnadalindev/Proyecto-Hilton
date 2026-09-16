@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,40 +41,75 @@
 .btn-remove:hover { color: #991b1b; }
 .subtotal-row { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--gris-borde); margin-top: 8px; font-size: 0.82rem; color: var(--gris-texto); }
 .subtotal-row strong { color: var(--azul); font-size: 1rem; }
-.personal-grid { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; margin-bottom: 12px; }
-.personal-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; transition: background var(--tr); }
-.personal-item:hover { background: var(--azul-claro); }
-.personal-item input { width: 16px; height: 16px; accent-color: var(--azul); flex-shrink: 0; }
-.personal-nombre { flex: 1; font-size: 0.83rem; color: var(--negro); font-weight: 500; }
-.personal-rol { font-size: 0.65rem; color: var(--gris-texto); text-transform: uppercase; letter-spacing: 0.08em; }
 .form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--gris-borde); }
 .back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: flex; align-items: center; gap: 4px; }
 .back-link:hover { color: var(--azul); }
 
-/* Calendario mini */
-#mini-cal { font-family: var(--font-sans); }
-.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.cal-header span { font-size: 0.85rem; font-weight: 600; color: var(--negro); }
-.cal-nav { background: none; border: 1px solid var(--gris-borde); border-radius: 6px; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gris-texto); font-size: 14px; transition: all var(--tr); }
-.cal-nav:hover { border-color: var(--azul); color: var(--azul); }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-.cal-day-name { text-align: center; font-size: 0.6rem; font-weight: 600; color: var(--gris-texto); padding: 4px 0; letter-spacing: 0.05em; }
-.cal-day { text-align: center; font-size: 0.78rem; padding: 6px 4px; border-radius: 6px; cursor: pointer; color: var(--negro); transition: all var(--tr); }
-.cal-day:hover { background: var(--azul-claro); color: var(--azul); }
-.cal-day.hoy { background: var(--azul-claro); color: var(--azul); font-weight: 600; }
-.cal-day.seleccionado { background: var(--azul); color: #fff; font-weight: 600; }
-.cal-day.vacio { visibility: hidden; }
-.cal-day.otro-mes { color: var(--gris-borde); cursor: default; }
-.cal-day.otro-mes:hover { background: none; }
+/* Desplegable con buscador (multiselección) — usado para fríos/calientes/
+   principales/postres y para personal. Envuelve una lista de checkboxes
+   ya existente: el buscador solo filtra qué filas se ven, y las filas
+   tildadas se muestran además como "chips" debajo, con una X para sacarlas
+   rápido sin tener que reabrir la lista. */
+.multiselect { position: relative; margin-bottom: 16px; }
+.multiselect:last-child { margin-bottom: 0; }
+.multiselect > label.ms-label { display: block; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gris-texto); margin-bottom: 6px; }
+.multiselect-input-wrap { position: relative; }
+.multiselect-input-wrap i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--gris-texto); font-size: 15px; pointer-events: none; }
+.multiselect-input {
+  width: 100%; background: var(--gris-fondo); border: 1px solid var(--gris-borde);
+  border-radius: 8px; padding: 10px 34px 10px 12px; font-family: var(--font-sans);
+  font-size: 0.85rem; color: var(--negro); outline: none;
+  transition: border-color var(--tr), box-shadow var(--tr);
+}
+.multiselect-input:focus { border-color: var(--azul); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: var(--blanco); }
+.multiselect-panel {
+  /* A propósito NO es "position: absolute": si flotara por encima, al
+     abrir un desplegable taparía el campo de abajo (por ej. Calientes
+     debajo de Fríos) y un click ahí quedaría atrapado por el panel de
+     arriba en vez de llegar al campo tapado. Al ser parte del flujo
+     normal, abrir la lista empuja el resto del formulario hacia abajo
+     en vez de superponerse. */
+  margin-top: 6px;
+  background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 8px;
+  max-height: 230px; overflow-y: auto;
+  display: none;
+}
+.multiselect-panel.abierto { display: block; }
+.multiselect-option { display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; font-size: 0.82rem; color: var(--negro); }
+.multiselect-option:hover { background: var(--azul-claro); }
+.multiselect-option input { width: 15px; height: 15px; accent-color: var(--azul); flex-shrink: 0; }
+.multiselect-option .personal-rol { font-size: 0.65rem; color: var(--gris-texto); text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; }
+.multiselect-option.oculto { display: none; }
+.multiselect-empty { padding: 10px 12px; font-size: 0.78rem; color: var(--gris-texto); font-style: italic; display: none; }
+.multiselect-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { display: flex; align-items: center; gap: 6px; background: var(--azul-claro); color: var(--azul); border-radius: 999px; padding: 5px 8px 5px 12px; font-size: 0.76rem; font-weight: 500; }
+.chip button { background: none; border: none; color: var(--azul); cursor: pointer; font-size: 14px; line-height: 1; padding: 2px; display: flex; }
+.chip button:hover { color: #991b1b; }
 
 @media (max-width: 900px) {
-  .form-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; gap: 14px; }
+  .form-col { gap: 14px; }
   .field-row { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 600px) {
-  .form-card { padding: 16px; }
-  /* Fila de "agregar plato/vajilla" (3 inputs + botón, sin flex-wrap):
+  /* Achicado para que entre cómodo en un celular: menos relleno, textos
+     un poco más chicos, y la lista desplegable con menos alto (si no,
+     una lista larga como "Personal" ocupa toda la pantalla y hay que
+     scrollear demasiado para llegar al resto del formulario). */
+  .form-card { padding: 14px; }
+  .form-card-title { font-size: 0.66rem; margin-bottom: 14px; }
+  .field { margin-bottom: 11px; }
+  .field label, .multiselect > label.ms-label { font-size: 0.65rem; }
+  .field input, .field textarea, .multiselect-input { padding: 9px 10px; font-size: 0.82rem; }
+  .multiselect { margin-bottom: 12px; }
+  .multiselect-panel { max-height: 170px; }
+  .multiselect-option { padding: 8px 10px; font-size: 0.8rem; gap: 8px; }
+  .multiselect-chips { gap: 5px; }
+  .chip { font-size: 0.72rem; padding: 4px 6px 4px 10px; }
+  .subtotal-row, .item-row { font-size: 0.78rem; }
+  .item-detalle { font-size: 0.7rem; }
+  /* Fila de "agregar vajilla" (2 inputs + botón, sin flex-wrap):
      en un celular angosto los inputs no se achican lo suficiente y la
      fila se corta — se envuelve para que cada campo pase a su propia
      línea si hace falta. */
@@ -100,7 +135,7 @@
 </div>
 
 <form method="POST" action="/eventos/nuevo" id="form-evento">
-<input type="hidden" name="platos_json" id="platos_json" value="[]">
+<input type="hidden" name="bocaditos_json" id="bocaditos_json" value="[]">
 <input type="hidden" name="personal_json" id="personal_json" value="[]">
 <input type="hidden" name="vajilla_json" id="vajilla_json" value="[]">
 
@@ -118,133 +153,56 @@
         <input type="text" name="nombre" placeholder="Ej: Casamiento García" required>
       </div>
 
-      <div class="field-row">
-        <div class="field">
-          <label>Fecha</label>
-          <input type="date" name="fecha" id="campo-fecha" required>
-        </div>
-        <div class="field">
-          <label>Hora inicio</label>
-          <input type="time" name="hora_inicio">
-        </div>
-        <div class="field">
-          <label>Hora fin</label>
-          <input type="time" name="hora_fin">
-        </div>
-      </div>
-
-      <div class="field-row">
-        <div class="field">
-          <label>Horas de producción</label>
-          <input type="number" name="horas_produccion" placeholder="0" min="0" step="0.5">
-        </div>
-      </div>
-
       <div class="field">
-        <label>Descripción (opcional)</label>
-        <textarea name="descripcion" rows="3" placeholder="Notas del evento..."></textarea>
-      </div>
-    </div>
-
-    <!-- Calendario visual -->
-    <div class="form-card">
-      <p class="form-card-title"><i class="ti ti-calendar" aria-hidden="true"></i> Calendario</p>
-      <div id="mini-cal"></div>
-    </div>
-
-  </div>
-
-  <!-- ── Columna derecha ── -->
-  <div class="form-col">
-
-    <!-- Platos -->
-    <div class="form-card">
-      <p class="form-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Platos del menú</p>
-
-      <% if (menus.length > 0) { %>
-      <div class="field" style="margin-bottom:12px;">
-        <label>Cargar un menú completo</label>
-        <select id="menu-select" onchange="cargarMenuCompleto()">
-          <option value="">— Seleccionar un menú —</option>
-          <% menus.forEach(m => { %>
-          <option value="<%= m.id %>"><%= m.nombre %> (<%= m.platos.length %> plato<%= m.platos.length !== 1 ? 's' : '' %>)</option>
-          <% }) %>
-        </select>
-        <p style="font-size:0.68rem;color:var(--gris-texto);margin-top:6px;">
-          Agrega de una todos los platos que ya tiene asignados ese menú.
-        </p>
-      </div>
-      <% } %>
-
-      <% if (platosConCosto.length > 0) { %>
-      <div class="field" style="margin-bottom:12px;">
-        <label>O elegir un plato suelto ya cargado en Costos</label>
-        <select id="plato-select" onchange="elegirPlatoCargado()">
-          <option value="">— Seleccionar —</option>
-          <% platosConCosto.forEach(p => { %>
-          <option value="<%= p.id %>"
-                  data-nombre="<%= p.nombre %>"
-                  data-porciones="<%= p.porciones || 1 %>"
-                  data-costo="<%= (parseFloat(p.costo_total) / (p.porciones || 1)).toFixed(2) %>">
-            <%= p.nombre %> ($<%= (parseFloat(p.costo_total) / (p.porciones || 1)).toFixed(2) %>/porción)
-          </option>
-          <% }) %>
-        </select>
-        <p style="font-size:0.68rem;color:var(--gris-texto);margin-top:6px;">
-          Al elegir uno, completa los campos de abajo — podés ajustar porciones o costo antes de agregarlo. También podés cargar un plato suelto escribiendo el nombre a mano.
-        </p>
-      </div>
-      <% } %>
-
-      <div class="add-row">
-        <input type="text" id="plato-nombre" placeholder="Nombre del plato">
-        <input type="number" id="plato-porciones" placeholder="Porciones" min="1" value="1">
-        <input type="number" id="plato-costo" placeholder="Costo por porción $" min="0" step="0.01">
-        <button type="button" class="btn-add" onclick="agregarPlato()">
-          <i class="ti ti-plus" aria-hidden="true"></i>
-        </button>
+        <label>Fecha</label>
+        <input type="date" name="fecha" id="campo-fecha" required>
       </div>
 
-      <div id="lista-platos" class="items-list">
-        <p class="list-empty">No hay platos agregados todavía.</p>
+      <div class="field" style="margin-bottom:20px;">
+        <label>Cantidad de comensales</label>
+        <input type="number" id="input-comensales" name="comensales" min="1" placeholder="Ej: 50" oninput="recalcularBocaditos()">
       </div>
 
-      <div class="subtotal-row">
-        <span>Costo total de platos:</span>
-        <strong id="costo-total-display">$0.00</strong>
-      </div>
-    </div>
-
-    <!-- Personal -->
-    <div class="form-card">
-      <p class="form-card-title"><i class="ti ti-users" aria-hidden="true"></i> Personal asignado</p>
-
-      <div class="personal-grid">
-        <% if (personal.length > 0) { %>
-          <% personal.forEach(p => { %>
-          <label class="personal-item">
-            <input type="checkbox" class="chk-personal" value="<%= p.id %>" data-nombre="<%= p.nombre %>">
-            <span class="personal-nombre"><%= p.nombre %></span>
-            <span class="personal-rol"><%= p.rol %></span>
+      <% const NOMBRES_CATEGORIA = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
+      <% ['frios','calientes','principales','postres'].forEach(cat => { %>
+      <div class="multiselect" data-nombre-categoria="<%= cat %>">
+        <label class="ms-label"><%= NOMBRES_CATEGORIA[cat] %></label>
+        <div class="multiselect-input-wrap">
+          <input type="text" class="multiselect-input" placeholder="Buscar <%= NOMBRES_CATEGORIA[cat].toLowerCase() %>...">
+          <i class="ti ti-search" aria-hidden="true"></i>
+        </div>
+        <div class="multiselect-panel">
+          <% (catalogoBocaditos[cat] || []).forEach(b => { %>
+          <label class="multiselect-option" data-buscar="<%= b.nombre.toLowerCase() %>" data-nombre="<%= b.nombre %>">
+            <input type="checkbox" class="chk-bocadito" id="chk-<%= cat %>-<%= b.id %>"
+                   data-id="<%= b.id %>" data-categoria="<%= cat %>" data-nombre="<%= b.nombre %>"
+                   data-vajilla-texto="<%= b.vajilla_texto || '' %>" data-vajilla-capacidad="<%= b.vajilla_capacidad || 1 %>"
+                   data-costo-unitario="<%= b.costo_unitario || 0 %>"
+                   onchange="recalcularBocaditos()">
+            <span><%= b.nombre %></span>
           </label>
           <% }) %>
-        <% } else { %>
-          <p class="list-empty">No hay personal registrado todavía.</p>
-        <% } %>
+          <p class="multiselect-empty">No se encontraron platos.</p>
+        </div>
       </div>
+      <% }) %>
 
-      <div class="subtotal-row">
-        <span>Personal seleccionado:</span>
-        <strong id="personal-count">0 personas</strong>
-      </div>
     </div>
 
     <!-- Vajilla -->
     <div class="form-card">
       <p class="form-card-title"><i class="ti ti-bowl" aria-hidden="true"></i> Vajilla necesaria</p>
 
-      <div class="add-row">
-        <input type="text" id="vajilla-nombre" placeholder="Tipo de vajilla">
+      <p style="font-size:0.68rem;color:var(--gris-texto);margin-bottom:10px;">
+        Se calcula sola a partir de los bocaditos elegidos. Si hace falta algo extra (cubiertos, servilleteros, etc.), agregalo a mano acá abajo.
+      </p>
+
+      <div id="lista-vajilla-calculada" class="items-list">
+        <p class="list-empty">Todavía no hay bocaditos elegidos.</p>
+      </div>
+
+      <div class="add-row" style="margin-top:14px;">
+        <input type="text" id="vajilla-nombre" placeholder="Vajilla extra (opcional)">
         <input type="number" id="vajilla-cantidad" placeholder="Cantidad" min="1" value="1">
         <button type="button" class="btn-add" onclick="agregarVajilla()">
           <i class="ti ti-plus" aria-hidden="true"></i>
@@ -252,7 +210,72 @@
       </div>
 
       <div id="lista-vajilla" class="items-list">
-        <p class="list-empty">No hay vajilla agregada todavía.</p>
+        <p class="list-empty">No hay vajilla extra agregada todavía.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Columna derecha ── -->
+  <div class="form-col">
+
+    <!-- Bocaditos calculados -->
+    <div class="form-card">
+      <p class="form-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Bocaditos calculados</p>
+
+      <div class="subtotal-row" style="border-top:none;padding-top:0;margin-top:0;">
+        <span>Platos elegidos:</span>
+        <strong id="bocaditos-count">0</strong>
+      </div>
+
+      <div id="resumen-bocaditos" class="items-list" style="margin-top:8px;">
+        <p class="list-empty">Elegí comensales y platos para ver las cantidades.</p>
+      </div>
+
+      <div class="subtotal-row">
+        <span>Costo estimado:</span>
+        <strong id="bocaditos-costo-estimado">$0.00</strong>
+      </div>
+      <p style="font-size:0.66rem;color:var(--gris-texto);margin-top:4px;">
+        Estimado según el costo por bocado cargado en <a href="/eventos/bocaditos-costos" target="_blank">Costos de bocaditos</a>. El servidor vuelve a calcularlo al guardar.
+      </p>
+    </div>
+
+    <!-- Personal -->
+    <div class="form-card">
+      <p class="form-card-title"><i class="ti ti-users" aria-hidden="true"></i> Personal asignado</p>
+
+      <p style="font-size:0.78rem;color:var(--gris-texto);margin-bottom:12px;background:var(--gris-fondo);border-radius:8px;padding:10px 12px;">
+        <i class="ti ti-info-circle" aria-hidden="true"></i> Según la cantidad de comensales hacen falta
+        <strong id="personal-requerido-texto">— cocineros de servicio y — de producción</strong>
+        (2 de servicio y 4 de producción cada 50 comensales). Elegí de la lista quiénes van a cubrir esos puestos.
+      </p>
+
+      <% if (personal.length > 0) { %>
+      <div class="multiselect">
+        <div class="multiselect-input-wrap">
+          <input type="text" class="multiselect-input" placeholder="Buscar empleado...">
+          <i class="ti ti-search" aria-hidden="true"></i>
+        </div>
+        <div class="multiselect-panel">
+          <% personal.forEach(p => { %>
+          <label class="multiselect-option" data-buscar="<%= (p.nombre + ' ' + p.rol).toLowerCase() %>" data-nombre="<%= p.nombre %>">
+            <input type="checkbox" class="chk-personal" id="chk-personal-<%= p.id %>" value="<%= p.id %>" data-nombre="<%= p.nombre %>">
+            <span class="personal-nombre"><%= p.nombre %></span>
+            <span class="personal-rol"><%= p.rol %></span>
+          </label>
+          <% }) %>
+          <p class="multiselect-empty">No se encontraron empleados.</p>
+        </div>
+        <div class="multiselect-chips"></div>
+      </div>
+      <% } else { %>
+        <p class="list-empty">No hay personal registrado todavía.</p>
+      <% } %>
+
+      <div class="subtotal-row">
+        <span>Personal seleccionado:</span>
+        <strong id="personal-count">0 personas</strong>
       </div>
     </div>
 
@@ -272,90 +295,88 @@
 
 <script>
 // ── Estado ──────────────────────────────────────────
-let platos = [];
-let vajilla = [];
+let vajilla = [];        // vajilla extra cargada a mano (además de la calculada)
+let bocaditosCalculados = []; // último resultado de recalcularBocaditos(), para mandar al guardar
 
-// Datos de los menús (nombre, porciones y costo de cada plato que los compone),
-// para poder agregarlos todos de una sin ir al servidor.
-const MENUS = <%- JSON.stringify(menus.map(m => ({
-  id: m.id,
-  platos: m.platos.map(p => ({
-    nombre: p.nombre,
-    porciones: p.cantidad_porciones || p.porciones_base || 1,
-    costo: p.porciones_base ? (parseFloat(p.costo_total) / p.porciones_base) : 0
-  }))
-}))) %>;
+// ── Bocaditos: misma fórmula que src/services/calculoBocaditos.js ───
+// (se duplica acá en JS solo para mostrar el cálculo en vivo mientras se
+// elige — el servidor SIEMPRE recalcula todo de nuevo al guardar, así que
+// esto es nada más una vista previa, no la fuente de verdad).
+const BOCADOS_POR_PERSONA_FRIOS_CALIENTES = 0.82;
+const BOCADOS_POR_PERSONA_PRINCIPAL_UNICO = 1.5;
+const BOCADOS_POR_PERSONA_PRINCIPAL_MULTIPLE = 1;
+const BOCADOS_POR_PERSONA_POSTRES_TOTAL = 2;
+const NOMBRES_CATEGORIA_JS = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' };
 
-function cargarMenuCompleto() {
-  const sel = document.getElementById('menu-select');
-  const menuId = parseInt(sel.value);
-  if (!menuId) return;
-  const menu = MENUS.find(m => m.id === menuId);
-  if (!menu) return;
-  menu.platos.forEach(p => {
-    const subtotal = p.porciones * p.costo;
-    platos.push({ nombre: p.nombre, porciones: p.porciones, costo: p.costo, subtotal });
+function recalcularBocaditos() {
+  const pax = parseInt(document.getElementById('input-comensales').value) || 0;
+  const chks = [...document.querySelectorAll('.chk-bocadito:checked')];
+  document.getElementById('bocaditos-count').textContent = chks.length;
+
+  const porCategoria = { frios: 0, calientes: 0, principales: 0, postres: 0 };
+  chks.forEach(c => { porCategoria[c.dataset.categoria] = (porCategoria[c.dataset.categoria]||0) + 1; });
+
+  bocaditosCalculados = chks.map(c => {
+    const categoria = c.dataset.categoria;
+    let bocadosPorPersona = 0;
+    if (categoria === 'frios' || categoria === 'calientes') {
+      bocadosPorPersona = BOCADOS_POR_PERSONA_FRIOS_CALIENTES;
+    } else if (categoria === 'principales') {
+      bocadosPorPersona = porCategoria.principales <= 1 ? BOCADOS_POR_PERSONA_PRINCIPAL_UNICO : BOCADOS_POR_PERSONA_PRINCIPAL_MULTIPLE;
+    } else if (categoria === 'postres') {
+      bocadosPorPersona = BOCADOS_POR_PERSONA_POSTRES_TOTAL / (porCategoria.postres || 1);
+    }
+    const bocados_totales = Math.round(bocadosPorPersona * pax);
+    const capacidad = parseInt(c.dataset.vajillaCapacidad) || 1;
+    const vajilla_cantidad = bocados_totales > 0 ? Math.ceil(bocados_totales / capacidad) : 0;
+    const costo_unitario = parseFloat(c.dataset.costoUnitario) || 0;
+    const costo_total = Math.round(bocados_totales * costo_unitario * 100) / 100;
+    return {
+      id: c.dataset.id, categoria, nombre: c.dataset.nombre,
+      vajilla_texto: c.dataset.vajillaTexto, vajilla_capacidad: capacidad,
+      bocados_totales, vajilla_cantidad, costo_unitario, costo_total,
+    };
   });
-  sel.value = '';
-  renderPlatos();
-  actualizarCosto();
-}
 
-// ── Platos ──────────────────────────────────────────
-function elegirPlatoCargado() {
-  const sel = document.getElementById('plato-select');
-  const opt = sel.options[sel.selectedIndex];
-  if (!opt || !opt.value) return;
-  document.getElementById('plato-nombre').value = opt.dataset.nombre;
-  document.getElementById('plato-porciones').value = opt.dataset.porciones;
-  document.getElementById('plato-costo').value = opt.dataset.costo;
-  document.getElementById('plato-costo').focus();
-}
-
-function agregarPlato() {
-  const nombre = document.getElementById('plato-nombre').value.trim();
-  const porciones = parseInt(document.getElementById('plato-porciones').value) || 1;
-  const costo = parseFloat(document.getElementById('plato-costo').value) || 0;
-  if (!nombre) { document.getElementById('plato-nombre').focus(); return; }
-  const subtotal = porciones * costo;
-  platos.push({ nombre, porciones, costo, subtotal });
-  document.getElementById('plato-nombre').value = '';
-  document.getElementById('plato-porciones').value = '1';
-  document.getElementById('plato-costo').value = '';
-  const sel = document.getElementById('plato-select');
-  if (sel) sel.value = '';
-  renderPlatos();
-  actualizarCosto();
-}
-
-function eliminarPlato(i) {
-  platos.splice(i, 1);
-  renderPlatos();
-  actualizarCosto();
-}
-
-function renderPlatos() {
-  const el = document.getElementById('lista-platos');
-  if (!platos.length) {
-    el.innerHTML = '<p class="list-empty">No hay platos agregados todavía.</p>';
-    return;
+  // Resumen de bocados
+  const elResumen = document.getElementById('resumen-bocaditos');
+  if (!bocaditosCalculados.length) {
+    elResumen.innerHTML = '<p class="list-empty">Elegí comensales y platos para ver las cantidades.</p>';
+  } else {
+    elResumen.innerHTML = bocaditosCalculados.map(b => `
+      <div class="item-row">
+        <span class="item-nombre">${b.nombre}</span>
+        <span class="item-detalle">${NOMBRES_CATEGORIA_JS[b.categoria]}${b.costo_unitario > 0 ? ' · $' + b.costo_total.toFixed(2) : ''}</span>
+        <span class="item-costo">${b.bocados_totales} bocados</span>
+      </div>
+    `).join('');
   }
-  el.innerHTML = platos.map((p, i) => `
-    <div class="item-row">
-      <span class="item-nombre">${p.nombre}</span>
-      <span class="item-detalle">${p.porciones} porc. × $${p.costo.toFixed(2)}</span>
-      <span class="item-costo">$${p.subtotal.toFixed(2)}</span>
-      <button type="button" class="btn-remove" onclick="eliminarPlato(${i})">
-        <i class="ti ti-x" aria-hidden="true"></i>
-      </button>
-    </div>
-  `).join('');
-}
 
-function actualizarCosto() {
-  const total = platos.reduce((s, p) => s + p.subtotal, 0);
-  document.getElementById('costo-total-display').textContent = '$' + total.toFixed(2);
-  document.getElementById('platos_json').value = JSON.stringify(platos);
+  const costoEstimadoTotal = bocaditosCalculados.reduce((acc, b) => acc + b.costo_total, 0);
+  document.getElementById('bocaditos-costo-estimado').textContent = '$' + costoEstimadoTotal.toFixed(2);
+
+  // Vajilla calculada (una fila por plato, agrupando el mismo tipo de vajilla del mismo plato)
+  const elVajillaCalc = document.getElementById('lista-vajilla-calculada');
+  const conVajilla = bocaditosCalculados.filter(b => b.vajilla_texto && b.vajilla_cantidad > 0);
+  if (!conVajilla.length) {
+    elVajillaCalc.innerHTML = '<p class="list-empty">Todavía no hay bocaditos elegidos.</p>';
+  } else {
+    elVajillaCalc.innerHTML = conVajilla.map(b => `
+      <div class="item-row">
+        <span class="item-nombre">${b.vajilla_texto}</span>
+        <span class="item-detalle">para ${b.nombre}</span>
+        <span class="item-costo">${b.vajilla_cantidad}</span>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('bocaditos_json').value = JSON.stringify(bocaditosCalculados);
+
+  // Personal requerido (2 de servicio + 4 de producción cada 50 comensales, redondeando para arriba)
+  const bloques = pax > 0 ? Math.ceil(pax / 50) : 0;
+  const servicio = bloques * 2, produccion = bloques * 4;
+  document.getElementById('personal-requerido-texto').textContent =
+    (pax > 0 ? `${servicio} cocineros de servicio y ${produccion} de producción` : '— cocineros de servicio y — de producción');
 }
 
 // ── Personal ─────────────────────────────────────────
@@ -403,64 +424,73 @@ function renderVajilla() {
   document.getElementById('vajilla_json').value = JSON.stringify(vajilla);
 }
 
-// ── Calendario mini ──────────────────────────────────
-const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const DIAS = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
-let calFecha = new Date();
-let calSeleccionado = null;
+// ── Desplegables con buscador (fríos/calientes/principales/postres y
+// personal) ────────────────────────────────────────────────────────
+// Envuelven checkboxes que ya existían (.chk-bocadito / .chk-personal):
+// el buscador solo filtra qué filas se ven, y abajo se arma la lista de
+// "chips" con lo tildado para sacar algo sin tener que reabrir la lista.
+const TODOS_LOS_PANELES_MULTISELECT = [];
 
-function renderCal() {
-  const hoy = new Date();
-  const anio = calFecha.getFullYear();
-  const mes = calFecha.getMonth();
-  const primerDia = new Date(anio, mes, 1).getDay();
-  const diasMes = new Date(anio, mes + 1, 0).getDate();
+function cerrarOtrosPaneles(exceptoPanel) {
+  TODOS_LOS_PANELES_MULTISELECT.forEach(p => { if (p !== exceptoPanel) p.classList.remove('abierto'); });
+}
 
-  let html = `
-    <div class="cal-header">
-      <button type="button" class="cal-nav" onclick="calMes(-1)">&#8249;</button>
-      <span>${MESES[mes]} ${anio}</span>
-      <button type="button" class="cal-nav" onclick="calMes(1)">&#8250;</button>
-    </div>
-    <div class="cal-grid">
-  `;
-  DIAS.forEach(d => html += `<div class="cal-day-name">${d}</div>`);
-  for (let i = 0; i < primerDia; i++) html += `<div class="cal-day vacio"></div>`;
-  for (let d = 1; d <= diasMes; d++) {
-    const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    let cls = 'cal-day';
-    if (hoy.getDate()===d && hoy.getMonth()===mes && hoy.getFullYear()===anio) cls += ' hoy';
-    if (calSeleccionado === fechaStr) cls += ' seleccionado';
-    html += `<div class="${cls}" onclick="selDia('${fechaStr}', ${d})">${d}</div>`;
+function initMultiselect(container) {
+  const input = container.querySelector('.multiselect-input');
+  const panel = container.querySelector('.multiselect-panel');
+  const chipsEl = container.querySelector('.multiselect-chips');
+  const vacioMsg = container.querySelector('.multiselect-empty');
+  const opciones = [...container.querySelectorAll('.multiselect-option')];
+  if (!input || !panel) return;
+  TODOS_LOS_PANELES_MULTISELECT.push(panel);
+
+  function filtrar() {
+    const q = input.value.trim().toLowerCase();
+    let visibles = 0;
+    opciones.forEach(op => {
+      const coincide = op.dataset.buscar.includes(q);
+      op.classList.toggle('oculto', !coincide);
+      if (coincide) visibles++;
+    });
+    if (vacioMsg) vacioMsg.style.display = visibles ? 'none' : 'block';
   }
-  html += '</div>';
-  document.getElementById('mini-cal').innerHTML = html;
-}
 
-function calMes(dir) {
-  calFecha.setMonth(calFecha.getMonth() + dir);
-  renderCal();
-}
-
-function selDia(fechaStr, dia) {
-  calSeleccionado = fechaStr;
-  document.getElementById('campo-fecha').value = fechaStr;
-  renderCal();
-}
-
-// Sincronizar calendario con el input de fecha
-document.getElementById('campo-fecha').addEventListener('change', function() {
-  if (this.value) {
-    calSeleccionado = this.value;
-    calFecha = new Date(this.value + 'T00:00:00');
-    renderCal();
+  function renderChips() {
+    if (!chipsEl) return; // esta categoría no muestra chips (ver más abajo en el HTML)
+    const marcadas = opciones.filter(op => op.querySelector('input').checked);
+    if (!marcadas.length) { chipsEl.innerHTML = ''; return; }
+    chipsEl.innerHTML = marcadas.map(op => {
+      const chk = op.querySelector('input');
+      return `<span class="chip">${op.dataset.nombre}<button type="button" data-target="${chk.id}"><i class="ti ti-x" aria-hidden="true"></i></button></span>`;
+    }).join('');
+    chipsEl.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const chk = document.getElementById(btn.dataset.target);
+        if (!chk) return;
+        chk.checked = false;
+        chk.dispatchEvent(new Event('change'));
+      });
+    });
   }
-});
 
-renderCal();
+  input.addEventListener('focus', () => { cerrarOtrosPaneles(panel); panel.classList.add('abierto'); });
+  input.addEventListener('input', filtrar);
+  // Escape cierra el desplegable sin tener que ir a clickear afuera.
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { panel.classList.remove('abierto'); input.blur(); }
+  });
+  opciones.forEach(op => op.querySelector('input').addEventListener('change', renderChips));
+  document.addEventListener('click', e => {
+    if (!container.contains(e.target)) panel.classList.remove('abierto');
+  });
 
-// ── Enter en inputs de platos/vajilla ────────────────
-document.getElementById('plato-costo').addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();agregarPlato();} });
+  filtrar();
+  renderChips();
+}
+
+document.querySelectorAll('.multiselect').forEach(initMultiselect);
+
+// ── Enter en el input de vajilla extra ────────────────
 document.getElementById('vajilla-cantidad').addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();agregarVajilla();} });
 </script>
 
@@ -469,4 +499,3 @@ document.getElementById('vajilla-cantidad').addEventListener('keydown', e => { i
 </div>
 </body>
 </html>
-

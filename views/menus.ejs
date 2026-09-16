@@ -31,13 +31,13 @@
     </div>
 
     <p style="font-size:0.82rem;color:var(--gris-texto);margin-bottom:20px;">
-      Un menú agrupa varios platos ya costeados en Costos, para poder sumarlos de una sola vez a un evento.
+      Un menú agrupa varios bocaditos ya cargados en el catálogo de Eventos, para armar combos reutilizables.
     </p>
 
     <% if (menus.length > 0) { %>
     <div class="menus-grid">
       <% menus.forEach(m => {
-        const costoTotal = m.platos.reduce((s,p) => s + (parseFloat(p.costo_total)/(p.porciones_base||1)) * (p.cantidad_porciones||p.porciones_base||1), 0);
+        const costoTotal = m.platos.reduce((s,p) => s + parseFloat(p.costo_unitario || 0) * (p.cantidad_porciones || 1), 0);
       %>
       <a href="/eventos/menus/<%= m.id %>" class="menu-card">
         <p class="menu-card-nombre"><%= m.nombre %></p>

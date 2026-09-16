@@ -1,0 +1,470 @@
+[
+  {
+    "categoria": "frios",
+    "nombre": "Ceviche mixto de truchón patagónico, abadejo y langostinos con maíz cancha",
+    "vajilla_texto": "Split individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Montadito de pulpo con alioli de perejil",
+    "vajilla_texto": "Dipp blanco individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Pretzalej de ternera braseada, pepinillos y crema acida",
+    "vajilla_texto": "Tabla madera con rejilla metal 20 bocados",
+    "vajilla_capacidad": 20
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Craquelin de tomate y mascarpone",
+    "vajilla_texto": "Laja negra 10 bocados",
+    "vajilla_capacidad": 10
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Guacamole con totopos",
+    "vajilla_texto": "Split individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Mini Arepas reina pepiada",
+    "vajilla_texto": "Platito de café individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Queso azul, Chutney de mango garrapiñada de girasol y olivas",
+    "vajilla_texto": "Split individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Scons de aceituna y albahaca, aderezo de yogurt y salsa romesco",
+    "vajilla_texto": "Platito de café individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Conos de picada argentina",
+    "vajilla_texto": "Platito de café individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Tataki de atún rojo, togarashi, crema de palta y pickles de cebolla",
+    "vajilla_texto": "Platito de café individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Pavlova de truchón patagónico curado, crema de palta y polvo de aceitunas negras",
+    "vajilla_texto": "Platito de café individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Financier de queso azul, tomates secos y aceitunas negras",
+    "vajilla_texto": "Laja negra 10 bocados",
+    "vajilla_capacidad": 10
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Quiche de hongos, queso mascarpone",
+    "vajilla_texto": "Laja negra 10 bocados",
+    "vajilla_capacidad": 10
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Babaganoush y hongos trufados",
+    "vajilla_texto": "Laja negra 10 bocados",
+    "vajilla_capacidad": 10
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Muffin de harina de maíz, queso cuartirolo y semillas de anis",
+    "vajilla_texto": "Pala de madera 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Tartar de langostinos, tortilla de maíz, alioli, pickles de cebolla, ceniza de puerro y brotes",
+    "vajilla_texto": "Platito de café individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Tiradito de pesca blanca, leche de tigre, palta quemada y jalapeño",
+    "vajilla_texto": "Platito de café individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Sable de pistacho, vitel toné, alioli, atún curado, alcaparras y manzanas confitadas",
+    "vajilla_texto": "Laja negra 10 bocados",
+    "vajilla_capacidad": 10
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Fosforito de jamón y queso",
+    "vajilla_texto": "Pala de madera 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Macaron de queso de cabra y mermelada de aceitunas negras",
+    "vajilla_texto": "Laja negra 10 bocados",
+    "vajilla_capacidad": 10
+  },
+  {
+    "categoria": "frios",
+    "nombre": "Blinis de espinaca, truchón patagónico curado, emulsión de curry, alcaparras",
+    "vajilla_texto": "Platito de café individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Mini empanadas porteñas",
+    "vajilla_texto": "Pala de madera 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Langostinos apanados con panko y coco, alioli de lima",
+    "vajilla_texto": "Canasto de freidora 15 bocados",
+    "vajilla_capacidad": 15
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Revuelto de gramajo",
+    "vajilla_texto": "Cerealera individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Mini cheese Burger",
+    "vajilla_texto": "Laja negra 10 unidades",
+    "vajilla_capacidad": 10
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Bao buns, panceta laqueada, pickles, alioli de Sriracha",
+    "vajilla_texto": "Vaporera grande 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Falafel, aderezo de yogurt y menta, comino",
+    "vajilla_texto": "Sartén hierro 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Kebab, Babaganoush, pickles, salsa de yogur",
+    "vajilla_texto": "Sartén hierro 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Gyosas, salsa teriyaki, sésamo",
+    "vajilla_texto": "Vaporera grande 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Blooming bread",
+    "vajilla_texto": "Laja negra 10 bocados",
+    "vajilla_capacidad": 10
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Arepas de carne mechada",
+    "vajilla_texto": "Sartén hierro 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Mini provoleta con salsa criolla",
+    "vajilla_texto": "Platito de café individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Bohío de verdura",
+    "vajilla_texto": "Medio tronco 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Spring roll de vegetales, salsa ponzu (V)",
+    "vajilla_texto": "Canasto de freidora 10 bocados",
+    "vajilla_capacidad": 10
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Patacón con ternera braseada, cilantro, pico de gallo",
+    "vajilla_texto": "Pala de madera 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Buñuelos de kale, Sriracha, mayonesa de cilantro",
+    "vajilla_texto": "Cuenco madera grande 10 bocados",
+    "vajilla_capacidad": 10
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Croqueta de morcilla y mayonesa de curry",
+    "vajilla_texto": "Cuenco madera grande 10 bocados",
+    "vajilla_capacidad": 10
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Dumpligns de cerdo, teriyaki, sésamo tostado",
+    "vajilla_texto": "Vaporera grande 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Mollejas glaseadas con miel y tomillo",
+    "vajilla_texto": "Dipp blanco individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Creme brulée de humita y queso de cabra",
+    "vajilla_texto": "Dipp blanco individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Pincho de tortilla de papa y alioli",
+    "vajilla_texto": "Laja negra 10 bocados",
+    "vajilla_capacidad": 10
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Mini sfijas",
+    "vajilla_texto": "Laja negra 10 bocados",
+    "vajilla_capacidad": 10
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Elotitos, mole verde, salsa macha, ceniza vegetal",
+    "vajilla_texto": "Platito de café individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Tacos de carne, cilantro, cream cheese y cheddar",
+    "vajilla_texto": "Soporte taco 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Fainá crocante con mayonesa de lima (V-C)",
+    "vajilla_texto": "Canasto de freidora 15 bocados",
+    "vajilla_capacidad": 15
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Faina verdeo y oliva",
+    "vajilla_texto": "Canasto de freidora 15 bocados",
+    "vajilla_capacidad": 15
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Tequeños con salsa cocktail",
+    "vajilla_texto": "Canasto de freidora 15 bocados",
+    "vajilla_capacidad": 15
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Mini pebete de milanesa, con mayo de provenzal",
+    "vajilla_texto": "Tabla madera con rejilla metal 20 bocados",
+    "vajilla_capacidad": 20
+  },
+  {
+    "categoria": "calientes",
+    "nombre": "Choripán de masa madre con salsa criolla",
+    "vajilla_texto": "Tabla madera con rejilla metal 20 bocados",
+    "vajilla_capacidad": 20
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Pastrón en cocción lenta con mostaza a la antigua y cebollines braseados",
+    "vajilla_texto": "Cerealera individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Finger de pollo crocante con mayonesa de lima",
+    "vajilla_texto": "Cuenco madera grande 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Cordero braseado con espuma de papas y oliva",
+    "vajilla_texto": "Cerealera individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Brisket con salsa barbecue con cremoso de boniato",
+    "vajilla_texto": "Cerealera individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Risotto de cebada, hongos y lima",
+    "vajilla_texto": "Cerealera individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Empanada de carne cortada a cuchillo con gajos de lima",
+    "vajilla_texto": "Cuenco madera grande 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Pizza de jamón crudo con tomates secos y albahaca",
+    "vajilla_texto": "Plato gris de 27 cm individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Koftas con berenjenas ahumadas y salsa de yogur especiado",
+    "vajilla_texto": "Cerealera individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Chicken wings con aioli y Limón",
+    "vajilla_texto": "Sarten de metal 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Pasta con salsa de tomate natural, alcaparras y olivas",
+    "vajilla_texto": "Cerealera individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Curry de pollo y vegetales con leche de coco",
+    "vajilla_texto": "Cerealera individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Paella de mariscos con alioli y limón",
+    "vajilla_texto": "Cerealera individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Revuelto de gramajo",
+    "vajilla_texto": "Cerealera individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Mini Tortilla de papa y aioli",
+    "vajilla_texto": "Palto e café individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Pastel de cordero y boniato",
+    "vajilla_texto": "Dips individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Chilli bean con tostada de maíz crocante, queso cheddar y guacamole",
+    "vajilla_texto": "Cerealera individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Hummus de garbanzos, encurtidos, pan pita especiado (V)",
+    "vajilla_texto": "Cerealera individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Queso asado con chutney de frutas (V-C)",
+    "vajilla_texto": "Cerealera individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "principales",
+    "nombre": "Taco de carne con guacamole y pico de gallo",
+    "vajilla_texto": "Soporte tacos 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "postres",
+    "nombre": "Profiterol de chocolate",
+    "vajilla_texto": "Laja negra 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "postres",
+    "nombre": "Tarteleta de lima y frutos rojos",
+    "vajilla_texto": "Pala de madera 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "postres",
+    "nombre": "Mousse de chocolate y toffee de naranja",
+    "vajilla_texto": "Split individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "postres",
+    "nombre": "Cremoso de dulce de leche y coco",
+    "vajilla_texto": "Split individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "postres",
+    "nombre": "Cheesecake con lemon curd",
+    "vajilla_texto": "Laja negra 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "postres",
+    "nombre": "Tarteleta de chocolate y frutos secos",
+    "vajilla_texto": "Laja negra 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "postres",
+    "nombre": "Yogur, mango y maracuyá",
+    "vajilla_texto": "Split individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "postres",
+    "nombre": "Flan",
+    "vajilla_texto": "Dipp blanco individual",
+    "vajilla_capacidad": 1
+  },
+  {
+    "categoria": "postres",
+    "nombre": "Mini Pavlova con crema de chocolate blanco y frutas (C)",
+    "vajilla_texto": "Laja negra 8 bocados",
+    "vajilla_capacidad": 8
+  },
+  {
+    "categoria": "postres",
+    "nombre": "Fruta de estación (C – V)",
+    "vajilla_texto": "Dipp blanco individual",
+    "vajilla_capacidad": 1
+  }
+]

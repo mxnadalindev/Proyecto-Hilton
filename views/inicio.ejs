@@ -551,6 +551,45 @@ function pasoModulo(dir) {
 
 actualizarPosiciones();
 
+// ── Swipe táctil ─────────────────────────────────────────────────────
+// El carrusel ya se cambia con las flechitas o los puntos, pero en el
+// celular/tablet se espera poder deslizar el dedo directo sobre las
+// tarjetas. Se agrega escuchando los eventos táctiles nativos del
+// navegador — sin sumar ninguna librería (nada de jQuery/Slick).
+(function () {
+  const deckEl = document.getElementById('deck');
+  if (!deckEl) return;
+
+  let inicioX = 0, inicioY = 0, arrastrando = false;
+  const UMBRAL_SWIPE = 40; // px mínimos para contar como swipe y no como un tap
+
+  deckEl.addEventListener('touchstart', (ev) => {
+    if (ev.touches.length !== 1) return;
+    inicioX = ev.touches[0].clientX;
+    inicioY = ev.touches[0].clientY;
+    arrastrando = true;
+  }, { passive: true });
+
+  deckEl.addEventListener('touchmove', (ev) => {
+    if (!arrastrando || ev.touches.length !== 1) return;
+    const dx = ev.touches[0].clientX - inicioX;
+    const dy = ev.touches[0].clientY - inicioY;
+    // Si el gesto es más horizontal que vertical es un swipe del carrusel
+    // — se frena el scroll vertical de la página para que no "pelee" con
+    // el dedo mientras desliza las tarjetas.
+    if (Math.abs(dx) > Math.abs(dy)) ev.preventDefault();
+  }, { passive: false });
+
+  deckEl.addEventListener('touchend', (ev) => {
+    if (!arrastrando) return;
+    arrastrando = false;
+    const dx = ev.changedTouches[0].clientX - inicioX;
+    if (Math.abs(dx) < UMBRAL_SWIPE) return; // fue un tap, lo maneja clickCard() como siempre
+    ev.preventDefault(); // evita el click "fantasma" que el navegador dispara después del swipe
+    pasoModulo(dx < 0 ? 1 : -1);
+  }, { passive: false });
+})();
+
 // En esta página (Inicio), clickear un ícono del menú selecciona su tarjeta
 // en el carrusel en vez de navegar directo — un segundo click sobre la
 // misma tarjeta (ya al frente) sí entra al módulo.
