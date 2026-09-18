@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nuevo Evento — Hilton</title>
+  <title><%= typeof evento !== 'undefined' && evento ? 'Editar Evento' : 'Nuevo Evento' %> — Hilton</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
@@ -10,10 +10,13 @@
   <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
 <style>
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.form-col { display: flex; flex-direction: column; gap: 20px; }
 .form-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
 .form-card-title { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
+/* Un solo cuadrado para todo el formulario (como en el detalle de un
+   evento): cada sección que antes era su propia .form-card ahora es un
+   bloque interno separado con un divisor, en vez de una tarjeta aparte. */
+.form-section { padding-top: 22px; margin-top: 22px; border-top: 1px solid var(--gris-borde); }
+.form-section:first-child { padding-top: 0; margin-top: 0; border-top: none; }
 .field { margin-bottom: 14px; }
 .field:last-child { margin-bottom: 0; }
 .field label { display: block; font-size: 0.68rem; font-weight: 500; color: var(--negro); margin-bottom: 6px; letter-spacing: 0.05em; }
@@ -41,9 +44,37 @@
 .btn-remove:hover { color: #991b1b; }
 .subtotal-row { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--gris-borde); margin-top: 8px; font-size: 0.82rem; color: var(--gris-texto); }
 .subtotal-row strong { color: var(--azul); font-size: 1rem; }
-.form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--gris-borde); }
 .back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: flex; align-items: center; gap: 4px; }
 .back-link:hover { color: var(--azul); }
+/* Mismo "molde" que .btn-primary/.btn-secondary en style.css, para el
+   botón de Cancelar (rojo) que va arriba junto con Eventos y Guardar. */
+.btn-danger {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: #fef2f2; color: #dc2626;
+  border: 1px solid #fecaca; border-radius: 8px;
+  padding: 0 18px; box-sizing: border-box; height: 40px;
+  font-family: var(--font-sans); font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+  cursor: pointer; transition: all var(--tr);
+}
+.btn-danger:hover { background: #dc2626; color: #fff; }
+
+/* Cartel de confirmación para "Cancelar", con el mismo estilo de tarjeta
+   (fondo blanco, borde, sombra, tipografía Lora) que el resto del sitio,
+   en vez del cartel feo del navegador (window.confirm). */
+.confirm-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  z-index: 1000; align-items: center; justify-content: center; padding: 16px;
+}
+.confirm-overlay.abierto { display: flex; }
+.confirm-box {
+  background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px;
+  box-shadow: var(--sombra-md); padding: 26px; max-width: 360px; width: 100%;
+  font-family: var(--font-sans);
+}
+.confirm-box p.confirm-titulo { font-size: 0.95rem; font-weight: 600; color: var(--negro); margin: 0 0 8px; }
+.confirm-box p.confirm-texto { font-size: 0.82rem; color: var(--gris-texto); margin: 0 0 22px; line-height: 1.5; }
+.confirm-box .confirm-acciones { display: flex; justify-content: flex-end; gap: 10px; }
 
 /* Desplegable con buscador (multiselección) — usado para fríos/calientes/
    principales/postres y para personal. Envuelve una lista de checkboxes
@@ -86,9 +117,28 @@
 .chip button { background: none; border: none; color: var(--azul); cursor: pointer; font-size: 14px; line-height: 1; padding: 2px; display: flex; }
 .chip button:hover { color: #991b1b; }
 
+/* Pestañas del formulario: Información / Platos / Personal. Cada
+   .wizard-panel arranca oculto salvo el que tiene .activo; el botón de
+   pestaña activo se remarca con el mismo verde traslucido que .btn-primary
+   para que quede claro en qué paso está parado. */
+.wizard-tabs { display: flex; gap: 6px; margin-bottom: 22px; border-bottom: 1px solid var(--gris-borde); }
+.wizard-tab {
+  flex: 1; background: none; border: none; border-bottom: 2px solid transparent;
+  padding: 12px 10px; font-family: var(--font-sans); font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--gris-texto);
+  cursor: pointer; transition: all var(--tr);
+}
+.wizard-tab:hover { color: var(--negro); }
+.wizard-tab.activo { color: var(--azul); border-bottom-color: var(--azul); }
+.wizard-panel { display: none; }
+.wizard-panel.activo { display: block; }
+
+@media (max-width: 600px) {
+  .wizard-tabs { margin-bottom: 16px; }
+  .wizard-tab { font-size: 0.62rem; padding: 10px 4px; letter-spacing: 0.03em; }
+}
+
 @media (max-width: 900px) {
-  .form-grid { grid-template-columns: 1fr; gap: 14px; }
-  .form-col { gap: 14px; }
   .field-row { grid-template-columns: 1fr 1fr; }
 }
 
@@ -99,6 +149,7 @@
      scrollear demasiado para llegar al resto del formulario). */
   .form-card { padding: 14px; }
   .form-card-title { font-size: 0.66rem; margin-bottom: 14px; }
+  .form-section { padding-top: 16px; margin-top: 16px; }
   .field { margin-bottom: 11px; }
   .field label, .multiselect > label.ms-label { font-size: 0.65rem; }
   .field input, .field textarea, .multiselect-input { padding: 9px 10px; font-size: 0.82rem; }
@@ -127,100 +178,102 @@
 
 
 
+<% const editando = typeof evento !== 'undefined' && evento; %>
+<% const urlCancelar = editando ? ('/eventos/' + evento.id) : '/eventos'; %>
 <div class="seccion-header">
   <div class="seccion-header-left">
-    <p class="seccion-label"><a href="/eventos" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> Eventos</a></p>
-    <h1 class="seccion-titulo">Nuevo evento</h1>
+    <h1 class="seccion-titulo"><%= editando ? 'Editar evento' : 'Nuevo evento' %></h1>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <a href="<%= urlCancelar %>" class="btn-secondary"><i class="ti ti-arrow-left" aria-hidden="true"></i> <%= editando ? 'Volver' : 'Eventos' %></a>
+    <button type="submit" form="form-evento" class="btn-primary">
+      <i class="ti ti-device-floppy" aria-hidden="true"></i> <%= editando ? 'Guardar cambios' : 'Guardar evento' %>
+    </button>
+    <a href="<%= urlCancelar %>" id="link-cancelar" class="btn-danger" onclick="event.preventDefault(); abrirConfirmCancelar();">
+      <i class="ti ti-x" aria-hidden="true"></i> Cancelar
+    </a>
   </div>
 </div>
 
-<form method="POST" action="/eventos/nuevo" id="form-evento">
+<!-- Cartel de confirmación para Cancelar (mismo estilo de tarjeta que el resto del sitio, no el cartel del navegador) -->
+<div class="confirm-overlay" id="confirm-cancelar-overlay">
+  <div class="confirm-box">
+    <p class="confirm-titulo">¿Seguro que querés cancelar?</p>
+    <p class="confirm-texto"><%= editando ? 'Se van a perder los cambios que hiciste acá.' : 'Se va a perder lo que cargaste en este formulario.' %></p>
+    <div class="confirm-acciones">
+      <button type="button" class="btn-secondary" onclick="cerrarConfirmCancelar()">Seguir cargando</button>
+      <a href="<%= urlCancelar %>" class="btn-danger">Sí, cancelar</a>
+    </div>
+  </div>
+</div>
+
+<form method="POST" action="<%= editando ? ('/eventos/' + evento.id + '/editar') : '/eventos/nuevo' %>" id="form-evento">
 <input type="hidden" name="bocaditos_json" id="bocaditos_json" value="[]">
 <input type="hidden" name="personal_json" id="personal_json" value="[]">
 <input type="hidden" name="vajilla_json" id="vajilla_json" value="[]">
 
-<div class="form-grid">
+<div class="form-card">
 
-  <!-- ── Columna izquierda ── -->
-  <div class="form-col">
+  <!-- Pestañas: Información / Platos / Vajilla / Personal / Costo -->
+  <div class="wizard-tabs">
+    <button type="button" class="wizard-tab activo" data-target="panel-info">1. Información</button>
+    <button type="button" class="wizard-tab" data-target="panel-platos">2. Platos</button>
+    <button type="button" class="wizard-tab" data-target="panel-vajilla">3. Vajilla</button>
+    <button type="button" class="wizard-tab" data-target="panel-personal">4. Personal</button>
+    <button type="button" class="wizard-tab" data-target="panel-costo">5. Costo</button>
+  </div>
 
-    <!-- Info general -->
-    <div class="form-card">
-      <p class="form-card-title"><i class="ti ti-info-circle" aria-hidden="true"></i> Información general</p>
+  <!-- ── Pestaña 1: Información ── -->
+  <div class="wizard-panel activo" id="panel-info">
 
-      <div class="field">
-        <label>Nombre del evento</label>
-        <input type="text" name="nombre" placeholder="Ej: Casamiento García" required>
-      </div>
-
-      <div class="field">
-        <label>Fecha</label>
-        <input type="date" name="fecha" id="campo-fecha" required>
-      </div>
-
-      <div class="field" style="margin-bottom:20px;">
-        <label>Cantidad de comensales</label>
-        <input type="number" id="input-comensales" name="comensales" min="1" placeholder="Ej: 50" oninput="recalcularBocaditos()">
-      </div>
-
-      <% const NOMBRES_CATEGORIA = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
-      <% ['frios','calientes','principales','postres'].forEach(cat => { %>
-      <div class="multiselect" data-nombre-categoria="<%= cat %>">
-        <label class="ms-label"><%= NOMBRES_CATEGORIA[cat] %></label>
-        <div class="multiselect-input-wrap">
-          <input type="text" class="multiselect-input" placeholder="Buscar <%= NOMBRES_CATEGORIA[cat].toLowerCase() %>...">
-          <i class="ti ti-search" aria-hidden="true"></i>
-        </div>
-        <div class="multiselect-panel">
-          <% (catalogoBocaditos[cat] || []).forEach(b => { %>
-          <label class="multiselect-option" data-buscar="<%= b.nombre.toLowerCase() %>" data-nombre="<%= b.nombre %>">
-            <input type="checkbox" class="chk-bocadito" id="chk-<%= cat %>-<%= b.id %>"
-                   data-id="<%= b.id %>" data-categoria="<%= cat %>" data-nombre="<%= b.nombre %>"
-                   data-vajilla-texto="<%= b.vajilla_texto || '' %>" data-vajilla-capacidad="<%= b.vajilla_capacidad || 1 %>"
-                   data-costo-unitario="<%= b.costo_unitario || 0 %>"
-                   onchange="recalcularBocaditos()">
-            <span><%= b.nombre %></span>
-          </label>
-          <% }) %>
-          <p class="multiselect-empty">No se encontraron platos.</p>
-        </div>
-      </div>
-      <% }) %>
-
+    <div class="field">
+      <label>Nombre del evento</label>
+      <input type="text" name="nombre" placeholder="Ej: Casamiento García" value="<%= editando ? evento.nombre : '' %>" required>
     </div>
 
-    <!-- Vajilla -->
-    <div class="form-card">
-      <p class="form-card-title"><i class="ti ti-bowl" aria-hidden="true"></i> Vajilla necesaria</p>
+    <div class="field">
+      <label>Fecha</label>
+      <input type="date" name="fecha" id="campo-fecha" value="<%= editando ? evento.fecha : '' %>" required>
+    </div>
 
-      <p style="font-size:0.68rem;color:var(--gris-texto);margin-bottom:10px;">
-        Se calcula sola a partir de los bocaditos elegidos. Si hace falta algo extra (cubiertos, servilleteros, etc.), agregalo a mano acá abajo.
-      </p>
-
-      <div id="lista-vajilla-calculada" class="items-list">
-        <p class="list-empty">Todavía no hay bocaditos elegidos.</p>
-      </div>
-
-      <div class="add-row" style="margin-top:14px;">
-        <input type="text" id="vajilla-nombre" placeholder="Vajilla extra (opcional)">
-        <input type="number" id="vajilla-cantidad" placeholder="Cantidad" min="1" value="1">
-        <button type="button" class="btn-add" onclick="agregarVajilla()">
-          <i class="ti ti-plus" aria-hidden="true"></i>
-        </button>
-      </div>
-
-      <div id="lista-vajilla" class="items-list">
-        <p class="list-empty">No hay vajilla extra agregada todavía.</p>
-      </div>
+    <div class="field" style="margin-bottom:0;">
+      <label>Cantidad de comensales</label>
+      <input type="number" id="input-comensales" name="comensales" min="1" placeholder="Ej: 50" value="<%= editando && evento.comensales ? evento.comensales : '' %>" oninput="recalcularBocaditos()">
     </div>
 
   </div>
 
-  <!-- ── Columna derecha ── -->
-  <div class="form-col">
+  <!-- ── Pestaña 2: Platos ── -->
+  <div class="wizard-panel" id="panel-platos">
+
+    <% const NOMBRES_CATEGORIA = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
+    <% ['frios','calientes','principales','postres'].forEach(cat => { %>
+    <div class="multiselect" data-nombre-categoria="<%= cat %>">
+      <label class="ms-label"><%= NOMBRES_CATEGORIA[cat] %></label>
+      <div class="multiselect-input-wrap">
+        <input type="text" class="multiselect-input" placeholder="Buscar <%= NOMBRES_CATEGORIA[cat].toLowerCase() %>...">
+        <i class="ti ti-search" aria-hidden="true"></i>
+      </div>
+      <div class="multiselect-panel">
+        <% (catalogoBocaditos[cat] || []).forEach(b => { %>
+        <% const bocaditoYaElegido = editando && typeof bocaditosSeleccionados !== 'undefined' && bocaditosSeleccionados.includes(b.id); %>
+        <label class="multiselect-option" data-buscar="<%= b.nombre.toLowerCase() %>" data-nombre="<%= b.nombre %>">
+          <input type="checkbox" class="chk-bocadito" id="chk-<%= cat %>-<%= b.id %>"
+                 data-id="<%= b.id %>" data-categoria="<%= cat %>" data-nombre="<%= b.nombre %>"
+                 data-vajilla-texto="<%= b.vajilla_texto || '' %>" data-vajilla-capacidad="<%= b.vajilla_capacidad || 1 %>"
+                 data-costo-unitario="<%= b.costo_unitario || 0 %>"
+                 <%= bocaditoYaElegido ? 'checked' : '' %>
+                 onchange="recalcularBocaditos()">
+          <span><%= b.nombre %></span>
+        </label>
+        <% }) %>
+        <p class="multiselect-empty">No se encontraron platos.</p>
+      </div>
+    </div>
+    <% }) %>
 
     <!-- Bocaditos calculados -->
-    <div class="form-card">
+    <div class="form-section">
       <p class="form-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Bocaditos calculados</p>
 
       <div class="subtotal-row" style="border-top:none;padding-top:0;margin-top:0;">
@@ -232,62 +285,111 @@
         <p class="list-empty">Elegí comensales y platos para ver las cantidades.</p>
       </div>
 
-      <div class="subtotal-row">
-        <span>Costo estimado:</span>
-        <strong id="bocaditos-costo-estimado">$0.00</strong>
-      </div>
-      <p style="font-size:0.66rem;color:var(--gris-texto);margin-top:4px;">
-        Estimado según el costo por bocado cargado en <a href="/eventos/bocaditos-costos" target="_blank">Costos de bocaditos</a>. El servidor vuelve a calcularlo al guardar.
-      </p>
-    </div>
-
-    <!-- Personal -->
-    <div class="form-card">
-      <p class="form-card-title"><i class="ti ti-users" aria-hidden="true"></i> Personal asignado</p>
-
-      <p style="font-size:0.78rem;color:var(--gris-texto);margin-bottom:12px;background:var(--gris-fondo);border-radius:8px;padding:10px 12px;">
-        <i class="ti ti-info-circle" aria-hidden="true"></i> Según la cantidad de comensales hacen falta
-        <strong id="personal-requerido-texto">— cocineros de servicio y — de producción</strong>
-        (2 de servicio y 4 de producción cada 50 comensales). Elegí de la lista quiénes van a cubrir esos puestos.
-      </p>
-
-      <% if (personal.length > 0) { %>
-      <div class="multiselect">
-        <div class="multiselect-input-wrap">
-          <input type="text" class="multiselect-input" placeholder="Buscar empleado...">
-          <i class="ti ti-search" aria-hidden="true"></i>
-        </div>
-        <div class="multiselect-panel">
-          <% personal.forEach(p => { %>
-          <label class="multiselect-option" data-buscar="<%= (p.nombre + ' ' + p.rol).toLowerCase() %>" data-nombre="<%= p.nombre %>">
-            <input type="checkbox" class="chk-personal" id="chk-personal-<%= p.id %>" value="<%= p.id %>" data-nombre="<%= p.nombre %>">
-            <span class="personal-nombre"><%= p.nombre %></span>
-            <span class="personal-rol"><%= p.rol %></span>
-          </label>
-          <% }) %>
-          <p class="multiselect-empty">No se encontraron empleados.</p>
-        </div>
-        <div class="multiselect-chips"></div>
-      </div>
-      <% } else { %>
-        <p class="list-empty">No hay personal registrado todavía.</p>
-      <% } %>
-
-      <div class="subtotal-row">
-        <span>Personal seleccionado:</span>
-        <strong id="personal-count">0 personas</strong>
-      </div>
+      <!-- El costo estimado ($) ya no se repite acá: ahora tiene su propia
+           pestaña "5. Costo" con el mismo dato. -->
+      <strong id="bocaditos-costo-estimado" style="display:none;"></strong>
     </div>
 
   </div>
-</div>
 
-<!-- Botones -->
-<div class="form-actions">
-  <a href="/eventos" class="btn-secondary">Cancelar</a>
-  <button type="submit" class="btn-primary">
-    <i class="ti ti-device-floppy" aria-hidden="true"></i> Guardar evento
-  </button>
+  <!-- ── Pestaña 3: Vajilla ──
+       Ojo: la lista calculada sale directo de los platos elegidos en la
+       pestaña "Platos" (recalcularBocaditos() la arma junto con todo lo
+       demás), así que sigue tan "linkeada" a los platos como antes — nada
+       más cambió de pestaña, no la lógica. -->
+  <div class="wizard-panel" id="panel-vajilla">
+
+    <p class="form-card-title"><i class="ti ti-bowl" aria-hidden="true"></i> Vajilla necesaria</p>
+
+    <p style="font-size:0.68rem;color:var(--gris-texto);margin-bottom:10px;">
+      Se calcula sola a partir de los bocaditos elegidos en la pestaña "Platos". Si hace falta algo extra (cubiertos, servilleteros, etc.), agregalo a mano acá abajo.
+    </p>
+
+    <div id="lista-vajilla-calculada" class="items-list">
+      <p class="list-empty">Todavía no hay bocaditos elegidos.</p>
+    </div>
+
+    <div class="add-row" style="margin-top:14px;">
+      <input type="text" id="vajilla-nombre" placeholder="Vajilla extra (opcional)">
+      <input type="number" id="vajilla-cantidad" placeholder="Cantidad" min="1" value="1">
+      <button type="button" class="btn-add" onclick="agregarVajilla()">
+        <i class="ti ti-plus" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div id="lista-vajilla" class="items-list">
+      <p class="list-empty">No hay vajilla extra agregada todavía.</p>
+    </div>
+
+  </div>
+
+  <!-- ── Pestaña 4: Personal ── -->
+  <div class="wizard-panel" id="panel-personal">
+
+    <p style="font-size:0.78rem;color:var(--gris-texto);margin-bottom:12px;background:var(--gris-fondo);border-radius:8px;padding:10px 12px;">
+      <i class="ti ti-info-circle" aria-hidden="true"></i> Según la cantidad de comensales hacen falta
+      <strong id="personal-requerido-texto">— cocineros de servicio y — de producción</strong>
+      (2 de servicio y 4 de producción cada 50 comensales). Elegí de la lista quiénes van a cubrir esos puestos.
+    </p>
+
+    <% if (personal.length > 0) { %>
+    <div class="multiselect">
+      <div class="multiselect-input-wrap">
+        <input type="text" class="multiselect-input" placeholder="Buscar empleado...">
+        <i class="ti ti-search" aria-hidden="true"></i>
+      </div>
+      <div class="multiselect-panel">
+        <% personal.forEach(p => { %>
+        <% const personalYaElegido = editando && typeof personalSeleccionado !== 'undefined' && personalSeleccionado.includes(p.id); %>
+        <label class="multiselect-option" data-buscar="<%= (p.nombre + ' ' + p.rol).toLowerCase() %>" data-nombre="<%= p.nombre %>">
+          <input type="checkbox" class="chk-personal" id="chk-personal-<%= p.id %>" value="<%= p.id %>" data-nombre="<%= p.nombre %>" <%= personalYaElegido ? 'checked' : '' %>>
+          <span class="personal-nombre"><%= p.nombre %></span>
+          <span class="personal-rol"><%= p.rol %></span>
+        </label>
+        <% }) %>
+        <p class="multiselect-empty">No se encontraron empleados.</p>
+      </div>
+      <div class="multiselect-chips"></div>
+    </div>
+    <% } else { %>
+      <p class="list-empty">No hay personal registrado todavía.</p>
+    <% } %>
+
+    <div class="subtotal-row">
+      <span>Personal seleccionado:</span>
+      <strong id="personal-count">0 personas</strong>
+    </div>
+  </div>
+
+  <!-- ── Pestaña 5: Costo ──
+       Resumen de lo elegido hasta ahora (mismos datos que ya se calculan
+       en recalcularBocaditos(), mostrados acá aparte para tener una sola
+       pantalla con el total). No es la fuente de verdad: el servidor
+       vuelve a calcular todo de cero al guardar el evento. -->
+  <div class="wizard-panel" id="panel-costo">
+
+    <p class="form-card-title"><i class="ti ti-report-money" aria-hidden="true"></i> Costo de lo elegido hasta ahora</p>
+
+    <div class="subtotal-row" style="border-top:none;padding-top:0;margin-top:0;">
+      <span>Platos elegidos:</span>
+      <strong id="costo-bocaditos-count">0</strong>
+    </div>
+
+    <div id="resumen-costo" class="items-list" style="margin-top:8px;">
+      <p class="list-empty">Todavía no elegiste platos en la pestaña "Platos".</p>
+    </div>
+
+    <div class="subtotal-row">
+      <span>Costo total estimado:</span>
+      <strong id="costo-total-estimado">$0.00</strong>
+    </div>
+
+    <p style="font-size:0.66rem;color:var(--gris-texto);margin-top:4px;">
+      Estimado según el costo por bocado cargado en <a href="/eventos/bocaditos-costos" target="_blank">Costos de bocaditos</a>. El servidor vuelve a calcularlo al guardar.
+    </p>
+
+  </div>
+
 </div>
 
 </form>
@@ -295,7 +397,10 @@
 
 <script>
 // ── Estado ──────────────────────────────────────────
-let vajilla = [];        // vajilla extra cargada a mano (además de la calculada)
+// Al editar, arranca con la vajilla extra que ya tenía cargada el evento
+// (la calculada automáticamente NO va acá: sale sola de los bocaditos
+// tildados arriba, igual que al crear uno nuevo).
+let vajilla = <%- JSON.stringify((editando && typeof vajillaExtra !== 'undefined') ? vajillaExtra : []) %>;
 let bocaditosCalculados = []; // último resultado de recalcularBocaditos(), para mandar al guardar
 
 // ── Bocaditos: misma fórmula que src/services/calculoBocaditos.js ───
@@ -354,6 +459,22 @@ function recalcularBocaditos() {
 
   const costoEstimadoTotal = bocaditosCalculados.reduce((acc, b) => acc + b.costo_total, 0);
   document.getElementById('bocaditos-costo-estimado').textContent = '$' + costoEstimadoTotal.toFixed(2);
+
+  // Misma info, repetida en la pestaña "Costo" para tener un resumen aparte.
+  document.getElementById('costo-bocaditos-count').textContent = chks.length;
+  const elResumenCosto = document.getElementById('resumen-costo');
+  if (!bocaditosCalculados.length) {
+    elResumenCosto.innerHTML = '<p class="list-empty">Todavía no elegiste platos en la pestaña "Platos".</p>';
+  } else {
+    elResumenCosto.innerHTML = bocaditosCalculados.map(b => `
+      <div class="item-row">
+        <span class="item-nombre">${b.nombre}</span>
+        <span class="item-detalle">${NOMBRES_CATEGORIA_JS[b.categoria]} · ${b.bocados_totales} bocados</span>
+        <span class="item-costo">$${b.costo_total.toFixed(2)}</span>
+      </div>
+    `).join('');
+  }
+  document.getElementById('costo-total-estimado').textContent = '$' + costoEstimadoTotal.toFixed(2);
 
   // Vajilla calculada (una fila por plato, agrupando el mismo tipo de vajilla del mismo plato)
   const elVajillaCalc = document.getElementById('lista-vajilla-calculada');
@@ -490,8 +611,62 @@ function initMultiselect(container) {
 
 document.querySelectorAll('.multiselect').forEach(initMultiselect);
 
+// Al editar, los checkboxes ya vienen tildados desde el servidor (arriba),
+// pero las tablas de resumen (bocaditos, vajilla calculada, costo, personal)
+// solo se arman cuando algo dispara un "change" — así que se recalcula todo
+// una vez al cargar la página, para que se vea consistente desde el arranque.
+renderVajilla();
+<% if (editando) { %>
+recalcularBocaditos();
+actualizarPersonal();
+<% } %>
+
 // ── Enter en el input de vajilla extra ────────────────
 document.getElementById('vajilla-cantidad').addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();agregarVajilla();} });
+
+// ── Cartel de confirmación de Cancelar ────────────────
+function abrirConfirmCancelar() {
+  document.getElementById('confirm-cancelar-overlay').classList.add('abierto');
+}
+function cerrarConfirmCancelar() {
+  document.getElementById('confirm-cancelar-overlay').classList.remove('abierto');
+}
+// Clickear el fondo oscuro (fuera de la tarjeta) también cierra, y Escape también.
+document.getElementById('confirm-cancelar-overlay').addEventListener('click', e => {
+  if (e.target.id === 'confirm-cancelar-overlay') cerrarConfirmCancelar();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') cerrarConfirmCancelar();
+});
+
+// ── Pestañas del formulario (Información / Platos / Personal) ────────
+const wizardTabs = [...document.querySelectorAll('.wizard-tab')];
+function irAPestana(target) {
+  wizardTabs.forEach(t => t.classList.toggle('activo', t.dataset.target === target));
+  document.querySelectorAll('.wizard-panel').forEach(p => p.classList.toggle('activo', p.id === target));
+}
+wizardTabs.forEach(tab => tab.addEventListener('click', () => irAPestana(tab.dataset.target)));
+
+// Nombre y Fecha (required) viven en la pestaña "Información": si el
+// usuario los deja vacíos parado en otra pestaña, esos campos quedan con
+// display:none y el navegador ni siquiera llega a disparar el evento
+// "submit" (la validación nativa los encuentra inválidos pero no puede
+// enfocarlos por estar ocultos, y aborta el envío en silencio — no hay
+// forma de engancharse ahí). Por eso el chequeo se hace un paso antes, en
+// el click del botón "Guardar evento", con la misma lógica que usaría el
+// navegador pero mostrando primero la pestaña donde está el problema.
+const formEvento = document.getElementById('form-evento');
+document.querySelector('button[form="form-evento"]').addEventListener('click', function (e) {
+  const campoNombre = formEvento.querySelector('[name="nombre"]');
+  const campoFecha = formEvento.querySelector('[name="fecha"]');
+  if ((campoNombre && !campoNombre.value.trim()) || (campoFecha && !campoFecha.value)) {
+    e.preventDefault();
+    irAPestana('panel-info');
+    // Recién con la pestaña visible el navegador puede enfocar el campo y
+    // mostrar el globito de validación nativo.
+    requestAnimationFrame(() => formEvento.reportValidity());
+  }
+});
 </script>
 
   </main>

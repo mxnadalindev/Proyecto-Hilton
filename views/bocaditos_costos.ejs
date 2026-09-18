@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Costos de bocaditos — Hilton</title>
+  <title>Costos — Eventos — Hilton</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
@@ -23,7 +23,6 @@
   font-size: 0.85rem; color: var(--negro); outline: none; text-align: right;
 }
 .costo-input-wrap input:focus { border-color: var(--azul); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: var(--blanco); }
-.form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
 .back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: flex; align-items: center; gap: 4px; }
 .back-link:hover { color: var(--azul); }
 .success-banner { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; border-radius: 10px; padding: 11px 14px; margin-bottom: 20px; font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
@@ -41,8 +40,28 @@
 
 <div class="seccion-header">
   <div class="seccion-header-left">
-    <p class="seccion-label"><a href="/eventos" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> Eventos</a></p>
-    <h1 class="seccion-titulo">Costos de bocaditos</h1>
+    <p class="seccion-label">Portal interno</p>
+    <h1 class="seccion-titulo">Costos</h1>
+    <%- include('partials/eventos_subnav', { seccionEventos: 'costos' }) %>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <a href="/eventos/bocaditos-costos/excel" class="btn-secondary">
+      <i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Descargar Excel
+    </a>
+    <!-- Formulario aparte (no el de edición manual de abajo) solo para el
+         archivo: el input vive adentro para que "this.form.submit()" no
+         dependa de la asociación por atributo "form" (menos robusta entre
+         navegadores para inputs de archivo fuera de su <form>). -->
+    <form method="POST" action="/eventos/bocaditos-costos/importar" enctype="multipart/form-data" id="form-excel-costos" style="margin:0;">
+      <label class="btn-secondary" style="cursor:pointer;margin:0;">
+        <i class="ti ti-upload" aria-hidden="true"></i> Subir Excel
+        <input type="file" name="archivo_excel" accept=".xlsx" id="input-excel-costos" style="display:none;" onchange="this.form.submit()">
+      </label>
+    </form>
+    <a href="/eventos" class="btn-secondary">Cancelar</a>
+    <button type="submit" form="form-costos" class="btn-primary">
+      <i class="ti ti-device-floppy" aria-hidden="true"></i> Guardar costos
+    </button>
   </div>
 </div>
 
@@ -50,13 +69,24 @@
 <div class="success-banner"><i class="ti ti-check" aria-hidden="true"></i> Costos guardados.</div>
 <% } %>
 
+<% if (typeof importado !== 'undefined' && importado) { %>
+<div class="success-banner"><i class="ti ti-check" aria-hidden="true"></i>
+  Excel importado: <%= actualizados %> precio<%= actualizados === 1 ? '' : 's' %> actualizado<%= actualizados === 1 ? '' : 's' %><% if (omitidos > 0) { %>, <%= omitidos %> fila<%= omitidos === 1 ? '' : 's' %> sin cambios (id no encontrado o precio vacío)<% } %>.
+</div>
+<% } %>
+
+<% if (typeof errorImportacion !== 'undefined' && errorImportacion) { %>
+<div class="success-banner" style="background:#fef2f2;border-color:#fecaca;color:#dc2626;"><i class="ti ti-alert-circle" aria-hidden="true"></i> <%= errorImportacion %></div>
+<% } %>
+
 <p style="font-size:0.8rem;color:var(--gris-texto);margin-bottom:20px;">
   Costo de UN bocado de cada plato. Se usa para calcular el costo estimado de cada evento nuevo
   (cantidad de bocados que hacen falta × este costo). Los eventos que ya están creados no cambian
-  con lo que edites acá.
+  con lo que edites acá. Podés editar los precios acá abajo uno por uno, o descargar el Excel,
+  editar la columna de costo y volver a subirlo para actualizar todos de una.
 </p>
 
-<form method="POST" action="/eventos/bocaditos-costos">
+<form method="POST" action="/eventos/bocaditos-costos" id="form-costos">
   <% const NOMBRES_CATEGORIA = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
   <% ['frios','calientes','principales','postres'].forEach(cat => { %>
   <div class="form-card">
@@ -76,13 +106,6 @@
     <% } %>
   </div>
   <% }) %>
-
-  <div class="form-actions">
-    <a href="/eventos" class="btn-secondary">Cancelar</a>
-    <button type="submit" class="btn-primary">
-      <i class="ti ti-device-floppy" aria-hidden="true"></i> Guardar costos
-    </button>
-  </div>
 </form>
 
   </main>

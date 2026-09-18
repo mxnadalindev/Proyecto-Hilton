@@ -350,6 +350,18 @@ input::placeholder, textarea::placeholder {
   font-size: 2rem; font-weight: 300; color: var(--negro);
 }
 
+/* Solapas de navegación dentro de una sección con sub-páginas (por ahora
+   solo Eventos: Eventos / Menús / Costos) — reemplaza tener que ir a cada
+   una con un botón suelto en el header. */
+.eventos-subnav { display: flex; gap: 6px; margin-top: 8px; }
+.eventos-subnav-item {
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--gris-texto); background: var(--gris-fondo); border: 1px solid var(--gris-borde);
+  border-radius: 8px; padding: 6px 14px; text-decoration: none; transition: all var(--tr);
+}
+.eventos-subnav-item:hover { color: var(--azul); border-color: var(--azul-borde); }
+.eventos-subnav-item.activa { color: var(--azul); background: var(--azul-claro); border-color: var(--azul-borde); }
+
 /* ── Cards contenido ── */
 .content-grid {
   display: grid;

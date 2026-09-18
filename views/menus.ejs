@@ -24,8 +24,9 @@
   <main class="main-content">
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label"><a href="/eventos" style="color:var(--gris-texto);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;"><i class="ti ti-arrow-left"></i> Eventos</a></p>
+        <p class="seccion-label">Portal interno</p>
         <h1 class="seccion-titulo">Menús</h1>
+        <%- include('partials/eventos_subnav', { seccionEventos: 'menus' }) %>
       </div>
       <a href="/eventos/menus/nuevo" class="btn-primary"><i class="ti ti-plus"></i> Nuevo menú</a>
     </div>

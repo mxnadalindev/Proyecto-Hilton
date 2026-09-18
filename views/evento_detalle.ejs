@@ -10,7 +10,10 @@
   <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
 <style>
-.detalle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+/* Por ahora, un solo cuadrado por sección en vez de la grilla de 2
+   columnas (Personal asignado y Vajilla necesaria se sacaron de acá
+   temporalmente — a pedido, hasta que se defina cómo acomodarlos). */
+.detalle-grid { display: flex; flex-direction: column; gap: 20px; }
 .detalle-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
 .detalle-card-title { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
 .info-rows { display: flex; flex-direction: column; gap: 0; }
@@ -47,8 +50,38 @@
 .btn-remove:hover { color: #991b1b; }
 .back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; }
 .back-link:hover { color: var(--azul); }
-.btn-danger { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all var(--tr); }
+/* Mismo "molde" (alto fijo, padding, tamaño de letra) que .btn-secondary
+   en style.css: antes .btn-danger tenía su propio padding/tamaño de letra
+   armado a mano y quedaba un par de píxeles más bajo que el botón de al
+   lado (BEO), así que no se veían parejos en la misma fila. */
+.btn-danger {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: #fef2f2; color: #dc2626;
+  border: 1px solid #fecaca; border-radius: 8px;
+  padding: 0 18px; box-sizing: border-box; height: 40px;
+  font-family: var(--font-sans); font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  transition: all var(--tr);
+}
 .btn-danger:hover { background: #dc2626; color: #fff; }
+
+/* Cartel de confirmación para "Eliminar", mismo estilo de tarjeta (fondo
+   blanco, borde, sombra, tipografía Lora) que el resto del sitio, en vez
+   del cartel feo del navegador (window.confirm) que usaba antes. */
+.confirm-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  z-index: 1000; align-items: center; justify-content: center; padding: 16px;
+}
+.confirm-overlay.abierto { display: flex; }
+.confirm-box {
+  background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px;
+  box-shadow: var(--sombra-md); padding: 26px; max-width: 360px; width: 100%;
+  font-family: var(--font-sans);
+}
+.confirm-box p.confirm-titulo { font-size: 0.95rem; font-weight: 600; color: var(--negro); margin: 0 0 8px; }
+.confirm-box p.confirm-texto { font-size: 0.82rem; color: var(--gris-texto); margin: 0 0 22px; line-height: 1.5; }
+.confirm-box .confirm-acciones { display: flex; justify-content: flex-end; gap: 10px; }
+
 @media (max-width: 900px) { .detalle-grid { grid-template-columns: 1fr; } }
 
 @media (max-width: 600px) {
@@ -76,21 +109,51 @@
 
 <div class="seccion-header">
   <div class="seccion-header-left">
-    <p class="seccion-label"><a href="/eventos" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> Eventos</a></p>
     <h1 class="seccion-titulo"><%= evento.nombre %></h1>
   </div>
-  <div style="display:flex;gap:8px;">
-    <a href="/eventos/<%= evento.id %>/beo" class="btn-secondary">
-      <i class="ti ti-file-text" aria-hidden="true"></i> Orden de evento (BEO)
+  <div style="display:flex;gap:8px;align-items:center;">
+    <a href="/eventos" class="btn-secondary"><i class="ti ti-arrow-left" aria-hidden="true"></i> Eventos</a>
+    <a href="/eventos/<%= evento.id %>/editar" class="btn-secondary">
+      <i class="ti ti-edit" aria-hidden="true"></i> Editar
     </a>
-    <form method="POST" action="/eventos/<%= evento.id %>/eliminar"
-          onsubmit="return confirm('¿Eliminar este evento?')">
-      <button type="submit" class="btn-danger">
+    <a href="/eventos/<%= evento.id %>/beo" class="btn-primary">
+      <i class="ti ti-file-text" aria-hidden="true"></i> BEO
+    </a>
+    <form method="POST" action="/eventos/<%= evento.id %>/eliminar" id="form-eliminar-evento"
+          onsubmit="return false;">
+      <button type="button" class="btn-danger" onclick="abrirConfirmEliminar()">
         <i class="ti ti-trash" aria-hidden="true"></i> Eliminar
       </button>
     </form>
   </div>
 </div>
+
+<!-- Cartel de confirmación para Eliminar (mismo estilo de tarjeta que el resto del sitio, no el cartel del navegador) -->
+<div class="confirm-overlay" id="confirm-eliminar-overlay">
+  <div class="confirm-box">
+    <p class="confirm-titulo">¿Eliminar este evento?</p>
+    <p class="confirm-texto">Esta acción no se puede deshacer. Se va a borrar "<%= evento.nombre %>" y todo lo que tenga cargado (platos, personal, vajilla).</p>
+    <div class="confirm-acciones">
+      <button type="button" class="btn-secondary" onclick="cerrarConfirmEliminar()">Cancelar</button>
+      <button type="button" class="btn-danger" onclick="document.getElementById('form-eliminar-evento').removeAttribute('onsubmit'); document.getElementById('form-eliminar-evento').submit();">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function abrirConfirmEliminar() {
+  document.getElementById('confirm-eliminar-overlay').classList.add('abierto');
+}
+function cerrarConfirmEliminar() {
+  document.getElementById('confirm-eliminar-overlay').classList.remove('abierto');
+}
+document.getElementById('confirm-eliminar-overlay').addEventListener('click', e => {
+  if (e.target.id === 'confirm-eliminar-overlay') cerrarConfirmEliminar();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') cerrarConfirmEliminar();
+});
+</script>
 
 <div class="detalle-grid">
 
@@ -99,13 +162,6 @@
     <p class="detalle-card-title"><i class="ti ti-info-circle" aria-hidden="true"></i> Información general</p>
     <div class="info-rows">
       <div class="info-row"><span class="info-label">Fecha</span><span class="info-val"><%= evento.fecha %></span></div>
-      <div class="info-row">
-        <span class="info-label">Horario</span>
-        <span class="info-val">
-          <% if (evento.hora_inicio) { %><%= evento.hora_inicio %><% if (evento.hora_fin) { %> — <%= evento.hora_fin %><% } %><% } else { %>—<% } %>
-        </span>
-      </div>
-      <div class="info-row"><span class="info-label">Hs. producción</span><span class="info-val"><%= evento.horas_produccion || 0 %> hs</span></div>
       <% if (evento.comensales) { %>
       <div class="info-row"><span class="info-label">Comensales</span><span class="info-val"><%= evento.comensales %></span></div>
       <div class="info-row"><span class="info-label">Personal requerido</span><span class="info-val"><%= evento.personal_servicio_requerido || 0 %> servicio + <%= evento.personal_produccion_requerido || 0 %> producción</span></div>
@@ -115,7 +171,6 @@
       <% if (evento.descripcion) { %>
       <div class="info-row"><span class="info-label">Notas</span><span class="info-val"><%= evento.descripcion %></span></div>
       <% } %>
-      <div class="info-row"><span class="info-label">Creado por</span><span class="info-val"><%= evento.creador || '—' %></span></div>
     </div>
   </div>
 
@@ -145,42 +200,10 @@
   </div>
   <% } %>
 
-  <!-- Personal -->
-  <div class="detalle-card">
-    <p class="detalle-card-title"><i class="ti ti-users" aria-hidden="true"></i> Personal asignado</p>
-    <% if (personal.length > 0) { %>
-      <div class="personal-lista-detalle">
-        <% personal.forEach(p => { %>
-        <div class="personal-item-detalle">
-          <div class="avatar"><%= p.nombre[0] %></div>
-          <div>
-            <p class="p-nombre"><%= p.nombre %></p>
-            <p class="p-rol"><%= p.rol %></p>
-          </div>
-        </div>
-        <% }) %>
-      </div>
-    <% } else { %>
-      <p class="list-empty">Sin personal asignado.</p>
-    <% } %>
-  </div>
-
-  <!-- Vajilla -->
-  <div class="detalle-card">
-    <p class="detalle-card-title"><i class="ti ti-bowl" aria-hidden="true"></i> Vajilla necesaria</p>
-    <% if (vajilla.length > 0) { %>
-      <div class="vajilla-lista">
-        <% vajilla.forEach(v => { %>
-        <div class="vajilla-item">
-          <span class="vajilla-nombre"><%= v.vajilla_nombre %></span>
-          <span class="vajilla-cant"><%= v.cantidad %> uds.</span>
-        </div>
-        <% }) %>
-      </div>
-    <% } else { %>
-      <p class="list-empty">Sin vajilla registrada.</p>
-    <% } %>
-  </div>
+  <!-- Personal asignado y Vajilla necesaria se sacaron de acá por ahora
+       (a pedido, "vemos cómo acomodamos lo otro" más adelante). Los datos
+       siguen intactos: se siguen calculando igual y se ven completos en
+       la Orden de evento (BEO). -->
 
 </div>
 
