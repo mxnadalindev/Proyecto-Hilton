@@ -40,18 +40,19 @@
 .dropdown-otras-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;font-size:0.83rem;color:var(--negro);text-decoration:none;transition:background .15s;}
 .dropdown-otras-item:hover{background:var(--gris-fondo);}
 .dropdown-otras-item i{font-size:15px;color:var(--gris-texto);flex-shrink:0;}
-
-/* Tarjeta resumen que reemplaza a la tabla siempre visible — mismo patrón
-   que "Insumos / Ingredientes" en Costos: un cartel con el total y un
-   botón que abre la lista completa en un modal, en vez de que la lista
-   ocupe toda la pantalla de entrada (con muchos productos se hacía
-   kilométrica). */
-.tarjeta-resumen-lista{max-width:360px;margin:0 auto 26px;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:26px 22px;box-shadow:var(--sombra);text-align:center;}
-.tarjeta-resumen-lista-icono{width:44px;height:44px;border-radius:10px;background:var(--azul-claro);color:var(--azul);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px;}
-.tarjeta-resumen-lista-titulo{font-size:0.9rem;font-weight:600;color:var(--negro);margin:0 0 4px;}
-.tarjeta-resumen-numero{font-family:var(--font-serif);font-size:2.4rem;font-weight:400;color:var(--negro);margin:4px 0 0;line-height:1;}
-.tarjeta-resumen-lista-desc{font-size:0.76rem;color:var(--gris-texto);margin:0 0 18px;}
-.tarjeta-resumen-lista .btn-glass-verde{width:100%;}
+/* Un color por tipo de acción, para distinguirlas de un vistazo — mismo
+   patrón que ya usan los desplegables de Costos/Horarios/Horas extra
+   (ahí "Excel" ya venía verde): acá se agrega "crear" (verde principal
+   del sitio) y "nav" (azul marino) para las que faltaban. */
+.dropdown-otras-item-crear{ color:#057a68; }
+.dropdown-otras-item-crear i{ color:#06937e; }
+.dropdown-otras-item-crear:hover{ background:rgba(6,147,126,0.10); }
+.dropdown-otras-item-excel{ color:#15803d; }
+.dropdown-otras-item-excel i{ color:#16a34a; }
+.dropdown-otras-item-excel:hover{ background:#f0fdf4; }
+.dropdown-otras-item-nav{ color:#002f61; }
+.dropdown-otras-item-nav i{ color:#1d4e89; }
+.dropdown-otras-item-nav:hover{ background:rgba(0,47,97,0.08); }
 
 /* Modal de lista completa: overlay a pantalla completa, la caja centrada
    y grande — igual que el de Insumos en Costos. */
@@ -162,13 +163,13 @@
             <i class="ti ti-dots"></i> Otras opciones <i class="ti ti-chevron-down" style="font-size:12px;"></i>
           </button>
           <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
-            <a href="#" onclick="hideOtrasOpciones();showModal('modal-producto');return false;" class="dropdown-otras-item"><i class="ti ti-plus"></i> Nuevo producto</a>
-            <a href="#" onclick="hideOtrasOpciones();showModal('modal-importar');return false;" class="dropdown-otras-item"><i class="ti ti-file-spreadsheet"></i> Importar productos (Excel)</a>
-            <a href="/inventario-ayb/necesidad-semanal" class="dropdown-otras-item"><i class="ti ti-clipboard-list"></i> Necesidad semanal</a>
-            <a href="/inventario-ayb/reportes" class="dropdown-otras-item"><i class="ti ti-chart-bar"></i> Reportes de consumo</a>
-            <a href="/inventario-ayb/etiquetas" class="dropdown-otras-item"><i class="ti ti-qrcode"></i> Imprimir etiquetas QR</a>
+            <a href="#" onclick="hideOtrasOpciones();showModal('modal-producto');return false;" class="dropdown-otras-item dropdown-otras-item-crear"><i class="ti ti-plus"></i> Nuevo producto</a>
+            <a href="#" onclick="hideOtrasOpciones();showModal('modal-importar');return false;" class="dropdown-otras-item dropdown-otras-item-excel"><i class="ti ti-file-spreadsheet"></i> Importar productos (Excel)</a>
+            <a href="/inventario-ayb/necesidad-semanal" class="dropdown-otras-item dropdown-otras-item-nav"><i class="ti ti-clipboard-list"></i> Necesidad semanal</a>
+            <a href="/inventario-ayb/reportes" class="dropdown-otras-item dropdown-otras-item-nav"><i class="ti ti-chart-bar"></i> Reportes de consumo</a>
+            <a href="/inventario-ayb/etiquetas" class="dropdown-otras-item dropdown-otras-item-nav"><i class="ti ti-qrcode"></i> Imprimir etiquetas QR</a>
             <% if (typeof geminiConfigurado !== 'undefined' && geminiConfigurado) { %>
-            <a href="/inventario-ayb/reconocer" class="dropdown-otras-item"><i class="ti ti-camera"></i> Reconocer con foto</a>
+            <a href="/inventario-ayb/reconocer" class="dropdown-otras-item dropdown-otras-item-nav"><i class="ti ti-camera"></i> Reconocer con foto</a>
             <% } %>
           </div>
         </div>
@@ -189,12 +190,22 @@
     </div>
     <% } %>
 
-    <!-- Resumen -->
+    <!-- Resumen: las dos tarjetas son botones que abren cada una su modal
+         con el detalle completo (lista de productos por rubro / lista de
+         stock bajo) — antes el total de productos se repetía acá arriba Y
+         en una tarjeta blanca aparte más abajo, con el mismo número dos
+         veces en la misma pantalla; ahora esta tarjeta verde cumple las dos
+         funciones (mostrar el total y abrir la lista) y la tarjeta blanca
+         de abajo se sacó. -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;">
-      <div style="background:rgba(6,147,126,0.12);border:1px solid rgba(6,147,126,0.3);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
+      <button type="button"
+              onclick="showModal('modal-lista-productos')"
+              title="Ver productos"
+              style="background:rgba(6,147,126,0.12);border:1px solid rgba(6,147,126,0.3);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;font-family:inherit;width:100%;cursor:pointer;transition:background .15s ease;"
+              onmouseover="this.style.background='rgba(6,147,126,0.20)'" onmouseout="this.style.background='rgba(6,147,126,0.12)'">
         <p id="contador-total-productos" style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= totalProductos %></p>
         <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Producto<%= totalProductos !== 1 ? 's' : '' %> activo<%= totalProductos !== 1 ? 's' : '' %></p>
-      </div>
+      </button>
       <button type="button"
               <% if (bajoStock.length > 0) { %>onclick="showModal('modal-stock-bajo')"<% } else { %>disabled<% } %>
               title="<%= bajoStock.length > 0 ? 'Ver productos con stock bajo el mínimo' : 'No hay productos con stock bajo el mínimo' %>"
@@ -202,19 +213,6 @@
               <% if (bajoStock.length > 0) { %>onmouseover="this.style.background='rgba(220,38,38,0.16)'" onmouseout="this.style.background='rgba(220,38,38,0.10)'"<% } %>>
         <p id="contador-stock-bajo" style="font-size:1.8rem;font-weight:700;color:#dc2626;margin:0;"><%= bajoStock.length %></p>
         <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:#dc2626;margin:4px 0 0;">Con stock bajo el mínimo</p>
-      </button>
-    </div>
-
-    <!-- Resumen de productos: la lista completa vive en el modal, separada
-         por rubro — antes esto era una tabla siempre abierta debajo del
-         buscador, que con muchos productos ocupaba toda la pantalla. -->
-    <div class="tarjeta-resumen-lista">
-      <div class="tarjeta-resumen-lista-icono"><i class="ti ti-bottle"></i></div>
-      <p class="tarjeta-resumen-lista-titulo">Productos</p>
-      <p class="tarjeta-resumen-numero" id="contador-total-productos-tarjeta"><%= totalProductos %></p>
-      <p class="tarjeta-resumen-lista-desc">producto<%= totalProductos !== 1 ? 's' : '' %> activo<%= totalProductos !== 1 ? 's' : '' %>, por rubro</p>
-      <button type="button" class="btn-glass-verde" onclick="showModal('modal-lista-productos')">
-        <i class="ti ti-list"></i> Ver productos
       </button>
     </div>
 

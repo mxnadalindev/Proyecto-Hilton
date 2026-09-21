@@ -65,6 +65,35 @@
 }
 .btn-danger:hover { background: #dc2626; color: #fff; }
 
+/* "Otras opciones" — mismas clases que ya usan Horas Extra/Horarios/Personal/
+   Costos/Inventario AYB (viven en su propio <style> ahí también, no en
+   style.css global). Acá agrupa Editar/BEO/Eliminar bajo un solo botón de
+   "Más opciones" al lado de "Eventos", para que el encabezado no quede con
+   4 botones sueltos en fila. */
+.dropdown-otras-opciones{
+  display:none;
+  position:absolute; right:0; top:calc(100% + 6px); z-index:200;
+  background:var(--blanco); border:1px solid var(--gris-borde); border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.15);
+  min-width:200px; padding:6px;
+}
+.dropdown-otras-opciones.abierto{ display:flex; flex-direction:column; gap:2px; }
+.dropdown-otras-item{
+  display:flex; align-items:center; gap:8px; width:100%;
+  background:none; border:none; padding:9px 12px;
+  font-family:var(--font-sans); font-size:0.78rem; font-weight:500;
+  color:var(--negro); text-decoration:none; cursor:pointer;
+  border-radius:6px; text-align:left;
+}
+.dropdown-otras-item:hover{ background:var(--gris-fondo); }
+.dropdown-otras-item i{ font-size:15px; color:var(--gris-texto); flex-shrink:0; }
+.dropdown-otras-item-nav{ color:#1d4e89; }
+.dropdown-otras-item-nav i{ color:#002f61; }
+.dropdown-otras-item-nav:hover{ background:rgba(0,47,97,0.08); }
+.dropdown-otras-item-danger{ color:#dc2626; }
+.dropdown-otras-item-danger i{ color:#dc2626; }
+.dropdown-otras-item-danger:hover{ background:#fef2f2; }
+
 /* Cartel de confirmación para "Eliminar", mismo estilo de tarjeta (fondo
    blanco, borde, sombra, tipografía Lora) que el resto del sitio, en vez
    del cartel feo del navegador (window.confirm) que usaba antes. */
@@ -112,34 +141,47 @@
     <h1 class="seccion-titulo"><%= evento.nombre %></h1>
   </div>
   <div style="display:flex;gap:8px;align-items:center;">
-    <a href="/eventos" class="btn-secondary"><i class="ti ti-arrow-left" aria-hidden="true"></i> Eventos</a>
-    <a href="/eventos/<%= evento.id %>/editar" class="btn-secondary">
-      <i class="ti ti-edit" aria-hidden="true"></i> Editar
-    </a>
-    <a href="/eventos/<%= evento.id %>/beo" class="btn-primary">
-      <i class="ti ti-file-text" aria-hidden="true"></i> BEO
-    </a>
-    <form method="POST" action="/eventos/<%= evento.id %>/eliminar" id="form-eliminar-evento"
-          onsubmit="return false;">
-      <button type="button" class="btn-danger" onclick="abrirConfirmEliminar()">
-        <i class="ti ti-trash" aria-hidden="true"></i> Eliminar
+    <a href="/eventos" class="btn-secondary"><i class="ti ti-arrow-left" aria-hidden="true"></i> <span data-i18n>Eventos</span></a>
+
+    <!-- "Más opciones": agrupa Editar/BEO/Eliminar (antes 3 botones sueltos
+         al lado de "Eventos") bajo un solo desplegable, mismo patrón que
+         "Otras opciones" en Horas Extra/Horarios/Personal/Costos/Inventario. -->
+    <div class="menu-otras-opciones" style="position:relative;">
+      <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
+        <i class="ti ti-dots"></i> <span data-i18n>Más opciones</span> <i class="ti ti-chevron-down" style="font-size:12px;"></i>
       </button>
-    </form>
+      <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
+        <a href="/eventos/<%= evento.id %>/editar" class="dropdown-otras-item dropdown-otras-item-nav">
+          <i class="ti ti-edit" aria-hidden="true"></i> <span data-i18n>Editar</span>
+        </a>
+        <a href="/eventos/<%= evento.id %>/beo" class="dropdown-otras-item dropdown-otras-item-nav">
+          <i class="ti ti-file-text" aria-hidden="true"></i> BEO
+        </a>
+        <form method="POST" action="/eventos/<%= evento.id %>/eliminar" id="form-eliminar-evento"
+              onsubmit="return false;">
+          <button type="button" class="dropdown-otras-item dropdown-otras-item-danger"
+                  onclick="document.getElementById('dropdown-otras-opciones').classList.remove('abierto');abrirConfirmEliminar()">
+            <i class="ti ti-trash" aria-hidden="true"></i> <span data-i18n>Eliminar</span>
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- Cartel de confirmación para Eliminar (mismo estilo de tarjeta que el resto del sitio, no el cartel del navegador) -->
 <div class="confirm-overlay" id="confirm-eliminar-overlay">
   <div class="confirm-box">
-    <p class="confirm-titulo">¿Eliminar este evento?</p>
-    <p class="confirm-texto">Esta acción no se puede deshacer. Se va a borrar "<%= evento.nombre %>" y todo lo que tenga cargado (platos, personal, vajilla).</p>
+    <p class="confirm-titulo" data-i18n>¿Eliminar este evento?</p>
+    <p class="confirm-texto"><span data-i18n>Esta acción no se puede deshacer. Se va a borrar</span> "<%= evento.nombre %>" <span data-i18n>y todo lo que tenga cargado (platos, personal, vajilla).</span></p>
     <div class="confirm-acciones">
-      <button type="button" class="btn-secondary" onclick="cerrarConfirmEliminar()">Cancelar</button>
-      <button type="button" class="btn-danger" onclick="document.getElementById('form-eliminar-evento').removeAttribute('onsubmit'); document.getElementById('form-eliminar-evento').submit();">Sí, eliminar</button>
+      <button type="button" class="btn-secondary" onclick="cerrarConfirmEliminar()" data-i18n>Cancelar</button>
+      <button type="button" class="btn-danger" onclick="document.getElementById('form-eliminar-evento').removeAttribute('onsubmit'); document.getElementById('form-eliminar-evento').submit();" data-i18n>Sí, eliminar</button>
     </div>
   </div>
 </div>
 
+<script src="/js/ui-comun.js"></script>
 <script>
 function abrirConfirmEliminar() {
   document.getElementById('confirm-eliminar-overlay').classList.add('abierto');
@@ -153,23 +195,33 @@ document.getElementById('confirm-eliminar-overlay').addEventListener('click', e 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') cerrarConfirmEliminar();
 });
+
+// Menú "Más opciones" (mismo patrón que Horas Extra/Horarios/Personal/
+// Costos/Inventario AYB): cerrar el desplegable si se hace clic afuera.
+document.addEventListener('click', (ev) => {
+  const dropdown = document.getElementById('dropdown-otras-opciones');
+  const boton = document.getElementById('btn-otras-opciones');
+  if (dropdown && dropdown.classList.contains('abierto') && !dropdown.contains(ev.target) && ev.target !== boton && !boton.contains(ev.target)) {
+    dropdown.classList.remove('abierto');
+  }
+});
 </script>
 
 <div class="detalle-grid">
 
   <!-- Info general -->
   <div class="detalle-card">
-    <p class="detalle-card-title"><i class="ti ti-info-circle" aria-hidden="true"></i> Información general</p>
+    <p class="detalle-card-title"><i class="ti ti-info-circle" aria-hidden="true"></i> <span data-i18n>Información general</span></p>
     <div class="info-rows">
-      <div class="info-row"><span class="info-label">Fecha</span><span class="info-val"><%= evento.fecha %></span></div>
+      <div class="info-row"><span class="info-label" data-i18n>Fecha</span><span class="info-val"><%= evento.fecha %></span></div>
       <% if (evento.comensales) { %>
-      <div class="info-row"><span class="info-label">Comensales</span><span class="info-val"><%= evento.comensales %></span></div>
-      <div class="info-row"><span class="info-label">Personal requerido</span><span class="info-val"><%= evento.personal_servicio_requerido || 0 %> servicio + <%= evento.personal_produccion_requerido || 0 %> producción</span></div>
+      <div class="info-row"><span class="info-label" data-i18n>Comensales</span><span class="info-val"><%= evento.comensales %></span></div>
+      <div class="info-row"><span class="info-label" data-i18n>Personal requerido</span><span class="info-val"><%= evento.personal_servicio_requerido || 0 %> <span data-i18n>servicio</span> + <%= evento.personal_produccion_requerido || 0 %> <span data-i18n>producción</span></span></div>
       <% } %>
-      <div class="info-row"><span class="info-label">Miembros de equipo</span><span class="info-val"><%= evento.cantidad_personal %> personas</span></div>
-      <div class="info-row"><span class="info-label">Costo total</span><span class="info-val costo-grande">$<%= parseFloat(evento.costo_total).toFixed(2) %></span></div>
+      <div class="info-row"><span class="info-label" data-i18n>Miembros de equipo</span><span class="info-val"><%= evento.cantidad_personal %> <span data-i18n>personas</span></span></div>
+      <div class="info-row"><span class="info-label" data-i18n>Costo total</span><span class="info-val costo-grande">$<%= parseFloat(evento.costo_total).toFixed(2) %></span></div>
       <% if (evento.descripcion) { %>
-      <div class="info-row"><span class="info-label">Notas</span><span class="info-val"><%= evento.descripcion %></span></div>
+      <div class="info-row"><span class="info-label" data-i18n>Notas</span><span class="info-val"><%= evento.descripcion %></span></div>
       <% } %>
     </div>
   </div>
@@ -177,15 +229,15 @@ document.addEventListener('keydown', e => {
   <% if (bocaditos.length > 0) { %>
   <!-- Bocaditos -->
   <div class="detalle-card">
-    <p class="detalle-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Bocaditos calculados</p>
+    <p class="detalle-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> <span data-i18n>Bocaditos calculados</span></p>
     <table class="tabla-interna">
-      <thead><tr><th>Plato</th><th>Categoría</th><th>Bocados</th><th>Vajilla</th><th>Costo</th></tr></thead>
+      <thead><tr><th data-i18n>Plato</th><th data-i18n>Categoría</th><th data-i18n>Bocados</th><th data-i18n>Vajilla</th><th data-i18n>Costo</th></tr></thead>
       <tbody>
         <% const NOMBRES_CATEGORIA_DET = { frios: 'Fríos', calientes: 'Calientes', principales: 'Plato principal', postres: 'Postre' }; %>
         <% bocaditos.forEach(b => { %>
         <tr>
           <td><%= b.nombre %></td>
-          <td><%= NOMBRES_CATEGORIA_DET[b.categoria] || b.categoria %></td>
+          <td data-i18n><%= NOMBRES_CATEGORIA_DET[b.categoria] || b.categoria %></td>
           <td style="font-weight:600;color:var(--azul)"><%= b.bocados_totales %></td>
           <td><%= b.vajilla_texto ? (b.vajilla_cantidad + ' × ' + b.vajilla_texto) : '—' %></td>
           <td>$<%= parseFloat(b.costo_total || 0).toFixed(2) %></td>
@@ -194,7 +246,7 @@ document.addEventListener('keydown', e => {
       </tbody>
     </table>
     <div class="total-row">
-      <span>Costo bocaditos:</span>
+      <span data-i18n>Costo bocaditos:</span>
       <strong>$<%= parseFloat(evento.costo_bocaditos || 0).toFixed(2) %></strong>
     </div>
   </div>

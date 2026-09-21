@@ -182,15 +182,15 @@
 <% const urlCancelar = editando ? ('/eventos/' + evento.id) : '/eventos'; %>
 <div class="seccion-header">
   <div class="seccion-header-left">
-    <h1 class="seccion-titulo"><%= editando ? 'Editar evento' : 'Nuevo evento' %></h1>
+    <h1 class="seccion-titulo" data-i18n><%= editando ? 'Editar evento' : 'Nuevo evento' %></h1>
   </div>
   <div style="display:flex;gap:8px;align-items:center;">
-    <a href="<%= urlCancelar %>" class="btn-secondary"><i class="ti ti-arrow-left" aria-hidden="true"></i> <%= editando ? 'Volver' : 'Eventos' %></a>
+    <a href="<%= urlCancelar %>" class="btn-secondary"><i class="ti ti-arrow-left" aria-hidden="true"></i> <span data-i18n><%= editando ? 'Volver' : 'Eventos' %></span></a>
     <button type="submit" form="form-evento" class="btn-primary">
-      <i class="ti ti-device-floppy" aria-hidden="true"></i> <%= editando ? 'Guardar cambios' : 'Guardar evento' %>
+      <i class="ti ti-device-floppy" aria-hidden="true"></i> <span data-i18n><%= editando ? 'Guardar cambios' : 'Guardar evento' %></span>
     </button>
     <a href="<%= urlCancelar %>" id="link-cancelar" class="btn-danger" onclick="event.preventDefault(); abrirConfirmCancelar();">
-      <i class="ti ti-x" aria-hidden="true"></i> Cancelar
+      <i class="ti ti-x" aria-hidden="true"></i> <span data-i18n>Cancelar</span>
     </a>
   </div>
 </div>
@@ -198,11 +198,11 @@
 <!-- Cartel de confirmación para Cancelar (mismo estilo de tarjeta que el resto del sitio, no el cartel del navegador) -->
 <div class="confirm-overlay" id="confirm-cancelar-overlay">
   <div class="confirm-box">
-    <p class="confirm-titulo">¿Seguro que querés cancelar?</p>
-    <p class="confirm-texto"><%= editando ? 'Se van a perder los cambios que hiciste acá.' : 'Se va a perder lo que cargaste en este formulario.' %></p>
+    <p class="confirm-titulo" data-i18n>¿Seguro que querés cancelar?</p>
+    <p class="confirm-texto" data-i18n><%= editando ? 'Se van a perder los cambios que hiciste acá.' : 'Se va a perder lo que cargaste en este formulario.' %></p>
     <div class="confirm-acciones">
-      <button type="button" class="btn-secondary" onclick="cerrarConfirmCancelar()">Seguir cargando</button>
-      <a href="<%= urlCancelar %>" class="btn-danger">Sí, cancelar</a>
+      <button type="button" class="btn-secondary" onclick="cerrarConfirmCancelar()" data-i18n>Seguir cargando</button>
+      <a href="<%= urlCancelar %>" class="btn-danger" data-i18n>Sí, cancelar</a>
     </div>
   </div>
 </div>
@@ -216,29 +216,29 @@
 
   <!-- Pestañas: Información / Platos / Vajilla / Personal / Costo -->
   <div class="wizard-tabs">
-    <button type="button" class="wizard-tab activo" data-target="panel-info">1. Información</button>
-    <button type="button" class="wizard-tab" data-target="panel-platos">2. Platos</button>
-    <button type="button" class="wizard-tab" data-target="panel-vajilla">3. Vajilla</button>
-    <button type="button" class="wizard-tab" data-target="panel-personal">4. Personal</button>
-    <button type="button" class="wizard-tab" data-target="panel-costo">5. Costo</button>
+    <button type="button" class="wizard-tab activo" data-target="panel-info">1. <span data-i18n>Información</span></button>
+    <button type="button" class="wizard-tab" data-target="panel-platos">2. <span data-i18n>Platos</span></button>
+    <button type="button" class="wizard-tab" data-target="panel-vajilla">3. <span data-i18n>Vajilla</span></button>
+    <button type="button" class="wizard-tab" data-target="panel-personal">4. <span data-i18n>Personal</span></button>
+    <button type="button" class="wizard-tab" data-target="panel-costo">5. <span data-i18n>Costo</span></button>
   </div>
 
   <!-- ── Pestaña 1: Información ── -->
   <div class="wizard-panel activo" id="panel-info">
 
     <div class="field">
-      <label>Nombre del evento</label>
-      <input type="text" name="nombre" placeholder="Ej: Casamiento García" value="<%= editando ? evento.nombre : '' %>" required>
+      <label data-i18n>Nombre del evento</label>
+      <input type="text" name="nombre" placeholder="Ej: Casamiento García" data-i18n-ph="Ej: Casamiento García" value="<%= editando ? evento.nombre : '' %>" required>
     </div>
 
     <div class="field">
-      <label>Fecha</label>
+      <label data-i18n>Fecha</label>
       <input type="date" name="fecha" id="campo-fecha" value="<%= editando ? evento.fecha : '' %>" required>
     </div>
 
     <div class="field" style="margin-bottom:0;">
-      <label>Cantidad de comensales</label>
-      <input type="number" id="input-comensales" name="comensales" min="1" placeholder="Ej: 50" value="<%= editando && evento.comensales ? evento.comensales : '' %>" oninput="recalcularBocaditos()">
+      <label data-i18n>Cantidad de comensales</label>
+      <input type="number" id="input-comensales" name="comensales" min="1" placeholder="Ej: 50" data-i18n-ph="Ej: 50" value="<%= editando && evento.comensales ? evento.comensales : '' %>" oninput="recalcularBocaditos()">
     </div>
 
   </div>
@@ -249,7 +249,7 @@
     <% const NOMBRES_CATEGORIA = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
     <% ['frios','calientes','principales','postres'].forEach(cat => { %>
     <div class="multiselect" data-nombre-categoria="<%= cat %>">
-      <label class="ms-label"><%= NOMBRES_CATEGORIA[cat] %></label>
+      <label class="ms-label" data-i18n><%= NOMBRES_CATEGORIA[cat] %></label>
       <div class="multiselect-input-wrap">
         <input type="text" class="multiselect-input" placeholder="Buscar <%= NOMBRES_CATEGORIA[cat].toLowerCase() %>...">
         <i class="ti ti-search" aria-hidden="true"></i>
@@ -267,22 +267,22 @@
           <span><%= b.nombre %></span>
         </label>
         <% }) %>
-        <p class="multiselect-empty">No se encontraron platos.</p>
+        <p class="multiselect-empty" data-i18n>No se encontraron platos.</p>
       </div>
     </div>
     <% }) %>
 
     <!-- Bocaditos calculados -->
     <div class="form-section">
-      <p class="form-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Bocaditos calculados</p>
+      <p class="form-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> <span data-i18n>Bocaditos calculados</span></p>
 
       <div class="subtotal-row" style="border-top:none;padding-top:0;margin-top:0;">
-        <span>Platos elegidos:</span>
+        <span data-i18n>Platos elegidos:</span>
         <strong id="bocaditos-count">0</strong>
       </div>
 
       <div id="resumen-bocaditos" class="items-list" style="margin-top:8px;">
-        <p class="list-empty">Elegí comensales y platos para ver las cantidades.</p>
+        <p class="list-empty" data-i18n>Elegí comensales y platos para ver las cantidades.</p>
       </div>
 
       <!-- El costo estimado ($) ya no se repite acá: ahora tiene su propia
@@ -299,26 +299,26 @@
        más cambió de pestaña, no la lógica. -->
   <div class="wizard-panel" id="panel-vajilla">
 
-    <p class="form-card-title"><i class="ti ti-bowl" aria-hidden="true"></i> Vajilla necesaria</p>
+    <p class="form-card-title"><i class="ti ti-bowl" aria-hidden="true"></i> <span data-i18n>Vajilla necesaria</span></p>
 
-    <p style="font-size:0.68rem;color:var(--gris-texto);margin-bottom:10px;">
+    <p style="font-size:0.68rem;color:var(--gris-texto);margin-bottom:10px;" data-i18n>
       Se calcula sola a partir de los bocaditos elegidos en la pestaña "Platos". Si hace falta algo extra (cubiertos, servilleteros, etc.), agregalo a mano acá abajo.
     </p>
 
     <div id="lista-vajilla-calculada" class="items-list">
-      <p class="list-empty">Todavía no hay bocaditos elegidos.</p>
+      <p class="list-empty" data-i18n>Todavía no hay bocaditos elegidos.</p>
     </div>
 
     <div class="add-row" style="margin-top:14px;">
-      <input type="text" id="vajilla-nombre" placeholder="Vajilla extra (opcional)">
-      <input type="number" id="vajilla-cantidad" placeholder="Cantidad" min="1" value="1">
+      <input type="text" id="vajilla-nombre" placeholder="Vajilla extra (opcional)" data-i18n-ph="Vajilla extra (opcional)">
+      <input type="number" id="vajilla-cantidad" placeholder="Cantidad" data-i18n-ph="Cantidad" min="1" value="1">
       <button type="button" class="btn-add" onclick="agregarVajilla()">
         <i class="ti ti-plus" aria-hidden="true"></i>
       </button>
     </div>
 
     <div id="lista-vajilla" class="items-list">
-      <p class="list-empty">No hay vajilla extra agregada todavía.</p>
+      <p class="list-empty" data-i18n>No hay vajilla extra agregada todavía.</p>
     </div>
 
   </div>
@@ -327,15 +327,15 @@
   <div class="wizard-panel" id="panel-personal">
 
     <p style="font-size:0.78rem;color:var(--gris-texto);margin-bottom:12px;background:var(--gris-fondo);border-radius:8px;padding:10px 12px;">
-      <i class="ti ti-info-circle" aria-hidden="true"></i> Según la cantidad de comensales hacen falta
-      <strong id="personal-requerido-texto">— cocineros de servicio y — de producción</strong>
-      (2 de servicio y 4 de producción cada 50 comensales). Elegí de la lista quiénes van a cubrir esos puestos.
+      <i class="ti ti-info-circle" aria-hidden="true"></i> <span data-i18n>Según la cantidad de comensales hacen falta</span>
+      <strong id="personal-requerido-texto" data-i18n>— cocineros de servicio y — de producción</strong>
+      <span data-i18n>(2 de servicio y 4 de producción cada 50 comensales). Elegí de la lista quiénes van a cubrir esos puestos.</span>
     </p>
 
     <% if (personal.length > 0) { %>
     <div class="multiselect">
       <div class="multiselect-input-wrap">
-        <input type="text" class="multiselect-input" placeholder="Buscar empleado...">
+        <input type="text" class="multiselect-input" placeholder="Buscar empleado..." data-i18n-ph="Buscar empleado...">
         <i class="ti ti-search" aria-hidden="true"></i>
       </div>
       <div class="multiselect-panel">
@@ -347,16 +347,16 @@
           <span class="personal-rol"><%= p.rol %></span>
         </label>
         <% }) %>
-        <p class="multiselect-empty">No se encontraron empleados.</p>
+        <p class="multiselect-empty" data-i18n>No se encontraron empleados.</p>
       </div>
       <div class="multiselect-chips"></div>
     </div>
     <% } else { %>
-      <p class="list-empty">No hay personal registrado todavía.</p>
+      <p class="list-empty" data-i18n>No hay personal registrado todavía.</p>
     <% } %>
 
     <div class="subtotal-row">
-      <span>Personal seleccionado:</span>
+      <span data-i18n>Personal seleccionado:</span>
       <strong id="personal-count">0 personas</strong>
     </div>
   </div>
@@ -368,24 +368,24 @@
        vuelve a calcular todo de cero al guardar el evento. -->
   <div class="wizard-panel" id="panel-costo">
 
-    <p class="form-card-title"><i class="ti ti-report-money" aria-hidden="true"></i> Costo de lo elegido hasta ahora</p>
+    <p class="form-card-title"><i class="ti ti-report-money" aria-hidden="true"></i> <span data-i18n>Costo de lo elegido hasta ahora</span></p>
 
     <div class="subtotal-row" style="border-top:none;padding-top:0;margin-top:0;">
-      <span>Platos elegidos:</span>
+      <span data-i18n>Platos elegidos:</span>
       <strong id="costo-bocaditos-count">0</strong>
     </div>
 
     <div id="resumen-costo" class="items-list" style="margin-top:8px;">
-      <p class="list-empty">Todavía no elegiste platos en la pestaña "Platos".</p>
+      <p class="list-empty" data-i18n>Todavía no elegiste platos en la pestaña "Platos".</p>
     </div>
 
     <div class="subtotal-row">
-      <span>Costo total estimado:</span>
+      <span data-i18n>Costo total estimado:</span>
       <strong id="costo-total-estimado">$0.00</strong>
     </div>
 
     <p style="font-size:0.66rem;color:var(--gris-texto);margin-top:4px;">
-      Estimado según el costo por bocado cargado en <a href="/eventos/bocaditos-costos" target="_blank">Costos de bocaditos</a>. El servidor vuelve a calcularlo al guardar.
+      <span data-i18n>Estimado según el costo por bocado cargado en</span> <a href="/eventos/bocaditos-costos" target="_blank" data-i18n>Costos de bocaditos</a>. <span data-i18n>El servidor vuelve a calcularlo al guardar.</span>
     </p>
 
   </div>
@@ -444,15 +444,18 @@ function recalcularBocaditos() {
   });
 
   // Resumen de bocados
+  // tHilton() traduce estos textos armados en JS si hay un idioma distinto
+  // de español elegido (ver public/js/i18n.js) — no son data-i18n porque se
+  // reescriben en vivo acá, no vienen ya armados desde el servidor.
   const elResumen = document.getElementById('resumen-bocaditos');
   if (!bocaditosCalculados.length) {
-    elResumen.innerHTML = '<p class="list-empty">Elegí comensales y platos para ver las cantidades.</p>';
+    elResumen.innerHTML = `<p class="list-empty">${tHilton('Elegí comensales y platos para ver las cantidades.')}</p>`;
   } else {
     elResumen.innerHTML = bocaditosCalculados.map(b => `
       <div class="item-row">
         <span class="item-nombre">${b.nombre}</span>
-        <span class="item-detalle">${NOMBRES_CATEGORIA_JS[b.categoria]}${b.costo_unitario > 0 ? ' · $' + b.costo_total.toFixed(2) : ''}</span>
-        <span class="item-costo">${b.bocados_totales} bocados</span>
+        <span class="item-detalle">${tHilton(NOMBRES_CATEGORIA_JS[b.categoria])}${b.costo_unitario > 0 ? ' · $' + b.costo_total.toFixed(2) : ''}</span>
+        <span class="item-costo">${b.bocados_totales} ${tHilton('bocados')}</span>
       </div>
     `).join('');
   }
@@ -464,12 +467,12 @@ function recalcularBocaditos() {
   document.getElementById('costo-bocaditos-count').textContent = chks.length;
   const elResumenCosto = document.getElementById('resumen-costo');
   if (!bocaditosCalculados.length) {
-    elResumenCosto.innerHTML = '<p class="list-empty">Todavía no elegiste platos en la pestaña "Platos".</p>';
+    elResumenCosto.innerHTML = `<p class="list-empty">${tHilton('Todavía no elegiste platos en la pestaña "Platos".')}</p>`;
   } else {
     elResumenCosto.innerHTML = bocaditosCalculados.map(b => `
       <div class="item-row">
         <span class="item-nombre">${b.nombre}</span>
-        <span class="item-detalle">${NOMBRES_CATEGORIA_JS[b.categoria]} · ${b.bocados_totales} bocados</span>
+        <span class="item-detalle">${tHilton(NOMBRES_CATEGORIA_JS[b.categoria])} · ${b.bocados_totales} ${tHilton('bocados')}</span>
         <span class="item-costo">$${b.costo_total.toFixed(2)}</span>
       </div>
     `).join('');
@@ -480,12 +483,12 @@ function recalcularBocaditos() {
   const elVajillaCalc = document.getElementById('lista-vajilla-calculada');
   const conVajilla = bocaditosCalculados.filter(b => b.vajilla_texto && b.vajilla_cantidad > 0);
   if (!conVajilla.length) {
-    elVajillaCalc.innerHTML = '<p class="list-empty">Todavía no hay bocaditos elegidos.</p>';
+    elVajillaCalc.innerHTML = `<p class="list-empty">${tHilton('Todavía no hay bocaditos elegidos.')}</p>`;
   } else {
     elVajillaCalc.innerHTML = conVajilla.map(b => `
       <div class="item-row">
         <span class="item-nombre">${b.vajilla_texto}</span>
-        <span class="item-detalle">para ${b.nombre}</span>
+        <span class="item-detalle">${tHilton('para')} ${b.nombre}</span>
         <span class="item-costo">${b.vajilla_cantidad}</span>
       </div>
     `).join('');
@@ -530,13 +533,13 @@ function eliminarVajilla(i) {
 function renderVajilla() {
   const el = document.getElementById('lista-vajilla');
   if (!vajilla.length) {
-    el.innerHTML = '<p class="list-empty">No hay vajilla agregada todavía.</p>';
+    el.innerHTML = `<p class="list-empty">${tHilton('No hay vajilla agregada todavía.')}</p>`;
     return;
   }
   el.innerHTML = vajilla.map((v, i) => `
     <div class="item-row">
       <span class="item-nombre">${v.nombre}</span>
-      <span class="item-detalle">${v.cantidad} unidades</span>
+      <span class="item-detalle">${v.cantidad} ${tHilton('unidades')}</span>
       <button type="button" class="btn-remove" onclick="eliminarVajilla(${i})">
         <i class="ti ti-x" aria-hidden="true"></i>
       </button>

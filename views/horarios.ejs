@@ -51,6 +51,9 @@
 .dropdown-otras-item-excel{ color:#15803d; }
 .dropdown-otras-item-excel i{ color:#16a34a; }
 .dropdown-otras-item-excel:hover{ background:#f0fdf4; }
+.dropdown-otras-item-nav{ color:#002f61; }
+.dropdown-otras-item-nav i{ color:#1d4e89; }
+.dropdown-otras-item-nav:hover{ background:rgba(0,47,97,0.08); }
 
 /* Aviso "deslizá" arriba de la grilla — solo se ve en pantallas chicas,
    mismo patrón que en Miembro de equipo (personal.ejs). */
@@ -127,7 +130,7 @@
             <form method="POST" action="/horarios/copiar-semana" style="margin:0;">
               <input type="hidden" name="inicio_destino" value="<%= inicio %>">
               <input type="hidden" name="fin_destino" value="<%= fin %>">
-              <button type="submit" class="dropdown-otras-item" onclick="return confirm('¿Copiar los horarios del período anterior (misma duración) a este período?')">
+              <button type="submit" class="dropdown-otras-item dropdown-otras-item-nav" onclick="return confirm('¿Copiar los horarios del período anterior (misma duración) a este período?')">
                 <i class="ti ti-copy"></i> Copiar período anterior
               </button>
             </form>

@@ -30,6 +30,9 @@
 }
 .dropdown-otras-item:hover{ background:var(--gris-fondo); }
 .dropdown-otras-item i{ font-size:15px; color:var(--gris-texto); flex-shrink:0; }
+.dropdown-otras-item-nav{ color:#002f61; }
+.dropdown-otras-item-nav i{ color:#1d4e89; }
+.dropdown-otras-item-nav:hover{ background:rgba(0,47,97,0.08); }
 
 .recoff-control{display:inline-flex;align-items:center;gap:6px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:20px;padding:2px 4px;}
 .recoff-control button{width:20px;height:20px;border-radius:50%;border:none;background:var(--blanco);color:var(--gris-texto);cursor:pointer;font-size:0.85rem;line-height:1;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;}
@@ -307,14 +310,14 @@
             <i class="ti ti-dots"></i> Otras opciones <i class="ti ti-chevron-down" style="font-size:12px;"></i>
           </button>
           <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
-            <a id="btn-ver-horarios" href="/horarios?inicio=<%= inicio %>&fin=<%= fin %>" class="dropdown-otras-item">
+            <a id="btn-ver-horarios" href="/horarios?inicio=<%= inicio %>&fin=<%= fin %>" class="dropdown-otras-item dropdown-otras-item-nav">
               <i class="ti ti-clock"></i> Ver en Horarios
             </a>
             <% if (esAdmin) { %>
-            <button type="button" class="dropdown-otras-item" onclick="showModal('modal-importar-mozos')">
+            <button type="button" class="dropdown-otras-item dropdown-otras-item-nav" onclick="showModal('modal-importar-mozos')">
               <i class="ti ti-file-upload"></i> Importar mozos (CSV)
             </button>
-            <button type="button" class="dropdown-otras-item" onclick="showModal('modal-importar-mozos-foto')">
+            <button type="button" class="dropdown-otras-item dropdown-otras-item-nav" onclick="showModal('modal-importar-mozos-foto')">
               <i class="ti ti-camera"></i> Cargar con foto
             </button>
             <% } %>

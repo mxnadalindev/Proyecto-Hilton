@@ -157,6 +157,9 @@
 .dropdown-otras-item-excel{ color:#15803d; }
 .dropdown-otras-item-excel i{ color:#16a34a; }
 .dropdown-otras-item-excel:hover{ background:#f0fdf4; }
+.dropdown-otras-item-crear{ color:#057a68; }
+.dropdown-otras-item-crear i{ color:#06937e; }
+.dropdown-otras-item-crear:hover{ background:rgba(6,147,126,0.10); }
 
 /* Cartel de aviso propio de la app (reemplaza mostrar un mensaje suelto o
    nada de nada) — se usa para confirmar "Trago/plato guardado" al volver
@@ -211,7 +214,7 @@
               <i class="ti ti-file-spreadsheet"></i> Excel de costeo (<%= (typeof esAyb !== 'undefined' && esAyb) ? 'tragos' : 'platos' %>)
             </a>
             <% if (typeof esAyb !== 'undefined' && esAyb) { %>
-            <button type="button" class="dropdown-otras-item" onclick="document.getElementById('dropdown-otras-opciones').classList.remove('abierto');showModal('modal-plato')">
+            <button type="button" class="dropdown-otras-item dropdown-otras-item-crear" onclick="document.getElementById('dropdown-otras-opciones').classList.remove('abierto');showModal('modal-plato')">
               <i class="ti ti-glass"></i> Nuevo trago
             </button>
             <% } %>

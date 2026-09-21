@@ -27,6 +27,68 @@
 .back-link:hover { color: var(--azul); }
 .success-banner { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; border-radius: 10px; padding: 11px 14px; margin-bottom: 20px; font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
 
+/* Pestañas de categoría (Fríos/Calientes/Platos principales/Postres): antes
+   las 4 categorías se mostraban todas apiladas, una tarjeta larga debajo de
+   la otra — en el celu había que scrollear muchísimo para llegar a Postres.
+   Ahora se arma como pestañas (mismo estilo "subrayado" que Eventos/Menús/
+   Costos) y solo se ve una categoría a la vez. Los inputs de las categorías
+   ocultas NO se sacan del formulario (display:none nomás), así que "Guardar
+   costos" sigue mandando los precios de las 4 categorías juntas, se estén
+   viendo o no en ese momento. */
+.categoria-tabs { display: flex; gap: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--gris-borde); overflow-x: auto; }
+.categoria-tab {
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 0 1px 10px; margin-bottom: -1px; white-space: nowrap;
+  background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer;
+  color: var(--gris-texto); font-family: var(--font-sans); transition: all var(--tr);
+}
+.categoria-tab:hover { color: var(--azul); border-bottom-color: rgba(6,147,126,0.35); }
+.categoria-tab.activa { color: var(--azul); border-bottom-color: var(--azul); }
+.categoria-tab .categoria-tab-count { font-weight: 400; opacity: 0.75; }
+.form-card.categoria-oculta { display: none; }
+
+/* "Otras opciones" — mismas clases que ya usan Horas Extra/Horarios/Personal/
+   Costos/Inventario AYB (viven en su propio <style> acá también, no en
+   style.css global). Agrupa Descargar Excel/Subir Excel bajo un solo botón
+   para que no queden dos botones sueltos de Excel en el encabezado. */
+.dropdown-otras-opciones{
+  display:none;
+  position:absolute; right:0; top:calc(100% + 6px); z-index:200;
+  background:var(--blanco); border:1px solid var(--gris-borde); border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.15);
+  min-width:210px; padding:6px;
+}
+.dropdown-otras-opciones.abierto{ display:flex; flex-direction:column; gap:2px; }
+.dropdown-otras-item{
+  display:flex; align-items:center; gap:8px; width:100%;
+  background:none; border:none; padding:9px 12px;
+  font-family:var(--font-sans); font-size:0.78rem; font-weight:500;
+  color:var(--negro); text-decoration:none; cursor:pointer;
+  border-radius:6px; text-align:left;
+}
+.dropdown-otras-item:hover{ background:var(--gris-fondo); }
+.dropdown-otras-item i{ font-size:15px; color:var(--gris-texto); flex-shrink:0; }
+.dropdown-otras-item-excel{ color:#15803d; }
+.dropdown-otras-item-excel i{ color:#16a34a; }
+.dropdown-otras-item-excel:hover{ background:#f0fdf4; }
+
+/* "Cancelar" en rojo (en vez del azul de .btn-secondary de siempre): al
+   quedar pegado al botón "Otras opciones" (que también es .btn-secondary,
+   azul), los dos se veían igual. Mismo molde de .btn-primary/.btn-secondary
+   (alto 40px, mismo padding/radio), paleta roja traslúcida como el resto
+   del sitio usa para acciones de "cancelar/eliminar". */
+.btn-cancelar-rojo {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: rgba(220,38,38,0.10); color: #dc2626;
+  border: 1px solid rgba(220,38,38,0.28); border-radius: 8px;
+  padding: 0 18px; box-sizing: border-box; height: 40px;
+  font-family: var(--font-sans); font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; cursor: pointer;
+  transition: all var(--tr);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.btn-cancelar-rojo:hover { background: rgba(220,38,38,0.20); }
+
 @media (max-width: 600px) {
   .form-card { padding: 16px; }
   .costo-row { flex-wrap: wrap; }
@@ -40,33 +102,43 @@
 
 <div class="seccion-header">
   <div class="seccion-header-left">
-    <p class="seccion-label">Portal interno</p>
-    <h1 class="seccion-titulo">Costos</h1>
+    <p class="seccion-label" data-i18n>Portal interno</p>
+    <h1 class="seccion-titulo" data-i18n>Costos</h1>
     <%- include('partials/eventos_subnav', { seccionEventos: 'costos' }) %>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-    <a href="/eventos/bocaditos-costos/excel" class="btn-secondary">
-      <i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Descargar Excel
-    </a>
-    <!-- Formulario aparte (no el de edición manual de abajo) solo para el
-         archivo: el input vive adentro para que "this.form.submit()" no
-         dependa de la asociación por atributo "form" (menos robusta entre
-         navegadores para inputs de archivo fuera de su <form>). -->
-    <form method="POST" action="/eventos/bocaditos-costos/importar" enctype="multipart/form-data" id="form-excel-costos" style="margin:0;">
-      <label class="btn-secondary" style="cursor:pointer;margin:0;">
-        <i class="ti ti-upload" aria-hidden="true"></i> Subir Excel
-        <input type="file" name="archivo_excel" accept=".xlsx" id="input-excel-costos" style="display:none;" onchange="this.form.submit()">
-      </label>
-    </form>
-    <a href="/eventos" class="btn-secondary">Cancelar</a>
+    <!-- "Otras opciones": agrupa Descargar Excel/Subir Excel (antes 2 botones
+         sueltos) bajo un solo desplegable, mismo patrón que "Otras opciones"
+         en Horas Extra/Horarios/Personal/Costos/Inventario AYB. -->
+    <div class="menu-otras-opciones" style="position:relative;">
+      <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
+        <i class="ti ti-dots"></i> <span data-i18n>Otras opciones</span> <i class="ti ti-chevron-down" style="font-size:12px;"></i>
+      </button>
+      <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
+        <a href="/eventos/bocaditos-costos/excel" class="dropdown-otras-item dropdown-otras-item-excel">
+          <i class="ti ti-file-spreadsheet" aria-hidden="true"></i> <span data-i18n>Descargar Excel</span>
+        </a>
+        <!-- Formulario aparte (no el de edición manual de abajo) solo para el
+             archivo: el input vive adentro para que "this.form.submit()" no
+             dependa de la asociación por atributo "form" (menos robusta entre
+             navegadores para inputs de archivo fuera de su <form>). -->
+        <form method="POST" action="/eventos/bocaditos-costos/importar" enctype="multipart/form-data" id="form-excel-costos" style="margin:0;">
+          <label class="dropdown-otras-item dropdown-otras-item-excel" style="cursor:pointer;margin:0;">
+            <i class="ti ti-upload" aria-hidden="true"></i> <span data-i18n>Subir Excel</span>
+            <input type="file" name="archivo_excel" accept=".xlsx" id="input-excel-costos" style="display:none;" onchange="this.form.submit()">
+          </label>
+        </form>
+      </div>
+    </div>
+    <a href="/eventos" class="btn-cancelar-rojo" data-i18n>Cancelar</a>
     <button type="submit" form="form-costos" class="btn-primary">
-      <i class="ti ti-device-floppy" aria-hidden="true"></i> Guardar costos
+      <i class="ti ti-device-floppy" aria-hidden="true"></i> <span data-i18n>Guardar costos</span>
     </button>
   </div>
 </div>
 
 <% if (typeof guardado !== 'undefined' && guardado) { %>
-<div class="success-banner"><i class="ti ti-check" aria-hidden="true"></i> Costos guardados.</div>
+<div class="success-banner"><i class="ti ti-check" aria-hidden="true"></i> <span data-i18n>Costos guardados.</span></div>
 <% } %>
 
 <% if (typeof importado !== 'undefined' && importado) { %>
@@ -79,30 +151,32 @@
 <div class="success-banner" style="background:#fef2f2;border-color:#fecaca;color:#dc2626;"><i class="ti ti-alert-circle" aria-hidden="true"></i> <%= errorImportacion %></div>
 <% } %>
 
-<p style="font-size:0.8rem;color:var(--gris-texto);margin-bottom:20px;">
-  Costo de UN bocado de cada plato. Se usa para calcular el costo estimado de cada evento nuevo
-  (cantidad de bocados que hacen falta × este costo). Los eventos que ya están creados no cambian
-  con lo que edites acá. Podés editar los precios acá abajo uno por uno, o descargar el Excel,
-  editar la columna de costo y volver a subirlo para actualizar todos de una.
-</p>
+<p style="font-size:0.8rem;color:var(--gris-texto);margin-bottom:20px;" data-i18n>Costo de UN bocado de cada plato. Se usa para calcular el costo estimado de cada evento nuevo (cantidad de bocados que hacen falta × este costo). Los eventos que ya están creados no cambian con lo que edites acá. Podés editar los precios acá abajo uno por uno, o descargar el Excel, editar la columna de costo y volver a subirlo para actualizar todos de una.</p>
+
+<% const NOMBRES_CATEGORIA = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
+<div class="categoria-tabs" id="categoria-tabs">
+  <% ['frios','calientes','principales','postres'].forEach((cat, i) => { %>
+  <button type="button" class="categoria-tab<%= i === 0 ? ' activa' : '' %>" data-cat="<%= cat %>" onclick="mostrarCategoriaCosto('<%= cat %>')">
+    <span data-i18n><%= NOMBRES_CATEGORIA[cat] %></span> <span class="categoria-tab-count">(<%= (catalogoBocaditos[cat] || []).length %>)</span>
+  </button>
+  <% }) %>
+</div>
 
 <form method="POST" action="/eventos/bocaditos-costos" id="form-costos">
-  <% const NOMBRES_CATEGORIA = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
-  <% ['frios','calientes','principales','postres'].forEach(cat => { %>
-  <div class="form-card">
-    <p class="form-card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> <%= NOMBRES_CATEGORIA[cat] %></p>
+  <% ['frios','calientes','principales','postres'].forEach((cat, i) => { %>
+  <div class="form-card categoria-card<%= i === 0 ? '' : ' categoria-oculta' %>" data-cat="<%= cat %>">
     <% (catalogoBocaditos[cat] || []).forEach(b => { %>
     <div class="costo-row">
       <span class="costo-nombre"><%= b.nombre %></span>
       <label class="costo-input-wrap">
         <span>$</span>
         <input type="number" name="costo_<%= b.id %>" min="0" step="0.01" value="<%= parseFloat(b.costo_unitario || 0).toFixed(2) %>">
-        <span>/bocado</span>
+        <span data-i18n>/bocado</span>
       </label>
     </div>
     <% }) %>
     <% if (!(catalogoBocaditos[cat] || []).length) { %>
-    <p style="font-size:0.78rem;color:var(--gris-texto);font-style:italic;">Sin platos cargados en esta categoría.</p>
+    <p style="font-size:0.78rem;color:var(--gris-texto);font-style:italic;" data-i18n>Sin platos cargados en esta categoría.</p>
     <% } %>
   </div>
   <% }) %>
@@ -111,5 +185,29 @@
   </main>
   <%- include('partials/mobile-nav', { path: path }) %>
 </div>
+<script src="/js/ui-comun.js"></script>
+<script>
+// Pestañas de categoría: muestra la tarjeta de la categoría elegida y
+// esconde el resto (display:none, no se sacan del formulario — así
+// "Guardar costos" sigue mandando los precios de las 4 categorías juntas).
+function mostrarCategoriaCosto(cat) {
+  document.querySelectorAll('.categoria-card').forEach(el => {
+    el.classList.toggle('categoria-oculta', el.dataset.cat !== cat);
+  });
+  document.querySelectorAll('.categoria-tab').forEach(el => {
+    el.classList.toggle('activa', el.dataset.cat === cat);
+  });
+}
+
+// Menú "Otras opciones" (mismo patrón que Horas Extra/Horarios/Personal/
+// Costos/Inventario AYB): cerrar el desplegable si se hace clic afuera.
+document.addEventListener('click', (ev) => {
+  const dropdown = document.getElementById('dropdown-otras-opciones');
+  const boton = document.getElementById('btn-otras-opciones');
+  if (dropdown && dropdown.classList.contains('abierto') && !dropdown.contains(ev.target) && ev.target !== boton && !boton.contains(ev.target)) {
+    dropdown.classList.remove('abierto');
+  }
+});
+</script>
 </body>
 </html>

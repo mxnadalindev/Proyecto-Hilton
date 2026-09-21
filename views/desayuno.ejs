@@ -17,13 +17,33 @@
 
 .desayuno-buscador{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:28px;box-shadow:var(--sombra);margin-bottom:20px;}
 .desayuno-buscador-input{font-size:1.6rem;font-weight:700;text-align:center;letter-spacing:0.06em;padding:16px;border-radius:10px;}
-.desayuno-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
-.desayuno-stat{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:16px;text-align:center;}
+/* 5 tarjetas: en pantallas chicas van UNA por fila (no 2) a propósito —
+   con 2 columnas, la 5ta tarjeta queda sola debajo de la 3ra y ahí sí o sí
+   se repite un color pegado arriba de otro igual (con solo verde/azul
+   para el resto, no hay forma de evitarlo en una grilla 2 columnas x 5
+   tarjetas). En una sola fila (desktop) o una sola columna (mobile) el
+   orden es siempre lineal, así el mismo criterio de colores de abajo
+   nunca deja dos tarjetas iguales pegadas, en ninguna de las dos pantallas. */
+.desayuno-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.desayuno-stat{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:16px;text-align:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
 .desayuno-stat p:first-child{font-size:0.62rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;}
 .desayuno-stat p:last-child{font-size:1.4rem;font-weight:700;color:var(--negro);margin:0;}
-@media (max-width:700px){.desayuno-stats{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:700px){.desayuno-stats{grid-template-columns:1fr;}}
+
+/* Colores translúcidos por tarjeta — mismo estilo "vidrio" que ya usamos en
+   Inventario AYB (fondo de color con transparencia + borde a juego). */
+.desayuno-stat-azul{ background:rgba(0,47,97,0.12); border-color:rgba(0,47,97,0.28); }
+.desayuno-stat-rojo{ background:rgba(220,38,38,0.10); border-color:rgba(220,38,38,0.28); }
+.desayuno-stat-rojo p{ color:#dc2626; }
+.desayuno-stat-verde{ background:rgba(6,147,126,0.12); border-color:rgba(6,147,126,0.3); }
 
 .desayuno-resultado{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:24px;box-shadow:var(--sombra);}
+/* Tiñe toda la tarjeta según si la habitación tiene desayuno incluido o
+   no (mismos colores que ya usa el cartelito badge-si/badge-no, muy
+   translúcidos para no perder la legibilidad de todos los datos de
+   adentro). Elegido en un mockup aparte antes de instalarlo acá. */
+.desayuno-resultado-si{background:rgba(6,147,126,0.06);border-color:rgba(6,147,126,0.28);}
+.desayuno-resultado-no{background:rgba(220,38,38,0.05);border-color:rgba(220,38,38,0.25);}
 .desayuno-resultado-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--gris-borde);}
 .desayuno-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
 .badge-si{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;}
@@ -39,6 +59,9 @@
 .dropdown-otras-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;font-size:0.83rem;color:var(--negro);text-decoration:none;transition:background .15s;border:none;background:none;width:100%;text-align:left;cursor:pointer;font-family:var(--font-sans);}
 .dropdown-otras-item:hover{background:var(--gris-fondo);}
 .dropdown-otras-item i{font-size:16px;color:var(--gris-texto);}
+.dropdown-otras-item-nav{ color:#002f61; }
+.dropdown-otras-item-nav i{ color:#1d4e89; }
+.dropdown-otras-item-nav:hover{ background:rgba(0,47,97,0.08); }
 .menu-otras-opciones{position:relative;}
 
 /* Modal de confirmación (mismo patrón que ya se usa en Configuración y en
@@ -78,7 +101,7 @@
           <i class="ti ti-dots"></i> Otras opciones
         </button>
         <div class="dropdown-otras-opciones" id="dropdown-otras-opciones-desayuno">
-          <button type="button" class="dropdown-otras-item" onclick="showModal('modal-subir-reporte')">
+          <button type="button" class="dropdown-otras-item dropdown-otras-item-nav" onclick="showModal('modal-subir-reporte')">
             <i class="ti ti-upload"></i> Subir reporte del día
           </button>
           <% if (fechaReporte) { %>
@@ -113,10 +136,11 @@
     <% } else { %>
 
       <div class="desayuno-stats">
-        <div class="desayuno-stat"><p>Habitaciones</p><p><%= totalHabitaciones %></p></div>
-        <div class="desayuno-stat"><p>Sin desayuno incluido</p><p><%= sinDesayuno %></p></div>
-        <div class="desayuno-stat"><p>Tripulación</p><p><%= tripulacion %></p></div>
-        <div class="desayuno-stat"><p>Con pedido TR</p><p><%= conTR %></p></div>
+        <div class="desayuno-stat desayuno-stat-azul"><p>Habitaciones</p><p><%= totalHabitaciones %></p></div>
+        <div class="desayuno-stat desayuno-stat-rojo"><p>Sin desayuno incluido</p><p><%= sinDesayuno %></p></div>
+        <div class="desayuno-stat desayuno-stat-verde"><p>Con desayuno incluido</p><p><%= totalHabitaciones - sinDesayuno %></p></div>
+        <div class="desayuno-stat desayuno-stat-azul"><p>Tripulación</p><p><%= tripulacion %></p></div>
+        <div class="desayuno-stat desayuno-stat-verde"><p>Con pedido TR</p><p><%= conTR %></p></div>
       </div>
       <p style="font-size:0.75rem;color:var(--gris-texto);margin:-12px 0 20px;">Reporte del <%= fechaReporte.split('-').reverse().join('-') %></p>
 
@@ -239,7 +263,7 @@ function tarjetaHabitacion(f) {
     : '';
 
   return `
-    <div class="desayuno-resultado">
+    <div class="desayuno-resultado ${f.bkfIncluido ? 'desayuno-resultado-si' : 'desayuno-resultado-no'}">
       <div class="desayuno-resultado-header">
         <div>
           <p style="font-size:0.62rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px;">Habitación ${escaparHtml(f.habitacion)}</p>

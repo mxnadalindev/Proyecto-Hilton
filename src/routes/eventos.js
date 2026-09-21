@@ -8,6 +8,16 @@ const { calcularBocaditos, calcularPersonalRequerido } = require('../services/ca
 const ExcelJS = require('exceljs');
 const multer = require('multer');
 const uploadExcelCostos = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+// Dependencia nueva (pedida y confirmada por Maxi) solo para el botón
+// "Descargar PDF" del BEO: arma el PDF de verdad en el servidor, en vez de
+// depender de que el usuario elija "Guardar como PDF" en el diálogo de
+// impresión del navegador (eso lo sigue haciendo el botón "Imprimir",
+// separado, con window.print() como siempre). La primera vez que se instala
+// esta versión, "npm install" descarga además una copia de Chromium propia
+// (unos 200-300 MB) — por eso el primer "npm install" después de este
+// cambio tarda más de lo normal; no hace falta instalar Chrome aparte, ya
+// viene con el paquete.
+const puppeteer = require('puppeteer');
 router.use(loginRequerido, requiereDepartamento('/eventos'));
 
 // Trae el catálogo de bocaditos (fríos/calientes/principales/postres) que
@@ -489,6 +499,77 @@ router.get('/:id/beo', loginRequerido, async (req, res) => {
   const personal  = await db.all2(`SELECT u.nombre,u.rol FROM evento_personal ep JOIN usuarios u ON ep.usuario_id=u.id WHERE ep.evento_id=$1 ORDER BY u.nombre`, [req.params.id]);
   const vajilla   = await db.all2("SELECT * FROM evento_vajilla WHERE evento_id=$1 ORDER BY vajilla_nombre", [req.params.id]);
   res.render('evento_beo', { evento, platos, bocaditos, personal, vajilla, path: 'eventos' });
+});
+
+// Descarga directa del BEO como PDF (botón "Descargar PDF", separado de
+// "Imprimir"). Arma el PDF renderizando la MISMA página /beo de arriba con
+// un Chromium en el servidor (Puppeteer) — así el PDF sale siempre idéntico
+// a lo que se ve en pantalla, sin duplicar el armado del documento en dos
+// lugares. Le pasamos la cookie de sesión de este mismo pedido para que esa
+// segunda visita "interna" quede logueada igual que el usuario real.
+router.get('/:id/beo/pdf', loginRequerido, async (req, res) => {
+  const evento = await db.get2('SELECT nombre FROM eventos WHERE id=$1', [req.params.id]);
+  if (!evento) return res.redirect('/eventos');
+
+  let browser;
+  try {
+    browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+    const page = await browser.newPage();
+    if (req.headers.cookie) {
+      await page.setExtraHTTPHeaders({ Cookie: req.headers.cookie });
+    }
+    const puerto = process.env.PORT || 5000;
+    await page.goto(`http://localhost:${puerto}/eventos/${req.params.id}/beo`, { waitUntil: 'networkidle0' });
+    // Sin esto, los íconos (Tabler Icons es una tipografía web, no imágenes)
+    // salían en blanco o como el cuadradito de "carácter no encontrado" en
+    // el PDF. Dos pasos hacen falta, no solo uno: el link de esa fuente se
+    // carga con el truco media="print" → "all" (ver evento_beo.ejs) para no
+    // bloquear el primer pintado de la página normal — pero eso significa
+    // que recién se vuelve "all" (y ahí arranca la descarga de la fuente)
+    // un instante DESPUÉS de que networkidle0 ya dio por terminada la carga.
+    // Por eso primero hay que esperar a que ese link ya esté en media="all",
+    // y recién ahí esperar document.fonts.ready (que sí espera a que la
+    // fuente termine de aplicarse).
+    await page.waitForFunction(() => {
+      const link = document.querySelector('link[href*="tabler-icons"]');
+      return link && link.media === 'all';
+    });
+    await page.evaluate(() => document.fonts.ready);
+    // page.pdf() emula media "print" por default para decidir qué CSS
+    // aplicar — y en el Chromium de este entorno de pruebas, esa emulación
+    // específica (no la carga de la fuente en sí, ya esperada arriba) hace
+    // que los glifos de Tabler Icons no se rastericen en el PDF (quedan en
+    // blanco), aunque en pantalla normal se ven perfecto. Se fuerza acá
+    // media "screen" (así usa exactamente el mismo camino de pintado que ya
+    // funciona bien) y la franja de botones —que dependía de la regla
+    // "@media print" para esconderse— se oculta a mano en su lugar.
+    await page.emulateMediaType('screen');
+    await page.evaluate(() => {
+      const barra = document.querySelector('.barra-acciones');
+      if (barra) barra.style.display = 'none';
+    });
+    // Puppeteer (desde v22) devuelve un Uint8Array, no un Buffer de Node —
+    // si se lo pasa tal cual a res.send(), Express no lo reconoce como
+    // binario y lo manda serializado como JSON (un objeto {"0":37,"1":80,...}
+    // en vez del PDF real), rompiendo la descarga sin ningún error visible.
+    // Buffer.from() lo convierte al tipo que Express sí sabe mandar tal cual.
+    const pdfBuffer = Buffer.from(await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '14mm', bottom: '14mm', left: '14mm', right: '14mm' },
+    }));
+    const nombreArchivo = `BEO_${(evento.nombre || 'evento').replace(/[^a-zA-Z0-9]+/g, '_')}.pdf`;
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${nombreArchivo}"`,
+    });
+    res.send(pdfBuffer);
+  } catch (e) {
+    console.error('Error generando el PDF del BEO:', e.message);
+    res.status(500).send('No se pudo generar el PDF. Probá de nuevo, o usá el botón "Imprimir" y elegí "Guardar como PDF" desde ahí.');
+  } finally {
+    if (browser) await browser.close().catch(() => {});
+  }
 });
 
 // Agrega un plato al menú de un evento ya creado (elegido de Costos o cargado a mano)

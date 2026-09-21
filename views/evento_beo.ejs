@@ -42,6 +42,22 @@
   }
   .btn-imprimir:hover { background: rgba(6,147,126,0.24); }
 
+  /* "Descargar PDF" separado de "Imprimir" — mismo box-model, color navy
+     traslúcido (igual que "Volver al evento") para diferenciarlo del verde
+     de Imprimir, que sigue siendo la acción principal de esta pantalla. */
+  .btn-descargar-pdf {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: rgba(0,47,97,0.12); color: #002f61;
+    border: 1px solid rgba(0,47,97,0.28); border-radius: 8px;
+    padding: 0 18px; box-sizing: border-box; height: 40px;
+    font-family: var(--font-sans); font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+    cursor: pointer; transition: all var(--tr);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  }
+  .btn-descargar-pdf:hover { background: rgba(0,47,97,0.20); }
+  .btn-descargar-pdf[aria-disabled="true"] { opacity: 0.6; cursor: default; pointer-events: none; }
+
   .encabezado { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid var(--azul); padding-bottom: 16px; margin-bottom: 20px; }
   .encabezado h1 { font-size: 1.5rem; margin: 0 0 4px; color: var(--azul); }
   .encabezado .subtitulo { font-size: 0.8rem; color: var(--gris-texto); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
@@ -82,42 +98,68 @@
 </head>
 <body>
 
+<!-- Esta pantalla es una "hoja suelta" (no incluye partials/nav, es la orden
+     para imprimir/descargar) así que, a diferencia del resto del sitio, acá
+     hay que cargar el traductor a mano — en las demás pantallas ya viene
+     con el header. -->
+<script src="/js/i18n.js"></script>
+
 <div class="barra-acciones">
-  <a href="/eventos/<%= evento.id %>" class="btn-volver-beo"><i class="ti ti-arrow-left" aria-hidden="true"></i> Volver al evento</a>
-  <button class="btn-imprimir" onclick="window.print()"><i class="ti ti-printer" aria-hidden="true"></i> Imprimir / Guardar PDF</button>
+  <a href="/eventos/<%= evento.id %>" class="btn-volver-beo"><i class="ti ti-arrow-left" aria-hidden="true"></i> <span data-i18n>Volver al evento</span></a>
+  <div style="display:flex;gap:10px;">
+    <button class="btn-imprimir" onclick="window.print()"><i class="ti ti-printer" aria-hidden="true"></i> <span data-i18n>Imprimir</span></button>
+    <a href="/eventos/<%= evento.id %>/beo/pdf" class="btn-descargar-pdf" id="btn-descargar-pdf" onclick="marcarDescargandoPdf(this)">
+      <i class="ti ti-download" aria-hidden="true"></i> <span id="txt-descargar-pdf" data-i18n>Descargar PDF</span>
+    </a>
+  </div>
 </div>
+<script>
+// El PDF se arma en el servidor (Puppeteer) recién al tocar el botón, así
+// que tarda unos segundos — este cartel evita que parezca que no pasó nada
+// mientras se genera. No bloquea nada: si tarda más de lo esperado, el
+// texto vuelve solo y se puede tocar de nuevo sin problema.
+// tHilton() traduce "Generando…" si hay un idioma distinto de español
+// elegido (ver public/js/i18n.js) — así el cartel también queda traducido.
+function marcarDescargandoPdf(el) {
+  const txt = document.getElementById('txt-descargar-pdf');
+  const original = txt.textContent;
+  txt.textContent = window.tHilton ? window.tHilton('Generando…') : 'Generando…';
+  el.setAttribute('aria-disabled', 'true');
+  setTimeout(() => { txt.textContent = original; el.removeAttribute('aria-disabled'); }, 8000);
+}
+</script>
 
 <div class="hoja">
 
   <div class="encabezado">
     <div>
-      <p class="subtitulo">Orden de evento (BEO)</p>
+      <p class="subtitulo" data-i18n>Orden de evento (BEO)</p>
       <h1><%= evento.nombre %></h1>
     </div>
     <div class="hotel">
       <strong>Hilton Buenos Aires</strong>
-      Emitido el <%= new Date().toLocaleDateString('es-AR') %>
+      <span data-i18n>Emitido el</span> <%= new Date().toLocaleDateString('es-AR') %>
     </div>
   </div>
 
   <div class="datos-evento">
     <div class="dato">
-      <div class="dato-label">Fecha</div>
+      <div class="dato-label" data-i18n>Fecha</div>
       <div class="dato-valor"><%= evento.fecha %></div>
     </div>
     <div class="dato">
-      <div class="dato-label">Horario</div>
+      <div class="dato-label" data-i18n>Horario</div>
       <div class="dato-valor"><%= evento.hora_inicio ? evento.hora_inicio + (evento.hora_fin ? ' – ' + evento.hora_fin : '') : '—' %></div>
     </div>
     <div class="dato">
-      <div class="dato-label">Comensales</div>
+      <div class="dato-label" data-i18n>Comensales</div>
       <div class="dato-valor"><%= evento.comensales || '—' %></div>
     </div>
     <div class="dato">
-      <div class="dato-label">Personal requerido</div>
+      <div class="dato-label" data-i18n>Personal requerido</div>
       <div class="dato-valor">
         <% if (evento.comensales) { %>
-          <%= evento.personal_servicio_requerido || 0 %> serv. + <%= evento.personal_produccion_requerido || 0 %> prod.
+          <%= evento.personal_servicio_requerido || 0 %> <span data-i18n>serv.</span> + <%= evento.personal_produccion_requerido || 0 %> <span data-i18n>prod.</span>
         <% } else { %>—<% } %>
       </div>
     </div>
@@ -125,14 +167,14 @@
 
   <% if (bocaditos.length > 0) { %>
   <div class="seccion">
-    <p class="seccion-titulo"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Menú — bocaditos</p>
+    <p class="seccion-titulo"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> <span data-i18n>Menú — bocaditos</span></p>
     <% const NOMBRES_CATEGORIA_BEO = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
     <% ['frios','calientes','principales','postres'].forEach(cat => { %>
       <% const items = bocaditos.filter(b => b.categoria === cat); %>
       <% if (items.length > 0) { %>
-      <p class="categoria-titulo"><%= NOMBRES_CATEGORIA_BEO[cat] %></p>
+      <p class="categoria-titulo" data-i18n><%= NOMBRES_CATEGORIA_BEO[cat] %></p>
       <table>
-        <thead><tr><th>Plato</th><th class="num">Bocados</th><th>Vajilla</th></tr></thead>
+        <thead><tr><th data-i18n>Plato</th><th class="num" data-i18n>Bocados</th><th data-i18n>Vajilla</th></tr></thead>
         <tbody>
           <% items.forEach(b => { %>
           <tr>
@@ -150,9 +192,9 @@
 
   <% if (platos.length > 0) { %>
   <div class="seccion">
-    <p class="seccion-titulo"><i class="ti ti-list-details" aria-hidden="true"></i> Otros platos del menú</p>
+    <p class="seccion-titulo"><i class="ti ti-list-details" aria-hidden="true"></i> <span data-i18n>Otros platos del menú</span></p>
     <table>
-      <thead><tr><th>Plato</th><th class="num">Porciones</th><th class="num">Subtotal</th></tr></thead>
+      <thead><tr><th data-i18n>Plato</th><th class="num" data-i18n>Porciones</th><th class="num" data-i18n>Subtotal</th></tr></thead>
       <tbody>
         <% platos.forEach(p => { %>
         <tr>
@@ -167,10 +209,10 @@
   <% } %>
 
   <div class="seccion">
-    <p class="seccion-titulo"><i class="ti ti-bowl" aria-hidden="true"></i> Vajilla necesaria</p>
+    <p class="seccion-titulo"><i class="ti ti-bowl" aria-hidden="true"></i> <span data-i18n>Vajilla necesaria</span></p>
     <% if (vajilla.length > 0) { %>
       <table>
-        <thead><tr><th>Vajilla</th><th class="num">Cantidad</th></tr></thead>
+        <thead><tr><th data-i18n>Vajilla</th><th class="num" data-i18n>Cantidad</th></tr></thead>
         <tbody>
           <% vajilla.forEach(v => { %>
           <tr><td><%= v.vajilla_nombre %></td><td class="num"><%= v.cantidad %></td></tr>
@@ -178,12 +220,12 @@
         </tbody>
       </table>
     <% } else { %>
-      <p class="vacio">Sin vajilla registrada.</p>
+      <p class="vacio" data-i18n>Sin vajilla registrada.</p>
     <% } %>
   </div>
 
   <div class="seccion">
-    <p class="seccion-titulo"><i class="ti ti-users" aria-hidden="true"></i> Personal asignado</p>
+    <p class="seccion-titulo"><i class="ti ti-users" aria-hidden="true"></i> <span data-i18n>Personal asignado</span></p>
     <% if (personal.length > 0) { %>
       <div class="lista-simple">
         <% personal.forEach(p => { %>
@@ -191,25 +233,25 @@
         <% }) %>
       </div>
     <% } else { %>
-      <p class="vacio">Sin personal asignado.</p>
+      <p class="vacio" data-i18n>Sin personal asignado.</p>
     <% } %>
   </div>
 
   <% if (evento.descripcion) { %>
   <div class="seccion">
-    <p class="seccion-titulo"><i class="ti ti-note" aria-hidden="true"></i> Notas</p>
+    <p class="seccion-titulo"><i class="ti ti-note" aria-hidden="true"></i> <span data-i18n>Notas</span></p>
     <p style="font-size:0.85rem;"><%= evento.descripcion %></p>
   </div>
   <% } %>
 
   <div class="total-final">
-    <span style="font-size:0.78rem;color:var(--gris-texto);">Costo total del evento</span>
+    <span style="font-size:0.78rem;color:var(--gris-texto);" data-i18n>Costo total del evento</span>
     <span class="num-total">$<%= parseFloat(evento.costo_total || 0).toFixed(2) %></span>
   </div>
 
   <div class="pie">
-    <span>Cargado por <%= evento.creador || '—' %></span>
-    <span>Portal interno Hilton Buenos Aires</span>
+    <span><span data-i18n>Cargado por</span> <%= evento.creador || '—' %></span>
+    <span data-i18n>Portal interno Hilton Buenos Aires</span>
   </div>
 
 </div>

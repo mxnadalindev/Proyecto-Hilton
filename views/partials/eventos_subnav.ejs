@@ -1,9 +1,11 @@
 <!-- Solapas de navegación dentro de Eventos: Eventos / Menús / Costos.
      Se incluye con { seccionEventos: 'lista' | 'menus' | 'costos' } para
      marcar cuál está activa. El CSS (.eventos-subnav / .eventos-subnav-item)
-     vive en style.css, compartido por las 3 pantallas que la usan. -->
+     vive en style.css, compartido por las 3 pantallas que la usan. Cada
+     pestaña tiene además un color fijo (verde/azul, igual paleta que los
+     botones del sitio) para distinguirlas entre sí. -->
 <div class="eventos-subnav">
-  <a href="/eventos" class="eventos-subnav-item <%= seccionEventos === 'lista' ? 'activa' : '' %>">Eventos</a>
-  <a href="/eventos/menus" class="eventos-subnav-item <%= seccionEventos === 'menus' ? 'activa' : '' %>">Menús</a>
-  <a href="/eventos/bocaditos-costos" class="eventos-subnav-item <%= seccionEventos === 'costos' ? 'activa' : '' %>">Costos</a>
+  <a href="/eventos" class="eventos-subnav-item color-verde <%= seccionEventos === 'lista' ? 'activa' : '' %>" data-i18n>Eventos</a>
+  <a href="/eventos/menus" class="eventos-subnav-item color-verde <%= seccionEventos === 'menus' ? 'activa' : '' %>" data-i18n>Menús</a>
+  <a href="/eventos/bocaditos-costos" class="eventos-subnav-item color-azul <%= seccionEventos === 'costos' ? 'activa' : '' %>" data-i18n>Costos</a>
 </div>

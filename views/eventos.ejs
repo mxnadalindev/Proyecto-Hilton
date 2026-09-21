@@ -16,19 +16,19 @@
   <main class="main-content">
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label">Portal interno</p>
-        <h1 class="seccion-titulo">Eventos</h1>
+        <p class="seccion-label" data-i18n>Portal interno</p>
+        <h1 class="seccion-titulo" data-i18n>Eventos</h1>
         <%- include('partials/eventos_subnav', { seccionEventos: 'lista' }) %>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <a href="/eventos/nuevo" class="btn-primary"><i class="ti ti-plus"></i> Nuevo evento</a>
+        <a href="/eventos/nuevo" class="btn-primary"><i class="ti ti-plus"></i> <span data-i18n>Nuevo evento</span></a>
       </div>
     </div>
 
     <% if (eventos.length > 0) { %>
     <div class="tabla-wrap">
       <table class="tabla">
-        <thead><tr><th>Nombre</th><th>Fecha</th><th>Horario</th><th>Miembros de equipo</th><th>Costo total</th><th></th></tr></thead>
+        <thead><tr><th data-i18n>Nombre</th><th data-i18n>Fecha</th><th data-i18n>Horario</th><th data-i18n>Miembros de equipo</th><th data-i18n>Costo total</th><th></th></tr></thead>
         <tbody>
           <% eventos.forEach(e => { %>
           <tr>
@@ -37,7 +37,7 @@
             <td><%= e.hora_inicio ? e.hora_inicio + (e.hora_fin ? ' — ' + e.hora_fin : '') : '—' %></td>
             <td><span class="badge-num"><i class="ti ti-users"></i> <%= e.cantidad_personal %></span></td>
             <td style="font-weight:500;color:var(--azul);">$<%= parseFloat(e.costo_total).toFixed(2) %></td>
-            <td><a href="/eventos/<%= e.id %>" class="btn-sm">Ver detalle</a></td>
+            <td><a href="/eventos/<%= e.id %>" class="btn-sm" data-i18n>Ver detalle</a></td>
           </tr>
           <% }) %>
         </tbody>
@@ -46,12 +46,12 @@
     <% } else { %>
     <div class="empty-state">
       <i class="ti ti-calendar-off" style="font-size:2.5rem;color:var(--gris-borde);margin-bottom:16px;display:block;"></i>
-      <p>No hay eventos todavía.</p>
-      <a href="/eventos/nuevo" class="btn-primary" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> Crear el primer evento</a>
+      <p data-i18n>No hay eventos todavía.</p>
+      <a href="/eventos/nuevo" class="btn-primary" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> <span data-i18n>Crear el primer evento</span></a>
     </div>
     <% } %>
     <div style="display:flex;justify-content:flex-start;align-items:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--gris-borde);">
-      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
+      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> <span data-i18n>Volver al menú principal</span></a>
     </div>
   </main>
   <%- include('partials/mobile-nav', { path: path }) %>

@@ -59,7 +59,17 @@
       return;
     }
     try {
-      const resp = await fetch('/i18n/' + idioma + '.json', { cache: 'force-cache' });
+      // OJO: iba con "force-cache", que hace que el navegador use la copia
+      // guardada del diccionario PARA SIEMPRE una vez que la tiene, ni
+      // siquiera respetando que quedó vieja — así que cualquier palabra
+      // nueva que agreguemos acá (como las de esta sesión) no aparecía
+      // hasta que alguien vaciara el caché del navegador a mano. Con
+      // "no-cache" el navegador SIEMPRE le confirma al servidor si el
+      // archivo cambió antes de usar la copia guardada (sigue siendo
+      // rápido si no cambió), así que las traducciones nuevas aparecen
+      // solas la primera vez que se carga la página después de instalar
+      // una actualización.
+      const resp = await fetch('/i18n/' + idioma + '.json', { cache: 'no-cache' });
       dict = resp.ok ? await resp.json() : {};
     } catch (e) {
       dict = {}; // sin conexión al archivo de traducciones: se queda en español, no rompe nada

@@ -352,15 +352,25 @@ input::placeholder, textarea::placeholder {
 
 /* Solapas de navegación dentro de una sección con sub-páginas (por ahora
    solo Eventos: Eventos / Menús / Costos) — reemplaza tener que ir a cada
-   una con un botón suelto en el header. */
-.eventos-subnav { display: flex; gap: 6px; margin-top: 8px; }
+   una con un botón suelto en el header. Formato de pestañas: una línea
+   base compartida y cada solapa se marca con un subrayado de color propio
+   cuando está activa (en vez del formato anterior de botones/píldoras). */
+.eventos-subnav { display: flex; gap: 24px; margin-top: 14px; border-bottom: 1px solid var(--gris-borde); }
 .eventos-subnav-item {
-  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
-  color: var(--gris-texto); background: var(--gris-fondo); border: 1px solid var(--gris-borde);
-  border-radius: 8px; padding: 6px 14px; text-decoration: none; transition: all var(--tr);
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 0 1px 10px; text-decoration: none; transition: all var(--tr);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
 }
-.eventos-subnav-item:hover { color: var(--azul); border-color: var(--azul-borde); }
-.eventos-subnav-item.activa { color: var(--azul); background: var(--azul-claro); border-color: var(--azul-borde); }
+/* Color fijo por pestaña (igual paleta que .btn-primary / .btn-secondary del sitio),
+   así se distinguen entre sí aunque ninguna esté activa: tenue cuando no está
+   activa, color completo + subrayado sólido cuando sí lo está. */
+.eventos-subnav-item.color-verde { color: rgba(6,147,126,0.55); }
+.eventos-subnav-item.color-verde:hover { color: #06937e; border-bottom-color: rgba(6,147,126,0.35); }
+.eventos-subnav-item.color-verde.activa { color: #06937e; border-bottom-color: #06937e; }
+
+.eventos-subnav-item.color-azul { color: rgba(0,47,97,0.5); }
+.eventos-subnav-item.color-azul:hover { color: #002f61; border-bottom-color: rgba(0,47,97,0.35); }
+.eventos-subnav-item.color-azul.activa { color: #002f61; border-bottom-color: #002f61; }
 
 /* ── Cards contenido ── */
 .content-grid {
