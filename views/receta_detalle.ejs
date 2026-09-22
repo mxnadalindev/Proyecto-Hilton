@@ -26,8 +26,8 @@
    WhatsApp), eliminar en rojo. */
 .btn-icono-accion {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 40px; height: 40px; box-sizing: border-box; padding: 0;
-  border-radius: 8px; font-size: 16px; text-decoration: none; cursor: pointer;
+  width: 32px; height: 32px; box-sizing: border-box; padding: 0;
+  border-radius: 8px; font-size: 15px; text-decoration: none; cursor: pointer;
   transition: all var(--tr);
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
@@ -37,6 +37,12 @@
 .btn-icono-verde:hover { background: rgba(6,147,126,0.24); }
 .btn-icono-rojo { background: var(--rojo-claro); color: var(--rojo); border: 1px solid var(--rojo-borde); }
 .btn-icono-rojo:hover { background: var(--rojo); color: #fff; }
+
+/* "Ver video" y "Agregar procedimiento" — mismo molde chico (32px) que el
+   resto del módulo de Recetas, en vez de .btn-primary (40px) y .btn-sm
+   (otro estilo más viejo, sin el mismo verde/azul traslúcido). */
+.btn-chico-verde { background: rgba(6,147,126,0.14); color: #06937e; border: 1px solid rgba(6,147,126,0.32); font-family: var(--font-sans); font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 12px; height: 32px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; transition: all var(--tr); box-sizing: border-box; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.btn-chico-verde:hover { background: rgba(6,147,126,0.24); }
 
 .receta-foto { margin-bottom: 20px; border-radius: 12px; overflow: hidden; box-shadow: var(--sombra); }
 .receta-foto img { width: 100%; max-height: 380px; object-fit: cover; display: block; }
@@ -90,6 +96,17 @@
         fotosPorGrupo[g].push(f);
       });
     %>
+
+    <% if (typeof msg !== 'undefined' && msg) {
+      const mensajesReceta = { creada: 'Receta guardada correctamente.', actualizada: 'Receta actualizada correctamente.' };
+      const textoMsg = mensajesReceta[msg] || null;
+    %>
+    <% if (textoMsg) { %>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:#16a34a;display:flex;align-items:center;gap:10px;">
+      <i class="ti ti-check" style="font-size:18px;"></i> <span data-i18n><%= textoMsg %></span>
+    </div>
+    <% } %>
+    <% } %>
 
     <div class="seccion-header">
       <div class="seccion-header-left">
@@ -201,7 +218,7 @@
         <% } else { %>
           <p class="list-empty" data-i18n>Sin procedimiento cargado.</p>
           <% if (puedeEditar) { %>
-          <a href="/recetas/<%= receta.id %>/editar" class="btn-sm" style="margin-top:10px;display:inline-flex;align-items:center;gap:5px;">
+          <a href="/recetas/<%= receta.id %>/editar" class="btn-chico-verde" style="margin-top:10px;">
             <i class="ti ti-plus"></i> <span data-i18n>Agregar procedimiento</span>
           </a>
           <% } %>
@@ -223,7 +240,7 @@
                 <% const ytId = v.valor.includes('youtu.be') ? v.valor.split('/').pop() : v.valor.split('v=')[1]?.split('&')[0]; %>
                 <iframe width="100%" src="https://www.youtube.com/embed/<%= ytId %>" frameborder="0" allowfullscreen style="border-radius:8px;aspect-ratio:16/9;display:block;"></iframe>
               <% } else if (v.origen === 'url') { %>
-                <a href="<%= v.valor %>" target="_blank" class="btn-primary" style="display:inline-flex;">
+                <a href="<%= v.valor %>" target="_blank" class="btn-chico-verde" style="display:inline-flex;">
                   <i class="ti ti-external-link"></i> <span data-i18n>Ver video</span>
                 </a>
               <% } else { %>

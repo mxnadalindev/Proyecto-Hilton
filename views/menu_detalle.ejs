@@ -21,6 +21,13 @@
 .btn-danger{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-family:var(--font-sans);font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;}
 .btn-danger:hover{background:#dc2626;color:#fff;}
 
+/* Botones "chicos" (32px), mismo molde que el resto de la aplicación. */
+.btn-chico-rojo,.btn-chico-verde{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-rojo{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;}
+.btn-chico-rojo:hover{background:#dc2626;color:#fff;}
+.btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
+
 @media (max-width: 600px) {
   .form-card{padding:16px;}
 }
@@ -37,7 +44,7 @@
         <% if (menu.descripcion) { %><p style="font-size:0.82rem;color:var(--gris-texto);margin:4px 0 0;"><%= menu.descripcion %></p><% } %>
       </div>
       <form method="POST" action="/eventos/menus/<%= menu.id %>/eliminar" onsubmit="return confirm(tHilton('¿Eliminar este menú? Los bocaditos del catálogo no se borran, solo se desvinculan.'))">
-        <button type="submit" class="btn-danger"><i class="ti ti-trash"></i> <span data-i18n>Eliminar menú</span></button>
+        <button type="submit" class="btn-chico-rojo"><i class="ti ti-trash"></i> <span data-i18n>Eliminar menú</span></button>
       </form>
     </div>
 
@@ -58,7 +65,7 @@
             <% } %>
           <% }) %>
         </select>
-        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> <span data-i18n>Agregar</span></button>
+        <button type="submit" class="btn-chico-verde"><i class="ti ti-plus"></i> <span data-i18n>Agregar</span></button>
       </form>
     </div>
 

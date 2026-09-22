@@ -65,6 +65,18 @@
 }
 .btn-danger:hover { background: #dc2626; color: #fff; }
 
+/* Botones "chicos" (32px), mismo molde que el resto de la aplicación.
+   "Eventos" y "Más opciones" quedaban pegados y los dos eran azules
+   (.btn-secondary), así que "Más opciones" pasa a verde para que no se
+   repita el color al lado del otro. */
+.btn-chico-azul,.btn-chico-verde,.btn-chico-rojo{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-azul{background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);}
+.btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+.btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
+.btn-chico-rojo{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;}
+.btn-chico-rojo:hover{background:#dc2626;color:#fff;}
+
 /* "Otras opciones" — mismas clases que ya usan Horas Extra/Horarios/Personal/
    Costos/Inventario AYB (viven en su propio <style> ahí también, no en
    style.css global). Acá agrupa Editar/BEO/Eliminar bajo un solo botón de
@@ -141,13 +153,13 @@
     <h1 class="seccion-titulo"><%= evento.nombre %></h1>
   </div>
   <div style="display:flex;gap:8px;align-items:center;">
-    <a href="/eventos" class="btn-secondary"><i class="ti ti-arrow-left" aria-hidden="true"></i> <span data-i18n>Eventos</span></a>
+    <a href="/eventos" class="btn-chico-azul"><i class="ti ti-arrow-left" aria-hidden="true"></i> <span data-i18n>Eventos</span></a>
 
     <!-- "Más opciones": agrupa Editar/BEO/Eliminar (antes 3 botones sueltos
          al lado de "Eventos") bajo un solo desplegable, mismo patrón que
          "Otras opciones" en Horas Extra/Horarios/Personal/Costos/Inventario. -->
     <div class="menu-otras-opciones" style="position:relative;">
-      <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
+      <button type="button" class="btn-chico-verde" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
         <i class="ti ti-dots"></i> <span data-i18n>Más opciones</span> <i class="ti ti-chevron-down" style="font-size:12px;"></i>
       </button>
       <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
@@ -175,8 +187,8 @@
     <p class="confirm-titulo" data-i18n>¿Eliminar este evento?</p>
     <p class="confirm-texto"><span data-i18n>Esta acción no se puede deshacer. Se va a borrar</span> "<%= evento.nombre %>" <span data-i18n>y todo lo que tenga cargado (platos, personal, vajilla).</span></p>
     <div class="confirm-acciones">
-      <button type="button" class="btn-secondary" onclick="cerrarConfirmEliminar()" data-i18n>Cancelar</button>
-      <button type="button" class="btn-danger" onclick="document.getElementById('form-eliminar-evento').removeAttribute('onsubmit'); document.getElementById('form-eliminar-evento').submit();" data-i18n>Sí, eliminar</button>
+      <button type="button" class="btn-chico-azul" onclick="cerrarConfirmEliminar()" data-i18n>Cancelar</button>
+      <button type="button" class="btn-chico-rojo" onclick="document.getElementById('form-eliminar-evento').removeAttribute('onsubmit'); document.getElementById('form-eliminar-evento').submit();" data-i18n>Sí, eliminar</button>
     </div>
   </div>
 </div>

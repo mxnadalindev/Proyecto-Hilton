@@ -9,6 +9,14 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
+  <style>
+    /* Botón "chico" (32px), mismo molde que el resto de la aplicación. */
+    .btn-chico-azul,.btn-chico-verde{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all .2s;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+    .btn-chico-azul{background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);}
+    .btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+    .btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+    .btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
+  </style>
 </head>
 <body>
 <div class="app-layout">
@@ -20,7 +28,7 @@
         <p class="seccion-label">Costos</p>
         <h1 class="seccion-titulo">Revisar factura</h1>
       </div>
-      <a href="/costos" class="btn-secondary"><i class="ti ti-arrow-left"></i> Cancelar y volver</a>
+      <a href="/costos" class="btn-chico-azul"><i class="ti ti-arrow-left"></i> Cancelar y volver</a>
     </div>
 
     <% if (typeof autoAplicados !== 'undefined' && autoAplicados > 0) { %>
@@ -155,8 +163,8 @@
         </div>
 
         <div style="margin-top:20px;display:flex;gap:12px;">
-          <button type="button" class="btn-primary" onclick="intentarAplicar()"><i class="ti ti-check"></i> Aplicar cambios tildados</button>
-          <a href="/costos" class="btn-secondary">Descartar todo</a>
+          <button type="button" class="btn-chico-verde" onclick="intentarAplicar()"><i class="ti ti-check"></i> Aplicar cambios tildados</button>
+          <a href="/costos" class="btn-chico-azul">Descartar todo</a>
         </div>
       </form>
 
@@ -182,9 +190,9 @@
             Esto es solo un aviso — todavía no se aplicó ningún cambio. Revisá la tabla y confirmá cuando quieras.
           </p>
           <div style="display:flex;gap:10px;justify-content:center;">
-            <button type="button" id="btn-modal-platos-cancelar" class="btn-secondary" onclick="cerrarModalPlatos()">Cancelar</button>
-            <button type="button" id="btn-modal-platos-entendido" class="btn-secondary" style="display:none;" onclick="cerrarModalPlatos()">Entendido</button>
-            <button type="button" id="btn-modal-platos-confirmar" class="btn-primary" onclick="confirmarAplicarConPlatos()"><i class="ti ti-check"></i> Sí, aplicar cambios</button>
+            <button type="button" id="btn-modal-platos-cancelar" class="btn-chico-azul" onclick="cerrarModalPlatos()">Cancelar</button>
+            <button type="button" id="btn-modal-platos-entendido" class="btn-chico-azul" style="display:none;" onclick="cerrarModalPlatos()">Entendido</button>
+            <button type="button" id="btn-modal-platos-confirmar" class="btn-chico-verde" onclick="confirmarAplicarConPlatos()"><i class="ti ti-check"></i> Sí, aplicar cambios</button>
           </div>
         </div>
       </div>

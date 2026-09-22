@@ -74,20 +74,27 @@
 
 /* "Cancelar" en rojo (en vez del azul de .btn-secondary de siempre): al
    quedar pegado al botón "Otras opciones" (que también es .btn-secondary,
-   azul), los dos se veían igual. Mismo molde de .btn-primary/.btn-secondary
-   (alto 40px, mismo padding/radio), paleta roja traslúcida como el resto
-   del sitio usa para acciones de "cancelar/eliminar". */
+   azul), los dos se veían igual. Mismo molde de .btn-primary/.btn-secondary,
+   paleta roja traslúcida como el resto del sitio usa para acciones de
+   "cancelar/eliminar". Los tres botones del encabezado (Otras opciones,
+   Cancelar, Guardar costos) ahora achicados a 32px, mismo tamaño que se usa
+   en el resto de la aplicación (Recetas, Costos). */
 .btn-cancelar-rojo {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
   background: rgba(220,38,38,0.10); color: #dc2626;
   border: 1px solid rgba(220,38,38,0.28); border-radius: 8px;
-  padding: 0 18px; box-sizing: border-box; height: 40px;
-  font-family: var(--font-sans); font-size: 0.7rem; font-weight: 600;
-  letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; cursor: pointer;
+  padding: 0 12px; box-sizing: border-box; height: 32px;
+  font-family: var(--font-sans); font-size: 0.62rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; cursor: pointer;
   transition: all var(--tr);
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
 .btn-cancelar-rojo:hover { background: rgba(220,38,38,0.20); }
+.btn-chico-azul,.btn-chico-verde{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-azul{background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);}
+.btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+.btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
 
 @media (max-width: 600px) {
   .form-card { padding: 16px; }
@@ -111,7 +118,7 @@
          sueltos) bajo un solo desplegable, mismo patrón que "Otras opciones"
          en Horas Extra/Horarios/Personal/Costos/Inventario AYB. -->
     <div class="menu-otras-opciones" style="position:relative;">
-      <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
+      <button type="button" class="btn-chico-azul" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
         <i class="ti ti-dots"></i> <span data-i18n>Otras opciones</span> <i class="ti ti-chevron-down" style="font-size:12px;"></i>
       </button>
       <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
@@ -131,7 +138,7 @@
       </div>
     </div>
     <a href="/eventos" class="btn-cancelar-rojo" data-i18n>Cancelar</a>
-    <button type="submit" form="form-costos" class="btn-primary">
+    <button type="submit" form="form-costos" class="btn-chico-verde">
       <i class="ti ti-device-floppy" aria-hidden="true"></i> <span data-i18n>Guardar costos</span>
     </button>
   </div>

@@ -10,6 +10,14 @@
   <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
   <style>
+/* Botón "chico" (32px), mismo molde que el resto de la aplicación. */
+.btn-icono-chico{width:32px;height:32px;box-sizing:border-box;padding:0;border-radius:8px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer;transition:all .2s;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all .2s;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-azul{background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);}
+.btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+.btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
+
 .desayuno-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
 .desayuno-stat{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:16px;text-align:center;}
 .desayuno-stat p:first-child{font-size:0.62rem;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;}
@@ -28,13 +36,13 @@
         <h1 class="seccion-titulo">Revisar antes de cargar</h1>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;">
-        <a href="/inicio" class="btn-secondary" title="Volver al inicio"><i class="ti ti-home"></i></a>
+        <a href="/inicio" class="btn-icono-chico btn-chico-verde" title="Volver al inicio"><i class="ti ti-home"></i></a>
         <form method="POST" action="/desayuno/cancelar" style="margin:0;">
-          <button type="submit" class="btn-secondary"><i class="ti ti-arrow-left"></i> Cancelar y volver</button>
+          <button type="submit" class="btn-chico btn-chico-azul"><i class="ti ti-arrow-left"></i> Cancelar y volver</button>
         </form>
         <% if (totalFilas > 0) { %>
         <form method="POST" action="/desayuno/aplicar" style="margin:0;">
-          <button type="submit" class="btn-primary"><i class="ti ti-check"></i> Confirmar y cargar <%= totalFilas %> habitaciones</button>
+          <button type="submit" class="btn-chico btn-chico-verde"><i class="ti ti-check"></i> Confirmar y cargar <%= totalFilas %> habitaciones</button>
         </form>
         <% } %>
       </div>

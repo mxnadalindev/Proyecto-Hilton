@@ -44,6 +44,14 @@
 .btn-guardar-chico { background: rgba(6,147,126,0.14); color: #06937e; border: 1px solid rgba(6,147,126,0.32); font-family: var(--font-sans); font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 12px; height: 32px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all var(--tr); box-sizing: border-box; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .btn-guardar-chico:hover { background: rgba(6,147,126,0.24); }
 
+/* Agregar video / Agregar foto / Agregar ingrediente — mismo molde chico
+   (32px) que Cancelar/Guardar, en verde traslucido porque son acciones de
+   "sumar algo" (mismo lenguaje que .btn-guardar-chico), antes eran
+   .btn-secondary (azul, 40px) y quedaban desparejos con el resto de los
+   botones de la página. */
+.btn-agregar-chico { background: rgba(6,147,126,0.14); color: #06937e; border: 1px solid rgba(6,147,126,0.32); font-family: var(--font-sans); font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 12px; height: 32px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all var(--tr); box-sizing: border-box; }
+.btn-agregar-chico:hover { background: rgba(6,147,126,0.24); }
+
 /* Pestañas — mismo "molde" (subrayado azul en la activa, gris el resto)
    que ya usa Configuración, para que el formulario de receta no sea un
    scroll larguísimo con las 5 tarjetas apiladas una atrás de otra. */
@@ -58,7 +66,7 @@
 .tabla-ingredientes input, .tabla-ingredientes select { width: 100%; background: var(--gris-fondo); border: 1px solid var(--gris-borde); border-radius: 7px; padding: 7px 9px; font-family: var(--font-sans); font-size: 0.8rem; color: var(--negro); outline: none; }
 .tabla-ingredientes input:focus, .tabla-ingredientes select:focus { border-color: var(--azul); background: var(--blanco); }
 .subtotal-ing { font-size: 0.78rem; font-weight: 600; color: var(--azul); white-space: nowrap; }
-.btn-fila-quitar { background: var(--rojo-claro); border: none; color: var(--rojo); width: 28px; height: 28px; border-radius: 7px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.btn-fila-quitar { background: var(--rojo-claro); border: none; color: var(--rojo); width: 32px; height: 32px; box-sizing: border-box; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .btn-fila-quitar:hover { background: var(--rojo); color: #fff; }
 
 /* Filas de video / foto */
@@ -70,6 +78,19 @@
 @media (max-width: 600px) {
   .form-card { padding: 16px; }
 }
+
+/* Cartel propio de "campo obligatorio" al apretar Guardar, en vez del
+   globito nativo del navegador — ese globito viene con el estilo del
+   sistema operativo (en Windows, un recuadro gris con la tipografía de
+   Windows) y desentona con el resto de la página, además de que ni
+   siquiera se puede ver si el campo está en una pestaña oculta (por eso ya
+   existía el cambio de pestaña automático — ver el listener de "invalid"
+   más abajo). Mismo lenguaje visual que los carteles de error del resto
+   del sitio (fondo/borde/texto rojo). */
+.campo-invalido { border-color: var(--rojo) !important; background: var(--rojo-claro) !important; }
+.globo-validacion { display: flex; align-items: center; gap: 6px; background: var(--rojo-claro); border: 1px solid var(--rojo-borde); color: var(--rojo); font-size: 0.74rem; font-weight: 500; padding: 6px 10px; border-radius: 7px; margin-top: 6px; animation: globoValidacionAparecer 0.15s ease; }
+.globo-validacion i { font-size: 15px; flex-shrink: 0; }
+@keyframes globoValidacionAparecer { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
@@ -152,7 +173,7 @@
           <div class="form-card">
             <p class="form-card-title"><i class="ti ti-video"></i> <span data-i18n>Videos</span></p>
             <div id="videos-body"></div>
-            <button type="button" class="btn-secondary" onclick="agregarFilaVideo()" style="margin-top:8px;">
+            <button type="button" class="btn-agregar-chico" onclick="agregarFilaVideo()" style="margin-top:8px;">
               <i class="ti ti-plus"></i> <span data-i18n>Agregar video</span>
             </button>
           </div>
@@ -163,7 +184,7 @@
           <div class="form-card">
             <p class="form-card-title"><i class="ti ti-photo"></i> <span data-i18n>Fotos (Preparación, Montaje, etc.)</span></p>
             <div id="fotos-body"></div>
-            <button type="button" class="btn-secondary" onclick="agregarFilaFoto()" style="margin-top:8px;">
+            <button type="button" class="btn-agregar-chico" onclick="agregarFilaFoto()" style="margin-top:8px;">
               <i class="ti ti-plus"></i> <span data-i18n>Agregar foto</span>
             </button>
           </div>
@@ -182,7 +203,7 @@
               <tbody id="ingredientes-body"></tbody>
             </table>
             </div>
-            <button type="button" class="btn-secondary" onclick="agregarFilaIngrediente()" style="margin-top:10px;">
+            <button type="button" class="btn-agregar-chico" onclick="agregarFilaIngrediente()" style="margin-top:10px;">
               <i class="ti ti-plus"></i> <span data-i18n>Agregar ingrediente</span>
             </button>
           </div>
@@ -244,11 +265,71 @@ function mostrarTabReceta(tab) {
 // al primero justo cuando el navegador le intenta mostrar el cartel. Por
 // eso se compara el campo del evento contra el primer inválido del
 // formulario, y solo se cambia de pestaña para ese.
-document.getElementById('form-receta').addEventListener('invalid', function (e) {
+// ── Cartel propio de "campo obligatorio" en vez del globito nativo del
+// navegador (a pedido: "que no sea de Windows si no de la página
+// nuestra") — se desactiva la validación automática del navegador con
+// noValidate y se corre a mano con checkValidity() al mandar el
+// formulario; eso sigue disparando el evento "invalid" en cada campo que
+// falte (igual que antes), solo que ahora en vez del cartelito del
+// sistema operativo se muestra este cartel propio pegado al campo.
+const formReceta = document.getElementById('form-receta');
+formReceta.noValidate = true;
+
+let _globoValidacionActual = null;
+function ocultarGloboValidacion() {
+  if (_globoValidacionActual) { _globoValidacionActual.remove(); _globoValidacionActual = null; }
+}
+// El texto NO sale de campo.validationMessage a propósito — ese mensaje lo arma
+// el navegador con el idioma del sistema operativo (en Windows en inglés
+// sale "Please fill out this field", sin importar el idioma elegido acá
+// adentro), que es justo lo que se quería sacar de encima. En su lugar se
+// arma el texto a mano según qué regla de validación falló, siempre en el
+// idioma del sitio.
+function textoValidacionPropio(campo) {
+  const v = campo.validity;
+  if (v.valueMissing) {
+    return campo.tagName === 'SELECT' ? tHilton('Seleccioná una opción.') : tHilton('Completá este campo.');
+  }
+  if (v.typeMismatch || v.patternMismatch) return tHilton('El valor no es válido.');
+  if (v.rangeUnderflow) return tHilton('El valor es menor al mínimo permitido.');
+  if (v.rangeOverflow) return tHilton('El valor es mayor al máximo permitido.');
+  return tHilton('Revisá este campo.');
+}
+
+function mostrarGloboValidacion(campo) {
+  ocultarGloboValidacion();
+  campo.classList.add('campo-invalido');
+  const globo = document.createElement('div');
+  globo.className = 'globo-validacion';
+  const texto = document.createElement('span');
+  texto.textContent = textoValidacionPropio(campo);
+  globo.appendChild(Object.assign(document.createElement('i'), { className: 'ti ti-alert-circle' }));
+  globo.appendChild(texto);
+  campo.insertAdjacentElement('afterend', globo);
+  _globoValidacionActual = globo;
+  campo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  campo.focus({ preventScroll: true });
+
+  const limpiar = () => {
+    campo.classList.remove('campo-invalido');
+    ocultarGloboValidacion();
+    campo.removeEventListener('input', limpiar);
+    campo.removeEventListener('change', limpiar);
+  };
+  campo.addEventListener('input', limpiar);
+  campo.addEventListener('change', limpiar);
+}
+
+formReceta.addEventListener('submit', function (e) {
+  if (!this.checkValidity()) e.preventDefault();
+});
+
+formReceta.addEventListener('invalid', function (e) {
   const primero = this.querySelector(':invalid');
   if (e.target !== primero) return;
   const tabContent = primero.closest('[id^="tab-content-"]');
   if (tabContent) mostrarTabReceta(tabContent.id.replace('tab-content-', ''));
+  mostrarGloboValidacion(primero);
 }, true);
 
 // ── Insumos disponibles (para el <select> de ingredientes) ──

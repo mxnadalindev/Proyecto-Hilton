@@ -35,6 +35,14 @@
 .btn-icono{background:none;border:1px solid var(--gris-borde);border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gris-texto);transition:border-color .2s,color .2s;}
 .btn-icono:hover{border-color:var(--azul);color:var(--azul);}
 
+/* Botón "chico" (32px), mismo molde que el resto de la aplicación. */
+.btn-icono-chico{width:32px;height:32px;box-sizing:border-box;padding:0;border-radius:8px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer;transition:all .2s;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all .2s;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-azul{background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);}
+.btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+.btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
+
 .field{display:flex;flex-direction:column;gap:6px;}
 .field label{font-size:0.72rem;font-weight:600;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.04em;}
 .field input{border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;background:var(--gris-fondo);}
@@ -54,8 +62,8 @@
         <h1 class="seccion-titulo">Croutons</h1>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
-        <button onclick="showModal('modal-lote')" class="btn-secondary">
+        <a href="/inicio" class="btn-icono-chico btn-chico-verde" title="Menú principal"><i class="ti ti-home"></i></a>
+        <button onclick="showModal('modal-lote')" class="btn-chico btn-chico-azul">
           <i class="ti ti-plus"></i> Cargar lote a mano
         </button>
       </div>
@@ -109,7 +117,7 @@
             <span id="nombre-archivo-croutons">Elegir archivo</span>
             <input type="file" id="input-croutons" required onchange="detectarTipoArchivoCroutons(this)">
           </label>
-          <button type="submit" id="btn-carga-croutons" class="btn-primary">
+          <button type="submit" id="btn-carga-croutons" class="btn-chico btn-chico-verde">
             <i class="ti ti-upload" id="icon-carga-croutons"></i>
             <span id="texto-carga-croutons">Subir</span>
           </button>
@@ -239,8 +247,8 @@
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-lote')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> Agregar lote</button>
+        <button type="button" onclick="hideModal('modal-lote')" class="btn-chico btn-chico-azul">Cancelar</button>
+        <button type="submit" class="btn-chico btn-chico-verde"><i class="ti ti-plus"></i> Agregar lote</button>
       </div>
     </form>
   </div>

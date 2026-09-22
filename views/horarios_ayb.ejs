@@ -17,6 +17,22 @@
 .btn-whatsapp{display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-sans);font-size:0.68rem;font-weight:600;text-decoration:none;cursor:pointer;transition:background 0.2s;}
 .btn-whatsapp:hover{background:#1ea952;}
 
+/* Botones "chicos" (32px) del encabezado y de los modales de Cancelar/
+   Guardar/Eliminar, mismo molde que el resto de la aplicación. "Mi agenda"
+   y "Eventos" quedaban los dos azules pegados, así que "Eventos" pasa a
+   verde para que no se repita el color al lado del otro. El resto de los
+   botones de esta pantalla (dentro de cada tarjeta de evento: Inscriptos,
+   Anotarme, Vino/No vino, etc.) usan su propio estilo gris neutro — se
+   dejan así, no forman parte de este esquema rojo/azul/verde. */
+.btn-icono-chico{width:32px;height:32px;box-sizing:border-box;padding:0;border-radius:8px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-azul{background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);}
+.btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+.btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
+.btn-chico-rojo{background:var(--rojo-claro);color:var(--rojo);border:1px solid var(--rojo-borde);}
+.btn-chico-rojo:hover{background:var(--rojo);color:#fff;}
+
 /* Valores "de escritorio" para propiedades que antes estaban puestas como
    estilo inline directo en el HTML — se movieron acá (mismo valor de
    siempre) porque un estilo inline SIEMPRE le gana a una regla de este
@@ -51,13 +67,13 @@
         <h1 class="seccion-titulo" id="ayb-titulo">Mi disponibilidad</h1>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
-        <button type="button" onclick="abrirMisCompromisos()" class="btn-secondary"><i class="ti ti-calendar-event"></i> Mi agenda</button>
-        <button type="button" onclick="abrirEventosMes()" class="btn-secondary"><i class="ti ti-users"></i> Eventos</button>
+        <a href="/inicio" class="btn-icono-chico btn-chico-verde" title="Menú principal"><i class="ti ti-home"></i></a>
+        <button type="button" onclick="abrirMisCompromisos()" class="btn-chico btn-chico-azul"><i class="ti ti-calendar-event"></i> Mi agenda</button>
+        <button type="button" onclick="abrirEventosMes()" class="btn-chico btn-chico-verde"><i class="ti ti-users"></i> Eventos</button>
         <% // "Miembro de equipo" (con Vencimientos) es solo para quien gestiona
            // AYB (admin/supervisor) — un mozo común no debe verlo. %>
         <% if (esGestor) { %>
-        <a href="/miembros-de-equipo" id="ayb-btn-ver-equipo" class="btn-primary"><i class="ti ti-users"></i> Ver equipo</a>
+        <a href="/miembros-de-equipo" id="ayb-btn-ver-equipo" class="btn-chico btn-chico-azul"><i class="ti ti-users"></i> Ver equipo</a>
         <% } %>
       </div>
     </div>
@@ -173,10 +189,10 @@
             <span style="font-size:0.68rem;font-weight:700;background:var(--azul-claro);border:1px solid var(--azul);color:var(--azul);padding:4px 12px;border-radius:20px;">Con eventos</span>
             <span style="font-size:0.68rem;font-weight:700;background:var(--gris-fondo);border:1px solid var(--gris-borde);color:var(--gris-texto);padding:4px 12px;border-radius:20px;">Sin eventos</span>
           </div>
-          <button type="button" id="ev-btn-convocar-ahora" onclick="correrEscalamientoAhora()" class="btn-secondary" style="display:none;padding:7px 14px;font-size:0.75rem;white-space:nowrap;" title="Sin esto, el sistema revisa los eventos solo cada unos minutos en segundo plano — este botón lo hace ahora mismo, sin esperar.">
+          <button type="button" id="ev-btn-convocar-ahora" onclick="correrEscalamientoAhora()" class="btn-chico btn-chico-azul" style="display:none;white-space:nowrap;" title="Sin esto, el sistema revisa los eventos solo cada unos minutos en segundo plano — este botón lo hace ahora mismo, sin esperar.">
             <i class="ti ti-refresh"></i> Convocar ahora
           </button>
-          <button type="button" id="ev-btn-nuevo" onclick="abrirCargarEvento()" class="btn-primary" style="display:none;padding:7px 14px;font-size:0.75rem;white-space:nowrap;">
+          <button type="button" id="ev-btn-nuevo" onclick="abrirCargarEvento()" class="btn-chico btn-chico-verde" style="display:none;white-space:nowrap;">
             <i class="ti ti-plus"></i> Cargar evento
           </button>
         </div>
@@ -213,7 +229,7 @@
     </div>
 
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
+      <a href="/inicio" class="btn-chico btn-chico-azul"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
     </div>
   </main>
   <%- include('partials/mobile-nav', { path: 'horarios' }) %>
@@ -262,8 +278,8 @@
         <i class="ti ti-users"></i> Ver mozos disponibles
       </button>
       <div style="display:flex;gap:12px;">
-        <button type="button" onclick="hideModal('modal-evento')" class="btn-secondary">Cancelar</button>
-        <button type="button" onclick="guardarEvento()" class="btn-primary"><i class="ti ti-check"></i> <span id="ev-modal-btn-texto">Guardar evento</span></button>
+        <button type="button" onclick="hideModal('modal-evento')" class="btn-chico btn-chico-azul">Cancelar</button>
+        <button type="button" onclick="guardarEvento()" class="btn-chico btn-chico-verde"><i class="ti ti-check"></i> <span id="ev-modal-btn-texto">Guardar evento</span></button>
       </div>
     </div>
   </div>
@@ -292,7 +308,7 @@
       <i class="ti ti-alert-triangle" style="font-size:32px;color:#b45309;"></i>
     </div>
     <p id="aviso-ayb-texto" style="font-size:0.88rem;color:var(--negro);margin-bottom:22px;line-height:1.5;white-space:pre-line;text-align:left;"></p>
-    <button type="button" class="btn-primary" onclick="hideModal('modal-aviso-ayb')" style="min-width:120px;">Aceptar</button>
+    <button type="button" class="btn-chico btn-chico-verde" onclick="hideModal('modal-aviso-ayb')" style="min-width:120px;justify-content:center;">Aceptar</button>
   </div>
 </div>
 
@@ -305,8 +321,8 @@
     </div>
     <p style="font-size:0.88rem;color:var(--negro);margin-bottom:22px;line-height:1.5;">¿Eliminar este evento? No se puede deshacer.</p>
     <div style="display:flex;gap:10px;justify-content:center;">
-      <button type="button" class="btn-secondary" onclick="hideModal('modal-confirmar-eliminar-evento')" style="min-width:110px;">Cancelar</button>
-      <button type="button" onclick="confirmarEliminarEvento()" style="min-width:110px;background:#dc2626;color:#fff;border:none;border-radius:8px;padding:11px 18px;font-family:var(--font-sans);font-size:0.85rem;font-weight:600;cursor:pointer;">Eliminar</button>
+      <button type="button" class="btn-chico btn-chico-azul" onclick="hideModal('modal-confirmar-eliminar-evento')" style="min-width:110px;justify-content:center;">Cancelar</button>
+      <button type="button" class="btn-chico btn-chico-rojo" onclick="confirmarEliminarEvento()" style="min-width:110px;justify-content:center;">Eliminar</button>
     </div>
   </div>
 </div>

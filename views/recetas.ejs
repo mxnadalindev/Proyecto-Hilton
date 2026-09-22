@@ -59,6 +59,18 @@
   .deck-recetas { height:280px; }
   .card-receta { width:150px; height:210px; margin-left:-75px; margin-top:-105px; }
 }
+
+/* Botones "chicos" (32px) del mismo molde que usa el formulario de
+   Nueva/Editar receta, para que las 3 pantallas del módulo queden parejas.
+   Antes estos usaban las clases globales .btn-icono-casa/.btn-primary
+   (40px) — se dejan clases locales acá en vez de tocar las globales para
+   no afectar el tamaño de esos botones en el resto de la aplicación. */
+.btn-icono-casa-chico { background: rgba(0,47,97,0.12); color: #002f61; border: 1px solid rgba(0,47,97,0.28); width: 32px; height: 32px; box-sizing: border-box; padding: 0; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; text-decoration: none; transition: all var(--tr); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.btn-icono-casa-chico:hover { background: rgba(0,47,97,0.20); }
+.btn-primary-chico { background: rgba(6,147,126,0.14); color: #06937e; border: 1px solid rgba(6,147,126,0.32); font-family: var(--font-sans); font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 12px; height: 32px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; transition: all var(--tr); box-sizing: border-box; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.btn-primary-chico:hover { background: rgba(6,147,126,0.24); }
+.btn-icono-buscar-chico { width: 32px; height: 32px; box-sizing: border-box; padding: 0; display: inline-flex; align-items: center; justify-content: center; background: rgba(6,147,126,0.14); color: #06937e; border: 1px solid rgba(6,147,126,0.32); border-radius: 8px; cursor: pointer; font-size: 14px; transition: all var(--tr); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.btn-icono-buscar-chico:hover { background: rgba(6,147,126,0.24); }
 </style>
 </head>
 <body>
@@ -71,9 +83,9 @@
         <h1 class="seccion-titulo" data-i18n>Recetas</h1>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-icono-casa" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
+        <a href="/inicio" class="btn-icono-casa-chico" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
         <% if (puedeEditar) { %>
-        <a href="/recetas/nueva" class="btn-primary"><i class="ti ti-plus"></i> <span data-i18n>Nueva receta</span></a>
+        <a href="/recetas/nueva" class="btn-primary-chico"><i class="ti ti-plus"></i> <span data-i18n>Nueva receta</span></a>
         <% } %>
       </div>
     </div>
@@ -83,7 +95,7 @@
       <div style="display:flex;gap:10px;max-width:400px;">
         <input type="text" name="q" value="<%= busqueda %>" placeholder="Buscar receta..." data-i18n-ph="Buscar receta..."
                style="flex:1;padding:10px 14px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.85rem;outline:none;background:var(--blanco);color:var(--negro);">
-        <button type="submit" class="btn-primary" style="padding:10px 16px;">
+        <button type="submit" class="btn-icono-buscar-chico" title="Buscar" data-i18n-title="Buscar">
           <i class="ti ti-search"></i>
         </button>
       </div>
@@ -119,7 +131,7 @@
     <div class="receta-info-sel">
       <p class="stage-eyebrow" id="recetaCategoriaSel"<% if (!recetas[0].categoria) { %> data-i18n<% } %>><%= recetas[0].categoria || 'Cocina' %></p>
       <h2 class="stage-nombre" id="recetaNombreSel"><%= recetas[0].nombre %></h2>
-      <a href="/recetas/<%= recetas[0].id %>" class="btn-primary" id="recetaVerBtn">
+      <a href="/recetas/<%= recetas[0].id %>" class="btn-primary-chico" id="recetaVerBtn">
         <span data-i18n>Ver receta</span> <i class="ti ti-arrow-right" aria-hidden="true"></i>
       </a>
     </div>
@@ -128,7 +140,7 @@
       <i class="ti ti-chef-hat" style="font-size:2.5rem;color:var(--gris-borde);margin-bottom:16px;display:block;"></i>
       <p data-i18n>No hay recetas todavía.</p>
       <% if (puedeEditar) { %>
-      <a href="/recetas/nueva" class="btn-primary" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> <span data-i18n>Crear la primera receta</span></a>
+      <a href="/recetas/nueva" class="btn-primary-chico" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> <span data-i18n>Crear la primera receta</span></a>
       <% } %>
     </div>
     <% } %>

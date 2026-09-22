@@ -34,6 +34,19 @@
 .dropdown-otras-item-nav i{ color:#1d4e89; }
 .dropdown-otras-item-nav:hover{ background:rgba(0,47,97,0.08); }
 
+/* Botones "chicos" (32px), mismo molde que ya usan Recetas y Costos, para
+   que el encabezado y los modales de esta pantalla queden del mismo
+   tamaño que el resto de la aplicación en vez de los 40px de antes. Los
+   colores existentes ya alternaban bien (casita verde, Ver en
+   Horarios/Otras opciones azul, Nuevo empleado verde), así que se
+   mantienen — solo se achica el tamaño. */
+.btn-icono-chico{width:32px;height:32px;box-sizing:border-box;padding:0;border-radius:8px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-azul{background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);}
+.btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+.btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
+
 .recoff-control{display:inline-flex;align-items:center;gap:6px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:20px;padding:2px 4px;}
 .recoff-control button{width:20px;height:20px;border-radius:50%;border:none;background:var(--blanco);color:var(--gris-texto);cursor:pointer;font-size:0.85rem;line-height:1;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;}
 .recoff-control button:hover{background:var(--azul);color:#fff;}
@@ -299,14 +312,14 @@
         <h1 class="seccion-titulo" data-i18n>Miembro de equipo</h1>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-icono-casa" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
+        <a href="/inicio" class="btn-icono-chico btn-chico-verde" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
         <% if (misDepto === 'ayb') { %>
         <!-- AYB: "Ver en Horarios" + Importar mozos + Cargar con foto agrupados
              en un desplegable "Otras opciones", mismo patrón/clases que usa
              Horarios (horarios.ejs) para su propio menú de "Otras opciones" —
              así no se amontonan tantos botones sueltos en el header. -->
         <div class="menu-otras-opciones" style="position:relative;">
-          <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
+          <button type="button" class="btn-chico btn-chico-azul" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
             <i class="ti ti-dots"></i> <span data-i18n>Otras opciones</span> <i class="ti ti-chevron-down" style="font-size:12px;"></i>
           </button>
           <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
@@ -324,10 +337,10 @@
           </div>
         </div>
         <% } else { %>
-        <a id="btn-ver-horarios" href="/horarios?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-secondary"><i class="ti ti-clock"></i> <span data-i18n>Ver en Horarios</span></a>
+        <a id="btn-ver-horarios" href="/horarios?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-chico btn-chico-azul"><i class="ti ti-clock"></i> <span data-i18n>Ver en Horarios</span></a>
         <% } %>
         <% if (esAdmin) { %>
-        <button onclick="showModal('modal-nuevo')" class="btn-primary"><i class="ti ti-plus"></i> <span data-i18n>Nuevo empleado</span></button>
+        <button onclick="showModal('modal-nuevo')" class="btn-chico btn-chico-verde"><i class="ti ti-plus"></i> <span data-i18n>Nuevo empleado</span></button>
         <% } %>
       </div>
     </div>
@@ -352,7 +365,7 @@
         <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 8px;" data-i18n>Rango seleccionado</p>
         <p id="semana-label" style="font-size:1.1rem;font-weight:600;color:var(--negro);margin:0 0 12px;"></p>
         <div id="semana-dias" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
-        <a id="btn-ir-semana" href="/personal?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;">
+        <a id="btn-ir-semana" href="/personal?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-chico btn-chico-verde" style="margin-bottom:12px;">
           <i class="ti ti-calendar-check"></i> <span data-i18n>Cargar este rango</span>
         </a>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -366,7 +379,7 @@
     <% } else { %>
     <!-- AYB: sin selector de estados — solo navegación de período para ver la disponibilidad cargada -->
     <div class="card-periodo-ayb" style="display:flex;align-items:center;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;margin-bottom:20px;box-shadow:var(--sombra);flex-wrap:wrap;gap:10px;">
-      <a href="/personal?inicio=<%= rangoAnterior.inicio %>&fin=<%= rangoAnterior.fin %>" class="btn-secondary" style="padding:6px 14px;">
+      <a href="/personal?inicio=<%= rangoAnterior.inicio %>&fin=<%= rangoAnterior.fin %>" class="btn-chico btn-chico-azul">
         <i class="ti ti-chevron-left"></i> <span data-i18n>Período anterior</span>
       </a>
       <div style="text-align:center;">
@@ -375,7 +388,7 @@
           <%= new Date(dias[0]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long'}) %> — <%= new Date(dias[dias.length-1]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}) %>
         </p>
       </div>
-      <a href="/personal?inicio=<%= rangoSiguiente.inicio %>&fin=<%= rangoSiguiente.fin %>" class="btn-secondary" style="padding:6px 14px;">
+      <a href="/personal?inicio=<%= rangoSiguiente.inicio %>&fin=<%= rangoSiguiente.fin %>" class="btn-chico btn-chico-azul">
         <span data-i18n>Período siguiente</span> <i class="ti ti-chevron-right"></i>
       </a>
     </div>
@@ -624,7 +637,7 @@
     </div>
 
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--gris-borde);">
-      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> <span data-i18n>Volver al menú principal</span></a>
+      <a href="/inicio" class="btn-chico btn-chico-azul"><i class="ti ti-arrow-left"></i> <span data-i18n>Volver al menú principal</span></a>
     </div>
   </main>
 
@@ -686,8 +699,8 @@
         <% } %>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-editar')" class="btn-secondary" data-i18n>Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-device-floppy"></i> <span data-i18n>Guardar cambios</span></button>
+        <button type="button" onclick="hideModal('modal-editar')" class="btn-chico btn-chico-azul" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-chico btn-chico-verde"><i class="ti ti-device-floppy"></i> <span data-i18n>Guardar cambios</span></button>
       </div>
     </form>
   </div>
@@ -742,8 +755,8 @@
         <div class="field" style="grid-column:1/-1;"><label data-i18n>Contraseña inicial</label><input type="text" name="password" value="Hilton2026!"></div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-nuevo')" class="btn-secondary" data-i18n>Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-user-plus"></i> <span data-i18n>Agregar empleado</span></button>
+        <button type="button" onclick="hideModal('modal-nuevo')" class="btn-chico btn-chico-azul" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-chico btn-chico-verde"><i class="ti ti-user-plus"></i> <span data-i18n>Agregar empleado</span></button>
       </div>
     </form>
   </div>
@@ -767,8 +780,8 @@
       </div>
       <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:20px;" data-i18n>Mínimo 8 caracteres, una mayúscula y un número.</p>
       <div style="display:flex;justify-content:flex-end;gap:12px;">
-        <button type="button" onclick="hideModal('modal-reset')" class="btn-secondary" data-i18n>Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-key"></i> <span data-i18n>Guardar</span></button>
+        <button type="button" onclick="hideModal('modal-reset')" class="btn-chico btn-chico-azul" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-chico btn-chico-verde"><i class="ti ti-key"></i> <span data-i18n>Guardar</span></button>
       </div>
     </form>
   </div>
@@ -789,8 +802,8 @@
                style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;outline:none;color:var(--negro);">
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;">
-        <button type="button" onclick="hideModal('modal-feriado')" class="btn-secondary" data-i18n>Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-check"></i> <span data-i18n>Guardar</span></button>
+        <button type="button" onclick="hideModal('modal-feriado')" class="btn-chico btn-chico-azul" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-chico btn-chico-verde"><i class="ti ti-check"></i> <span data-i18n>Guardar</span></button>
       </div>
     </form>
   </div>
@@ -810,8 +823,8 @@
         <input type="file" name="archivo" accept=".csv" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);">
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-importar-mozos')" class="btn-secondary" data-i18n>Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-file-upload"></i> <span data-i18n>Importar</span></button>
+        <button type="button" onclick="hideModal('modal-importar-mozos')" class="btn-chico btn-chico-azul" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-chico btn-chico-verde"><i class="ti ti-file-upload"></i> <span data-i18n>Importar</span></button>
       </div>
     </form>
   </div>
@@ -831,8 +844,8 @@
         <input type="file" name="foto" accept="image/*" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);">
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-importar-mozos-foto')" class="btn-secondary" data-i18n>Cancelar</button>
-        <button type="submit" class="btn-primary" id="btn-foto-mozos"><i class="ti ti-camera"></i> <span data-i18n>Analizar foto</span></button>
+        <button type="button" onclick="hideModal('modal-importar-mozos-foto')" class="btn-chico btn-chico-azul" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-chico btn-chico-verde" id="btn-foto-mozos"><i class="ti ti-camera"></i> <span data-i18n>Analizar foto</span></button>
       </div>
     </form>
   </div>
@@ -862,7 +875,7 @@
     </div>
 
     <div style="display:flex;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-      <button type="button" onclick="hideModal('modal-disponibilidad')" class="btn-secondary" data-i18n>Cerrar</button>
+      <button type="button" onclick="hideModal('modal-disponibilidad')" class="btn-chico btn-chico-azul" data-i18n>Cerrar</button>
     </div>
   </div>
 </div>

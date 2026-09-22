@@ -71,13 +71,16 @@
    .texto-descripcion (ver style.css) — acá solo quedan los ajustes
    propios de este bloque (separación, animación de fade). */
 .stage-detalle { margin-bottom: 22px; transition: opacity 0.3s ease; }
+/* Mismo botón "chico" verde traslúcido que "Ver receta" en Recetas — antes
+   era un botón sólido grande (fondo teal opaco, 12px 26px de padding). */
 .stage-btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: var(--azul); border: none; color: #fff;
-  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
-  padding: 12px 26px; border-radius: 9px; text-decoration: none; transition: background 0.2s, transform 0.2s;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(6,147,126,0.14); color: #06937e; border: 1px solid rgba(6,147,126,0.32);
+  font-family: var(--font-sans); font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0 12px; height: 32px; box-sizing: border-box; border-radius: 8px; text-decoration: none;
+  transition: all var(--tr); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
-.stage-btn:hover { background: var(--azul-hover); transform: translateY(-1px); }
+.stage-btn:hover { background: rgba(6,147,126,0.24); }
 
 /* ── Resumen rápido — renglón de tarjetas al pie de la home ── */
 .resumen-rapido {

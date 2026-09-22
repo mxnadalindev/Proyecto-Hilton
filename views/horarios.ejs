@@ -12,6 +12,19 @@
 <style>
 .btn-excel{display:inline-flex;align-items:center;gap:6px;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-sans);font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background 0.2s;}
 .btn-excel:hover{background:#15803d;}
+
+/* Botones "chicos" (32px), mismo molde que el resto de la aplicación
+   (Recetas, Costos, Personal, Eventos), en vez de los 40px de antes. Los
+   colores existentes ya alternaban bien (casita verde, Miembro de equipo
+   azul, Otras opciones verde), así que se mantienen. */
+.btn-icono-chico{width:32px;height:32px;box-sizing:border-box;padding:0;border-radius:8px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-azul{background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);}
+.btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+.btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
+.btn-chico-rojo{background:var(--rojo-claro);color:var(--rojo);border:1px solid var(--rojo-borde);}
+.btn-chico-rojo:hover{background:var(--rojo);color:#fff;}
 .btn-whatsapp{display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:var(--font-sans);font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background 0.2s;}
 .btn-whatsapp:hover{background:#1ea952;}
 .btn-whatsapp:disabled{opacity:0.6;cursor:wait;}
@@ -99,14 +112,14 @@
         <h1 class="seccion-titulo" data-i18n>Horarios</h1>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-icono-casa" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
+        <a href="/inicio" class="btn-icono-chico btn-chico-verde" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
         <%# Antes este link no llevaba el período — volver acá desde Horarios
             siempre te tiraba a la semana actual (31 ago—6 sep), pisando el
             rango que habías elegido en el almanaque de Miembro de equipo.
             Se le agrega el mismo inicio/fin que ya se usa en "Ver en
             Horarios" (personal.ejs), en el mismo sentido, para que vuelva
             al rango que se estaba mirando. %>
-        <a href="/miembros-de-equipo<%= dias.length ? ('?inicio=' + inicio + '&fin=' + fin) : '' %>" class="btn-secondary"><i class="ti ti-users"></i> <span data-i18n>Miembro de equipo</span></a>
+        <a href="/miembros-de-equipo<%= dias.length ? ('?inicio=' + inicio + '&fin=' + fin) : '' %>" class="btn-chico btn-chico-azul"><i class="ti ti-users"></i> <span data-i18n>Miembro de equipo</span></a>
 
         <!-- "Otras opciones": agrupa Enviar / Excel / Copiar período anterior /
              Reiniciar período en un desplegable — antes eran 4 botones sueltos
@@ -114,7 +127,7 @@
              amontonaban o se cortaban. Con esto quedan siempre 3 botones fijos
              arriba (Menú principal, Miembro de equipo, Otras opciones). -->
         <div class="menu-otras-opciones" style="position:relative;">
-          <button type="button" class="btn-primary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
+          <button type="button" class="btn-chico btn-chico-verde" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
             <i class="ti ti-dots"></i> <span data-i18n>Otras opciones</span> <i class="ti ti-chevron-down" style="font-size:12px;"></i>
           </button>
           <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
@@ -151,7 +164,7 @@
 
     <%# Navegación %>
     <div class="horarios-periodo-nav" style="display:flex;align-items:center;justify-content:space-between;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:14px 20px;margin-bottom:20px;box-shadow:var(--sombra);">
-      <a href="/horarios?inicio=<%= rangoAnterior.inicio %>&fin=<%= rangoAnterior.fin %>" class="btn-secondary" style="padding:6px 14px;">
+      <a href="/horarios?inicio=<%= rangoAnterior.inicio %>&fin=<%= rangoAnterior.fin %>" class="btn-chico btn-chico-azul">
         <i class="ti ti-chevron-left"></i> <span data-i18n>Período anterior</span>
       </a>
       <div style="text-align:center;">
@@ -166,7 +179,7 @@
         </p>
         <% } %>
       </div>
-      <a href="/horarios?inicio=<%= rangoSiguiente.inicio %>&fin=<%= rangoSiguiente.fin %>" class="btn-secondary" style="padding:6px 14px;">
+      <a href="/horarios?inicio=<%= rangoSiguiente.inicio %>&fin=<%= rangoSiguiente.fin %>" class="btn-chico btn-chico-azul">
         <span data-i18n>Período siguiente</span> <i class="ti ti-chevron-right"></i>
       </a>
     </div>
@@ -276,7 +289,7 @@
 
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> <span data-i18n>Volver al menú principal</span></a>
+      <a href="/inicio" class="btn-chico btn-chico-azul"><i class="ti ti-arrow-left"></i> <span data-i18n>Volver al menú principal</span></a>
     </div>
   </main>
   <%- include('partials/mobile-nav', { path: 'horarios' }) %>
@@ -295,8 +308,8 @@
     <p id="modal-reinicio-texto" style="font-size:0.85rem;color:var(--gris-texto);line-height:1.5;margin:0 0 4px;"></p>
     <p id="modal-reinicio-paso" style="font-size:0.68rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#dc2626;margin:12px 0 20px;"></p>
     <div style="display:flex;gap:10px;justify-content:center;">
-      <button type="button" class="btn-secondary" onclick="cerrarModalReinicio()" data-i18n>Cancelar</button>
-      <button type="button" id="btn-modal-reinicio-siguiente" class="btn-secondary" style="color:#dc2626;border-color:#fecaca;" onclick="pasoSiguienteReinicio()"></button>
+      <button type="button" class="btn-chico btn-chico-azul" onclick="cerrarModalReinicio()" data-i18n>Cancelar</button>
+      <button type="button" id="btn-modal-reinicio-siguiente" class="btn-chico btn-chico-rojo" onclick="pasoSiguienteReinicio()"></button>
     </div>
   </div>
 </div>

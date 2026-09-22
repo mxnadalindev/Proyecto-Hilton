@@ -194,7 +194,7 @@ router.post('/nueva', loginRequerido, requiereEdicion, upload.any(), async (req,
       );
     }
 
-    res.redirect('/recetas/' + nueva.id);
+    res.redirect('/recetas/' + nueva.id + '?msg=creada');
   } catch (e) {
     console.error('Error creando receta:', e.message);
     res.render('error', { mensaje: 'No se pudo guardar la receta. Probá de nuevo — si vuelve a pasar, avisale al admin.', volver: '/recetas' });
@@ -260,7 +260,7 @@ router.post('/:id/editar', loginRequerido, requiereEdicion, upload.any(), async 
       );
     }
 
-    res.redirect('/recetas/' + id);
+    res.redirect('/recetas/' + id + '?msg=actualizada');
   } catch (e) {
     console.error('Error editando receta:', e.message);
     res.render('error', { mensaje: 'No se pudo guardar los cambios de la receta. Probá de nuevo — si vuelve a pasar, avisale al admin.', volver: '/recetas' });
@@ -288,6 +288,7 @@ router.get('/:id', loginRequerido, async (req, res) => {
     res.render('receta_detalle', {
       receta, videos, fotos, ingredientes, costoTotal,
       puedeEditar: esAdminOSupervisor(req),
+      msg: req.query.msg || null,
     });
   } catch (e) {
     console.error('Error cargando receta:', e.message);

@@ -31,6 +31,13 @@
   .form-card{padding:16px;}
   .platos-grid{grid-template-columns:1fr;}
 }
+
+/* Botones "chicos" (32px), mismo molde que el resto de la aplicación. */
+.btn-chico-azul,.btn-chico-verde{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-azul{background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);}
+.btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+.btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
 </style>
 </head>
 <body>
@@ -91,8 +98,8 @@
       </div>
 
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
-        <a href="/eventos/menus" class="btn-secondary" data-i18n>Cancelar</a>
-        <button type="submit" class="btn-primary"><i class="ti ti-device-floppy"></i> <span data-i18n>Crear menú</span></button>
+        <a href="/eventos/menus" class="btn-chico-azul" data-i18n>Cancelar</a>
+        <button type="submit" class="btn-chico-verde"><i class="ti ti-device-floppy"></i> <span data-i18n>Crear menú</span></button>
       </div>
     </form>
   </main>

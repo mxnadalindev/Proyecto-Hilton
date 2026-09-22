@@ -9,6 +9,12 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
+  <style>
+    /* Botón "chico" (32px), mismo molde que el resto de la aplicación. */
+    .btn-icono-chico{width:32px;height:32px;box-sizing:border-box;padding:0;border-radius:8px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer;transition:all .2s;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+    .btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+    .btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
+  </style>
 </head>
 <body>
 <div class="app-layout">
@@ -23,7 +29,7 @@
         <h1 class="seccion-titulo">Compras</h1>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
+        <a href="/inicio" class="btn-icono-chico btn-chico-verde" title="Menú principal"><i class="ti ti-home"></i></a>
       </div>
     </div>
 

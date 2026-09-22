@@ -34,7 +34,21 @@
 .tarjeta-resumen-lista{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:14px;padding:26px 22px;box-shadow:var(--sombra);text-align:center;}
 .tarjeta-resumen-numero{font-family:var(--font-serif);font-size:2.4rem;font-weight:400;color:var(--negro);margin:4px 0 0;line-height:1;}
 .tarjeta-resumen-lista .tarjeta-unificada-desc{margin-bottom:18px;}
-.tarjeta-resumen-lista .btn-primary{width:100%;justify-content:center;}
+
+/* Botones "chicos" (32px) del mismo molde que usa el módulo de Recetas,
+   para que los botones de Costos también queden parejos y sin repetir
+   color al lado del otro. Se dejan clases locales acá (no se toca
+   .btn-primary/.btn-secondary globales) para no afectar el tamaño de esos
+   botones en el resto de la aplicación. */
+.btn-icono-chico{width:32px;height:32px;box-sizing:border-box;padding:0;border-radius:8px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-azul{background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);}
+.btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+.btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
+.btn-chico-rojo{background:var(--rojo-claro);color:var(--rojo);border:1px solid var(--rojo-borde);}
+.btn-chico-rojo:hover{background:var(--rojo);color:#fff;}
+.tarjeta-resumen-lista .btn-chico-verde{width:100%;justify-content:center;}
 
 /* Modal de lista completa: overlay a pantalla completa, la caja centrada y grande */
 .modal-lista{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;}
@@ -119,8 +133,8 @@
 .costos-card .tarjeta-unificada-opciones{gap:8px;overflow-x:visible;}
 .costos-card .input-archivo{max-width:145px;flex:0 1 auto;padding:9px 10px;}
 .costos-card .input-archivo span{max-width:85px;}
-.costos-card .btn-primary{padding:9px 12px;font-size:0.64rem;white-space:nowrap;}
-.costos-card .tarjeta-unificada-opciones,.costos-card .tarjeta-resumen-lista>.btn-primary,.costos-card form{margin-top:auto;}
+.costos-card .btn-chico{white-space:nowrap;}
+.costos-card .tarjeta-unificada-opciones,.costos-card .tarjeta-resumen-lista>.btn-chico,.costos-card form{margin-top:auto;}
 @media (max-width:480px){
   .costos-card{flex-basis:82vw;height:auto;min-height:288px;}
   .costos-carousel-outer{padding:0 36px;}
@@ -197,13 +211,14 @@
         <% } %>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-icono-casa" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
+        <a href="/inicio" class="btn-icono-chico btn-chico-azul" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
 
         <!-- "Otras opciones": exportar a Excel las listas de insumos y de
              costeo — mismo patrón (y mismas clases) que ya usan Horas
-             Extra/Horarios/Personal. -->
+             Extra/Horarios/Personal. Va en verde acá (en vez del azul de
+             siempre) porque queda pegada a la casita, que ahora es azul. -->
         <div class="menu-otras-opciones" style="position:relative;">
-          <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
+          <button type="button" class="btn-chico btn-chico-verde" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
             <i class="ti ti-dots"></i> <span data-i18n>Otras opciones</span> <i class="ti ti-chevron-down" style="font-size:12px;"></i>
           </button>
           <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
@@ -222,14 +237,14 @@
         </div>
 
         <% if (typeof esAyb !== 'undefined' && esAyb) { %>
-        <a href="/inventario-ayb" class="btn-secondary">
+        <a href="/inventario-ayb" class="btn-chico btn-chico-azul">
           <i class="ti ti-package"></i> <span data-i18n>Gestionar productos</span>
         </a>
         <% } else { %>
-        <button onclick="showModal('modal-insumo')" class="btn-secondary">
+        <button onclick="showModal('modal-insumo')" class="btn-chico btn-chico-azul">
           <i class="ti ti-plus"></i> <span data-i18n>Nuevo insumo</span>
         </button>
-        <button onclick="showModal('modal-plato')" class="btn-primary">
+        <button onclick="showModal('modal-plato')" class="btn-chico btn-chico-verde">
           <i class="ti ti-tools-kitchen-2"></i> <span data-i18n>Nuevo plato</span>
         </button>
         <% } %>
@@ -257,7 +272,7 @@
       <div class="tarjeta-unificada-icono"><i class="ti ti-trending-up"></i></div>
       <p class="tarjeta-unificada-titulo" data-i18n>Variación de precios</p>
       <p class="tarjeta-unificada-desc" data-i18n>Los insumos que más subieron, bajaron o se mantuvieron en un período.</p>
-      <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=<%= tipoVariacion %><%= qDepto %>#modal-variacion-precios" class="btn-secondary">
+      <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=<%= tipoVariacion %><%= qDepto %>#modal-variacion-precios" class="btn-chico btn-chico-azul">
         <i class="ti ti-chart-line"></i> <span data-i18n>Ver variación</span>
       </a>
     </div>
@@ -281,7 +296,7 @@
               <span data-i18n><%= totalInsumos !== 1 ? 'insumos' : 'insumo' %></span> <span data-i18n><%= totalInsumos !== 1 ? 'cargados' : 'cargado' %></span>
               <% if (typeof esAyb !== 'undefined' && esAyb) { %><br><span data-i18n>(catálogo de Inventario AYB)</span><% } %>
             </p>
-            <button type="button" class="btn-primary" onclick="showModal('modal-lista-insumos')">
+            <button type="button" class="btn-chico btn-chico-verde" onclick="showModal('modal-lista-insumos')">
               <i class="ti ti-list"></i> <span data-i18n>Ver insumos</span>
             </button>
           </div>
@@ -300,7 +315,7 @@
                 <span data-i18n><%= totalPlatos !== 1 ? 'platos' : 'plato' %></span> <span data-i18n><%= totalPlatos !== 1 ? 'costeados' : 'costeado' %></span>
               <% } %>
             </p>
-            <button type="button" class="btn-primary" onclick="showModal('modal-lista-platos')">
+            <button type="button" class="btn-chico btn-chico-verde" onclick="showModal('modal-lista-platos')">
               <i class="ti ti-list"></i> <span data-i18n>Ver</span> <span data-i18n><%= (typeof esAyb !== 'undefined' && esAyb) ? 'tragos' : 'platos' %></span>
             </button>
           </div>
@@ -329,7 +344,7 @@
                   <span id="nombre-archivo-unificado" data-i18n>Elegir archivo</span>
                   <input type="file" id="input-unificado" required onchange="detectarTipoArchivo(this)">
                 </label>
-                <button type="submit" id="btn-actualizar-unificado" class="btn-primary">
+                <button type="submit" id="btn-actualizar-unificado" class="btn-chico btn-chico-verde">
                   <i class="ti ti-upload" id="icon-actualizar-unificado"></i>
                   <span id="texto-actualizar-unificado" data-i18n>Actualizar</span>
                 </button>
@@ -355,7 +370,7 @@
                 <input type="file" id="input-platos" name="archivo_platos" required
                        onchange="marcarArchivoPlatosElegido(this)">
               </label>
-              <button type="submit" id="btn-importar-platos" class="btn-primary">
+              <button type="submit" id="btn-importar-platos" class="btn-chico btn-chico-verde">
                 <i class="ti ti-upload" id="icon-importar-platos"></i>
                 <span id="texto-importar-platos" data-i18n>Importar</span>
               </button>
@@ -372,7 +387,7 @@
     </div>
 
     <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--gris-borde);">
-      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> <span data-i18n>Volver al menú principal</span></a>
+      <a href="/inicio" class="btn-chico btn-chico-azul"><i class="ti ti-arrow-left"></i> <span data-i18n>Volver al menú principal</span></a>
     </div>
   </main>
 
@@ -718,8 +733,8 @@
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-insumo')" class="btn-secondary" data-i18n>Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> <span data-i18n>Agregar insumo</span></button>
+        <button type="button" onclick="hideModal('modal-insumo')" class="btn-chico btn-chico-azul" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-chico btn-chico-verde"><i class="ti ti-plus"></i> <span data-i18n>Agregar insumo</span></button>
       </div>
     </form>
   </div>
@@ -776,8 +791,8 @@
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-plato')" class="btn-secondary" data-i18n>Cancelar</button>
-        <button type="submit" class="btn-primary" onclick="prepararPlato()"><i class="ti ti-plus"></i> <span data-i18n>Crear</span> <span data-i18n><%= esAybNuevo ? 'trago' : 'plato' %></span></button>
+        <button type="button" onclick="hideModal('modal-plato')" class="btn-chico btn-chico-azul" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-chico btn-chico-verde" onclick="prepararPlato()"><i class="ti ti-plus"></i> <span data-i18n>Crear</span> <span data-i18n><%= esAybNuevo ? 'trago' : 'plato' %></span></button>
       </div>
     </form>
   </div>

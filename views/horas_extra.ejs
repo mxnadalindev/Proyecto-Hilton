@@ -16,6 +16,17 @@
 .field input:focus,.field select:focus{border-color:var(--azul);background:var(--blanco);}
 .btn-icono{background:none;border:1px solid var(--gris-borde);border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gris-texto);transition:border-color .2s,color .2s;}
 .btn-icono:hover{border-color:#dc2626;color:#dc2626;}
+
+/* Botones "chicos" (32px), mismo molde que el resto de la aplicación
+   (Recetas, Costos, Personal, Eventos, Horarios), en vez de los 40px de
+   antes. Los colores existentes ya alternaban bien (casita verde, Otras
+   opciones azul), así que se mantienen. */
+.btn-icono-chico{width:32px;height:32px;box-sizing:border-box;padding:0;border-radius:8px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-azul{background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);}
+.btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+.btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
 .ficha-empleado-fila:hover{background:var(--gris-fondo);}
 
 /* Carrusel de fichas de empleados — scroll horizontal con "snap" en vez de
@@ -98,14 +109,14 @@
         <h1 class="seccion-titulo" data-i18n>Horas extra</h1>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-icono-casa" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
+        <a href="/inicio" class="btn-icono-chico btn-chico-verde" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
 
         <!-- "Otras opciones": mismo patrón (y mismas clases) que ya usa
              Horarios — Enviar por WhatsApp / Excel del mes / historial
              completo. La carga de horas extra ya no necesita un botón acá
              arriba: se hace tocando la ficha de cada empleado, abajo. -->
         <div class="menu-otras-opciones" style="position:relative;">
-          <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
+          <button type="button" class="btn-chico btn-chico-azul" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
             <i class="ti ti-dots"></i> <span data-i18n>Otras opciones</span> <i class="ti ti-chevron-down" style="font-size:12px;"></i>
           </button>
           <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
@@ -139,7 +150,7 @@
 
     <!-- Navegación de mes -->
     <div style="display:flex;align-items:center;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;margin-bottom:20px;box-shadow:var(--sombra);flex-wrap:wrap;gap:10px;padding:4px;">
-      <a href="/horas-extra?mes=<%= mesAnterior %>" class="btn-secondary" style="padding:6px 14px;">
+      <a href="/horas-extra?mes=<%= mesAnterior %>" class="btn-chico btn-chico-azul">
         <i class="ti ti-chevron-left"></i> <span data-i18n>Mes anterior</span>
       </a>
       <div style="text-align:center;flex:1;">
@@ -148,7 +159,7 @@
           <%= new Date(mes+'-01T00:00:00').toLocaleDateString('es-AR',{month:'long',year:'numeric'}) %>
         </p>
       </div>
-      <a href="/horas-extra?mes=<%= mesSiguiente %>" class="btn-secondary" style="padding:6px 14px;<%= esMesActual ? 'opacity:0.4;pointer-events:none;' : '' %>">
+      <a href="/horas-extra?mes=<%= mesSiguiente %>" class="btn-chico btn-chico-azul" style="<%= esMesActual ? 'opacity:0.4;pointer-events:none;' : '' %>">
         <span data-i18n>Mes siguiente</span> <i class="ti ti-chevron-right"></i>
       </a>
     </div>
@@ -307,8 +318,8 @@
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-agregar')" class="btn-secondary" data-i18n>Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> <span data-i18n>Cargar</span></button>
+        <button type="button" onclick="hideModal('modal-agregar')" class="btn-chico btn-chico-azul" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-chico btn-chico-verde"><i class="ti ti-plus"></i> <span data-i18n>Cargar</span></button>
       </div>
     </form>
   </div>

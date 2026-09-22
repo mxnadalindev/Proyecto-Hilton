@@ -23,6 +23,15 @@
 .btn-danger { background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-family:var(--font-sans);font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;padding:0 16px;height:40px;box-sizing:border-box;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s; }
 .btn-danger:hover { background:#dc2626;color:#fff; }
 
+/* Botones "chicos" (32px), mismo molde que Recetas/Costos, para que
+   Guardar/Eliminar y "Agregar ingrediente" queden del mismo tamaño que el
+   resto de la aplicación en vez del tamaño grande (40px) de antes. */
+.btn-chico{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;gap:5px;text-decoration:none;cursor:pointer;transition:all var(--tr);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
+.btn-chico-rojo{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;}
+.btn-chico-rojo:hover{background:#dc2626;color:#fff;}
+
 .costos-plato-grid{grid-template-columns:1fr 1fr;}
 .costos-plato-stats{grid-template-columns:1fr 1fr;}
 
@@ -72,11 +81,11 @@
       </div>
       <div style="display:flex;gap:10px;">
         <form method="POST" action="/costos/plato/<%= plato.id %>/guardar" style="margin:0;">
-          <button type="submit" class="btn-primary"><i class="ti ti-device-floppy"></i> Guardar</button>
+          <button type="submit" class="btn-chico btn-chico-verde"><i class="ti ti-device-floppy"></i> Guardar</button>
         </form>
         <form method="POST" action="/costos/plato/<%= plato.id %>/eliminar" id="form-eliminar-plato"
               onsubmit="return confirmarAccion(event, this)">
-          <button type="submit" class="btn-danger" data-confirm-msg="¿Eliminar est<%= esAyb ? 'e trago' : 'e plato' %>?"><i class="ti ti-trash"></i> Eliminar</button>
+          <button type="submit" class="btn-chico btn-chico-rojo" data-confirm-msg="¿Eliminar est<%= esAyb ? 'e trago' : 'e plato' %>?"><i class="ti ti-trash"></i> Eliminar</button>
         </form>
       </div>
     </div>
@@ -165,7 +174,7 @@
               </select>
             </div>
           </div>
-          <button type="submit" class="btn-primary" style="width:100%;">
+          <button type="submit" class="btn-chico btn-chico-verde" style="width:100%;">
             <i class="ti ti-plus"></i> Agregar ingrediente
           </button>
         </form>

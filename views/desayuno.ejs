@@ -10,6 +10,13 @@
   <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
   <style>
+/* Botón "chico" (32px), mismo molde que el resto de la aplicación. */
+.btn-chico-azul,.btn-chico-verde{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all .2s;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-azul{background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);}
+.btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+.btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
+
 .field{display:flex;flex-direction:column;gap:6px;}
 .field label{font-size:0.72rem;font-weight:600;color:var(--gris-texto);text-transform:uppercase;letter-spacing:0.04em;}
 .field input{border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;background:var(--gris-fondo);}
@@ -97,7 +104,7 @@
         <h1 class="seccion-titulo">Desayuno</h1>
       </div>
       <div class="menu-otras-opciones">
-        <button type="button" class="btn-secondary" id="btn-otras-opciones-desayuno" onclick="document.getElementById('dropdown-otras-opciones-desayuno').classList.toggle('abierto')">
+        <button type="button" class="btn-chico-azul" id="btn-otras-opciones-desayuno" onclick="document.getElementById('dropdown-otras-opciones-desayuno').classList.toggle('abierto')">
           <i class="ti ti-dots"></i> Otras opciones
         </button>
         <div class="dropdown-otras-opciones" id="dropdown-otras-opciones-desayuno">
@@ -174,8 +181,8 @@
         cargarlo a la base te muestro un resumen para que confirmes.
       </p>
       <div style="display:flex;justify-content:flex-end;gap:10px;">
-        <button type="button" onclick="hideModal('modal-subir-reporte')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-upload"></i> Subir y revisar</button>
+        <button type="button" onclick="hideModal('modal-subir-reporte')" class="btn-chico-azul">Cancelar</button>
+        <button type="submit" class="btn-chico-verde"><i class="ti ti-upload"></i> Subir y revisar</button>
       </div>
     </form>
   </div>

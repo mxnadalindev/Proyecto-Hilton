@@ -5,6 +5,11 @@
   <title>Mi disponibilidad — Hilton</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+/* Botón "chico" (32px), mismo molde que el resto de la aplicación. */
+.btn-chico-azul{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all var(--tr);background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+</style>
 </head>
 <body>
 <div class="app-layout">
@@ -18,7 +23,7 @@
         <p class="seccion-label">Portal interno</p>
         <h1 class="seccion-titulo">Mi disponibilidad</h1>
       </div>
-      <a href="/inicio" class="btn-secondary"><i class="ti ti-home"></i> Menú principal</a>
+      <a href="/inicio" class="btn-chico-azul"><i class="ti ti-home"></i> Menú principal</a>
     </div>
 
     <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:24px;max-width:480px;box-shadow:var(--sombra);">
@@ -42,7 +47,7 @@
     </div>
 
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--gris-borde);">
-      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
+      <a href="/inicio" class="btn-chico-azul"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
     </div>
   </main>
 

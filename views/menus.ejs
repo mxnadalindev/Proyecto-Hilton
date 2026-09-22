@@ -16,6 +16,10 @@
 .menu-card-nombre{font-size:0.95rem;font-weight:600;color:var(--negro);margin:0 0 6px;}
 .menu-card-desc{font-size:0.75rem;color:var(--gris-texto);margin:0 0 14px;line-height:1.4;}
 .menu-card-footer{display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;color:var(--gris-texto);padding-top:12px;border-top:1px solid var(--gris-borde);}
+
+/* Botón "chico" (32px), mismo molde que el resto de la aplicación. */
+.btn-chico-verde{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all var(--tr);background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
 </style>
 </head>
 <body>
@@ -28,7 +32,7 @@
         <h1 class="seccion-titulo" data-i18n>Menús</h1>
         <%- include('partials/eventos_subnav', { seccionEventos: 'menus' }) %>
       </div>
-      <a href="/eventos/menus/nuevo" class="btn-primary"><i class="ti ti-plus"></i> <span data-i18n>Nuevo menú</span></a>
+      <a href="/eventos/menus/nuevo" class="btn-chico-verde"><i class="ti ti-plus"></i> <span data-i18n>Nuevo menú</span></a>
     </div>
 
     <p style="font-size:0.82rem;color:var(--gris-texto);margin-bottom:20px;" data-i18n>Un menú agrupa varios bocaditos ya cargados en el catálogo de Eventos, para armar combos reutilizables.</p>
@@ -52,7 +56,7 @@
     <div class="empty-state">
       <i class="ti ti-list-details" style="font-size:2.5rem;color:var(--gris-borde);margin-bottom:16px;display:block;"></i>
       <p data-i18n>No hay menús creados todavía.</p>
-      <a href="/eventos/menus/nuevo" class="btn-primary" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> <span data-i18n>Crear el primero</span></a>
+      <a href="/eventos/menus/nuevo" class="btn-chico-verde" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> <span data-i18n>Crear el primero</span></a>
     </div>
     <% } %>
   </main>
