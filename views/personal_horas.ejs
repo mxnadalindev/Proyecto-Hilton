@@ -17,10 +17,10 @@
   <main class="main-content">
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label">Miembro de equipo</p>
-        <h1 class="seccion-titulo">Horas de <%= empleado.nombre %></h1>
+        <p class="seccion-label" data-i18n>Miembro de equipo</p>
+        <h1 class="seccion-titulo"><span data-i18n>Horas de</span> <%= empleado.nombre %></h1>
       </div>
-      <a href="/miembros-de-equipo" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al equipo</a>
+      <a href="/miembros-de-equipo" class="btn-secondary"><i class="ti ti-arrow-left"></i> <span data-i18n>Volver al equipo</span></a>
     </div>
 
     <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:24px 28px;margin-bottom:24px;box-shadow:var(--sombra);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
@@ -31,40 +31,38 @@
         <div>
           <div style="font-size:1rem;font-weight:600;color:var(--negro);"><%= empleado.nombre %></div>
           <div style="font-size:0.78rem;color:var(--gris-texto);">
-            <%= empleado.modalidad || 'Sin modalidad' %><% if (empleado.legajo) { %> · CUIL <%= empleado.legajo %><% } %>
+            <%= empleado.modalidad %><% if (!empleado.modalidad) { %><span data-i18n>Sin modalidad</span><% } %><% if (empleado.legajo) { %> · <span data-i18n>CUIL</span> <%= empleado.legajo %><% } %>
           </div>
         </div>
       </div>
       <div style="text-align:right;">
-        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 4px;">Total histórico</p>
-        <p style="font-size:1.6rem;font-weight:700;color:var(--negro);margin:0;"><%= totalGeneral %>hs</p>
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 4px;" data-i18n>Total histórico</p>
+        <p style="font-size:1.6rem;font-weight:700;color:var(--negro);margin:0;"><%= totalGeneral %><span data-i18n>hs</span></p>
       </div>
     </div>
 
     <% if (meses.length === 0) { %>
-      <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:40px;text-align:center;color:var(--gris-texto);font-size:0.85rem;">
-        Todavía no tiene ningún evento marcado como "vino" — cuando el encargado empiece a marcar asistencia en los eventos, va a aparecer acá.
-      </div>
+      <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:40px;text-align:center;color:var(--gris-texto);font-size:0.85rem;" data-i18n>Todavía no tiene ningún evento marcado como "vino" — cuando el encargado empiece a marcar asistencia en los eventos, va a aparecer acá.</div>
     <% } %>
 
     <% meses.forEach(m => { %>
     <div style="background:var(--blanco);border:1px solid var(--gris-borde);border-radius:16px;padding:24px 28px;margin-bottom:16px;box-shadow:var(--sombra);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <h2 style="font-size:1rem;font-weight:600;color:var(--negro);text-transform:capitalize;"><%= m.etiqueta %></h2>
-        <span style="font-size:0.85rem;font-weight:700;color:var(--azul);"><%= m.subtotal %>hs</span>
+        <span style="font-size:0.85rem;font-weight:700;color:var(--azul);"><%= m.subtotal %><span data-i18n>hs</span></span>
       </div>
       <div class="tabla-wrap">
         <table class="tabla" style="width:100%;">
           <thead>
-            <tr><th>Fecha</th><th>Evento</th><th>Horario</th><th style="text-align:right;">Horas</th></tr>
+            <tr><th data-i18n>Fecha</th><th data-i18n>Evento</th><th data-i18n>Horario</th><th style="text-align:right;" data-i18n>Horas</th></tr>
           </thead>
           <tbody>
             <% m.eventos.forEach(ev => { %>
             <tr>
               <td style="font-size:0.82rem;"><%= new Date(ev.fecha+'T00:00:00').toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'}) %></td>
               <td style="font-size:0.82rem;font-weight:500;"><%= ev.nombre %></td>
-              <td style="font-size:0.82rem;color:var(--gris-texto);"><%= ev.hora_hasta ? `${ev.hora_desde} a ${ev.hora_hasta}` : `desde las ${ev.hora_desde}` %></td>
-              <td style="font-size:0.82rem;text-align:right;font-weight:600;"><%= ev.horas %>hs</td>
+              <td style="font-size:0.82rem;color:var(--gris-texto);"><% if (ev.hora_hasta) { %><%= ev.hora_desde %> <span data-i18n>a</span> <%= ev.hora_hasta %><% } else { %><span data-i18n>desde las</span> <%= ev.hora_desde %><% } %></td>
+              <td style="font-size:0.82rem;text-align:right;font-weight:600;"><%= ev.horas %><span data-i18n>hs</span></td>
             </tr>
             <% }) %>
           </tbody>

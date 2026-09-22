@@ -32,21 +32,21 @@
   <main class="main-content">
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label"><a href="/eventos/menus" style="color:var(--gris-texto);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;"><i class="ti ti-arrow-left"></i> Menús</a></p>
+        <p class="seccion-label"><a href="/eventos/menus" style="color:var(--gris-texto);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;"><i class="ti ti-arrow-left"></i> <span data-i18n>Menús</span></a></p>
         <h1 class="seccion-titulo"><%= menu.nombre %></h1>
         <% if (menu.descripcion) { %><p style="font-size:0.82rem;color:var(--gris-texto);margin:4px 0 0;"><%= menu.descripcion %></p><% } %>
       </div>
-      <form method="POST" action="/eventos/menus/<%= menu.id %>/eliminar" onsubmit="return confirm('¿Eliminar este menú? Los bocaditos del catálogo no se borran, solo se desvinculan.')">
-        <button type="submit" class="btn-danger"><i class="ti ti-trash"></i> Eliminar menú</button>
+      <form method="POST" action="/eventos/menus/<%= menu.id %>/eliminar" onsubmit="return confirm(tHilton('¿Eliminar este menú? Los bocaditos del catálogo no se borran, solo se desvinculan.'))">
+        <button type="submit" class="btn-danger"><i class="ti ti-trash"></i> <span data-i18n>Eliminar menú</span></button>
       </form>
     </div>
 
     <div class="form-card" style="margin-bottom:20px;">
-      <p class="form-card-title"><i class="ti ti-plus"></i> Agregar bocadito al menú</p>
+      <p class="form-card-title"><i class="ti ti-plus"></i> <span data-i18n>Agregar bocadito al menú</span></p>
       <form method="POST" action="/eventos/menus/<%= menu.id %>/plato" style="display:flex;gap:8px;">
         <% const NOMBRES_CATEGORIA_MD = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
         <select name="plato_id" required style="flex:1;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
-          <option value="">Seleccionar bocadito...</option>
+          <option value="" data-i18n>Seleccionar bocadito...</option>
           <% ['frios','calientes','principales','postres'].forEach(cat => { %>
             <% const items = catalogoBocaditos[cat] || []; %>
             <% if (items.length > 0) { %>
@@ -58,24 +58,24 @@
             <% } %>
           <% }) %>
         </select>
-        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> Agregar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> <span data-i18n>Agregar</span></button>
       </form>
     </div>
 
     <div class="form-card">
-      <p class="form-card-title"><i class="ti ti-tools-kitchen-2"></i> Bocaditos de este menú (<%= platosDelMenu.length %>)</p>
+      <p class="form-card-title"><i class="ti ti-tools-kitchen-2"></i> <span data-i18n>Bocaditos de este menú</span> (<%= platosDelMenu.length %>)</p>
       <% if (platosDelMenu.length > 0) { %>
       <table class="tabla-interna">
-        <thead><tr><th>Bocadito</th><th>Categoría</th><th>Costo/bocado</th><th></th></tr></thead>
+        <thead><tr><th data-i18n>Bocadito</th><th data-i18n>Categoría</th><th data-i18n>Costo/bocado</th><th></th></tr></thead>
         <tbody>
           <% platosDelMenu.forEach(p => { %>
           <tr>
             <td><%= p.nombre %></td>
-            <td><%= NOMBRES_CATEGORIA_MD[p.categoria] || p.categoria %></td>
+            <td data-i18n><%= NOMBRES_CATEGORIA_MD[p.categoria] || p.categoria %></td>
             <td style="color:var(--azul);font-weight:600;">$<%= parseFloat(p.costo_unitario || 0).toFixed(2) %></td>
             <td>
               <form method="POST" action="/eventos/menus/<%= menu.id %>/plato/<%= p.menu_plato_id %>/eliminar" style="margin:0;">
-                <button type="submit" class="btn-remove" title="Quitar del menú"><i class="ti ti-x"></i></button>
+                <button type="submit" class="btn-remove" title="Quitar del menú" data-i18n-title="Quitar del menú"><i class="ti ti-x"></i></button>
               </form>
             </td>
           </tr>
@@ -83,7 +83,7 @@
         </tbody>
       </table>
       <% } else { %>
-      <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;">Sin bocaditos todavía. Agregá el primero arriba.</p>
+      <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;" data-i18n>Sin bocaditos todavía. Agregá el primero arriba.</p>
       <% } %>
     </div>
   </main>

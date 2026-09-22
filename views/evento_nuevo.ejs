@@ -251,7 +251,7 @@
     <div class="multiselect" data-nombre-categoria="<%= cat %>">
       <label class="ms-label" data-i18n><%= NOMBRES_CATEGORIA[cat] %></label>
       <div class="multiselect-input-wrap">
-        <input type="text" class="multiselect-input" placeholder="Buscar <%= NOMBRES_CATEGORIA[cat].toLowerCase() %>...">
+        <input type="text" class="multiselect-input" placeholder="Buscar <%= NOMBRES_CATEGORIA[cat].toLowerCase() %>..." data-i18n-ph="Buscar <%= NOMBRES_CATEGORIA[cat].toLowerCase() %>...">
         <i class="ti ti-search" aria-hidden="true"></i>
       </div>
       <div class="multiselect-panel">
@@ -449,13 +449,13 @@ function recalcularBocaditos() {
   // reescriben en vivo acá, no vienen ya armados desde el servidor.
   const elResumen = document.getElementById('resumen-bocaditos');
   if (!bocaditosCalculados.length) {
-    elResumen.innerHTML = `<p class="list-empty">${tHilton('Elegí comensales y platos para ver las cantidades.')}</p>`;
+    elResumen.innerHTML = `<p class="list-empty" data-i18n>${tHilton('Elegí comensales y platos para ver las cantidades.')}</p>`;
   } else {
     elResumen.innerHTML = bocaditosCalculados.map(b => `
       <div class="item-row">
         <span class="item-nombre">${b.nombre}</span>
-        <span class="item-detalle">${tHilton(NOMBRES_CATEGORIA_JS[b.categoria])}${b.costo_unitario > 0 ? ' · $' + b.costo_total.toFixed(2) : ''}</span>
-        <span class="item-costo">${b.bocados_totales} ${tHilton('bocados')}</span>
+        <span class="item-detalle"><span data-i18n>${tHilton(NOMBRES_CATEGORIA_JS[b.categoria])}</span>${b.costo_unitario > 0 ? ' · $' + b.costo_total.toFixed(2) : ''}</span>
+        <span class="item-costo">${b.bocados_totales} <span data-i18n>${tHilton('bocados')}</span></span>
       </div>
     `).join('');
   }
@@ -467,12 +467,12 @@ function recalcularBocaditos() {
   document.getElementById('costo-bocaditos-count').textContent = chks.length;
   const elResumenCosto = document.getElementById('resumen-costo');
   if (!bocaditosCalculados.length) {
-    elResumenCosto.innerHTML = `<p class="list-empty">${tHilton('Todavía no elegiste platos en la pestaña "Platos".')}</p>`;
+    elResumenCosto.innerHTML = `<p class="list-empty" data-i18n>${tHilton('Todavía no elegiste platos en la pestaña "Platos".')}</p>`;
   } else {
     elResumenCosto.innerHTML = bocaditosCalculados.map(b => `
       <div class="item-row">
         <span class="item-nombre">${b.nombre}</span>
-        <span class="item-detalle">${tHilton(NOMBRES_CATEGORIA_JS[b.categoria])} · ${b.bocados_totales} ${tHilton('bocados')}</span>
+        <span class="item-detalle"><span data-i18n>${tHilton(NOMBRES_CATEGORIA_JS[b.categoria])}</span> · ${b.bocados_totales} <span data-i18n>${tHilton('bocados')}</span></span>
         <span class="item-costo">$${b.costo_total.toFixed(2)}</span>
       </div>
     `).join('');
@@ -483,12 +483,12 @@ function recalcularBocaditos() {
   const elVajillaCalc = document.getElementById('lista-vajilla-calculada');
   const conVajilla = bocaditosCalculados.filter(b => b.vajilla_texto && b.vajilla_cantidad > 0);
   if (!conVajilla.length) {
-    elVajillaCalc.innerHTML = `<p class="list-empty">${tHilton('Todavía no hay bocaditos elegidos.')}</p>`;
+    elVajillaCalc.innerHTML = `<p class="list-empty" data-i18n>${tHilton('Todavía no hay bocaditos elegidos.')}</p>`;
   } else {
     elVajillaCalc.innerHTML = conVajilla.map(b => `
       <div class="item-row">
         <span class="item-nombre">${b.vajilla_texto}</span>
-        <span class="item-detalle">${tHilton('para')} ${b.nombre}</span>
+        <span class="item-detalle"><span data-i18n>${tHilton('para')}</span> ${b.nombre}</span>
         <span class="item-costo">${b.vajilla_cantidad}</span>
       </div>
     `).join('');
@@ -533,13 +533,13 @@ function eliminarVajilla(i) {
 function renderVajilla() {
   const el = document.getElementById('lista-vajilla');
   if (!vajilla.length) {
-    el.innerHTML = `<p class="list-empty">${tHilton('No hay vajilla agregada todavía.')}</p>`;
+    el.innerHTML = `<p class="list-empty" data-i18n>${tHilton('No hay vajilla agregada todavía.')}</p>`;
     return;
   }
   el.innerHTML = vajilla.map((v, i) => `
     <div class="item-row">
       <span class="item-nombre">${v.nombre}</span>
-      <span class="item-detalle">${v.cantidad} ${tHilton('unidades')}</span>
+      <span class="item-detalle">${v.cantidad} <span data-i18n>${tHilton('unidades')}</span></span>
       <button type="button" class="btn-remove" onclick="eliminarVajilla(${i})">
         <i class="ti ti-x" aria-hidden="true"></i>
       </button>

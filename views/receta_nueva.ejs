@@ -10,9 +10,8 @@
   <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
 <style>
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.form-col { display: flex; flex-direction: column; gap: 20px; }
-.form-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); }
+.form-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 12px; padding: 24px; box-shadow: var(--sombra); margin-bottom: 20px; }
+.form-card:last-child { margin-bottom: 0; }
 .form-card-title { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--azul); margin-bottom: 18px; display: flex; align-items: center; gap: 7px; }
 .field { margin-bottom: 16px; }
 .field:last-child { margin-bottom: 0; }
@@ -32,10 +31,25 @@
   box-shadow: 0 0 0 3px var(--azul-claro);
   background: var(--blanco);
 }
-.form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--gris-borde); }
-.back-link { color: var(--gris-texto); text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px; }
-.back-link:hover { color: var(--azul); }
-@media (max-width: 900px) { .form-grid { grid-template-columns: 1fr; } }
+/* Casita/Cancelar/Guardar chicos arriba, los tres del mismo tamaño (32px
+   de alto) — antes Cancelar/Guardar eran dos botones grandes al pie del
+   formulario ("sube esos botones" los trajo arriba), y la casita venía
+   con el molde grande de .btn-icono-casa (40px) que quedaba desparejo al
+   lado de los otros dos, además de en verde — acá va en azul y al mismo
+   tamaño que sus vecinos. */
+.btn-icono-casa-chico { background: rgba(0,47,97,0.12); color: #002f61; border: 1px solid rgba(0,47,97,0.28); width: 32px; height: 32px; box-sizing: border-box; padding: 0; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; text-decoration: none; transition: all var(--tr); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.btn-icono-casa-chico:hover { background: rgba(0,47,97,0.20); }
+.btn-cancelar-chico { background: var(--rojo-claro); color: var(--rojo); border: 1px solid var(--rojo-borde); font-family: var(--font-sans); font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 12px; height: 32px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; transition: all var(--tr); box-sizing: border-box; }
+.btn-cancelar-chico:hover { background: var(--rojo); color: #fff; }
+.btn-guardar-chico { background: rgba(6,147,126,0.14); color: #06937e; border: 1px solid rgba(6,147,126,0.32); font-family: var(--font-sans); font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 12px; height: 32px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all var(--tr); box-sizing: border-box; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.btn-guardar-chico:hover { background: rgba(6,147,126,0.24); }
+
+/* Pestañas — mismo "molde" (subrayado azul en la activa, gris el resto)
+   que ya usa Configuración, para que el formulario de receta no sea un
+   scroll larguísimo con las 5 tarjetas apiladas una atrás de otra. */
+.tabs-receta { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid var(--gris-borde); overflow-x: auto; }
+.tab-receta-btn { padding: 10px 16px; background: none; border: none; font-family: var(--font-sans); font-size: 0.8rem; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; color: var(--gris-texto); white-space: nowrap; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+.tab-receta-btn.activa { color: var(--azul); border-bottom-color: var(--azul); }
 
 /* Tabla de ingredientes */
 .tabla-ingredientes { width: 100%; min-width: 480px; border-collapse: collapse; }
@@ -67,111 +81,123 @@
 
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label"><a href="/recetas" class="back-link"><i class="ti ti-arrow-left"></i> Recetas</a></p>
-        <h1 class="seccion-titulo"><%= receta ? 'Editar receta' : 'Nueva receta' %></h1>
+        <h1 class="seccion-titulo" data-i18n><%= receta ? 'Editar receta' : 'Nueva receta' %></h1>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <a href="/inicio" class="btn-icono-casa-chico" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
+        <a href="/recetas" class="btn-cancelar-chico"><i class="ti ti-x"></i> <span data-i18n>Cancelar</span></a>
+        <button type="submit" form="form-receta" class="btn-guardar-chico">
+          <i class="ti ti-device-floppy"></i> <span data-i18n>Guardar</span>
+        </button>
       </div>
     </div>
 
-    <form method="POST" action="<%= receta ? '/recetas/'+receta.id+'/editar' : '/recetas/nueva' %>" enctype="multipart/form-data">
-      <div class="form-grid">
+    <!-- Pestañas -->
+    <div class="tabs-receta">
+      <button type="button" class="tab-receta-btn activa" id="tab-general" onclick="mostrarTabReceta('general')"><i class="ti ti-info-circle"></i> <span data-i18n>Información general</span></button>
+      <button type="button" class="tab-receta-btn" id="tab-videos" onclick="mostrarTabReceta('videos')"><i class="ti ti-video"></i> <span data-i18n>Videos</span></button>
+      <button type="button" class="tab-receta-btn" id="tab-fotos" onclick="mostrarTabReceta('fotos')"><i class="ti ti-photo"></i> <span data-i18n>Fotos</span></button>
+      <button type="button" class="tab-receta-btn" id="tab-ingredientes" onclick="mostrarTabReceta('ingredientes')"><i class="ti ti-list"></i> <span data-i18n>Ingredientes</span></button>
+      <button type="button" class="tab-receta-btn" id="tab-procedimiento" onclick="mostrarTabReceta('procedimiento')"><i class="ti ti-list-numbers"></i> <span data-i18n>Procedimiento</span></button>
+    </div>
 
-        <!-- Columna izquierda -->
-        <div class="form-col">
+    <form method="POST" id="form-receta" action="<%= receta ? '/recetas/'+receta.id+'/editar' : '/recetas/nueva' %>" enctype="multipart/form-data">
+
+      <!-- TAB: Información general -->
+      <div id="tab-content-general">
           <div class="form-card">
-            <p class="form-card-title"><i class="ti ti-info-circle"></i> Información general</p>
+            <p class="form-card-title"><i class="ti ti-info-circle"></i> <span data-i18n>Información general</span></p>
             <div class="field">
-              <label>Nombre de la receta</label>
-              <input type="text" name="nombre" placeholder="Ej: Risotto de hongos" value="<%= receta?.nombre || '' %>" required>
+              <label data-i18n>Nombre de la receta</label>
+              <input type="text" name="nombre" placeholder="Ej: Risotto de hongos" data-i18n-ph="Ej: Risotto de hongos" value="<%= receta?.nombre || '' %>" required>
             </div>
             <div class="field">
-              <label>Categoría</label>
+              <label data-i18n>Categoría</label>
               <select name="categoria" id="sel-categoria" onchange="toggleOtro('categoria')">
-                <option value="">Seleccionar...</option>
+                <option value="" data-i18n>Seleccionar...</option>
                 <% categorias.forEach(c => { %>
                   <option value="<%= c %>" <%= receta?.categoria === c ? 'selected' : '' %>><%= c %></option>
                 <% }) %>
-                <option value="otro" <%= (receta?.categoria && !categorias.includes(receta.categoria)) ? 'selected' : '' %>>Otra (escribir)</option>
+                <option value="otro" <%= (receta?.categoria && !categorias.includes(receta.categoria)) ? 'selected' : '' %> data-i18n>Otra (escribir)</option>
               </select>
-              <input type="text" name="categoria_otro" id="otro-categoria" placeholder="Escribir categoría..."
+              <input type="text" name="categoria_otro" id="otro-categoria" placeholder="Escribir categoría..." data-i18n-ph="Escribir categoría..."
                      value="<%= (receta?.categoria && !categorias.includes(receta.categoria)) ? receta.categoria : '' %>"
                      style="display:<%= (receta?.categoria && !categorias.includes(receta.categoria)) ? 'block' : 'none' %>;margin-top:8px;">
             </div>
             <div class="field">
-              <label>Área</label>
+              <label data-i18n>Área</label>
               <select name="area" id="sel-area" onchange="toggleOtro('area')">
-                <option value="">Seleccionar...</option>
+                <option value="" data-i18n>Seleccionar...</option>
                 <% areas.forEach(a => { %>
                   <option value="<%= a %>" <%= receta?.area === a ? 'selected' : '' %>><%= a %></option>
                 <% }) %>
-                <option value="otro" <%= (receta?.area && !areas.includes(receta.area)) ? 'selected' : '' %>>Otra (escribir)</option>
+                <option value="otro" <%= (receta?.area && !areas.includes(receta.area)) ? 'selected' : '' %> data-i18n>Otra (escribir)</option>
               </select>
-              <input type="text" name="area_otro" id="otro-area" placeholder="Escribir área..."
+              <input type="text" name="area_otro" id="otro-area" placeholder="Escribir área..." data-i18n-ph="Escribir área..."
                      value="<%= (receta?.area && !areas.includes(receta.area)) ? receta.area : '' %>"
                      style="display:<%= (receta?.area && !areas.includes(receta.area)) ? 'block' : 'none' %>;margin-top:8px;">
             </div>
             <div class="field">
-              <label>Imagen de portada <% if (receta?.imagen) { %>(dejar vacío para conservar la actual)<% } %></label>
+              <label><span data-i18n>Imagen de portada</span> <% if (receta?.imagen) { %><span data-i18n>(dejar vacío para conservar la actual)</span><% } %></label>
               <input type="file" name="imagen" accept="image/*" style="padding:8px 0;">
               <% if (receta?.imagen) { %>
                 <img src="/uploads/<%= receta.imagen %>" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-top:8px;">
               <% } %>
             </div>
           </div>
+      </div>
 
+      <!-- TAB: Videos -->
+      <div id="tab-content-videos" style="display:none;">
           <div class="form-card">
-            <p class="form-card-title"><i class="ti ti-video"></i> Videos</p>
+            <p class="form-card-title"><i class="ti ti-video"></i> <span data-i18n>Videos</span></p>
             <div id="videos-body"></div>
             <button type="button" class="btn-secondary" onclick="agregarFilaVideo()" style="margin-top:8px;">
-              <i class="ti ti-plus"></i> Agregar video
+              <i class="ti ti-plus"></i> <span data-i18n>Agregar video</span>
             </button>
           </div>
+      </div>
 
+      <!-- TAB: Fotos -->
+      <div id="tab-content-fotos" style="display:none;">
           <div class="form-card">
-            <p class="form-card-title"><i class="ti ti-photo"></i> Fotos (Preparación, Montaje, etc.)</p>
+            <p class="form-card-title"><i class="ti ti-photo"></i> <span data-i18n>Fotos (Preparación, Montaje, etc.)</span></p>
             <div id="fotos-body"></div>
             <button type="button" class="btn-secondary" onclick="agregarFilaFoto()" style="margin-top:8px;">
-              <i class="ti ti-plus"></i> Agregar foto
+              <i class="ti ti-plus"></i> <span data-i18n>Agregar foto</span>
             </button>
           </div>
-        </div>
+      </div>
 
-        <!-- Columna derecha -->
-        <div class="form-col">
+      <!-- TAB: Ingredientes -->
+      <div id="tab-content-ingredientes" style="display:none;">
           <div class="form-card">
-            <p class="form-card-title"><i class="ti ti-list"></i> Ingredientes</p>
-            <p style="font-size:0.72rem;color:var(--gris-texto);margin:-10px 0 14px;">
-              Se eligen de la lista de insumos cargada en Costos — el precio se toma en vivo de ahí.
-            </p>
+            <p class="form-card-title"><i class="ti ti-list"></i> <span data-i18n>Ingredientes</span></p>
+            <p style="font-size:0.72rem;color:var(--gris-texto);margin:-10px 0 14px;" data-i18n>Se eligen de la lista de insumos cargada en Costos — el precio se toma en vivo de ahí.</p>
             <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
             <table class="tabla-ingredientes">
               <thead>
-                <tr><th>Insumo</th><th>Cantidad</th><th>Unidad</th><th>Subtotal</th><th></th></tr>
+                <tr><th data-i18n>Insumo</th><th data-i18n>Cantidad</th><th data-i18n>Unidad</th><th data-i18n>Subtotal</th><th></th></tr>
               </thead>
               <tbody id="ingredientes-body"></tbody>
             </table>
             </div>
             <button type="button" class="btn-secondary" onclick="agregarFilaIngrediente()" style="margin-top:10px;">
-              <i class="ti ti-plus"></i> Agregar ingrediente
+              <i class="ti ti-plus"></i> <span data-i18n>Agregar ingrediente</span>
             </button>
           </div>
-
-          <div class="form-card">
-            <p class="form-card-title"><i class="ti ti-list-numbers"></i> Procedimiento</p>
-            <div class="field">
-              <label>Describí cada paso</label>
-              <textarea name="procedimiento" rows="9"
-                placeholder="Paso 1: Mezclar la harina con los huevos.&#10;Paso 2: Agregar la leche de a poco.&#10;..."><%= receta?.procedimiento || '' %></textarea>
-            </div>
-          </div>
-        </div>
-
       </div>
 
-      <div class="form-actions">
-        <a href="/recetas" class="btn-secondary">Cancelar</a>
-        <button type="submit" class="btn-primary">
-          <i class="ti ti-device-floppy"></i> Guardar receta
-        </button>
+      <!-- TAB: Procedimiento -->
+      <div id="tab-content-procedimiento" style="display:none;">
+          <div class="form-card">
+            <p class="form-card-title"><i class="ti ti-list-numbers"></i> <span data-i18n>Procedimiento</span></p>
+            <div class="field">
+              <label data-i18n>Describí cada paso</label>
+              <textarea name="procedimiento" rows="9"
+                placeholder="Paso 1: Mezclar la harina con los huevos.&#10;Paso 2: Agregar la leche de a poco.&#10;..." data-i18n-ph="Paso 1: Mezclar la harina con los huevos.&#10;Paso 2: Agregar la leche de a poco.&#10;..."><%= receta?.procedimiento || '' %></textarea>
+            </div>
+          </div>
       </div>
     </form>
 
@@ -187,6 +213,43 @@ function toggleOtro(campo) {
   otro.style.display = sel.value === 'otro' ? 'block' : 'none';
   if (sel.value === 'otro') otro.focus();
 }
+
+// ── Pestañas del formulario ──
+const TABS_RECETA = ['general', 'videos', 'fotos', 'ingredientes', 'procedimiento'];
+function mostrarTabReceta(tab) {
+  TABS_RECETA.forEach(t => {
+    const content = document.getElementById('tab-content-' + t);
+    const btn = document.getElementById('tab-' + t);
+    if (content) content.style.display = t === tab ? 'block' : 'none';
+    if (btn) btn.classList.toggle('activa', t === tab);
+  });
+}
+
+// Si al apretar "Guardar" hay un campo obligatorio sin completar en una
+// pestaña que no es la que se está viendo (ej. "Nombre de la receta" en
+// Información general mientras estás mirando Procedimiento), el navegador
+// no puede mostrar su cartel de "completá este campo" porque el campo
+// está oculto (display:none) — así que sin esto el formulario no se
+// mandaba y no pasaba nada, sin ninguna pista de qué faltaba.
+//
+// OJO 1: cuando la validación falla, el navegador NUNCA llega a disparar
+// el evento "submit" (lo corta antes) — por eso esto escucha "invalid" en
+// cada campo (con captura, porque "invalid" no burbujea) y no "submit".
+//
+// OJO 2: si hay MÁS de un campo obligatorio sin completar a la vez (ej.
+// "Nombre" vacío Y ningún insumo elegido), el navegador dispara "invalid"
+// para cada uno — pero solo el PRIMERO en el orden del formulario recibe
+// el foco y el cartel. Si cambiáramos de pestaña en cada "invalid" que
+// llega, terminaríamos en la pestaña del último campo, tapando de nuevo
+// al primero justo cuando el navegador le intenta mostrar el cartel. Por
+// eso se compara el campo del evento contra el primer inválido del
+// formulario, y solo se cambia de pestaña para ese.
+document.getElementById('form-receta').addEventListener('invalid', function (e) {
+  const primero = this.querySelector(':invalid');
+  if (e.target !== primero) return;
+  const tabContent = primero.closest('[id^="tab-content-"]');
+  if (tabContent) mostrarTabReceta(tabContent.id.replace('tab-content-', ''));
+}, true);
 
 // ── Insumos disponibles (para el <select> de ingredientes) ──
 const INSUMOS_DISPONIBLES = <%- JSON.stringify(todosInsumos || []) %>;
@@ -213,7 +276,7 @@ function agregarFilaIngrediente(datos) {
   tr.innerHTML = `
     <td>
       <select name="ing_insumo_id_${idx}" onchange="actualizarSubtotalIng(${idx})" required>
-        <option value="">Seleccionar insumo...</option>
+        <option value="" data-i18n>${tHilton('Seleccionar insumo...')}</option>
         ${opciones}
       </select>
     </td>
@@ -260,13 +323,13 @@ function agregarFilaVideo(datos) {
   const esUrl = !datos || datos.origen === 'url';
   div.innerHTML = `
     <select name="video_clasificacion_${idx}">
-      <option value="Preparación" ${clasificacionSel === 'Preparación' ? 'selected' : ''}>Preparación</option>
-      <option value="Montaje" ${clasificacionSel === 'Montaje' ? 'selected' : ''}>Montaje</option>
-      <option value="Otros" ${clasificacionSel === 'Otros' ? 'selected' : ''}>Otros</option>
+      <option value="Preparación" data-i18n ${clasificacionSel === 'Preparación' ? 'selected' : ''}>${tHilton('Preparación')}</option>
+      <option value="Montaje" data-i18n ${clasificacionSel === 'Montaje' ? 'selected' : ''}>${tHilton('Montaje')}</option>
+      <option value="Otros" data-i18n ${clasificacionSel === 'Otros' ? 'selected' : ''}>${tHilton('Otros')}</option>
     </select>
     <select name="video_tipo_${idx}" onchange="toggleTipoVideo(${idx}, this.value)">
-      <option value="url" ${esUrl ? 'selected' : ''}>Link (YouTube/Drive)</option>
-      <option value="archivo" ${!esUrl ? 'selected' : ''}>Archivo</option>
+      <option value="url" data-i18n ${esUrl ? 'selected' : ''}>${tHilton('Link (YouTube/Drive)')}</option>
+      <option value="archivo" data-i18n ${!esUrl ? 'selected' : ''}>${tHilton('Archivo')}</option>
     </select>
     <input type="text" name="video_url_${idx}" placeholder="https://..." value="${esUrl && datos ? datos.valor : ''}" style="display:${esUrl ? 'block' : 'none'};flex:1;min-width:160px;" id="video-url-${idx}">
     <input type="file" name="video_archivo_${idx}" accept="video/*" style="display:${!esUrl ? 'block' : 'none'};" id="video-archivo-${idx}">
@@ -291,13 +354,13 @@ function agregarFilaFoto(datos) {
   const clasificacionSel = datos?.clasificacion || 'Preparación';
   div.innerHTML = `
     <select name="foto_clasificacion_${idx}">
-      <option value="Preparación" ${clasificacionSel === 'Preparación' ? 'selected' : ''}>Preparación</option>
-      <option value="Montaje" ${clasificacionSel === 'Montaje' ? 'selected' : ''}>Montaje</option>
-      <option value="Otros" ${clasificacionSel === 'Otros' ? 'selected' : ''}>Otros</option>
+      <option value="Preparación" data-i18n ${clasificacionSel === 'Preparación' ? 'selected' : ''}>${tHilton('Preparación')}</option>
+      <option value="Montaje" data-i18n ${clasificacionSel === 'Montaje' ? 'selected' : ''}>${tHilton('Montaje')}</option>
+      <option value="Otros" data-i18n ${clasificacionSel === 'Otros' ? 'selected' : ''}>${tHilton('Otros')}</option>
     </select>
     <input type="file" name="foto_archivo_${idx}" accept="image/*">
     <input type="hidden" name="foto_existente_${idx}" value="${datos?.archivo || ''}">
-    ${datos?.archivo ? `<span class="fila-foto-preview"><i class="ti ti-photo"></i> Foto actual (se conserva si no elegís otra)</span>` : ''}
+    ${datos?.archivo ? `<span class="fila-foto-preview"><i class="ti ti-photo"></i> <span data-i18n>${tHilton('Foto actual (se conserva si no elegís otra)')}</span></span>` : ''}
     <button type="button" class="btn-fila-quitar" onclick="document.getElementById('fila-foto-${idx}').remove()"><i class="ti ti-x"></i></button>
   `;
   cont.appendChild(div);

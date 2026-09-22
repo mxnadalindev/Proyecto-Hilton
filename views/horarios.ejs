@@ -95,18 +95,18 @@
 
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label">Portal interno</p>
-        <h1 class="seccion-titulo">Horarios</h1>
+        <p class="seccion-label" data-i18n>Portal interno</p>
+        <h1 class="seccion-titulo" data-i18n>Horarios</h1>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
+        <a href="/inicio" class="btn-icono-casa" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
         <%# Antes este link no llevaba el período — volver acá desde Horarios
             siempre te tiraba a la semana actual (31 ago—6 sep), pisando el
             rango que habías elegido en el almanaque de Miembro de equipo.
             Se le agrega el mismo inicio/fin que ya se usa en "Ver en
             Horarios" (personal.ejs), en el mismo sentido, para que vuelva
             al rango que se estaba mirando. %>
-        <a href="/miembros-de-equipo<%= dias.length ? ('?inicio=' + inicio + '&fin=' + fin) : '' %>" class="btn-secondary"><i class="ti ti-users"></i> Miembro de equipo</a>
+        <a href="/miembros-de-equipo<%= dias.length ? ('?inicio=' + inicio + '&fin=' + fin) : '' %>" class="btn-secondary"><i class="ti ti-users"></i> <span data-i18n>Miembro de equipo</span></a>
 
         <!-- "Otras opciones": agrupa Enviar / Excel / Copiar período anterior /
              Reiniciar período en un desplegable — antes eran 4 botones sueltos
@@ -115,23 +115,23 @@
              arriba (Menú principal, Miembro de equipo, Otras opciones). -->
         <div class="menu-otras-opciones" style="position:relative;">
           <button type="button" class="btn-primary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
-            <i class="ti ti-dots"></i> Otras opciones <i class="ti ti-chevron-down" style="font-size:12px;"></i>
+            <i class="ti ti-dots"></i> <span data-i18n>Otras opciones</span> <i class="ti ti-chevron-down" style="font-size:12px;"></i>
           </button>
           <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
             <button type="button" class="dropdown-otras-item dropdown-otras-item-whatsapp" id="btn-enviar-whatsapp" onclick="enviarExcelPorWhatsapp()">
-              <i class="ti ti-brand-whatsapp" id="icon-whatsapp"></i> <span id="texto-whatsapp">Enviar</span>
+              <i class="ti ti-brand-whatsapp" id="icon-whatsapp"></i> <span id="texto-whatsapp" data-i18n>Enviar</span>
             </button>
             <a href="/horarios/excel?inicio=<%= inicio %>&fin=<%= fin %>" class="dropdown-otras-item dropdown-otras-item-excel">
-              <i class="ti ti-file-spreadsheet"></i> Excel (este período)
+              <i class="ti ti-file-spreadsheet"></i> <span data-i18n>Excel (este período)</span>
             </a>
             <a href="/horarios/excel-historial" class="dropdown-otras-item dropdown-otras-item-excel">
-              <i class="ti ti-history"></i> Descargar historial completo
+              <i class="ti ti-history"></i> <span data-i18n>Descargar historial completo</span>
             </a>
             <form method="POST" action="/horarios/copiar-semana" style="margin:0;">
               <input type="hidden" name="inicio_destino" value="<%= inicio %>">
               <input type="hidden" name="fin_destino" value="<%= fin %>">
-              <button type="submit" class="dropdown-otras-item dropdown-otras-item-nav" onclick="return confirm('¿Copiar los horarios del período anterior (misma duración) a este período?')">
-                <i class="ti ti-copy"></i> Copiar período anterior
+              <button type="submit" class="dropdown-otras-item dropdown-otras-item-nav" onclick="return confirm(tHilton('¿Copiar los horarios del período anterior (misma duración) a este período?'))">
+                <i class="ti ti-copy"></i> <span data-i18n>Copiar período anterior</span>
               </button>
             </form>
             <% if (puedeReiniciar) { %>
@@ -140,7 +140,7 @@
               <input type="hidden" name="fin" value="<%= fin %>">
               <button type="button" class="dropdown-otras-item dropdown-otras-item-danger"
                       onclick="abrirModalReinicio()">
-                <i class="ti ti-trash"></i> Reiniciar período
+                <i class="ti ti-trash"></i> <span data-i18n>Reiniciar período</span>
               </button>
             </form>
             <% } %>
@@ -152,14 +152,14 @@
     <%# Navegación %>
     <div class="horarios-periodo-nav" style="display:flex;align-items:center;justify-content:space-between;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:14px 20px;margin-bottom:20px;box-shadow:var(--sombra);">
       <a href="/horarios?inicio=<%= rangoAnterior.inicio %>&fin=<%= rangoAnterior.fin %>" class="btn-secondary" style="padding:6px 14px;">
-        <i class="ti ti-chevron-left"></i> Período anterior
+        <i class="ti ti-chevron-left"></i> <span data-i18n>Período anterior</span>
       </a>
       <div style="text-align:center;">
         <% if (dias.length === 0) { %>
-        <p style="font-size:0.95rem;font-weight:600;color:var(--negro);margin:0;">Seleccioná una fecha en Miembro de equipo</p>
+        <p style="font-size:0.95rem;font-weight:600;color:var(--negro);margin:0;" data-i18n>Seleccioná una fecha en Miembro de equipo</p>
         <% } else { %>
         <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 2px;">
-          Período <% if (dias.length !== 7) { %>(<%= dias.length %> día<%= dias.length !== 1 ? 's' : '' %>)<% } %>
+          <span data-i18n>Período</span> <% if (dias.length !== 7) { %>(<%= dias.length %> día<%= dias.length !== 1 ? 's' : '' %>)<% } %>
         </p>
         <p style="font-size:0.95rem;font-weight:600;color:var(--negro);margin:0;">
           <%= new Date(dias[0]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long'}) %> — <%= new Date(dias[dias.length-1]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}) %>
@@ -167,14 +167,14 @@
         <% } %>
       </div>
       <a href="/horarios?inicio=<%= rangoSiguiente.inicio %>&fin=<%= rangoSiguiente.fin %>" class="btn-secondary" style="padding:6px 14px;">
-        Período siguiente <i class="ti ti-chevron-right"></i>
+        <span data-i18n>Período siguiente</span> <i class="ti ti-chevron-right"></i>
       </a>
     </div>
 
     <%# Alertas %>
    <% if (typeof msg !== 'undefined' && msg === 'reiniciado') { %> 
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
-      <i class="ti ti-check"></i> Horarios del período reiniciados correctamente.
+      <i class="ti ti-check"></i> <span data-i18n>Horarios del período reiniciados correctamente.</span>
     </div>
     <% } else if (typeof msg !== 'undefined' && msg) { %>
     <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#dc2626;display:flex;align-items:center;gap:8px;">
@@ -184,7 +184,7 @@
     <% if (alertas.length > 0) { %>
     <div style="background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:12px 16px;margin-bottom:20px;">
       <p style="font-size:0.75rem;font-weight:600;color:#854d0e;margin:0 0 6px;display:flex;align-items:center;gap:6px;">
-        <i class="ti ti-alert-triangle"></i> Sectores sin cobertura
+        <i class="ti ti-alert-triangle"></i> <span data-i18n>Sectores sin cobertura</span>
       </p>
       <div style="display:flex;flex-wrap:wrap;gap:6px;">
         <% alertas.slice(0,8).forEach(a => { %>
@@ -192,7 +192,7 @@
           <%= a.sector %> · <%= a.nombreDia %> <%= a.dia.slice(5) %>
         </span>
         <% }) %>
-        <% if (alertas.length > 8) { %><span style="font-size:0.72rem;color:#854d0e;">+<%= alertas.length-8 %> más</span><% } %>
+        <% if (alertas.length > 8) { %><span style="font-size:0.72rem;color:#854d0e;">+<%= alertas.length-8 %> <span data-i18n>más</span></span><% } %>
       </div>
     </div>
     <% } %>
@@ -202,18 +202,18 @@
         legibilidad. Se deja el scroll horizontal (ya lo tenía) y se agrega el
         mismo aviso "deslizá" que usa Miembro de equipo, porque en una pantalla
         angosta no se nota a simple vista que hay más días a la derecha. %>
-    <p class="aviso-scroll-tabla"><i class="ti ti-arrows-horizontal"></i> Deslizá hacia los costados para ver toda la semana</p>
+    <p class="aviso-scroll-tabla"><i class="ti ti-arrows-horizontal"></i> <span data-i18n>Deslizá hacia los costados para ver toda la semana</span></p>
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:1px solid var(--gris-borde);box-shadow:var(--sombra);">
       <table id="tabla-horarios" style="width:100%;border-collapse:collapse;min-width:<%= 270 + dias.length * 120 %>px;">
         <thead>
           <tr style="background:#1e3a5f;">
-            <th style="padding:10px 14px;text-align:left;color:#fff;font-size:0.72rem;font-weight:600;width:200px;">EMPLEADO</th>
-            <th style="padding:10px 10px;text-align:center;color:#fff;font-size:0.7rem;font-weight:600;width:70px;" title="Francos compensatorios adeudados">RECOFF</th>
+            <th style="padding:10px 14px;text-align:left;color:#fff;font-size:0.72rem;font-weight:600;width:200px;" data-i18n>EMPLEADO</th>
+            <th style="padding:10px 10px;text-align:center;color:#fff;font-size:0.7rem;font-weight:600;width:70px;" title="Francos compensatorios adeudados" data-i18n-title="Francos compensatorios adeudados" data-i18n>RECOFF</th>
             <% const NOMBRES_DIA = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB']; %>
             <% dias.forEach((d) => { %>
             <% const _fecha = new Date(d + 'T00:00:00'); %>
             <th style="padding:10px 8px;text-align:center;color:#fff;font-size:0.7rem;font-weight:600;min-width:90px;">
-              <%= NOMBRES_DIA[_fecha.getDay()] %><br><span style="font-size:0.65rem;opacity:0.8;font-weight:400;"><%= d.slice(5).replace('-','/') %></span>
+              <span data-i18n><%= NOMBRES_DIA[_fecha.getDay()] %></span><br><span style="font-size:0.65rem;opacity:0.8;font-weight:400;"><%= d.slice(5).replace('-','/') %></span>
             </th>
             <% }) %>
           </tr>
@@ -240,7 +240,7 @@
                 <%= emp.nombre %>
               </td>
               <td style="padding:5px 8px;text-align:center;background:<%= CS[sector]||'#fff' %>20;">
-                <span class="recoff-solo-lectura" id="recoff-h-<%= emp.id %>" title="Días de RECOFF pendientes"><%= emp.recoff_pendiente || 0 %></span>
+                <span class="recoff-solo-lectura" id="recoff-h-<%= emp.id %>" title="Días de RECOFF pendientes" data-i18n-title="Días de RECOFF pendientes"><%= emp.recoff_pendiente || 0 %></span>
               </td>
               <% dias.forEach(dia => { %>
               <%
@@ -276,7 +276,7 @@
 
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
+      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> <span data-i18n>Volver al menú principal</span></a>
     </div>
   </main>
   <%- include('partials/mobile-nav', { path: 'horarios' }) %>
@@ -291,11 +291,11 @@
     <div style="width:64px;height:64px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
       <i class="ti ti-alert-triangle" style="font-size:32px;color:#dc2626;"></i>
     </div>
-    <p id="modal-reinicio-titulo" style="font-size:1.05rem;font-weight:700;color:var(--negro);margin:0 0 8px;">Reiniciar período</p>
+    <p id="modal-reinicio-titulo" style="font-size:1.05rem;font-weight:700;color:var(--negro);margin:0 0 8px;" data-i18n>Reiniciar período</p>
     <p id="modal-reinicio-texto" style="font-size:0.85rem;color:var(--gris-texto);line-height:1.5;margin:0 0 4px;"></p>
     <p id="modal-reinicio-paso" style="font-size:0.68rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#dc2626;margin:12px 0 20px;"></p>
     <div style="display:flex;gap:10px;justify-content:center;">
-      <button type="button" class="btn-secondary" onclick="cerrarModalReinicio()">Cancelar</button>
+      <button type="button" class="btn-secondary" onclick="cerrarModalReinicio()" data-i18n>Cancelar</button>
       <button type="button" id="btn-modal-reinicio-siguiente" class="btn-secondary" style="color:#dc2626;border-color:#fecaca;" onclick="pasoSiguienteReinicio()"></button>
     </div>
   </div>
@@ -353,9 +353,9 @@ document.querySelectorAll('.celda-horario').forEach(input => {
 // modal propio de la app en vez de los confirm() nativos del navegador.
 // Solo al llegar al paso 3 y tocar el botón final se manda el formulario.
 const PASOS_REINICIO = [
-  { texto: '¿Reiniciar todos los horarios de este período? Esta acción no se puede deshacer.', boton: 'Sí, continuar' },
-  { texto: 'Confirmá de nuevo: se van a BORRAR todos los horarios cargados en este período, para todos los empleados.', boton: 'Sí, entiendo' },
-  { texto: 'Última confirmación: esto no tiene vuelta atrás.', boton: 'Reiniciar ahora' },
+  { texto: tHilton('¿Reiniciar todos los horarios de este período? Esta acción no se puede deshacer.'), boton: tHilton('Sí, continuar') },
+  { texto: tHilton('Confirmá de nuevo: se van a BORRAR todos los horarios cargados en este período, para todos los empleados.'), boton: tHilton('Sí, entiendo') },
+  { texto: tHilton('Última confirmación: esto no tiene vuelta atrás.'), boton: tHilton('Reiniciar ahora') },
 ];
 let pasoReinicioActual = 0;
 

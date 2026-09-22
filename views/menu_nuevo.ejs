@@ -39,60 +39,60 @@
   <main class="main-content">
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label"><a href="/eventos/menus" style="color:var(--gris-texto);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;"><i class="ti ti-arrow-left"></i> Menús</a></p>
-        <h1 class="seccion-titulo">Nuevo menú</h1>
+        <p class="seccion-label"><a href="/eventos/menus" style="color:var(--gris-texto);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;"><i class="ti ti-arrow-left"></i> <span data-i18n>Menús</span></a></p>
+        <h1 class="seccion-titulo" data-i18n>Nuevo menú</h1>
       </div>
     </div>
 
     <form method="POST" action="/eventos/menus/nuevo">
       <div class="form-card" style="margin-bottom:20px;">
         <div class="field" style="margin-bottom:14px;">
-          <label>Nombre del menú</label>
-          <input type="text" name="nombre" placeholder="Ej: Menú Buffet Ejecutivo" required>
+          <label data-i18n>Nombre del menú</label>
+          <input type="text" name="nombre" placeholder="Ej: Menú Buffet Ejecutivo" data-i18n-ph="Ej: Menú Buffet Ejecutivo" required>
         </div>
         <div class="field">
-          <label>Descripción (opcional)</label>
-          <input type="text" name="descripcion" placeholder="Ej: Almuerzo corporativo, hasta 50 personas">
+          <label data-i18n>Descripción (opcional)</label>
+          <input type="text" name="descripcion" placeholder="Ej: Almuerzo corporativo, hasta 50 personas" data-i18n-ph="Ej: Almuerzo corporativo, hasta 50 personas">
         </div>
       </div>
 
       <div class="form-card">
-        <p class="form-card-title"><i class="ti ti-tools-kitchen-2"></i> Elegí los bocaditos que lo componen</p>
+        <p class="form-card-title"><i class="ti ti-tools-kitchen-2"></i> <span data-i18n>Elegí los bocaditos que lo componen</span></p>
 
         <% const NOMBRES_CATEGORIA_MENU = { frios: 'Fríos', calientes: 'Calientes', principales: 'Platos principales', postres: 'Postres' }; %>
         <% const hayAlgunPlato = ['frios','calientes','principales','postres'].some(cat => (catalogoBocaditos[cat]||[]).length > 0); %>
 
         <% if (hayAlgunPlato) { %>
-        <input type="text" id="buscador-platos" placeholder="Buscar bocadito..." class="buscador-platos"
+        <input type="text" id="buscador-platos" placeholder="Buscar bocadito..." data-i18n-ph="Buscar bocadito..." class="buscador-platos"
                oninput="filtrarPlatos(this.value)">
         <div id="platos-contenedor">
           <% ['frios','calientes','principales','postres'].forEach(cat => { %>
             <% const items = catalogoBocaditos[cat] || []; %>
             <% if (items.length > 0) { %>
             <div class="categoria-bloque" data-categoria-bloque="<%= cat %>">
-              <p class="categoria-titulo"><%= NOMBRES_CATEGORIA_MENU[cat] %></p>
+              <p class="categoria-titulo" data-i18n><%= NOMBRES_CATEGORIA_MENU[cat] %></p>
               <div class="platos-grid">
                 <% items.forEach(b => { %>
                 <label class="plato-item" data-nombre="<%= b.nombre.toLowerCase() %>">
                   <input type="checkbox" name="platos" value="<%= b.id %>">
                   <span class="plato-nombre"><%= b.nombre %></span>
-                  <span class="plato-costo">$<%= parseFloat(b.costo_unitario || 0).toFixed(2) %>/bocado</span>
+                  <span class="plato-costo">$<%= parseFloat(b.costo_unitario || 0).toFixed(2) %><span data-i18n>/bocado</span></span>
                 </label>
                 <% }) %>
               </div>
             </div>
             <% } %>
           <% }) %>
-          <p class="sin-resultados" id="sin-resultados">Sin resultados para esa búsqueda.</p>
+          <p class="sin-resultados" id="sin-resultados" data-i18n>Sin resultados para esa búsqueda.</p>
         </div>
         <% } else { %>
-        <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;">No hay bocaditos cargados en el catálogo de Eventos todavía.</p>
+        <p style="font-size:0.82rem;color:var(--gris-texto);font-style:italic;" data-i18n>No hay bocaditos cargados en el catálogo de Eventos todavía.</p>
         <% } %>
       </div>
 
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
-        <a href="/eventos/menus" class="btn-secondary">Cancelar</a>
-        <button type="submit" class="btn-primary"><i class="ti ti-device-floppy"></i> Crear menú</button>
+        <a href="/eventos/menus" class="btn-secondary" data-i18n>Cancelar</a>
+        <button type="submit" class="btn-primary"><i class="ti ti-device-floppy"></i> <span data-i18n>Crear menú</span></button>
       </div>
     </form>
   </main>

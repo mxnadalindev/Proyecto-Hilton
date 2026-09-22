@@ -254,12 +254,12 @@
 
     <% if (msg === 'empleado_editado') { %>
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
-      <i class="ti ti-check"></i> Empleado actualizado.
+      <i class="ti ti-check"></i> <span data-i18n>Empleado actualizado.</span>
     </div>
     <% } %>
     <% if (msg === 'mozos_importados') { %>
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:8px;">
-      <i class="ti ti-check"></i> Se cargaron <%= cargadosMozos %> mozo<%= cargadosMozos != 1 ? 's' : '' %><% if (duplicadosMozos > 0) { %> (<%= duplicadosMozos %> ya existían por CUIL y se saltearon)<% } %>.
+      <i class="ti ti-check"></i> <span data-i18n>Se cargaron</span> <%= cargadosMozos %> <span data-i18n><%= cargadosMozos != 1 ? 'mozos' : 'mozo' %></span><% if (duplicadosMozos > 0) { %> (<%= duplicadosMozos %> <span data-i18n>ya existían por CUIL y se saltearon</span>)<% } %>.
     </div>
     <% } %>
     <% if (msg && msg !== 'empleado_editado' && msg !== 'mozos_importados') { %>
@@ -271,13 +271,13 @@
     <% if (typeof mozosVencidos !== 'undefined' && (mozosVencidos.length > 0 || mozosPorVencer.length > 0)) { %>
     <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:0.82rem;color:#991b1b;">
       <div style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:<%= (mozosVencidos.length + mozosPorVencer.length) ? '8px' : '0' %>;">
-        <i class="ti ti-alert-triangle"></i> Límite de 6 meses de mozos eventuales
+        <i class="ti ti-alert-triangle"></i> <span data-i18n>Límite de 6 meses de mozos eventuales</span>
       </div>
       <% mozosVencidos.forEach(p => { %>
-        <div style="padding:3px 0;">• <strong><%= p.nombre %></strong> superó su límite de 6 meses hace <%= Math.abs(p.dias_para_vencer_mozo) %> día<%= Math.abs(p.dias_para_vencer_mozo) !== 1 ? 's' : '' %> (venció el <%= new Date(p.fecha_vencimiento_mozo).toLocaleDateString('es-AR') %>).</div>
+        <div style="padding:3px 0;">• <strong><%= p.nombre %></strong> <span data-i18n>superó su límite de 6 meses hace</span> <%= Math.abs(p.dias_para_vencer_mozo) %> <span data-i18n><%= Math.abs(p.dias_para_vencer_mozo) !== 1 ? 'días' : 'día' %></span> (<span data-i18n>venció el</span> <%= new Date(p.fecha_vencimiento_mozo).toLocaleDateString('es-AR') %>).</div>
       <% }) %>
       <% mozosPorVencer.forEach(p => { %>
-        <div style="padding:3px 0;">• <strong><%= p.nombre %></strong> llega a los 6 meses en <%= p.dias_para_vencer_mozo %> día<%= p.dias_para_vencer_mozo !== 1 ? 's' : '' %> (<%= new Date(p.fecha_vencimiento_mozo).toLocaleDateString('es-AR') %>).</div>
+        <div style="padding:3px 0;">• <strong><%= p.nombre %></strong> <span data-i18n>llega a los 6 meses en</span> <%= p.dias_para_vencer_mozo %> <span data-i18n><%= p.dias_para_vencer_mozo !== 1 ? 'días' : 'día' %></span> (<%= new Date(p.fecha_vencimiento_mozo).toLocaleDateString('es-AR') %>).</div>
       <% }) %>
     </div>
     <% } %>
@@ -287,19 +287,19 @@
          const [anioFiltro, mesNumFiltro] = mesFiltro.split('-');
     %>
     <div style="background:var(--azul-claro);border:1px solid var(--azul);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:var(--azul);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-      <span><i class="ti ti-filter"></i> Mostrando solo a los mozos con algo cargado en <%= MESES_NOMBRE[parseInt(mesNumFiltro,10)-1] %> de <%= anioFiltro %> (disponibilidad y/o eventos).</span>
-      <a href="/miembros-de-equipo" style="color:var(--azul);text-decoration:underline;white-space:nowrap;">Ver a todo el equipo</a>
+      <span><i class="ti ti-filter"></i> <span data-i18n>Mostrando solo a los mozos con algo cargado en</span> <span data-i18n><%= MESES_NOMBRE[parseInt(mesNumFiltro,10)-1] %></span> <span data-i18n>de</span> <%= anioFiltro %> <span data-i18n>(disponibilidad y/o eventos).</span></span>
+      <a href="/miembros-de-equipo" style="color:var(--azul);text-decoration:underline;white-space:nowrap;" data-i18n>Ver a todo el equipo</a>
     </div>
     <% } %>
 
     <!-- Header -->
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label">Portal interno</p>
-        <h1 class="seccion-titulo">Miembro de equipo</h1>
+        <p class="seccion-label" data-i18n>Portal interno</p>
+        <h1 class="seccion-titulo" data-i18n>Miembro de equipo</h1>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
+        <a href="/inicio" class="btn-icono-casa" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
         <% if (misDepto === 'ayb') { %>
         <!-- AYB: "Ver en Horarios" + Importar mozos + Cargar con foto agrupados
              en un desplegable "Otras opciones", mismo patrón/clases que usa
@@ -307,27 +307,27 @@
              así no se amontonan tantos botones sueltos en el header. -->
         <div class="menu-otras-opciones" style="position:relative;">
           <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
-            <i class="ti ti-dots"></i> Otras opciones <i class="ti ti-chevron-down" style="font-size:12px;"></i>
+            <i class="ti ti-dots"></i> <span data-i18n>Otras opciones</span> <i class="ti ti-chevron-down" style="font-size:12px;"></i>
           </button>
           <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
             <a id="btn-ver-horarios" href="/horarios?inicio=<%= inicio %>&fin=<%= fin %>" class="dropdown-otras-item dropdown-otras-item-nav">
-              <i class="ti ti-clock"></i> Ver en Horarios
+              <i class="ti ti-clock"></i> <span data-i18n>Ver en Horarios</span>
             </a>
             <% if (esAdmin) { %>
             <button type="button" class="dropdown-otras-item dropdown-otras-item-nav" onclick="showModal('modal-importar-mozos')">
-              <i class="ti ti-file-upload"></i> Importar mozos (CSV)
+              <i class="ti ti-file-upload"></i> <span data-i18n>Importar mozos (CSV)</span>
             </button>
             <button type="button" class="dropdown-otras-item dropdown-otras-item-nav" onclick="showModal('modal-importar-mozos-foto')">
-              <i class="ti ti-camera"></i> Cargar con foto
+              <i class="ti ti-camera"></i> <span data-i18n>Cargar con foto</span>
             </button>
             <% } %>
           </div>
         </div>
         <% } else { %>
-        <a id="btn-ver-horarios" href="/horarios?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-secondary"><i class="ti ti-clock"></i> Ver en Horarios</a>
+        <a id="btn-ver-horarios" href="/horarios?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-secondary"><i class="ti ti-clock"></i> <span data-i18n>Ver en Horarios</span></a>
         <% } %>
         <% if (esAdmin) { %>
-        <button onclick="showModal('modal-nuevo')" class="btn-primary"><i class="ti ti-plus"></i> Nuevo empleado</button>
+        <button onclick="showModal('modal-nuevo')" class="btn-primary"><i class="ti ti-plus"></i> <span data-i18n>Nuevo empleado</span></button>
         <% } %>
       </div>
     </div>
@@ -344,16 +344,16 @@
           <button onclick="calMes(1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:16px;">&#8250;</button>
         </div>
         <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;"></div>
-        <p style="font-size:0.65rem;color:var(--gris-texto);margin:10px 0 0;text-align:center;">Elegí el día de inicio y después el día de fin.</p>
+        <p style="font-size:0.65rem;color:var(--gris-texto);margin:10px 0 0;text-align:center;" data-i18n>Elegí el día de inicio y después el día de fin.</p>
       </div>
 
       <!-- Rango seleccionado -->
       <div class="panel-rango-sel" style="flex:1;">
-        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 8px;">Rango seleccionado</p>
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 8px;" data-i18n>Rango seleccionado</p>
         <p id="semana-label" style="font-size:1.1rem;font-weight:600;color:var(--negro);margin:0 0 12px;"></p>
         <div id="semana-dias" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
         <a id="btn-ir-semana" href="/personal?inicio=<%= inicio %>&fin=<%= fin %>" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;">
-          <i class="ti ti-calendar-check"></i> Cargar este rango
+          <i class="ti ti-calendar-check"></i> <span data-i18n>Cargar este rango</span>
         </a>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <% const leyenda = [{v:'OFF',c:'#fbbf24'},{v:'VAC',c:'#dc2626'},{v:'RECOFF',c:'#22c55e'},{v:'LIBRE',c:'#dc2626'},{v:'ART',c:'#dc2626'},{v:'LICENCIA',c:'#dc2626'},{v:'CUMPLE',c:'#dc2626'},{v:'MUDANZA',c:'#dc2626'}]; %>
@@ -367,20 +367,20 @@
     <!-- AYB: sin selector de estados — solo navegación de período para ver la disponibilidad cargada -->
     <div class="card-periodo-ayb" style="display:flex;align-items:center;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;margin-bottom:20px;box-shadow:var(--sombra);flex-wrap:wrap;gap:10px;">
       <a href="/personal?inicio=<%= rangoAnterior.inicio %>&fin=<%= rangoAnterior.fin %>" class="btn-secondary" style="padding:6px 14px;">
-        <i class="ti ti-chevron-left"></i> Período anterior
+        <i class="ti ti-chevron-left"></i> <span data-i18n>Período anterior</span>
       </a>
       <div style="text-align:center;">
-        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 2px;">Período</p>
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 2px;" data-i18n>Período</p>
         <p style="font-size:0.95rem;font-weight:600;color:var(--negro);margin:0;">
           <%= new Date(dias[0]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long'}) %> — <%= new Date(dias[dias.length-1]+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}) %>
         </p>
       </div>
       <a href="/personal?inicio=<%= rangoSiguiente.inicio %>&fin=<%= rangoSiguiente.fin %>" class="btn-secondary" style="padding:6px 14px;">
-        Período siguiente <i class="ti ti-chevron-right"></i>
+        <span data-i18n>Período siguiente</span> <i class="ti ti-chevron-right"></i>
       </a>
     </div>
     <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#1d4ed8;display:flex;align-items:center;gap:8px;">
-      <i class="ti ti-info-circle"></i> Esto se arma solo con lo que cada mozo carga en Horarios — no se edita desde acá.
+      <i class="ti ti-info-circle"></i> <span data-i18n>Esto se arma solo con lo que cada mozo carga en Horarios — no se edita desde acá.</span>
     </div>
     <% } %>
 
@@ -388,18 +388,18 @@
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
       <div style="position:relative;flex:1;min-width:200px;max-width:300px;">
         <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
-        <input type="text" id="buscadorPersonal" placeholder="Buscar por nombre..." oninput="buscarPersonal()"
+        <input type="text" id="buscadorPersonal" placeholder="Buscar por nombre..." data-i18n-ph="Buscar por nombre..." oninput="buscarPersonal()"
                style="width:100%;padding:8px 12px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
       </div>
       <label style="font-size:0.75rem;color:var(--gris-texto);display:flex;align-items:center;gap:6px;cursor:pointer;">
         <input type="checkbox" id="mostrarInactivos" onchange="filtrarPersonal()" style="accent-color:var(--azul);width:16px;height:16px;">
-        Mostrar dados de baja
+        <span data-i18n>Mostrar dados de baja</span>
       </label>
       <span id="contadorActivos" style="font-size:0.72rem;color:var(--gris-texto);"></span>
     </div>
 
     <!-- Tabla -->
-    <p class="aviso-scroll-tabla"><i class="ti ti-arrows-horizontal"></i> Deslizá hacia los costados para ver toda la tabla</p>
+    <p class="aviso-scroll-tabla"><i class="ti ti-arrows-horizontal"></i> <span data-i18n>Deslizá hacia los costados para ver toda la tabla</span></p>
     <div class="tabla-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
       <table class="tabla" style="width:100%;min-width:<%= misDepto === 'ayb' ? '1250' : '1050' %>px;table-layout:fixed;">
         <colgroup>
@@ -418,17 +418,17 @@
         </colgroup>
         <thead>
           <tr>
-            <th>Nombre</th>
+            <th data-i18n>Nombre</th>
             <% if (misDepto === 'ayb') { %>
-            <th>Horas del mes</th>
-            <th>Vencimiento <span style="font-weight:400;font-size:0.62rem;">(mozos Eventual)</span></th>
-            <th>Días trabajados</th>
-            <th>Disponibilidad <span style="font-weight:400;font-size:0.62rem;">(cargada por cada mozo en Horarios)</span></th>
+            <th data-i18n>Horas del mes</th>
+            <th><span data-i18n>Vencimiento</span> <span style="font-weight:400;font-size:0.62rem;" data-i18n>(mozos Eventual)</span></th>
+            <th data-i18n>Días trabajados</th>
+            <th><span data-i18n>Disponibilidad</span> <span style="font-weight:400;font-size:0.62rem;" data-i18n>(cargada por cada mozo en Horarios)</span></th>
             <% } else { %>
-            <th>Puesto</th>
-            <th>Sector</th>
+            <th data-i18n>Puesto</th>
+            <th data-i18n>Sector</th>
             <th>RECOFF</th>
-            <th>Estados por día <span style="font-weight:400;font-size:0.62rem;">(clickeá cada día para cambiarlo)</span></th>
+            <th><span data-i18n>Estados por día</span> <span style="font-weight:400;font-size:0.62rem;" data-i18n>(clickeá cada día para cambiarlo)</span></th>
             <% } %>
             <th></th>
           </tr>
@@ -483,12 +483,12 @@
 
               <% if (misDepto === 'ayb') { %>
               <td>
-                <div style="font-size:0.85rem;font-weight:700;color:var(--negro);"><%= p.horas_mes_actual %>hs</div>
-                <div style="font-size:0.6rem;color:var(--gris-texto);margin-top:2px;">este mes</div>
+                <div style="font-size:0.85rem;font-weight:700;color:var(--negro);"><%= p.horas_mes_actual %><span data-i18n>hs</span></div>
+                <div style="font-size:0.6rem;color:var(--gris-texto);margin-top:2px;" data-i18n>este mes</div>
                 <% if (p.modalidad) { %>
                 <div style="font-size:0.62rem;color:var(--gris-texto);margin-top:4px;white-space:nowrap;">
                   <a href="/personal/<%= p.id %>/horas" style="color:inherit;text-decoration:underline;">
-                    <%= p.eventos_trabajados %> evento<%= p.eventos_trabajados !== 1 ? 's' : '' %> trabajado<%= p.eventos_trabajados !== 1 ? 's' : '' %>
+                    <%= p.eventos_trabajados %> <span data-i18n><%= p.eventos_trabajados !== 1 ? 'eventos trabajados' : 'evento trabajado' %></span>
                   </a>
                 </div>
                 <% } %>
@@ -496,18 +496,18 @@
               <td>
                 <% if (typeof p.dias_para_vencer_mozo === 'number') { %>
                   <span style="font-size:0.75rem;color:<%= p.dias_para_vencer_mozo < 0 ? '#dc2626' : (p.dias_para_vencer_mozo <= 15 ? '#b45309' : 'var(--negro)') %>;font-weight:<%= p.dias_para_vencer_mozo <= 15 ? '700' : '400' %>;white-space:nowrap;">
-                    <%= p.dias_para_vencer_mozo < 0 ? 'Venció hace ' + Math.abs(p.dias_para_vencer_mozo) + 'd' : 'Vence en ' + p.dias_para_vencer_mozo + 'd' %>
+                    <% if (p.dias_para_vencer_mozo < 0) { %><span data-i18n>Venció hace</span> <%= Math.abs(p.dias_para_vencer_mozo) %>d<% } else { %><span data-i18n>Vence en</span> <%= p.dias_para_vencer_mozo %>d<% } %>
                   </span>
                   <div style="font-size:0.6rem;color:var(--gris-texto);margin-top:2px;"><%= new Date(p.fecha_vencimiento_mozo+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'}) %></div>
                 <% } else if (p.modalidad === 'Eventual') { %>
-                  <span style="font-size:0.7rem;font-style:italic;color:var(--gris-texto);">Sin fecha de alta</span>
+                  <span style="font-size:0.7rem;font-style:italic;color:var(--gris-texto);" data-i18n>Sin fecha de alta</span>
                 <% } else { %>
                   <span style="font-size:0.72rem;color:var(--gris-texto);">—</span>
                 <% } %>
               </td>
               <td>
                 <span style="font-size:0.85rem;font-weight:700;color:var(--negro);"><%= p.dias_trabajados_mes %></span>
-                <div style="font-size:0.6rem;color:var(--gris-texto);margin-top:2px;">día<%= p.dias_trabajados_mes !== 1 ? 's' : '' %> este mes</div>
+                <div style="font-size:0.6rem;color:var(--gris-texto);margin-top:2px;"><span data-i18n><%= p.dias_trabajados_mes !== 1 ? 'días' : 'día' %></span> <span data-i18n>este mes</span></div>
               </td>
               <% } %>
 
@@ -526,20 +526,20 @@
                     const _dow = new Date(dia + 'T00:00:00').getDay();
                     const _numDia = new Date(dia + 'T00:00:00').getDate();
                     const _d = dispEmp[dia];
-                    let _texto = 'Sin cargar', _bg = 'var(--gris-fondo)', _color = 'var(--gris-texto)', _border = 'var(--gris-borde)';
+                    let _html = '<span data-i18n>Sin cargar</span>', _bg = 'var(--gris-fondo)', _color = 'var(--gris-texto)', _border = 'var(--gris-borde)';
                     if (_d) {
                       if (_d.disponible) {
-                        _texto = _d.hora_hasta ? `${_d.hora_desde}-${_d.hora_hasta}` : `Desde ${_d.hora_desde}`;
+                        _html = _d.hora_hasta ? `${_d.hora_desde}-${_d.hora_hasta}` : `<span data-i18n>Desde</span> ${_d.hora_desde}`;
                         _bg = '#f0fdf4'; _color = '#16a34a'; _border = '#bbf7d0';
                       } else {
-                        _texto = 'No disp.';
+                        _html = '<span data-i18n>No disp.</span>';
                         _bg = '#fef2f2'; _color = '#dc2626'; _border = '#fecaca';
                       }
                     }
                   %>
                   <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;">
                     <span style="font-size:0.56rem;color:var(--gris-texto);font-weight:600;white-space:nowrap;"><%= NOMBRES_DIA_CORTO[_dow] %> <%= _numDia %></span>
-                    <span style="width:64px;text-align:center;font-size:0.58rem;font-weight:600;background:<%= _bg %>;color:<%= _color %>;border:1px solid <%= _border %>;border-radius:5px;padding:3px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= _texto %></span>
+                    <span style="width:64px;text-align:center;font-size:0.58rem;font-weight:600;background:<%= _bg %>;color:<%= _color %>;border:1px solid <%= _border %>;border-radius:5px;padding:3px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%- _html %></span>
                   </div>
                   <% }) %>
                 </div>
@@ -561,7 +561,7 @@
                            style="width:64px;padding:2px 4px;border:1px solid var(--gris-borde);border-radius:5px;font-size:0.6rem;font-family:var(--font-sans);outline:none;text-align:center;background:<%= _esEstadoDia ? '#f1f5f9' : 'var(--gris-fondo)' %>;color:var(--negro);">
                     <select class="sel-estado-<%= p.id %> sel-dia-estado" data-fecha="<%= dia %>" onchange="onCambioEstadoDia(this, <%= p.id %>)"
                             style="background-color:<%= _bgDia ? _bgDia : 'var(--gris-fondo)' %>;border:1px solid <%= _bgDia ? _bgDia : 'var(--gris-borde)' %>;color:<%= _bgDia ? '#fff' : 'var(--negro)' %>;font-weight:<%= _bgDia ? '700' : '400' %>;">
-                      <option value="" style="background:var(--blanco);color:var(--negro);">Normal</option>
+                      <option value="" style="background:var(--blanco);color:var(--negro);" data-i18n>Normal</option>
                       <% ['OFF','VAC','RECOFF','LIBRE','ART','LICENCIA','CUMPLE','MUDANZA'].forEach(e => { %>
                       <option value="<%= e %>" <%= _valDia === e ? 'selected' : '' %>
                               style="background:<%= bgEstados[e] %>;color:#fff;font-weight:700;"><%= e %></option>
@@ -570,7 +570,7 @@
                     <select class="sel-sector-<%= p.id %> sel-sector-dia" data-fecha="<%= dia %>" onchange="onCambioSectorDia(this)"
                             title="Cambiar de sector solo este día, sin tocar su sector general"
                             style="width:64px;font-size:0.56rem;padding:1px 2px;border:1px solid var(--gris-borde);border-radius:5px;background:<%= sectoresEmp[dia] ? 'var(--azul-claro)' : 'var(--gris-fondo)' %>;color:<%= sectoresEmp[dia] ? 'var(--azul)' : 'var(--gris-texto)' %>;font-weight:<%= sectoresEmp[dia] ? '700' : '400' %>;">
-                      <option value="">— sector —</option>
+                      <option value="" data-i18n>— sector —</option>
                       <% sectores.forEach(s => { %>
                       <option value="<%= s %>" <%= sectoresEmp[dia] === s ? 'selected' : '' %>><%= s %></option>
                       <% }) %>
@@ -584,31 +584,31 @@
               <td style="text-align:center;position:relative;vertical-align:middle;">
                 <% if (p.activo && p.departamento !== 'ayb') { %>
                 <button onclick="guardarEmpleado(<%= p.id %>)"
-                        class="btn-asignar" title="Guardar rango" style="margin-bottom:4px;display:block;margin:0 auto 4px;">
+                        class="btn-asignar" title="Guardar rango" data-i18n-title="Guardar rango" style="margin-bottom:4px;display:block;margin:0 auto 4px;">
                   <i class="ti ti-check"></i>
                 </button>
                 <% } %>
                 <% if (esAdmin) { %>
-                <button class="btn-menu" onclick="toggleMenu(<%= p.id %>)" title="Opciones">
+                <button class="btn-menu" onclick="toggleMenu(<%= p.id %>)" title="Opciones" data-i18n-title="Opciones">
                   <i class="ti ti-dots-vertical"></i>
                 </button>
                 <div id="menu-<%= p.id %>" class="dropdown-menu" style="display:none;">
                   <button onclick="abrirEditar(<%= p.id %>, '<%= p.nombre.replace(/'/g,'') %>', '<%= p.email||'' %>', '<%= p.legajo||'' %>', '<%= p.puesto||'' %>', '<%= p.rol||'' %>', '<%= p.departamento === 'ayb' ? '' : (p.departamento||'') %>', '<%= p.modalidad||'' %>', '<%= p.fecha_alta||'' %>', '<%= p.celular||'' %>')" class="dropdown-item">
-                    <i class="ti ti-pencil"></i> Editar
+                    <i class="ti ti-pencil"></i> <span data-i18n>Editar</span>
                   </button>
                   <button onclick="abrirDisponibilidad(<%= p.id %>, '<%= p.nombre.replace(/'/g,'') %>')" class="dropdown-item">
-                    <i class="ti ti-calendar-event"></i> Disponibilidad
+                    <i class="ti ti-calendar-event"></i> <span data-i18n>Disponibilidad</span>
                   </button>
                   <button onclick="abrirReset(<%= p.id %>, '<%= p.nombre.replace(/'/g,'') %>')" class="dropdown-item">
-                    <i class="ti ti-key"></i> Contraseña
+                    <i class="ti ti-key"></i> <span data-i18n>Contraseña</span>
                   </button>
                   <% if (p.activo) { %>
-                  <form method="POST" action="/personal/<%= p.id %>/eliminar" style="margin:0;" onsubmit="return confirm('¿Dar de baja a <%= p.nombre %>?')">
-                    <button type="submit" class="dropdown-item dropdown-danger"><i class="ti ti-user-off"></i> Dar de baja</button>
+                  <form method="POST" action="/personal/<%= p.id %>/eliminar" style="margin:0;" onsubmit="return confirm(tHilton('¿Dar de baja a') + ' <%= p.nombre %>?')">
+                    <button type="submit" class="dropdown-item dropdown-danger"><i class="ti ti-user-off"></i> <span data-i18n>Dar de baja</span></button>
                   </form>
                   <% } else { %>
                   <form method="POST" action="/personal/<%= p.id %>/activar" style="margin:0;">
-                    <button type="submit" class="dropdown-item dropdown-success"><i class="ti ti-user-check"></i> Reactivar</button>
+                    <button type="submit" class="dropdown-item dropdown-success"><i class="ti ti-user-check"></i> <span data-i18n>Reactivar</span></button>
                   </form>
                   <% } %>
                 </div>
@@ -617,23 +617,23 @@
             </tr>
             <% }) %>
           <% } else { %>
-          <tr><td colspan="<%= misDepto === 'ayb' ? 6 : 4 %>" style="text-align:center;padding:48px;color:var(--gris-texto);font-style:italic;">No hay personal registrado.</td></tr>
+          <tr><td colspan="<%= misDepto === 'ayb' ? 6 : 4 %>" style="text-align:center;padding:48px;color:var(--gris-texto);font-style:italic;" data-i18n>No hay personal registrado.</td></tr>
           <% } %>
         </tbody>
       </table>
     </div>
 
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--gris-borde);">
-      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
+      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> <span data-i18n>Volver al menú principal</span></a>
     </div>
   </main>
 
   <nav class="mobile-nav">
-    <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span>Eventos</span></a>
-    <a href="/miembros-de-equipo" class="mobile-nav-link activo"><i class="ti ti-users"></i><span>Miembro de equipo</span></a>
-    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span>Horarios</span></a>
-    <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span>Recetas</span></a>
-    <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span>Costos</span></a>
+    <a href="/eventos"  class="mobile-nav-link"><i class="ti ti-calendar-event"></i><span data-i18n>Eventos</span></a>
+    <a href="/miembros-de-equipo" class="mobile-nav-link activo"><i class="ti ti-users"></i><span data-i18n>Miembro de equipo</span></a>
+    <a href="/horarios" class="mobile-nav-link"><i class="ti ti-clock"></i><span data-i18n>Horarios</span></a>
+    <a href="/recetas"  class="mobile-nav-link"><i class="ti ti-chef-hat"></i><span data-i18n>Recetas</span></a>
+    <a href="/costos"   class="mobile-nav-link"><i class="ti ti-coin"></i><span data-i18n>Costos</span></a>
   </nav>
 </div>
 
@@ -641,53 +641,53 @@
 <div id="modal-editar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Editar empleado</h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;" data-i18n>Editar empleado</h2>
       <button onclick="hideModal('modal-editar')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
     <form method="POST" action="/personal/editar">
       <input type="hidden" name="id" id="edit-id">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-        <div class="field" style="grid-column:1/-1;"><label>Nombre y apellido</label><input type="text" name="nombre" id="edit-nombre" required></div>
+        <div class="field" style="grid-column:1/-1;"><label data-i18n>Nombre y apellido</label><input type="text" name="nombre" id="edit-nombre" required></div>
         <% if (misDepto === 'ayb') { %>
-        <div class="field"><label>CUIL</label><input type="text" name="cuil" id="edit-cuil" placeholder="Ej: 20432824927"></div>
-        <div class="field"><label>Email (opcional)</label><input type="email" name="email" id="edit-email"></div>
-        <div class="field"><label>Rol</label>
+        <div class="field"><label data-i18n>CUIL</label><input type="text" name="cuil" id="edit-cuil" placeholder="Ej: 20432824927" data-i18n-ph="Ej: 20432824927"></div>
+        <div class="field"><label data-i18n>Email (opcional)</label><input type="email" name="email" id="edit-email"></div>
+        <div class="field"><label data-i18n>Rol</label>
           <select name="rol" id="edit-rol" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>
           </select>
         </div>
-        <div class="field"><label>Modalidad</label>
+        <div class="field"><label data-i18n>Modalidad</label>
           <select name="modalidad" id="edit-modalidad" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             <% modalidadesAyb.forEach(m => { %><option value="<%= m %>"><%= m %></option><% }) %>
           </select>
         </div>
-        <div class="field"><label>Fecha de alta</label><input type="date" name="fecha_alta" id="edit-fecha-alta"></div>
-        <p style="grid-column:1/-1;font-size:0.7rem;color:var(--gris-texto);margin-top:-8px;">Solo aplica a modalidad "Eventual": desde acá se cuenta el límite de 6 meses.</p>
-        <div class="field" style="grid-column:1/-1;"><label>Celular (para WhatsApp)</label><input type="text" name="celular" id="edit-celular" placeholder="Ej: 1122334455"></div>
+        <div class="field"><label data-i18n>Fecha de alta</label><input type="date" name="fecha_alta" id="edit-fecha-alta"></div>
+        <p style="grid-column:1/-1;font-size:0.7rem;color:var(--gris-texto);margin-top:-8px;" data-i18n>Solo aplica a modalidad "Eventual": desde acá se cuenta el límite de 6 meses.</p>
+        <div class="field" style="grid-column:1/-1;"><label data-i18n>Celular (para WhatsApp)</label><input type="text" name="celular" id="edit-celular" placeholder="Ej: 1122334455" data-i18n-ph="Ej: 1122334455"></div>
         <% } else { %>
-        <div class="field"><label>Legajo</label><input type="text" name="legajo" id="edit-legajo"></div>
-        <div class="field"><label>Email (opcional)</label><input type="email" name="email" id="edit-email"></div>
-        <div class="field"><label>Puesto</label>
+        <div class="field"><label data-i18n>Legajo</label><input type="text" name="legajo" id="edit-legajo"></div>
+        <div class="field"><label data-i18n>Email (opcional)</label><input type="email" name="email" id="edit-email"></div>
+        <div class="field"><label data-i18n>Puesto</label>
           <select name="puesto" id="edit-puesto" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             <% puestos.forEach(pt => { %><option value="<%= pt %>"><%= pt %></option><% }) %>
           </select>
         </div>
-        <div class="field"><label>Rol</label>
+        <div class="field"><label data-i18n>Rol</label>
           <select name="rol" id="edit-rol" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>
           </select>
         </div>
-        <div class="field" style="grid-column:1/-1;"><label>Sector de cocina</label>
+        <div class="field" style="grid-column:1/-1;"><label data-i18n>Sector de cocina</label>
           <select name="sector" id="edit-sector" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
-            <option value="">— Sin sector —</option>
+            <option value="" data-i18n>— Sin sector —</option>
             <% sectores.forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
           </select>
         </div>
         <% } %>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-editar')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-device-floppy"></i> Guardar cambios</button>
+        <button type="button" onclick="hideModal('modal-editar')" class="btn-secondary" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-device-floppy"></i> <span data-i18n>Guardar cambios</span></button>
       </div>
     </form>
   </div>
@@ -697,53 +697,53 @@
 <div id="modal-nuevo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Nuevo empleado</h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;" data-i18n>Nuevo empleado</h2>
       <button onclick="hideModal('modal-nuevo')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
     <form method="POST" action="/personal/nuevo">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-        <div class="field" style="grid-column:1/-1;"><label>Nombre y apellido</label><input type="text" name="nombre" placeholder="Ej: Juan García" required autofocus></div>
+        <div class="field" style="grid-column:1/-1;"><label data-i18n>Nombre y apellido</label><input type="text" name="nombre" placeholder="Ej: Juan García" data-i18n-ph="Ej: Juan García" required autofocus></div>
         <% if (misDepto === 'ayb') { %>
-        <div class="field"><label>CUIL</label><input type="text" name="cuil" placeholder="Ej: 20432824927"></div>
-        <div class="field"><label>Modalidad</label>
+        <div class="field"><label data-i18n>CUIL</label><input type="text" name="cuil" placeholder="Ej: 20432824927" data-i18n-ph="Ej: 20432824927"></div>
+        <div class="field"><label data-i18n>Modalidad</label>
           <select name="modalidad" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             <% modalidadesAyb.forEach(m => { %><option value="<%= m %>"><%= m %></option><% }) %>
           </select>
         </div>
-        <div class="field" style="grid-column:1/-1;"><label>Email (opcional)</label><input type="email" name="email" placeholder="nombre@hilton.com"></div>
-        <div class="field"><label>Rol</label>
+        <div class="field" style="grid-column:1/-1;"><label data-i18n>Email (opcional)</label><input type="email" name="email" placeholder="nombre@hilton.com" data-i18n-ph="nombre@hilton.com"></div>
+        <div class="field"><label data-i18n>Rol</label>
           <select name="rol" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>
           </select>
         </div>
-        <div class="field"><label>Fecha de alta</label><input type="date" name="fecha_alta" value="<%= hoy %>"></div>
-        <p style="grid-column:1/-1;font-size:0.7rem;color:var(--gris-texto);margin-top:-8px;">Solo aplica a modalidad "Eventual": desde acá se cuenta el límite de 6 meses.</p>
-        <div class="field" style="grid-column:1/-1;"><label>Celular (para WhatsApp)</label><input type="text" name="celular" placeholder="Ej: 1122334455"></div>
+        <div class="field"><label data-i18n>Fecha de alta</label><input type="date" name="fecha_alta" value="<%= hoy %>"></div>
+        <p style="grid-column:1/-1;font-size:0.7rem;color:var(--gris-texto);margin-top:-8px;" data-i18n>Solo aplica a modalidad "Eventual": desde acá se cuenta el límite de 6 meses.</p>
+        <div class="field" style="grid-column:1/-1;"><label data-i18n>Celular (para WhatsApp)</label><input type="text" name="celular" placeholder="Ej: 1122334455" data-i18n-ph="Ej: 1122334455"></div>
         <% } else { %>
-        <div class="field"><label>Legajo</label><input type="text" name="legajo" placeholder="Ej: 00123"></div>
-        <div class="field"><label>Puesto</label>
+        <div class="field"><label data-i18n>Legajo</label><input type="text" name="legajo" placeholder="Ej: 00123" data-i18n-ph="Ej: 00123"></div>
+        <div class="field"><label data-i18n>Puesto</label>
           <select name="puesto" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             <% puestos.forEach(pt => { %><option value="<%= pt %>"><%= pt %></option><% }) %>
           </select>
         </div>
-        <div class="field" style="grid-column:1/-1;"><label>Email (opcional)</label><input type="email" name="email" placeholder="nombre@hilton.com"></div>
-        <div class="field"><label>Rol</label>
+        <div class="field" style="grid-column:1/-1;"><label data-i18n>Email (opcional)</label><input type="email" name="email" placeholder="nombre@hilton.com" data-i18n-ph="nombre@hilton.com"></div>
+        <div class="field"><label data-i18n>Rol</label>
           <select name="rol" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
             <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>
           </select>
         </div>
-        <div class="field"><label>Sector de cocina</label>
+        <div class="field"><label data-i18n>Sector de cocina</label>
           <select name="sector" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);outline:none;">
-            <option value="">— Sin sector —</option>
+            <option value="" data-i18n>— Sin sector —</option>
             <% sectores.forEach(s => { %><option value="<%= s %>"><%= s %></option><% }) %>
           </select>
         </div>
         <% } %>
-        <div class="field" style="grid-column:1/-1;"><label>Contraseña inicial</label><input type="text" name="password" value="Hilton2026!"></div>
+        <div class="field" style="grid-column:1/-1;"><label data-i18n>Contraseña inicial</label><input type="text" name="password" value="Hilton2026!"></div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-nuevo')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-user-plus"></i> Agregar empleado</button>
+        <button type="button" onclick="hideModal('modal-nuevo')" class="btn-secondary" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-user-plus"></i> <span data-i18n>Agregar empleado</span></button>
       </div>
     </form>
   </div>
@@ -753,22 +753,22 @@
 <div id="modal-reset" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Resetear contraseña</h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;" data-i18n>Resetear contraseña</h2>
       <button onclick="hideModal('modal-reset')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
-    <p style="font-size:0.83rem;color:var(--gris-texto);margin-bottom:20px;">Reseteando contraseña de <strong id="reset-nombre"></strong>.</p>
+    <p style="font-size:0.83rem;color:var(--gris-texto);margin-bottom:20px;"><span data-i18n>Reseteando contraseña de</span> <strong id="reset-nombre"></strong>.</p>
     <form id="form-reset" method="POST">
       <div class="field" style="margin-bottom:8px;">
-        <label style="display:block;font-size:0.68rem;font-weight:500;margin-bottom:6px;">Nueva contraseña</label>
+        <label style="display:block;font-size:0.68rem;font-weight:500;margin-bottom:6px;" data-i18n>Nueva contraseña</label>
         <div style="position:relative;display:flex;align-items:center;">
           <input type="password" name="password_nuevo" id="input-nuevo-pass" minlength="8" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 44px 10px 12px;font-family:var(--font-sans);font-size:0.85rem;outline:none;color:var(--negro);">
           <button type="button" onclick="toggleResetPass()" style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:var(--gris-texto);font-size:16px;"><i class="ti ti-eye" id="eyeReset"></i></button>
         </div>
       </div>
-      <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:20px;">Mínimo 8 caracteres, una mayúscula y un número.</p>
+      <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:20px;" data-i18n>Mínimo 8 caracteres, una mayúscula y un número.</p>
       <div style="display:flex;justify-content:flex-end;gap:12px;">
-        <button type="button" onclick="hideModal('modal-reset')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-key"></i> Guardar</button>
+        <button type="button" onclick="hideModal('modal-reset')" class="btn-secondary" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-key"></i> <span data-i18n>Guardar</span></button>
       </div>
     </form>
   </div>
@@ -778,19 +778,19 @@
 <div id="modal-feriado" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;"><i class="ti ti-flag-filled" style="color:#dc2626;"></i> Marcar feriado</h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;"><i class="ti ti-flag-filled" style="color:#dc2626;"></i> <span data-i18n>Marcar feriado</span></h2>
       <button onclick="hideModal('modal-feriado')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
-    <p style="font-size:0.83rem;color:var(--gris-texto);margin-bottom:16px;">Fecha: <strong id="feriado-fecha-label"></strong></p>
+    <p style="font-size:0.83rem;color:var(--gris-texto);margin-bottom:16px;"><span data-i18n>Fecha:</span> <strong id="feriado-fecha-label"></strong></p>
     <form id="form-feriado" onsubmit="return guardarFeriadoDesdeModal(event)">
       <div class="field" style="margin-bottom:20px;">
-        <label style="display:block;font-size:0.68rem;font-weight:500;margin-bottom:6px;">Nombre del feriado</label>
-        <input type="text" id="input-feriado-nombre" placeholder="Ej: Día de la Independencia" required maxlength="80"
+        <label style="display:block;font-size:0.68rem;font-weight:500;margin-bottom:6px;" data-i18n>Nombre del feriado</label>
+        <input type="text" id="input-feriado-nombre" placeholder="Ej: Día de la Independencia" data-i18n-ph="Ej: Día de la Independencia" required maxlength="80"
                style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;outline:none;color:var(--negro);">
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;">
-        <button type="button" onclick="hideModal('modal-feriado')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-check"></i> Guardar</button>
+        <button type="button" onclick="hideModal('modal-feriado')" class="btn-secondary" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-check"></i> <span data-i18n>Guardar</span></button>
       </div>
     </form>
   </div>
@@ -800,22 +800,18 @@
 <div id="modal-importar-mozos" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Importar mozos (CSV)</h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;" data-i18n>Importar mozos (CSV)</h2>
       <button onclick="hideModal('modal-importar-mozos')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
-    <p style="font-size:0.8rem;color:var(--gris-texto);margin:0 0 16px;">
-      Columnas esperadas: <strong>CUIL</strong>, <strong>Nombre</strong> y <strong>Modalidad</strong>
-      (Eventual / Fijo / Agencia). Los que ya estén cargados (mismo CUIL) se saltean solos.
-      Contraseña inicial para todos: <strong>Hilton2026!</strong>
-    </p>
+    <p style="font-size:0.8rem;color:var(--gris-texto);margin:0 0 16px;"><span data-i18n>Columnas esperadas:</span> <strong data-i18n>CUIL</strong>, <strong data-i18n>Nombre</strong> <span data-i18n>y</span> <strong data-i18n>Modalidad</strong> <span data-i18n>(Eventual / Fijo / Agencia). Los que ya estén cargados (mismo CUIL) se saltean solos. Contraseña inicial para todos:</span> <strong>Hilton2026!</strong></p>
     <form method="POST" action="/personal/importar-mozos" enctype="multipart/form-data">
       <div class="field">
-        <label>Archivo CSV</label>
+        <label data-i18n>Archivo CSV</label>
         <input type="file" name="archivo" accept=".csv" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);">
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-importar-mozos')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-file-upload"></i> Importar</button>
+        <button type="button" onclick="hideModal('modal-importar-mozos')" class="btn-secondary" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-file-upload"></i> <span data-i18n>Importar</span></button>
       </div>
     </form>
   </div>
@@ -825,23 +821,18 @@
 <div id="modal-importar-mozos-foto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Cargar mozos con foto</h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;" data-i18n>Cargar mozos con foto</h2>
       <button onclick="hideModal('modal-importar-mozos-foto')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
-    <p style="font-size:0.8rem;color:var(--gris-texto);margin:0 0 16px;">
-      Sacale una foto a la planilla, lista o cuadro con los mozos (puede estar escrita a mano,
-      ser una captura de pantalla o una foto de una hoja impresa) y el sistema va a leer nombre,
-      CUIL y modalidad de cada uno. Después vas a poder revisar y corregir todo antes de cargarlo.
-      Contraseña inicial para todos: <strong>Hilton2026!</strong>
-    </p>
+    <p style="font-size:0.8rem;color:var(--gris-texto);margin:0 0 16px;"><span data-i18n>Sacale una foto a la planilla, lista o cuadro con los mozos (puede estar escrita a mano, ser una captura de pantalla o una foto de una hoja impresa) y el sistema va a leer nombre, CUIL y modalidad de cada uno. Después vas a poder revisar y corregir todo antes de cargarlo. Contraseña inicial para todos:</span> <strong>Hilton2026!</strong></p>
     <form method="POST" action="/personal/importar-mozos-foto" enctype="multipart/form-data">
       <div class="field">
-        <label>Foto de la planilla</label>
+        <label data-i18n>Foto de la planilla</label>
         <input type="file" name="foto" accept="image/*" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--negro);">
       </div>
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-importar-mozos-foto')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary" id="btn-foto-mozos"><i class="ti ti-camera"></i> Analizar foto</button>
+        <button type="button" onclick="hideModal('modal-importar-mozos-foto')" class="btn-secondary" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-primary" id="btn-foto-mozos"><i class="ti ti-camera"></i> <span data-i18n>Analizar foto</span></button>
       </div>
     </form>
   </div>
@@ -851,10 +842,10 @@
 <div id="modal-disponibilidad" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:400;">Disponibilidad</h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:400;" data-i18n>Disponibilidad</h2>
       <button onclick="hideModal('modal-disponibilidad')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
-    <p style="font-size:0.8rem;color:var(--gris-texto);margin:0 0 16px;">de <strong id="disp-nombre"></strong></p>
+    <p style="font-size:0.8rem;color:var(--gris-texto);margin:0 0 16px;"><span data-i18n>de</span> <strong id="disp-nombre"></strong></p>
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <button onclick="dispMes(-1)" style="background:none;border:1px solid var(--gris-borde);border-radius:8px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gris-texto);font-size:16px;">&#8249;</button>
@@ -863,15 +854,15 @@
     </div>
     <div id="disp-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;"></div>
 
-    <p style="font-size:0.65rem;color:var(--gris-texto);margin:12px 0 8px;text-align:center;">Click en un día para ir cambiando: sin dato → disponible → no disponible.</p>
+    <p style="font-size:0.65rem;color:var(--gris-texto);margin:12px 0 8px;text-align:center;" data-i18n>Click en un día para ir cambiando: sin dato → disponible → no disponible.</p>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-      <span style="font-size:0.65rem;font-weight:700;background:#22c55e;border:1px solid #22c55e;color:#fff;padding:3px 11px;border-radius:20px;">Disponible</span>
-      <span style="font-size:0.65rem;font-weight:700;background:#dc2626;border:1px solid #dc2626;color:#fff;padding:3px 11px;border-radius:20px;">No disponible</span>
-      <span style="font-size:0.65rem;font-weight:700;background:var(--gris-fondo);border:1px solid var(--gris-borde);color:var(--gris-texto);padding:3px 11px;border-radius:20px;">Sin dato</span>
+      <span style="font-size:0.65rem;font-weight:700;background:#22c55e;border:1px solid #22c55e;color:#fff;padding:3px 11px;border-radius:20px;" data-i18n>Disponible</span>
+      <span style="font-size:0.65rem;font-weight:700;background:#dc2626;border:1px solid #dc2626;color:#fff;padding:3px 11px;border-radius:20px;" data-i18n>No disponible</span>
+      <span style="font-size:0.65rem;font-weight:700;background:var(--gris-fondo);border:1px solid var(--gris-borde);color:var(--gris-texto);padding:3px 11px;border-radius:20px;" data-i18n>Sin dato</span>
     </div>
 
     <div style="display:flex;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-      <button type="button" onclick="hideModal('modal-disponibilidad')" class="btn-secondary">Cerrar</button>
+      <button type="button" onclick="hideModal('modal-disponibilidad')" class="btn-secondary" data-i18n>Cerrar</button>
     </div>
   </div>
 </div>
@@ -928,13 +919,13 @@ function getDiasRango(inicioStr, finStr) {
 function renderCal() {
   const anio = calFecha.getFullYear();
   const mes  = calFecha.getMonth();
-  document.getElementById('cal-titulo').textContent = MESES[mes] + ' ' + anio;
+  document.getElementById('cal-titulo').innerHTML = `<span data-i18n>${tHilton(MESES[mes])}</span> ${anio}`;
 
   const primerDia = new Date(anio, mes, 1).getDay();
   const diasMes   = new Date(anio, mes + 1, 0).getDate();
   const hoy = new Date().toISOString().split('T')[0];
 
-  let html = DIAS_SEMANA.map(d => `<div class="cal-nombre-dia">${d}</div>`).join('');
+  let html = DIAS_SEMANA.map(d => `<div class="cal-nombre-dia" data-i18n>${tHilton(d)}</div>`).join('');
   // "&nbsp;" en vez de vacío del todo: una celda completamente sin texto no
   // genera línea de texto y queda más baja que una con un número adentro —
   // eso hacía que una fila entera de relleno (sin días reales) achicara el
@@ -962,7 +953,7 @@ function renderCal() {
     }
     if (nombreFeriado) cls += ' es-feriado';
 
-    const titulo = nombreFeriado ? ` title="Feriado: ${nombreFeriado} — click en la banderita para editar/quitar"` : ' title="Click en la banderita para marcar como feriado"';
+    const titulo = nombreFeriado ? ` title="${tHilton('Feriado:')} ${nombreFeriado} — ${tHilton('click en la banderita para editar/quitar')}"` : ` title="${tHilton('Click en la banderita para marcar como feriado')}"`;
 
     html += `<div class="${cls}" onclick="seleccionarDia('${fechaStr}')"${titulo}>${d}<span class="cal-dia-flag" onclick="event.stopPropagation();toggleFeriado('${fechaStr}')"><i class="ti ti-flag-filled"></i></span></div>`;
   }
@@ -984,14 +975,14 @@ async function toggleFeriado(fechaStr) {
   const yaEsFeriado = !!FERIADOS_MAP[fechaStr];
 
   if (yaEsFeriado) {
-    const confirmar = confirm(`¿Quitar "${FERIADOS_MAP[fechaStr]}" como feriado del ${fechaStr}?`);
+    const confirmar = confirm(`${tHilton('¿Quitar')} "${FERIADOS_MAP[fechaStr]}" ${tHilton('como feriado del')} ${fechaStr}?`);
     if (!confirmar) return;
     try {
       const resp = await fetch(`/personal/feriados/${fechaStr}/eliminar`, { method: 'POST' });
       const data = await resp.json();
       if (data.ok) { delete FERIADOS_MAP[fechaStr]; renderCal(); }
-      else alert('Error: ' + data.error);
-    } catch (e) { alert('Error de conexión'); }
+      else alert(tHilton('Error:') + ' ' + data.error);
+    } catch (e) { alert(tHilton('Error de conexión')); }
     return;
   }
 
@@ -1029,9 +1020,9 @@ async function guardarFeriadoDesdeModal(event) {
       renderCal();
       hideModal('modal-feriado');
     } else {
-      alert('Error: ' + data.error);
+      alert(tHilton('Error:') + ' ' + data.error);
     }
-  } catch (e) { alert('Error de conexión'); }
+  } catch (e) { alert(tHilton('Error de conexión')); }
   return false;
 }
 
@@ -1086,7 +1077,7 @@ function actualizarEtiquetaRango() {
   const btnVerHorarios = document.getElementById('btn-ver-horarios');
 
   if (!rangoInicio) {
-    label.textContent = 'Elegí el día de inicio en el calendario';
+    label.innerHTML = `<span data-i18n>${tHilton('Elegí el día de inicio en el calendario')}</span>`;
     cont.innerHTML = '';
     btn.style.pointerEvents = 'none';
     btn.style.opacity = '0.5';
@@ -1097,7 +1088,7 @@ function actualizarEtiquetaRango() {
 
   if (!rangoFin) {
     label.innerHTML = d0.toLocaleDateString('es-AR',{day:'numeric',month:'long'}) +
-      ' — elegí el día de fin <button type="button" onclick="cancelarSeleccion()" style="background:none;border:none;color:var(--gris-texto);text-decoration:underline;cursor:pointer;font-size:0.75rem;margin-left:6px;">(cambiar inicio)</button>';
+      ` — <span data-i18n>${tHilton('elegí el día de fin')}</span> <button type="button" onclick="cancelarSeleccion()" style="background:none;border:none;color:var(--gris-texto);text-decoration:underline;cursor:pointer;font-size:0.75rem;margin-left:6px;" data-i18n>${tHilton('(cambiar inicio)')}</button>`;
     cont.innerHTML = '';
     btn.style.pointerEvents = 'none';
     btn.style.opacity = '0.5';
@@ -1112,7 +1103,7 @@ function actualizarEtiquetaRango() {
   cont.innerHTML = dias.map(d => {
     const fecha = new Date(d + 'T00:00:00');
     const dn = DIAS_SEMANA[fecha.getDay()];
-    return `<span style="font-size:0.72rem;background:var(--azul-claro);color:var(--azul);padding:3px 8px;border-radius:6px;font-weight:600;">${dn} ${fecha.getDate()}</span>`;
+    return `<span style="font-size:0.72rem;background:var(--azul-claro);color:var(--azul);padding:3px 8px;border-radius:6px;font-weight:600;"><span data-i18n>${tHilton(dn)}</span> ${fecha.getDate()}</span>`;
   }).join('');
 
   btn.style.pointerEvents = '';
@@ -1196,9 +1187,9 @@ async function guardarEmpleado(uid) {
       if (recoffSpan && data.recoff_pendiente !== undefined) recoffSpan.textContent = data.recoff_pendiente;
       mostrarCartelHorarioGuardado();
     } else {
-      alert('Error: ' + data.error);
+      alert(tHilton('Error:') + ' ' + data.error);
     }
-  } catch(e) { alert('Error de conexión'); }
+  } catch(e) { alert(tHilton('Error de conexión')); }
 }
 
 // Cartelito de confirmación con un cocinerito animado, al guardar el
@@ -1214,7 +1205,7 @@ function mostrarCartelHorarioGuardado() {
     cartel.innerHTML = `
       <div class="cartel-caja">
         <span class="cartel-cocinerito">👨‍🍳</span>
-        <span class="cartel-titulo">Horario cargado correctamente</span>
+        <span class="cartel-titulo" data-i18n>${tHilton('Horario cargado correctamente')}</span>
       </div>
     `;
     // Tocar afuera de la ventana (el fondo oscuro) la cierra antes de tiempo
@@ -1265,7 +1256,7 @@ function mostrarCartelRangoCargado(inicioStr, finStr) {
   cartel.innerHTML = `
     <div class="cartel-caja">
       <span class="cartel-icono-badge"><i class="ti ti-calendar-check"></i></span>
-      <span class="cartel-titulo">Semana cargada</span>
+      <span class="cartel-titulo" data-i18n>${tHilton('Semana cargada')}</span>
       <span class="cartel-sub">${rangoTexto}</span>
     </div>
   `;
@@ -1313,7 +1304,7 @@ function onCambioEstadoDia(sel, uid) {
   if (sel.value === 'FRANCO') {
     const totalFrancos = [...document.querySelectorAll(`.sel-estado-${uid}`)].filter(s => s.value === 'FRANCO').length;
     if (totalFrancos > 2) {
-      alert('Máximo 2 días de franco por rango.');
+      alert(tHilton('Máximo 2 días de franco por rango.'));
       sel.value = '';
     }
   }
@@ -1441,7 +1432,7 @@ async function cargarDisponibilidad() {
   const anio = dispFecha.getFullYear();
   const mes  = dispFecha.getMonth();
   const mesStr = `${anio}-${String(mes+1).padStart(2,'0')}`;
-  document.getElementById('disp-titulo').textContent = MESES[mes] + ' ' + anio;
+  document.getElementById('disp-titulo').innerHTML = `<span data-i18n>${tHilton(MESES[mes])}</span> ${anio}`;
   try {
     const resp = await fetch(`/personal/${dispUid}/disponibilidad?mes=${mesStr}`);
     const data = await resp.json();
@@ -1459,7 +1450,7 @@ function renderDispCal() {
   const diasMes   = new Date(anio, mes + 1, 0).getDate();
   const hoy = new Date().toISOString().split('T')[0];
 
-  let html = DIAS_SEMANA.map(d => `<div class="cal-nombre-dia">${d}</div>`).join('');
+  let html = DIAS_SEMANA.map(d => `<div class="cal-nombre-dia" data-i18n>${tHilton(d)}</div>`).join('');
   for (let i = 0; i < primerDia; i++) html += `<div class="cal-dia vacio"></div>`;
 
   for (let d = 1; d <= diasMes; d++) {
@@ -1470,10 +1461,10 @@ function renderDispCal() {
     let bg = '', color = '', border = 'transparent', titulo = '';
     if (info && info.disponible) {
       bg = '#22c55e'; color = '#fff'; border = '#22c55e';
-      titulo = info.hora_hasta ? `Disponible de ${info.hora_desde} a ${info.hora_hasta}` : `Disponible desde las ${info.hora_desde}`;
+      titulo = info.hora_hasta ? `${tHilton('Disponible de')} ${info.hora_desde} ${tHilton('a')} ${info.hora_hasta}` : `${tHilton('Disponible desde las')} ${info.hora_desde}`;
     } else if (info && !info.disponible) {
       bg = '#dc2626'; color = '#fff'; border = '#dc2626';
-      titulo = 'No disponible';
+      titulo = tHilton('No disponible');
     }
 
     let cls = 'cal-dia' + (esHoy && !info ? ' hoy' : '');
@@ -1490,10 +1481,10 @@ async function cicloDisponibilidad(fechaStr) {
 
   if (!actual) {
     estado = 'disponible';
-    hora_desde = prompt('¿Desde qué hora está disponible? (ej: 10:00)');
+    hora_desde = prompt(tHilton('¿Desde qué hora está disponible? (ej: 10:00)'));
     if (!hora_desde || !hora_desde.trim()) return; // canceló: no guardamos nada
     hora_desde = hora_desde.trim();
-    hora_hasta = prompt('¿Hasta qué hora? (dejalo vacío si no tiene límite)') || '';
+    hora_hasta = prompt(tHilton('¿Hasta qué hora? (dejalo vacío si no tiene límite)')) || '';
     hora_hasta = hora_hasta.trim();
   } else if (actual.disponible) {
     estado = 'no_disponible';
@@ -1508,11 +1499,11 @@ async function cicloDisponibilidad(fechaStr) {
       body: `fecha=${fechaStr}&estado=${estado}&hora_desde=${encodeURIComponent(hora_desde)}&hora_hasta=${encodeURIComponent(hora_hasta)}`
     });
     const data = await resp.json();
-    if (!data.ok) { alert('Error: ' + data.error); return; }
+    if (!data.ok) { alert(tHilton('Error:') + ' ' + data.error); return; }
     if (estado === '') delete dispMapa[fechaStr];
     else dispMapa[fechaStr] = { disponible: estado === 'disponible', hora_desde, hora_hasta };
     renderDispCal();
-  } catch (e) { alert('Error de conexión'); }
+  } catch (e) { alert(tHilton('Error de conexión')); }
 }
 
 function buscarPersonal() {
@@ -1534,7 +1525,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const activos   = document.querySelectorAll('.fila-activo').length;
   const inactivos = document.querySelectorAll('.fila-inactivo').length;
   const el = document.getElementById('contadorActivos');
-  if (el) el.textContent = activos + ' activo' + (activos!==1?'s':'') + (inactivos > 0 ? ' · ' + inactivos + ' dado'+(inactivos!==1?'s':'') + ' de baja' : '');
+  if (el) el.innerHTML = activos + ' <span data-i18n>' + tHilton(activos !== 1 ? 'activos' : 'activo') + '</span>' +
+    (inactivos > 0 ? ' · ' + inactivos + ' <span data-i18n>' + tHilton(inactivos !== 1 ? 'dados de baja' : 'dado de baja') + '</span>' : '');
 });
 
 <% /* Mismo aviso automático del bot que ya se mostraba en Horarios de AYB
@@ -1553,11 +1545,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const totalAvisos = alertas.reduce((n, a) => n + a.detalles.length, 0);
   agregarMensajeAsistente(
-    `⚠️ Ojo con los mozos de AYB: encontré ${totalAvisos} aviso${totalAvisos === 1 ? '' : 's'} entre ${alertas.length} mozo${alertas.length === 1 ? '' : 's'} este mes (descanso de 12hs, turnos de más de 12hs y/o bolsa de 200hs para Eventuales).`,
+    `⚠️ ${tHilton('Ojo con los mozos de AYB: encontré')} ${totalAvisos} ${tHilton(totalAvisos === 1 ? 'aviso' : 'avisos')} ${tHilton('entre')} ${alertas.length} ${tHilton(alertas.length === 1 ? 'mozo' : 'mozos')} ${tHilton('este mes (descanso de 12hs, turnos de más de 12hs y/o bolsa de 200hs para Eventuales).')}`,
     'bot'
   );
   alertas.forEach(a => {
-    agregarMensajeAsistente(`${a.nombre} (${a.horasTotales}hs este mes):\n• ${a.detalles.join('\n• ')}`, 'bot');
+    agregarMensajeAsistente(`${a.nombre} (${a.horasTotales}${tHilton('hs')} ${tHilton('este mes')}):\n• ${a.detalles.join('\n• ')}`, 'bot');
   });
 })();
 <% } %>

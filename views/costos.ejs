@@ -183,39 +183,39 @@
 
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label"><%= typeof depto !== 'undefined' && depto === 'ayb' ? 'AYB' : 'Cocina' %></p>
-        <h1 class="seccion-titulo">Costos</h1>
+        <p class="seccion-label" data-i18n><%= typeof depto !== 'undefined' && depto === 'ayb' ? 'AYB' : 'Cocina' %></p>
+        <h1 class="seccion-titulo" data-i18n>Costos</h1>
         <% // Este selector solo lo ve un admin general (sin departamento propio) —
            // una cuenta de Cocina o de AYB ya ve directo lo suyo, sin nada para
            // elegir acá. Cocina ve sus insumos/platos de siempre; AYB ve el
            // catálogo de Inventario AYB más sus tragos costeados. %>
         <% if (typeof esAdminGeneral !== 'undefined' && esAdminGeneral) { %>
         <p style="font-size:0.75rem;color:var(--gris-texto);margin-top:4px;">
-          Viendo <strong><%= depto === 'ayb' ? 'AYB' : 'Cocina' %></strong> ·
-          <a href="/costos<%= depto === 'ayb' ? '' : '?depto=ayb' %>" style="color:var(--azul);"><%= depto === 'ayb' ? 'ver Cocina' : 'ver AYB' %></a>
+          <span data-i18n>Viendo</span> <strong data-i18n><%= depto === 'ayb' ? 'AYB' : 'Cocina' %></strong> ·
+          <a href="/costos<%= depto === 'ayb' ? '' : '?depto=ayb' %>" style="color:var(--azul);" data-i18n><%= depto === 'ayb' ? 'ver Cocina' : 'ver AYB' %></a>
         </p>
         <% } %>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
+        <a href="/inicio" class="btn-icono-casa" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
 
         <!-- "Otras opciones": exportar a Excel las listas de insumos y de
              costeo — mismo patrón (y mismas clases) que ya usan Horas
              Extra/Horarios/Personal. -->
         <div class="menu-otras-opciones" style="position:relative;">
           <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
-            <i class="ti ti-dots"></i> Otras opciones <i class="ti ti-chevron-down" style="font-size:12px;"></i>
+            <i class="ti ti-dots"></i> <span data-i18n>Otras opciones</span> <i class="ti ti-chevron-down" style="font-size:12px;"></i>
           </button>
           <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
             <a href="/costos/insumos/excel<%= (typeof esAyb !== 'undefined' && esAyb) ? '?depto=ayb' : '' %>" class="dropdown-otras-item dropdown-otras-item-excel">
-              <i class="ti ti-file-spreadsheet"></i> Excel de insumos
+              <i class="ti ti-file-spreadsheet"></i> <span data-i18n>Excel de insumos</span>
             </a>
             <a href="/costos/platos/excel<%= (typeof esAyb !== 'undefined' && esAyb) ? '?depto=ayb' : '' %>" class="dropdown-otras-item dropdown-otras-item-excel">
-              <i class="ti ti-file-spreadsheet"></i> Excel de costeo (<%= (typeof esAyb !== 'undefined' && esAyb) ? 'tragos' : 'platos' %>)
+              <i class="ti ti-file-spreadsheet"></i> <span data-i18n>Excel de costeo</span> (<span data-i18n><%= (typeof esAyb !== 'undefined' && esAyb) ? 'tragos' : 'platos' %></span>)
             </a>
             <% if (typeof esAyb !== 'undefined' && esAyb) { %>
             <button type="button" class="dropdown-otras-item dropdown-otras-item-crear" onclick="document.getElementById('dropdown-otras-opciones').classList.remove('abierto');showModal('modal-plato')">
-              <i class="ti ti-glass"></i> Nuevo trago
+              <i class="ti ti-glass"></i> <span data-i18n>Nuevo trago</span>
             </button>
             <% } %>
           </div>
@@ -223,14 +223,14 @@
 
         <% if (typeof esAyb !== 'undefined' && esAyb) { %>
         <a href="/inventario-ayb" class="btn-secondary">
-          <i class="ti ti-package"></i> Gestionar productos
+          <i class="ti ti-package"></i> <span data-i18n>Gestionar productos</span>
         </a>
         <% } else { %>
         <button onclick="showModal('modal-insumo')" class="btn-secondary">
-          <i class="ti ti-plus"></i> Nuevo insumo
+          <i class="ti ti-plus"></i> <span data-i18n>Nuevo insumo</span>
         </button>
         <button onclick="showModal('modal-plato')" class="btn-primary">
-          <i class="ti ti-tools-kitchen-2"></i> Nuevo plato
+          <i class="ti ti-tools-kitchen-2"></i> <span data-i18n>Nuevo plato</span>
         </button>
         <% } %>
       </div>
@@ -255,10 +255,10 @@
     <!-- Variación de precios: único cartel fijo arriba de todo, chico y azul -->
     <div class="tarjeta-variacion-chica">
       <div class="tarjeta-unificada-icono"><i class="ti ti-trending-up"></i></div>
-      <p class="tarjeta-unificada-titulo">Variación de precios</p>
-      <p class="tarjeta-unificada-desc">Los insumos que más subieron, bajaron o se mantuvieron en un período.</p>
+      <p class="tarjeta-unificada-titulo" data-i18n>Variación de precios</p>
+      <p class="tarjeta-unificada-desc" data-i18n>Los insumos que más subieron, bajaron o se mantuvieron en un período.</p>
       <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=<%= tipoVariacion %><%= qDepto %>#modal-variacion-precios" class="btn-secondary">
-        <i class="ti ti-chart-line"></i> Ver variación
+        <i class="ti ti-chart-line"></i> <span data-i18n>Ver variación</span>
       </a>
     </div>
 
@@ -275,14 +275,14 @@
         <div class="costos-card">
           <div class="tarjeta-resumen-lista">
             <div class="tarjeta-unificada-icono"><i class="ti ti-package"></i></div>
-            <p class="tarjeta-unificada-titulo">Insumos / Ingredientes</p>
+            <p class="tarjeta-unificada-titulo" data-i18n>Insumos / Ingredientes</p>
             <p class="tarjeta-resumen-numero"><%= totalInsumos %></p>
             <p class="tarjeta-unificada-desc">
-              insumo<%= totalInsumos !== 1 ? 's' : '' %> cargado<%= totalInsumos !== 1 ? 's' : '' %>
-              <% if (typeof esAyb !== 'undefined' && esAyb) { %><br>(catálogo de Inventario AYB)<% } %>
+              <span data-i18n><%= totalInsumos !== 1 ? 'insumos' : 'insumo' %></span> <span data-i18n><%= totalInsumos !== 1 ? 'cargados' : 'cargado' %></span>
+              <% if (typeof esAyb !== 'undefined' && esAyb) { %><br><span data-i18n>(catálogo de Inventario AYB)</span><% } %>
             </p>
             <button type="button" class="btn-primary" onclick="showModal('modal-lista-insumos')">
-              <i class="ti ti-list"></i> Ver insumos
+              <i class="ti ti-list"></i> <span data-i18n>Ver insumos</span>
             </button>
           </div>
         </div>
@@ -291,17 +291,17 @@
         <div class="costos-card">
           <div class="tarjeta-resumen-lista">
             <div class="tarjeta-unificada-icono tarjeta-unificada-icono-csv"><i class="ti <%= (typeof esAyb !== 'undefined' && esAyb) ? 'ti-glass' : 'ti-tools-kitchen-2' %>"></i></div>
-            <p class="tarjeta-unificada-titulo">Costeo de <%= (typeof esAyb !== 'undefined' && esAyb) ? 'tragos' : 'platos' %></p>
+            <p class="tarjeta-unificada-titulo"><span data-i18n>Costeo de</span> <span data-i18n><%= (typeof esAyb !== 'undefined' && esAyb) ? 'tragos' : 'platos' %></span></p>
             <p class="tarjeta-resumen-numero"><%= totalPlatos %></p>
             <p class="tarjeta-unificada-desc">
               <% if (typeof esAyb !== 'undefined' && esAyb) { %>
-                trago<%= totalPlatos !== 1 ? 's' : '' %> costeado<%= totalPlatos !== 1 ? 's' : '' %>
+                <span data-i18n><%= totalPlatos !== 1 ? 'tragos' : 'trago' %></span> <span data-i18n><%= totalPlatos !== 1 ? 'costeados' : 'costeado' %></span>
               <% } else { %>
-                plato<%= totalPlatos !== 1 ? 's' : '' %> costeado<%= totalPlatos !== 1 ? 's' : '' %>
+                <span data-i18n><%= totalPlatos !== 1 ? 'platos' : 'plato' %></span> <span data-i18n><%= totalPlatos !== 1 ? 'costeados' : 'costeado' %></span>
               <% } %>
             </p>
             <button type="button" class="btn-primary" onclick="showModal('modal-lista-platos')">
-              <i class="ti ti-list"></i> Ver <%= (typeof esAyb !== 'undefined' && esAyb) ? 'tragos' : 'platos' %>
+              <i class="ti ti-list"></i> <span data-i18n>Ver</span> <span data-i18n><%= (typeof esAyb !== 'undefined' && esAyb) ? 'tragos' : 'platos' %></span>
             </button>
           </div>
         </div>
@@ -311,27 +311,27 @@
           <div class="tarjeta-unificada">
             <div class="tarjeta-unificada-icono"><i class="ti ti-refresh"></i></div>
             <p class="tarjeta-unificada-titulo">
-              Actualización de precios
+              <span data-i18n>Actualización de precios</span>
               <% if (geminiConfigurado) { %>
-                <span class="badge-activo"><i class="ti ti-circle-filled" style="font-size:7px;"></i> Activo</span>
+                <span class="badge-activo"><i class="ti ti-circle-filled" style="font-size:7px;"></i> <span data-i18n>Activo</span></span>
               <% } else { %>
-                <span class="badge-inactivo">Foto no configurada</span>
+                <span class="badge-inactivo" data-i18n>Foto no configurada</span>
               <% } %>
             </p>
-            <p class="tarjeta-unificada-desc">Elegí una foto de factura o el catálogo del proveedor — el sistema detecta solo cuál es.</p>
+            <p class="tarjeta-unificada-desc" data-i18n>Elegí una foto de factura o el catálogo del proveedor — el sistema detecta solo cuál es.</p>
 
             <div class="tarjeta-unificada-opciones">
               <form id="form-actualizacion" method="POST" enctype="multipart/form-data"
                     class="opcion-precio opcion-precio-sola" onsubmit="return prepararEnvioUnificado()">
-                <input type="text" id="input-categoria-unificada" placeholder="Categoría (si es catálogo)" class="precio-card-input-categoria" style="display:none;">
+                <input type="text" id="input-categoria-unificada" placeholder="Categoría (si es catálogo)" data-i18n-ph="Categoría (si es catálogo)" class="precio-card-input-categoria" style="display:none;">
                 <label class="input-archivo" id="label-archivo-unificado">
                   <i class="ti ti-paperclip"></i>
-                  <span id="nombre-archivo-unificado">Elegir archivo</span>
+                  <span id="nombre-archivo-unificado" data-i18n>Elegir archivo</span>
                   <input type="file" id="input-unificado" required onchange="detectarTipoArchivo(this)">
                 </label>
                 <button type="submit" id="btn-actualizar-unificado" class="btn-primary">
                   <i class="ti ti-upload" id="icon-actualizar-unificado"></i>
-                  <span id="texto-actualizar-unificado">Actualizar</span>
+                  <span id="texto-actualizar-unificado" data-i18n>Actualizar</span>
                 </button>
               </form>
             </div>
@@ -343,21 +343,21 @@
         <div class="costos-card">
           <div class="tarjeta-unificada">
             <div class="tarjeta-unificada-icono tarjeta-unificada-icono-csv"><i class="ti ti-file-spreadsheet"></i></div>
-            <p class="tarjeta-unificada-titulo">Costeo de platos (Excel/CSV)</p>
-            <p class="tarjeta-unificada-desc">Planilla de costeo — un bloque por plato. Si ya existe (mismo nombre), se actualizan sus ingredientes.</p>
+            <p class="tarjeta-unificada-titulo" data-i18n>Costeo de platos (Excel/CSV)</p>
+            <p class="tarjeta-unificada-desc" data-i18n>Planilla de costeo — un bloque por plato. Si ya existe (mismo nombre), se actualizan sus ingredientes.</p>
 
             <form id="form-importar-platos" method="POST" action="/costos/platos/importar" enctype="multipart/form-data" onsubmit="return prepararEnvioPlatos()">
-              <input type="text" name="categoria_platos" id="input-categoria-platos" placeholder="Categoría (ej: Pastelería)" required class="precio-card-input-categoria" style="width:100%;box-sizing:border-box;margin-bottom:10px;">
+              <input type="text" name="categoria_platos" id="input-categoria-platos" placeholder="Categoría (ej: Pastelería)" data-i18n-ph="Categoría (ej: Pastelería)" required class="precio-card-input-categoria" style="width:100%;box-sizing:border-box;margin-bottom:10px;">
               <div class="opcion-precio opcion-precio-sola">
               <label class="input-archivo">
                 <i class="ti ti-paperclip"></i>
-                <span id="nombre-archivo-platos">Elegir archivo</span>
+                <span id="nombre-archivo-platos" data-i18n>Elegir archivo</span>
                 <input type="file" id="input-platos" name="archivo_platos" required
                        onchange="marcarArchivoPlatosElegido(this)">
               </label>
               <button type="submit" id="btn-importar-platos" class="btn-primary">
                 <i class="ti ti-upload" id="icon-importar-platos"></i>
-                <span id="texto-importar-platos">Importar</span>
+                <span id="texto-importar-platos" data-i18n>Importar</span>
               </button>
               </div>
             </form>
@@ -372,7 +372,7 @@
     </div>
 
     <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--gris-borde);">
-      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> Volver al menú principal</a>
+      <a href="/inicio" class="btn-secondary"><i class="ti ti-arrow-left"></i> <span data-i18n>Volver al menú principal</span></a>
     </div>
   </main>
 
@@ -383,7 +383,7 @@
 <div id="modal-lista-insumos" class="modal-lista" style="display:none;" onclick="if(event.target===this)hideModal('modal-lista-insumos')">
   <div class="modal-lista-caja">
     <div class="modal-lista-header">
-      <p class="modal-lista-titulo"><i class="ti ti-package"></i> Insumos / Ingredientes</p>
+      <p class="modal-lista-titulo"><i class="ti ti-package"></i> <span data-i18n>Insumos / Ingredientes</span></p>
       <button onclick="hideModal('modal-lista-insumos')" class="modal-lista-cerrar"><i class="ti ti-x"></i></button>
     </div>
 
@@ -392,21 +392,21 @@
         <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
         <form method="GET" action="/costos">
           <% if (typeof esAyb !== 'undefined' && esAyb) { %><input type="hidden" name="depto" value="ayb"><% } %>
-          <input type="text" name="buscar" id="buscar-insumos-input" value="<%= buscar %>" placeholder="Buscar insumo por nombre o código..."
+          <input type="text" name="buscar" id="buscar-insumos-input" value="<%= buscar %>" placeholder="Buscar insumo por nombre o código..." data-i18n-ph="Buscar insumo por nombre o código..."
                  oninput="filtrarInsumosEnVivo()"
                  style="width:100%;padding:8px 32px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
           <% if (buscar) { %>
-          <a href="/costos<%= (typeof esAyb !== 'undefined' && esAyb) ? '?depto=ayb' : '' %>#modal-lista-insumos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
+          <a href="/costos<%= (typeof esAyb !== 'undefined' && esAyb) ? '?depto=ayb' : '' %>#modal-lista-insumos" title="Limpiar búsqueda" data-i18n-title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
           <% } %>
         </form>
       </div>
 
       <p id="contador-resultados-insumos" style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;<%= buscar ? '' : 'display:none;' %>">
-        <%= resultadosInsumos %> resultado<%= resultadosInsumos !== 1 ? 's' : '' %> para "<%= buscar %>"
+        <%= resultadosInsumos %> <span data-i18n><%= resultadosInsumos !== 1 ? 'resultados' : 'resultado' %></span> <span data-i18n>para</span> "<%= buscar %>"
       </p>
 
       <div id="solapas-letras-insumos" class="solapas-letras" style="<%= buscar ? 'display:none;' : '' %>">
-        <a href="/costos<%= (typeof esAyb !== 'undefined' && esAyb) ? '?depto=ayb' : '' %>" class="solapa-letra <%= !letra ? 'activa' : '' %>">Todos</a>
+        <a href="/costos<%= (typeof esAyb !== 'undefined' && esAyb) ? '?depto=ayb' : '' %>" class="solapa-letra <%= !letra ? 'activa' : '' %>" data-i18n>Todos</a>
         <% 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => { %>
         <a href="/costos?letra=<%= l %><%= qDepto %>" class="solapa-letra <%= letra === l ? 'activa' : '' %>"><%= l %></a>
         <% }) %>
@@ -419,9 +419,9 @@
           </colgroup>
           <thead>
             <tr>
-              <th>Código</th>
-              <th>Insumo</th>
-              <th>Precio unitario</th>
+              <th data-i18n>Código</th>
+              <th data-i18n>Insumo</th>
+              <th data-i18n>Precio unitario</th>
               <th></th>
             </tr>
           </thead>
@@ -433,7 +433,7 @@
                 <td style="font-weight:500;">
                   <%= ins.nombre %>
                   <% if (!ins.precio_unitario || parseFloat(ins.precio_unitario) === 0) { %>
-                    <span style="display:inline-block;margin-left:6px;font-size:0.6rem;font-weight:700;background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:20px;">SIN PRECIO</span>
+                    <span style="display:inline-block;margin-left:6px;font-size:0.6rem;font-weight:700;background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:20px;" data-i18n>SIN PRECIO</span>
                   <% } %>
                 </td>
                 <td>
@@ -442,15 +442,15 @@
                     <input type="number" name="precio_nuevo" value="<%= ins.precio_unitario %>" placeholder="Ej: 4500" step="0.01" min="0"
                            style="width:80px;padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.82rem;outline:none;">
                     <button type="submit" class="btn-sm" style="padding:4px 8px;">✓</button>
-                    <label title="El precio no baja solo — tildá esto solo si es una corrección real y querés bajarlo igual" style="display:flex;align-items:center;gap:3px;font-size:0.62rem;color:var(--gris-texto);cursor:pointer;white-space:nowrap;">
+                    <label title="El precio no baja solo — tildá esto solo si es una corrección real y querés bajarlo igual" data-i18n-title="El precio no baja solo — tildá esto solo si es una corrección real y querés bajarlo igual" style="display:flex;align-items:center;gap:3px;font-size:0.62rem;color:var(--gris-texto);cursor:pointer;white-space:nowrap;">
                       <input type="checkbox" name="forzar_menor" value="1" style="width:11px;height:11px;accent-color:var(--rojo);">
-                      Forzar
+                      <span data-i18n>Forzar</span>
                     </label>
                   </form>
                 </td>
                 <td>
                   <% if (typeof esAyb !== 'undefined' && esAyb) { %>
-                    <a href="/inventario-ayb" title="Gestionar en Inventario AYB" style="background:var(--azul-claro);color:var(--azul);display:inline-flex;align-items:center;justify-content:center;font-size:15px;padding:5px 8px;border-radius:6px;text-decoration:none;">
+                    <a href="/inventario-ayb" title="Gestionar en Inventario AYB" data-i18n-title="Gestionar en Inventario AYB" style="background:var(--azul-claro);color:var(--azul);display:inline-flex;align-items:center;justify-content:center;font-size:15px;padding:5px 8px;border-radius:6px;text-decoration:none;">
                       <i class="ti ti-external-link"></i>
                     </a>
                   <% } else { %>
@@ -458,7 +458,7 @@
                         onsubmit="return confirm('¿Eliminar este insumo?')" style="margin:0;">
                     <button type="submit"
                             style="background:var(--azul-claro);border:none;color:var(--azul);cursor:pointer;font-size:15px;padding:5px 8px;border-radius:6px;transition:all 0.2s;"
-                            title="Eliminar"
+                            title="Eliminar" data-i18n-title="Eliminar"
                             onmouseover="this.style.background='#dc2626';this.style.color='#fff';"
                             onmouseout="this.style.background='var(--azul-claro)';this.style.color='var(--azul)';">
                       <i class="ti ti-trash"></i>
@@ -471,19 +471,19 @@
             <% } else { %>
               <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
                 <% if (buscar) { %>
-                  No se encontraron insumos para "<%= buscar %>".
+                  <span data-i18n>No se encontraron insumos para</span> "<%= buscar %>".
                 <% } else if (letra) { %>
-                  No hay insumos que empiecen con "<%= letra %>".
+                  <span data-i18n>No hay insumos que empiecen con</span> "<%= letra %>".
                 <% } else if (typeof esAyb !== 'undefined' && esAyb) { %>
-                  Sin productos cargados. Agregalos desde <a href="/inventario-ayb">Inventario AYB</a>.
+                  <span data-i18n>Sin productos cargados. Agregalos desde</span> <a href="/inventario-ayb" data-i18n>Inventario AYB</a>.
                 <% } else { %>
-                  Sin insumos. Agregá el primero.
+                  <span data-i18n>Sin insumos. Agregá el primero.</span>
                 <% } %>
               </td></tr>
             <% } %>
             <tr id="fila-sin-resultados-js" style="display:none;">
               <td colspan="4" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
-                No se encontraron insumos para "<span id="fila-sin-resultados-js-texto"></span>".
+                <span data-i18n>No se encontraron insumos para</span> "<span id="fila-sin-resultados-js-texto"></span>".
               </td>
             </tr>
           </tbody>
@@ -499,7 +499,7 @@
 <div id="modal-lista-platos" class="modal-lista" style="display:none;" onclick="if(event.target===this)hideModal('modal-lista-platos')">
   <div class="modal-lista-caja">
     <div class="modal-lista-header">
-      <p class="modal-lista-titulo"><i class="ti <%= esAybModal ? 'ti-glass' : 'ti-tools-kitchen-2' %>"></i> Costeo de <%= esAybModal ? 'tragos' : 'platos' %></p>
+      <p class="modal-lista-titulo"><i class="ti <%= esAybModal ? 'ti-glass' : 'ti-tools-kitchen-2' %>"></i> <span data-i18n>Costeo de</span> <span data-i18n><%= esAybModal ? 'tragos' : 'platos' %></span></p>
       <button onclick="hideModal('modal-lista-platos')" class="modal-lista-cerrar"><i class="ti ti-x"></i></button>
     </div>
 
@@ -511,21 +511,21 @@
              // ese contexto al buscar — una cuenta de Cocina/AYB no lo necesita
              // (departamentoEfectivo ignora este parámetro para ellas). %>
           <% if (typeof depto !== 'undefined' && depto === 'ayb') { %><input type="hidden" name="depto" value="ayb"><% } %>
-          <input type="text" name="buscarPlato" id="buscar-platos-input" value="<%= buscarPlato %>" placeholder="Buscar <%= palabraItem %> por nombre..."
+          <input type="text" name="buscarPlato" id="buscar-platos-input" value="<%= buscarPlato %>" placeholder="Buscar <%= palabraItem %> por nombre..." data-i18n-ph="Buscar <%= palabraItem %> por nombre..."
                  oninput="filtrarPlatosEnVivo()"
                  style="width:100%;padding:8px 32px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
           <% if (buscarPlato) { %>
-          <a href="/costos<%= depto === 'ayb' ? '?depto=ayb' : '' %>#modal-lista-platos" title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
+          <a href="/costos<%= depto === 'ayb' ? '?depto=ayb' : '' %>#modal-lista-platos" title="Limpiar búsqueda" data-i18n-title="Limpiar búsqueda" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"><i class="ti ti-x"></i></a>
           <% } %>
         </form>
       </div>
 
       <p id="contador-resultados-platos" style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:10px;<%= buscarPlato ? '' : 'display:none;' %>">
-        <%= resultadosPlatos %> resultado<%= resultadosPlatos !== 1 ? 's' : '' %> para "<%= buscarPlato %>"
+        <%= resultadosPlatos %> <span data-i18n><%= resultadosPlatos !== 1 ? 'resultados' : 'resultado' %></span> <span data-i18n>para</span> "<%= buscarPlato %>"
       </p>
 
       <div id="solapas-letras-platos" class="solapas-letras" style="<%= buscarPlato ? 'display:none;' : '' %>">
-        <a href="/costos<%= depto === 'ayb' ? '?depto=ayb' : '' %>" class="solapa-letra <%= !letraPlato ? 'activa' : '' %>">Todos</a>
+        <a href="/costos<%= depto === 'ayb' ? '?depto=ayb' : '' %>" class="solapa-letra <%= !letraPlato ? 'activa' : '' %>" data-i18n>Todos</a>
         <% 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l => { %>
         <a href="/costos?letraPlato=<%= l %><%= depto === 'ayb' ? '&depto=ayb' : '' %>" class="solapa-letra <%= letraPlato === l ? 'activa' : '' %>"><%= l %></a>
         <% }) %>
@@ -535,10 +535,10 @@
         <table class="tabla">
           <thead>
             <tr>
-              <th><%= esAybModal ? 'Trago' : 'Plato' %></th>
-              <th>Costo</th>
-              <th>Margen</th>
-              <th>Precio venta</th>
+              <th data-i18n><%= esAybModal ? 'Trago' : 'Plato' %></th>
+              <th data-i18n>Costo</th>
+              <th data-i18n>Margen</th>
+              <th data-i18n>Precio venta</th>
               <th></th>
             </tr>
           </thead>
@@ -563,17 +563,17 @@
                 <td style="font-weight:600;color:#16a34a;">
                   $<%= (parseFloat(p.costo_total) * (1 + parseFloat(p.margen_ganancia)/100)).toFixed(2) %>
                 </td>
-                <td><a href="/costos/plato/<%= p.id %>" class="btn-sm">Ver</a></td>
+                <td><a href="/costos/plato/<%= p.id %>" class="btn-sm" data-i18n>Ver</a></td>
               </tr>
               <% }) %>
             <% } else { %>
               <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
                 <% if (buscarPlato) { %>
-                  No se encontraron <%= palabraItem %>s para "<%= buscarPlato %>".
+                  <span data-i18n>No se encontraron</span> <span data-i18n><%= esAybModal ? 'tragos' : 'platos' %></span> <span data-i18n>para</span> "<%= buscarPlato %>".
                 <% } else if (letraPlato) { %>
-                  No hay <%= palabraItem %>s que empiecen con "<%= letraPlato %>".
+                  <span data-i18n>No hay</span> <span data-i18n><%= esAybModal ? 'tragos' : 'platos' %></span> <span data-i18n>que empiecen con</span> "<%= letraPlato %>".
                 <% } else { %>
-                  Sin <%= palabraItem %>s. Agregá el primero.
+                  <span data-i18n><%= esAybModal ? 'Sin tragos. Agregá el primero.' : 'Sin platos. Agregá el primero.' %></span>
                 <% } %>
               </td></tr>
             <% } %>
@@ -588,10 +588,10 @@
 <div id="modal-variacion-precios" class="modal-lista" style="display:none;" onclick="if(event.target===this)hideModal('modal-variacion-precios')">
   <div class="modal-lista-caja">
     <div class="modal-lista-header">
-      <p class="modal-lista-titulo"><i class="ti ti-chart-line"></i> Variación de precios</p>
+      <p class="modal-lista-titulo"><i class="ti ti-chart-line"></i> <span data-i18n>Variación de precios</span></p>
       <div style="display:flex;align-items:center;gap:8px;">
         <a href="/costos/variacion-excel?dias=<%= diasVariacion %>&tipoVariacion=<%= tipoVariacion %><%= qDepto %>" class="btn-excel" style="padding:7px 12px;font-size:0.65rem;">
-          <i class="ti ti-file-spreadsheet"></i> Excel
+          <i class="ti ti-file-spreadsheet"></i> <span data-i18n>Excel</span>
         </a>
         <button onclick="hideModal('modal-variacion-precios')" class="modal-lista-cerrar"><i class="ti ti-x"></i></button>
       </div>
@@ -602,7 +602,7 @@
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
         <% [{v:7,l:'7 días'},{v:14,l:'14 días'},{v:21,l:'21 días'},{v:28,l:'28 días'}].forEach(p => { %>
         <a href="/costos?dias=<%= p.v %>&tipoVariacion=<%= tipoVariacion %><%= qDepto %>#modal-variacion-precios"
-           class="chip-periodo <%= diasVariacion === p.v ? 'activo' : '' %>"><%= p.l %></a>
+           class="chip-periodo <%= diasVariacion === p.v ? 'activo' : '' %>" data-i18n><%= p.l %></a>
         <% }) %>
       </div>
 
@@ -610,31 +610,31 @@
       <div style="display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--gris-borde);flex-wrap:wrap;">
         <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=subieron<%= qDepto %>#modal-variacion-precios"
            class="tab-variacion <%= tipoVariacion === 'subieron' ? 'activo' : '' %>">
-          <i class="ti ti-trending-up" style="color:#dc2626;"></i> Subieron
+          <i class="ti ti-trending-up" style="color:#dc2626;"></i> <span data-i18n>Subieron</span>
         </a>
         <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=bajaron<%= qDepto %>#modal-variacion-precios"
            class="tab-variacion <%= tipoVariacion === 'bajaron' ? 'activo' : '' %>">
-          <i class="ti ti-trending-down" style="color:#16a34a;"></i> Bajaron
+          <i class="ti ti-trending-down" style="color:#16a34a;"></i> <span data-i18n>Bajaron</span>
         </a>
         <a href="/costos?dias=<%= diasVariacion %>&tipoVariacion=iguales<%= qDepto %>#modal-variacion-precios"
            class="tab-variacion <%= tipoVariacion === 'iguales' ? 'activo' : '' %>">
-          <i class="ti ti-minus" style="color:var(--gris-texto);"></i> Se mantuvieron
+          <i class="ti ti-minus" style="color:var(--gris-texto);"></i> <span data-i18n>Se mantuvieron</span>
         </a>
       </div>
 
       <p style="font-size:0.72rem;color:var(--gris-texto);margin-bottom:12px;">
-        Comparando el precio de hoy contra el precio de hace <%= diasVariacion %> día<%= diasVariacion !== 1 ? 's' : '' %>.
-        Top <%= variacionPrecios.length %> resultado<%= variacionPrecios.length !== 1 ? 's' : '' %>.
+        <span data-i18n>Comparando el precio de hoy contra el precio de hace</span> <%= diasVariacion %> <span data-i18n><%= diasVariacion !== 1 ? 'días' : 'día' %></span>.
+        <span data-i18n>Top</span> <%= variacionPrecios.length %> <span data-i18n><%= variacionPrecios.length !== 1 ? 'resultados' : 'resultado' %></span>.
       </p>
 
       <div class="tabla-wrap">
         <table class="tabla">
           <thead>
             <tr>
-              <th>Insumo</th>
-              <th>Precio antes</th>
-              <th>Precio actual</th>
-              <th>Variación</th>
+              <th data-i18n>Insumo</th>
+              <th data-i18n>Precio antes</th>
+              <th data-i18n>Precio actual</th>
+              <th data-i18n>Variación</th>
             </tr>
           </thead>
           <tbody>
@@ -659,7 +659,7 @@
               <% }) %>
             <% } else { %>
               <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">
-                No hay insumos que <%= tipoVariacion === 'subieron' ? 'hayan subido de precio' : (tipoVariacion === 'bajaron' ? 'hayan bajado de precio' : 'se hayan mantenido igual') %> en este período.
+                <span data-i18n>No hay insumos que</span> <span data-i18n><%= tipoVariacion === 'subieron' ? 'hayan subido de precio' : (tipoVariacion === 'bajaron' ? 'hayan bajado de precio' : 'se hayan mantenido igual') %></span> <span data-i18n>en este período.</span>
               </td></tr>
             <% } %>
           </tbody>
@@ -674,52 +674,52 @@
 <div id="modal-insumo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Nuevo insumo</h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;" data-i18n>Nuevo insumo</h2>
       <button onclick="hideModal('modal-insumo')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
     <form method="POST" action="/costos/insumo/nuevo">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="field" style="grid-column:1/-1;">
-          <label>Nombre del insumo</label>
-          <input type="text" name="nombre" placeholder="Ej: Harina 000" required>
+          <label data-i18n>Nombre del insumo</label>
+          <input type="text" name="nombre" placeholder="Ej: Harina 000" data-i18n-ph="Ej: Harina 000" required>
         </div>
         <div class="field">
-          <label>Código interno (opcional)</label>
-          <input type="text" name="codigo" placeholder="Ej: 100001">
+          <label data-i18n>Código interno (opcional)</label>
+          <input type="text" name="codigo" placeholder="Ej: 100001" data-i18n-ph="Ej: 100001">
         </div>
         <div class="field">
-          <label>Categoría</label>
-          <input type="text" name="categoria" placeholder="Ej: Lácteos, Carnes">
+          <label data-i18n>Categoría</label>
+          <input type="text" name="categoria" placeholder="Ej: Lácteos, Carnes" data-i18n-ph="Ej: Lácteos, Carnes">
         </div>
         <div class="field">
-          <label>Unidad de medida</label>
+          <label data-i18n>Unidad de medida</label>
           <select name="unidad" style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
             <option value="kg">kg</option>
             <option value="g">g</option>
             <option value="lt">lt</option>
             <option value="ml">ml</option>
-            <option value="unidad">unidad</option>
-            <option value="docena">docena</option>
-            <option value="caja">caja</option>
-            <option value="botella">botella</option>
+            <option value="unidad" data-i18n>unidad</option>
+            <option value="docena" data-i18n>docena</option>
+            <option value="caja" data-i18n>caja</option>
+            <option value="botella" data-i18n>botella</option>
           </select>
         </div>
         <div class="field">
-          <label>Precio por unidad ($)</label>
+          <label data-i18n>Precio por unidad ($)</label>
           <input type="number" name="precio_unitario" placeholder="0.00" step="0.01" min="0">
         </div>
         <div class="field">
-          <label>Stock actual (cantidad)</label>
-          <input type="number" name="stock_actual" placeholder="Ej: 10" step="0.01" min="0">
+          <label data-i18n>Stock actual (cantidad)</label>
+          <input type="number" name="stock_actual" placeholder="Ej: 10" data-i18n-ph="Ej: 10" step="0.01" min="0">
         </div>
         <div class="field" style="grid-column:1/-1;">
-          <label>Proveedor</label>
-          <input type="text" name="proveedor" placeholder="Ej: Distribuidora XYZ">
+          <label data-i18n>Proveedor</label>
+          <input type="text" name="proveedor" placeholder="Ej: Distribuidora XYZ" data-i18n-ph="Ej: Distribuidora XYZ">
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-insumo')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> Agregar insumo</button>
+        <button type="button" onclick="hideModal('modal-insumo')" class="btn-secondary" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> <span data-i18n>Agregar insumo</span></button>
       </div>
     </form>
   </div>
@@ -732,52 +732,52 @@
 <div id="modal-plato" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Nuevo <%= esAybNuevo ? 'trago' : 'plato' %></h2>
+      <h2 style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;"><span data-i18n>Nuevo</span> <span data-i18n><%= esAybNuevo ? 'trago' : 'plato' %></span></h2>
       <button onclick="hideModal('modal-plato')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
     <form method="POST" action="/costos/plato/nuevo<%= esAybNuevo ? '?depto=ayb' : '' %>">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="field" style="grid-column:1/-1;">
-          <label>Nombre del <%= esAybNuevo ? 'trago' : 'plato' %></label>
-          <input type="text" name="nombre" placeholder="<%= esAybNuevo ? 'Ej: Daiquiri' : 'Ej: Risotto de hongos' %>" required>
+          <label><span data-i18n>Nombre del</span> <span data-i18n><%= esAybNuevo ? 'trago' : 'plato' %></span></label>
+          <input type="text" name="nombre" placeholder="<%= esAybNuevo ? 'Ej: Daiquiri' : 'Ej: Risotto de hongos' %>" data-i18n-ph="<%= esAybNuevo ? 'Ej: Daiquiri' : 'Ej: Risotto de hongos' %>" required>
         </div>
         <div class="field" style="grid-column:1/-1;">
-          <label>Categoría</label>
+          <label data-i18n>Categoría</label>
           <select name="categoria" id="sel-cat-plato" onchange="toggleOtroPlato()"
                   style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;color:var(--negro);outline:none;">
-            <option value="">Seleccionar...</option>
+            <option value="" data-i18n>Seleccionar...</option>
             <% if (esAybNuevo) { %>
-            <option>Tragos Clasicos</option><option>Tragos de Autor</option>
-            <option>Cerveza</option><option>Vino</option><option>Sin alcohol</option>
+            <option data-i18n>Tragos Clasicos</option><option data-i18n>Tragos de Autor</option>
+            <option data-i18n>Cerveza</option><option data-i18n>Vino</option><option data-i18n>Sin alcohol</option>
             <% } else { %>
-            <option>Entrada</option><option>Sopa</option><option>Ensalada</option>
-            <option>Principal</option><option>Guarnición</option><option>Postre</option>
-            <option>Desayuno</option><option>Merienda</option><option>Panadería</option>
-            <option>Pastelería</option><option>Bebida</option>
+            <option data-i18n>Entrada</option><option data-i18n>Sopa</option><option data-i18n>Ensalada</option>
+            <option data-i18n>Principal</option><option data-i18n>Guarnición</option><option data-i18n>Postre</option>
+            <option data-i18n>Desayuno</option><option data-i18n>Merienda</option><option data-i18n>Panadería</option>
+            <option data-i18n>Pastelería</option><option data-i18n>Bebida</option>
             <% } %>
-            <option value="otro">Otro (escribir)</option>
+            <option value="otro" data-i18n>Otro (escribir)</option>
           </select>
-          <input type="text" id="otro-cat-plato" name="categoria_otro" placeholder="Escribir categoría..."
+          <input type="text" id="otro-cat-plato" name="categoria_otro" placeholder="Escribir categoría..." data-i18n-ph="Escribir categoría..."
                  style="display:none;margin-top:6px;width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;color:var(--negro);outline:none;">
         </div>
         <% if (!esAybNuevo) { %>
         <div class="field">
-          <label>Porciones que rinde</label>
+          <label data-i18n>Porciones que rinde</label>
           <input type="number" name="porciones" placeholder="1" min="1" value="1">
         </div>
         <% } %>
         <div class="field">
-          <label>Margen de ganancia (%)</label>
+          <label data-i18n>Margen de ganancia (%)</label>
           <input type="number" name="margen_ganancia" placeholder="30" min="0" max="100" value="30">
         </div>
         <div class="field">
-          <label>Precio de venta ($)</label>
+          <label data-i18n>Precio de venta ($)</label>
           <input type="number" name="precio_venta" placeholder="0.00" step="0.01" min="0">
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-plato')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary" onclick="prepararPlato()"><i class="ti ti-plus"></i> Crear <%= esAybNuevo ? 'trago' : 'plato' %></button>
+        <button type="button" onclick="hideModal('modal-plato')" class="btn-secondary" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-primary" onclick="prepararPlato()"><i class="ti ti-plus"></i> <span data-i18n>Crear</span> <span data-i18n><%= esAybNuevo ? 'trago' : 'plato' %></span></button>
       </div>
     </form>
   </div>
@@ -786,8 +786,8 @@
 <div id="modal-aviso" class="modal-aviso" onclick="if(event.target===this) cerrarAvisoCostos()">
   <div class="modal-aviso-caja">
     <div class="modal-aviso-icono"><i class="ti ti-circle-check"></i></div>
-    <p class="modal-aviso-msg" id="modalAvisoMsg"></p>
-    <button type="button" class="modal-aviso-aceptar" onclick="cerrarAvisoCostos()">Aceptar</button>
+    <p class="modal-aviso-msg" id="modalAvisoMsg" data-i18n></p>
+    <button type="button" class="modal-aviso-aceptar" onclick="cerrarAvisoCostos()" data-i18n>Aceptar</button>
   </div>
 </div>
 
@@ -801,7 +801,7 @@ function cerrarAvisoCostos() {
 (function () {
   const params = new URLSearchParams(window.location.search);
   if (params.has('guardado')) {
-    document.getElementById('modalAvisoMsg').textContent = 'Guardado correctamente.';
+    document.getElementById('modalAvisoMsg').textContent = window.tHilton('Guardado correctamente.');
     document.getElementById('modal-aviso').classList.add('mostrar');
     params.delete('guardado');
     const query = params.toString();
@@ -841,12 +841,12 @@ function filaInsumoHtml(ins) {
   const sinPrecio = !ins.precio_unitario || parseFloat(ins.precio_unitario) === 0;
   const rutaPrecio = ES_AYB ? '/costos/producto-ayb/' : '/costos/insumo/';
   const colEliminar = ES_AYB
-    ? `<a href="/inventario-ayb" title="Gestionar en Inventario AYB" style="background:var(--azul-claro);color:var(--azul);display:inline-flex;align-items:center;justify-content:center;font-size:15px;padding:5px 8px;border-radius:6px;text-decoration:none;"><i class="ti ti-external-link"></i></a>`
+    ? `<a href="/inventario-ayb" title="${tHilton('Gestionar en Inventario AYB')}" data-i18n-title="Gestionar en Inventario AYB" style="background:var(--azul-claro);color:var(--azul);display:inline-flex;align-items:center;justify-content:center;font-size:15px;padding:5px 8px;border-radius:6px;text-decoration:none;"><i class="ti ti-external-link"></i></a>`
     : `<form method="POST" action="/costos/insumo/${ins.id}/eliminar"
               onsubmit="return confirm('¿Eliminar este insumo?')" style="margin:0;">
           <button type="submit"
                   style="background:var(--azul-claro);border:none;color:var(--azul);cursor:pointer;font-size:15px;padding:5px 8px;border-radius:6px;transition:all 0.2s;"
-                  title="Eliminar"
+                  title="${tHilton('Eliminar')}" data-i18n-title="Eliminar"
                   onmouseover="this.style.background='#dc2626';this.style.color='#fff';"
                   onmouseout="this.style.background='var(--azul-claro)';this.style.color='var(--azul)';">
             <i class="ti ti-trash"></i>
@@ -857,7 +857,7 @@ function filaInsumoHtml(ins) {
       <td style="font-size:0.72rem;color:var(--gris-texto);font-family:monospace;">${ins.codigo ? escaparHtml(ins.codigo) : '—'}</td>
       <td style="font-weight:500;">
         ${escaparHtml(ins.nombre)}
-        ${sinPrecio ? '<span style="display:inline-block;margin-left:6px;font-size:0.6rem;font-weight:700;background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:20px;">SIN PRECIO</span>' : ''}
+        ${sinPrecio ? `<span style="display:inline-block;margin-left:6px;font-size:0.6rem;font-weight:700;background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:20px;" data-i18n>${tHilton('SIN PRECIO')}</span>` : ''}
       </td>
       <td>
         <form method="POST" action="${rutaPrecio}${ins.id}/precio" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
@@ -865,9 +865,9 @@ function filaInsumoHtml(ins) {
           <input type="number" name="precio_nuevo" value="${ins.precio_unitario != null ? ins.precio_unitario : ''}" placeholder="Ej: 4500" step="0.01" min="0"
                  style="width:80px;padding:4px 8px;border:1px solid var(--gris-borde);border-radius:6px;font-size:0.82rem;outline:none;">
           <button type="submit" class="btn-sm" style="padding:4px 8px;">✓</button>
-          <label title="El precio no baja solo — tildá esto solo si es una corrección real y querés bajarlo igual" style="display:flex;align-items:center;gap:3px;font-size:0.62rem;color:var(--gris-texto);cursor:pointer;white-space:nowrap;">
+          <label title="${tHilton('El precio no baja solo — tildá esto solo si es una corrección real y querés bajarlo igual')}" data-i18n-title="El precio no baja solo — tildá esto solo si es una corrección real y querés bajarlo igual" style="display:flex;align-items:center;gap:3px;font-size:0.62rem;color:var(--gris-texto);cursor:pointer;white-space:nowrap;">
             <input type="checkbox" name="forzar_menor" value="1" style="width:11px;height:11px;accent-color:var(--rojo);">
-            Forzar
+            <span data-i18n>${tHilton('Forzar')}</span>
           </label>
         </form>
       </td>
@@ -923,7 +923,7 @@ function filtrarInsumosEnVivo() {
     }
     tbody.innerHTML = insumos.length > 0
       ? insumos.map(filaInsumoHtml).join('')
-      : `<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">No se encontraron insumos para "${escaparHtml(texto)}".</td></tr>`;
+      : `<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;"><span data-i18n>${tHilton('No se encontraron insumos para')}</span> "${escaparHtml(texto)}".</td></tr>`;
   }, 300);
 }
 
@@ -951,7 +951,7 @@ function filaPlatoHtml(p) {
       <td style="color:var(--azul);font-weight:600;">$${costo.toFixed(2)}</td>
       <td><span style="font-size:0.72rem;background:var(--azul-claro);color:var(--azul);padding:2px 8px;border-radius:20px;font-weight:500;">${margen}%</span></td>
       <td style="font-weight:600;color:#16a34a;">$${precioVenta.toFixed(2)}</td>
-      <td><a href="/costos/plato/${p.id}" class="btn-sm">Ver</a></td>
+      <td><a href="/costos/plato/${p.id}" class="btn-sm" data-i18n>${tHilton('Ver')}</a></td>
     </tr>
   `;
 }
@@ -994,7 +994,7 @@ function filtrarPlatosEnVivo() {
     }
     tbody.innerHTML = platos.length > 0
       ? platos.map(filaPlatoHtml).join('')
-      : `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;">No se encontraron ${PALABRA_ITEM}s para "${escaparHtml(texto)}".</td></tr>`;
+      : `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--gris-texto);font-style:italic;"><span data-i18n>${tHilton('No se encontraron')}</span> <span data-i18n>${tHilton(ES_AYB ? 'tragos' : 'platos')}</span> <span data-i18n>${tHilton('para')}</span> "${escaparHtml(texto)}".</td></tr>`;
   }, 300);
 }
 
@@ -1056,7 +1056,7 @@ function detectarTipoArchivo(input) {
   const textoBoton  = document.getElementById('texto-actualizar-unificado');
 
   if (!input.files || !input.files[0]) {
-    nombreSpan.textContent = 'Elegir archivo';
+    nombreSpan.textContent = window.tHilton('Elegir archivo');
     label.classList.remove('input-archivo-ok');
     return;
   }
@@ -1068,11 +1068,11 @@ function detectarTipoArchivo(input) {
   if (esImagen(archivo)) {
     catInput.style.display = 'none';
     catInput.required = false;
-    textoBoton.textContent = 'Subir';
+    textoBoton.textContent = window.tHilton('Subir');
   } else {
     catInput.style.display = '';
     catInput.required = true;
-    textoBoton.textContent = 'Importar';
+    textoBoton.textContent = window.tHilton('Importar');
   }
 }
 
@@ -1086,29 +1086,29 @@ function prepararEnvioUnificado() {
   const texto    = document.getElementById('texto-actualizar-unificado');
 
   if (!input.files || !input.files[0]) {
-    alert('Primero tenés que elegir un archivo — una foto de factura o el catálogo del proveedor.');
+    alert(window.tHilton('Primero tenés que elegir un archivo — una foto de factura o el catálogo del proveedor.'));
     return false;
   }
   const archivo = input.files[0];
 
   if (esImagen(archivo)) {
     if (!geminiConfigurado) {
-      alert('La lectura de fotos de factura todavía no está configurada. Usá el catálogo en su lugar.');
+      alert(window.tHilton('La lectura de fotos de factura todavía no está configurada. Usá el catálogo en su lugar.'));
       return false;
     }
     form.action = '/costos/factura' + (ES_AYB ? '?depto=ayb' : '');
     input.name = 'factura';
     catInput.name = '';
-    texto.textContent = 'Analizando factura...';
+    texto.textContent = window.tHilton('Analizando factura...');
   } else {
     if (!catInput.value.trim()) {
-      alert('Escribí a qué categoría pertenece este catálogo (ej: Frescos, Secos, Congelados).');
+      alert(window.tHilton('Escribí a qué categoría pertenece este catálogo (ej: Frescos, Secos, Congelados).'));
       return false;
     }
     form.action = '/costos/insumos/importar' + (ES_AYB ? '?depto=ayb' : '');
     input.name = 'archivo_csv';
     catInput.name = 'categoria';
-    texto.textContent = 'Importando...';
+    texto.textContent = window.tHilton('Importando...');
   }
 
   btn.disabled = true;
@@ -1124,7 +1124,7 @@ function marcarArchivoPlatosElegido(input) {
     nombre.textContent = input.files[0].name;
     label.classList.add('input-archivo-ok');
   } else {
-    nombre.textContent = 'Elegir archivo';
+    nombre.textContent = window.tHilton('Elegir archivo');
     label.classList.remove('input-archivo-ok');
   }
 }
@@ -1137,18 +1137,18 @@ function prepararEnvioPlatos() {
   const catInput = document.getElementById('input-categoria-platos');
 
   if (!catInput.value.trim()) {
-    alert('Escribí a qué categoría pertenecen estos platos (ej: Pastelería, Principales).');
+    alert(window.tHilton('Escribí a qué categoría pertenecen estos platos (ej: Pastelería, Principales).'));
     return false;
   }
   if (!input.files || input.files.length === 0) {
-    alert('Primero tenés que elegir el archivo.');
+    alert(window.tHilton('Primero tenés que elegir el archivo.'));
     return false;
   }
 
   btn.disabled = true;
   input.style.pointerEvents = 'none';
   icon.className = 'ti ti-loader-2 girando';
-  texto.textContent = 'Importando...';
+  texto.textContent = window.tHilton('Importando...');
   return true;
 }
 

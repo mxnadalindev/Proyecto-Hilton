@@ -94,11 +94,11 @@
     %>
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label">Cocina</p>
-        <h1 class="seccion-titulo">Horas extra</h1>
+        <p class="seccion-label" data-i18n>Cocina</p>
+        <h1 class="seccion-titulo" data-i18n>Horas extra</h1>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="/inicio" class="btn-icono-casa" title="Menú principal"><i class="ti ti-home"></i></a>
+        <a href="/inicio" class="btn-icono-casa" title="Menú principal" data-i18n-title="Menú principal"><i class="ti ti-home"></i></a>
 
         <!-- "Otras opciones": mismo patrón (y mismas clases) que ya usa
              Horarios — Enviar por WhatsApp / Excel del mes / historial
@@ -106,17 +106,17 @@
              arriba: se hace tocando la ficha de cada empleado, abajo. -->
         <div class="menu-otras-opciones" style="position:relative;">
           <button type="button" class="btn-secondary" onclick="toggleOtrasOpciones(event)" id="btn-otras-opciones">
-            <i class="ti ti-dots"></i> Otras opciones <i class="ti ti-chevron-down" style="font-size:12px;"></i>
+            <i class="ti ti-dots"></i> <span data-i18n>Otras opciones</span> <i class="ti ti-chevron-down" style="font-size:12px;"></i>
           </button>
           <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
             <button type="button" class="dropdown-otras-item dropdown-otras-item-whatsapp" onclick="enviarExcelPorWhatsapp()">
-              <i class="ti ti-brand-whatsapp"></i> Enviar
+              <i class="ti ti-brand-whatsapp"></i> <span data-i18n>Enviar</span>
             </button>
             <a href="/horas-extra/excel?mes=<%= mes %>" class="dropdown-otras-item dropdown-otras-item-excel">
-              <i class="ti ti-file-spreadsheet"></i> Excel (este mes)
+              <i class="ti ti-file-spreadsheet"></i> <span data-i18n>Excel (este mes)</span>
             </a>
             <a href="/horas-extra/excel-historial" class="dropdown-otras-item dropdown-otras-item-excel">
-              <i class="ti ti-history"></i> Descargar historial completo
+              <i class="ti ti-history"></i> <span data-i18n>Descargar historial completo</span>
             </a>
           </div>
         </div>
@@ -140,16 +140,16 @@
     <!-- Navegación de mes -->
     <div style="display:flex;align-items:center;background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;margin-bottom:20px;box-shadow:var(--sombra);flex-wrap:wrap;gap:10px;padding:4px;">
       <a href="/horas-extra?mes=<%= mesAnterior %>" class="btn-secondary" style="padding:6px 14px;">
-        <i class="ti ti-chevron-left"></i> Mes anterior
+        <i class="ti ti-chevron-left"></i> <span data-i18n>Mes anterior</span>
       </a>
       <div style="text-align:center;flex:1;">
-        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 2px;">Mes</p>
+        <p style="font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris-texto);margin:0 0 2px;" data-i18n>Mes</p>
         <p style="font-size:0.95rem;font-weight:600;color:var(--negro);margin:0;text-transform:capitalize;">
           <%= new Date(mes+'-01T00:00:00').toLocaleDateString('es-AR',{month:'long',year:'numeric'}) %>
         </p>
       </div>
       <a href="/horas-extra?mes=<%= mesSiguiente %>" class="btn-secondary" style="padding:6px 14px;<%= esMesActual ? 'opacity:0.4;pointer-events:none;' : '' %>">
-        Mes siguiente <i class="ti ti-chevron-right"></i>
+        <span data-i18n>Mes siguiente</span> <i class="ti ti-chevron-right"></i>
       </a>
     </div>
 
@@ -161,11 +161,11 @@
            empleados con el navy de marca (#002f61), mismo estilo. -->
       <div style="background:rgba(6,147,126,0.12);border:1px solid rgba(6,147,126,0.3);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
         <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= totalGeneral.toLocaleString('es-AR',{maximumFractionDigits:1}) %></p>
-        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Horas extra totales del mes</p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;" data-i18n>Horas extra totales del mes</p>
       </div>
       <div style="background:rgba(0,47,97,0.10);border:1px solid rgba(0,47,97,0.26);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:16px;text-align:center;">
         <p style="font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;"><%= filas.filter(f => f.totalHoras > 0).length %></p>
-        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;">Empleado<%= filas.filter(f => f.totalHoras > 0).length !== 1 ? 's' : '' %> con horas cargadas</p>
+        <p style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:4px 0 0;"><span data-i18n>Empleado</span><%= filas.filter(f => f.totalHoras > 0).length !== 1 ? 's' : '' %> <span data-i18n>con horas cargadas</span></p>
       </div>
     </div>
 
@@ -173,7 +173,7 @@
     <% if (filas.length === 0) { %>
     <div style="text-align:center;padding:60px 20px;color:var(--gris-texto);">
       <i class="ti ti-clock-off" style="font-size:40px;display:block;margin-bottom:12px;"></i>
-      No hay empleados activos de Cocina para mostrar.
+      <span data-i18n>No hay empleados activos de Cocina para mostrar.</span>
     </div>
     <% } else { %>
 
@@ -183,7 +183,7 @@
          recalcular el carrusel al filtrar). Mismo estilo visual que el resto. -->
     <div style="position:relative;max-width:320px;margin-bottom:16px;">
       <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gris-texto);font-size:15px;"></i>
-      <input type="text" id="buscarEmpleadoHoras" oninput="filtrarFichas()" placeholder="Buscar empleado por nombre o puesto..."
+      <input type="text" id="buscarEmpleadoHoras" oninput="filtrarFichas()" placeholder="Buscar empleado por nombre o puesto..." data-i18n-ph="Buscar empleado por nombre o puesto..."
              style="width:100%;box-sizing:border-box;padding:8px 12px 8px 32px;border:1px solid var(--gris-borde);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;outline:none;background:var(--gris-fondo);color:var(--negro);">
     </div>
 
@@ -215,34 +215,34 @@
           </div>
           <p style="font-weight:600;color:var(--negro);margin:0;text-transform:uppercase;letter-spacing:0.02em;font-size:0.85rem;"><%= f.nombre %></p>
           <% if (f.puesto) { %><p style="font-size:0.75rem;color:var(--azul);margin:2px 0 0;"><%= f.puesto %></p><% } %>
-          <p style="font-size:1.3rem;font-weight:700;color:<%= f.totalHoras > 0 ? 'var(--azul)' : 'var(--gris-texto)' %>;margin:10px 0 0;"><%= f.totalHoras.toLocaleString('es-AR',{maximumFractionDigits:1}) %>hs</p>
-          <p style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:2px 0 0;">este mes</p>
+          <p style="font-size:1.3rem;font-weight:700;color:<%= f.totalHoras > 0 ? 'var(--azul)' : 'var(--gris-texto)' %>;margin:10px 0 0;"><%= f.totalHoras.toLocaleString('es-AR',{maximumFractionDigits:1}) %><span data-i18n>hs</span></p>
+          <p style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gris-texto);margin:2px 0 0;" data-i18n>este mes</p>
         </div>
         <div style="display:flex;border-top:1px solid var(--gris-borde);">
           <button type="button" style="flex:1;background:none;border:none;border-right:1px solid var(--gris-borde);padding:10px;cursor:pointer;color:var(--azul);font-size:0.78rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;"
                   onclick="abrirCargaParaEmpleado(<%= f.id %>, '<%= String(f.nombre).replace(/\\/g,'\\\\').replace(/'/g,"\\'") %>')">
-            <i class="ti ti-plus"></i> Cargar
+            <i class="ti ti-plus"></i> <span data-i18n>Cargar</span>
           </button>
           <button type="button" style="flex:1;background:none;border:none;padding:10px;cursor:<%= f.registros.length > 0 ? 'pointer' : 'default' %>;color:<%= f.registros.length > 0 ? 'var(--gris-texto)' : '#d1d5db' %>;font-size:0.78rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;"
                   <% if (f.registros.length > 0) { %>onclick="toggleDetalle('detalle-<%= f.id %>')"<% } %> <%= f.registros.length === 0 ? 'disabled' : '' %>>
-            Detalle <i class="ti ti-chevron-down" id="chevron-<%= f.id %>"></i>
+            <span data-i18n>Detalle</span> <i class="ti ti-chevron-down" id="chevron-<%= f.id %>"></i>
           </button>
         </div>
         <% if (f.registros.length > 0) { %>
         <div id="detalle-<%= f.id %>" style="display:none;border-top:1px solid var(--gris-borde);overflow-x:auto;">
           <table class="tabla" style="width:100%;">
-            <thead><tr><th>Fecha</th><th>Horas</th><th>Nota</th><th>Cargado por</th><th></th></tr></thead>
+            <thead><tr><th data-i18n>Fecha</th><th data-i18n>Horas</th><th data-i18n>Nota</th><th data-i18n>Cargado por</th><th></th></tr></thead>
             <tbody>
               <% f.registros.forEach(r => { %>
               <tr>
                 <td><%= new Date(r.fecha+'T00:00:00').toLocaleDateString('es-AR') %></td>
-                <td style="font-weight:600;"><%= Number(r.horas).toLocaleString('es-AR',{maximumFractionDigits:1}) %>hs</td>
+                <td style="font-weight:600;"><%= Number(r.horas).toLocaleString('es-AR',{maximumFractionDigits:1}) %><span data-i18n>hs</span></td>
                 <td><%= r.nota || '—' %></td>
                 <td style="color:var(--gris-texto);font-size:0.8rem;"><%= r.creado_por_nombre || '—' %></td>
                 <td>
-                  <form method="POST" action="/horas-extra/<%= r.id %>/eliminar" onsubmit="return confirm('¿Eliminar este registro de horas extra?')" style="margin:0;">
+                  <form method="POST" action="/horas-extra/<%= r.id %>/eliminar" onsubmit="return confirm(tHilton('¿Eliminar este registro de horas extra?'))" style="margin:0;">
                     <input type="hidden" name="mes" value="<%= mes %>">
-                    <button type="submit" class="btn-icono" title="Eliminar"><i class="ti ti-trash"></i></button>
+                    <button type="submit" class="btn-icono" title="Eliminar" data-i18n-title="Eliminar"><i class="ti ti-trash"></i></button>
                   </form>
                 </td>
               </tr>
@@ -264,7 +264,7 @@
     </div>
     <p id="sinResultadosFichas" style="display:none;text-align:center;padding:40px 20px;color:var(--gris-texto);">
       <i class="ti ti-search-off" style="font-size:28px;display:block;margin-bottom:8px;"></i>
-      No encontré ningún empleado con ese nombre o puesto.
+      <span data-i18n>No encontré ningún empleado con ese nombre o puesto.</span>
     </p>
 
     <% } %>
@@ -276,16 +276,16 @@
 <div id="modal-agregar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:var(--blanco);border-radius:16px;padding:32px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2 id="modal-agregar-titulo" style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;">Cargar horas extra</h2>
+      <h2 id="modal-agregar-titulo" style="font-family:var(--font-serif);font-size:1.4rem;font-weight:400;" data-i18n>Cargar horas extra</h2>
       <button onclick="hideModal('modal-agregar')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gris-texto);"><i class="ti ti-x"></i></button>
     </div>
     <form method="POST" action="/horas-extra/agregar">
       <input type="hidden" name="mes" value="<%= mes %>">
       <div style="display:flex;flex-direction:column;gap:14px;">
         <div class="field">
-          <label>Empleado</label>
+          <label data-i18n>Empleado</label>
           <select name="usuario_id" id="select-empleado" required style="width:100%;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:10px 12px;font-size:0.85rem;outline:none;">
-            <option value="">Elegí un empleado…</option>
+            <option value="" data-i18n>Elegí un empleado…</option>
             <% empleadosActivos.forEach(e => { %>
             <option value="<%= e.id %>"><%= e.nombre %><%= e.puesto ? ' — ' + e.puesto : '' %></option>
             <% }) %>
@@ -293,22 +293,22 @@
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
           <div class="field">
-            <label>Fecha</label>
+            <label data-i18n>Fecha</label>
             <input type="date" name="fecha" required>
           </div>
           <div class="field">
-            <label>Horas extra</label>
-            <input type="number" name="horas" placeholder="Ej: 2.5" step="0.5" min="0.5" max="24" required>
+            <label data-i18n>Horas extra</label>
+            <input type="number" name="horas" placeholder="Ej: 2.5" data-i18n-ph="Ej: 2.5" step="0.5" min="0.5" max="24" required>
           </div>
         </div>
         <div class="field">
-          <label>Nota (opcional)</label>
-          <input type="text" name="nota" placeholder="Ej: se quedó cubriendo un evento">
+          <label data-i18n>Nota (opcional)</label>
+          <input type="text" name="nota" placeholder="Ej: se quedó cubriendo un evento" data-i18n-ph="Ej: se quedó cubriendo un evento">
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gris-borde);">
-        <button type="button" onclick="hideModal('modal-agregar')" class="btn-secondary">Cancelar</button>
-        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> Cargar</button>
+        <button type="button" onclick="hideModal('modal-agregar')" class="btn-secondary" data-i18n>Cancelar</button>
+        <button type="submit" class="btn-primary"><i class="ti ti-plus"></i> <span data-i18n>Cargar</span></button>
       </div>
     </form>
   </div>
@@ -339,7 +339,7 @@ function enviarExcelPorWhatsapp() {
 // nuevo en el desplegable. Sigue siendo editable por si tocaste la ficha
 // equivocada.
 function abrirCargaParaEmpleado(usuarioId, nombre) {
-  document.getElementById('modal-agregar-titulo').textContent = 'Cargar horas extra — ' + nombre;
+  document.getElementById('modal-agregar-titulo').textContent = tHilton('Cargar horas extra') + ' — ' + nombre;
   showModal('modal-agregar', 'input:not([type=hidden]), select');
   document.getElementById('select-empleado').value = usuarioId;
 }

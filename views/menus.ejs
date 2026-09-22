@@ -24,16 +24,14 @@
   <main class="main-content">
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label">Portal interno</p>
-        <h1 class="seccion-titulo">Menús</h1>
+        <p class="seccion-label" data-i18n>Portal interno</p>
+        <h1 class="seccion-titulo" data-i18n>Menús</h1>
         <%- include('partials/eventos_subnav', { seccionEventos: 'menus' }) %>
       </div>
-      <a href="/eventos/menus/nuevo" class="btn-primary"><i class="ti ti-plus"></i> Nuevo menú</a>
+      <a href="/eventos/menus/nuevo" class="btn-primary"><i class="ti ti-plus"></i> <span data-i18n>Nuevo menú</span></a>
     </div>
 
-    <p style="font-size:0.82rem;color:var(--gris-texto);margin-bottom:20px;">
-      Un menú agrupa varios bocaditos ya cargados en el catálogo de Eventos, para armar combos reutilizables.
-    </p>
+    <p style="font-size:0.82rem;color:var(--gris-texto);margin-bottom:20px;" data-i18n>Un menú agrupa varios bocaditos ya cargados en el catálogo de Eventos, para armar combos reutilizables.</p>
 
     <% if (menus.length > 0) { %>
     <div class="menus-grid">
@@ -44,7 +42,7 @@
         <p class="menu-card-nombre"><%= m.nombre %></p>
         <% if (m.descripcion) { %><p class="menu-card-desc"><%= m.descripcion %></p><% } %>
         <div class="menu-card-footer">
-          <span><%= m.platos.length %> plato<%= m.platos.length !== 1 ? 's' : '' %></span>
+          <span><%= m.platos.length %> <span data-i18n><%= m.platos.length !== 1 ? 'platos' : 'plato' %></span></span>
           <span style="color:var(--azul);font-weight:600;">$<%= costoTotal.toFixed(2) %></span>
         </div>
       </a>
@@ -53,8 +51,8 @@
     <% } else { %>
     <div class="empty-state">
       <i class="ti ti-list-details" style="font-size:2.5rem;color:var(--gris-borde);margin-bottom:16px;display:block;"></i>
-      <p>No hay menús creados todavía.</p>
-      <a href="/eventos/menus/nuevo" class="btn-primary" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> Crear el primero</a>
+      <p data-i18n>No hay menús creados todavía.</p>
+      <a href="/eventos/menus/nuevo" class="btn-primary" style="margin-top:20px;display:inline-flex;"><i class="ti ti-plus"></i> <span data-i18n>Crear el primero</span></a>
     </div>
     <% } %>
   </main>

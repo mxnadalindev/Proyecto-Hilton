@@ -17,23 +17,19 @@
   <main class="main-content">
     <div class="seccion-header">
       <div class="seccion-header-left">
-        <p class="seccion-label">Miembro de equipo</p>
-        <h1 class="seccion-titulo">Revisar mozos detectados</h1>
+        <p class="seccion-label" data-i18n>Miembro de equipo</p>
+        <h1 class="seccion-titulo" data-i18n>Revisar mozos detectados</h1>
       </div>
-      <a href="/miembros-de-equipo" class="btn-secondary"><i class="ti ti-arrow-left"></i> Cancelar y volver</a>
+      <a href="/miembros-de-equipo" class="btn-secondary"><i class="ti ti-arrow-left"></i> <span data-i18n>Cancelar y volver</span></a>
     </div>
 
     <% if (items.length === 0) { %>
       <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;color:#dc2626;">
-        No hay ninguna foto pendiente de revisión. <a href="/miembros-de-equipo">Volver a Miembro de equipo</a>.
+        <span data-i18n>No hay ninguna foto pendiente de revisión.</span> <a href="/miembros-de-equipo" data-i18n>Volver a Miembro de equipo</a>.
       </div>
     <% } else { %>
 
-      <p style="font-size:0.85rem;color:var(--gris-texto);margin-bottom:16px;">
-        Se detectaron <%= items.length %> persona(s) en la imagen. Revisá y corregí nombre, CUIL y
-        modalidad si hace falta, y tildá los que querés cargar. Contraseña inicial para todos:
-        <strong>Hilton2026!</strong> Los que ya estén cargados (mismo CUIL) se saltean solos.
-      </p>
+      <p style="font-size:0.85rem;color:var(--gris-texto);margin-bottom:16px;"><span data-i18n>Se detectaron</span> <%= items.length %> <span data-i18n>persona(s) en la imagen. Revisá y corregí nombre, CUIL y modalidad si hace falta, y tildá los que querés cargar. Contraseña inicial para todos:</span> <strong>Hilton2026!</strong> <span data-i18n>Los que ya estén cargados (mismo CUIL) se saltean solos.</span></p>
 
       <form method="POST" action="/personal/importar-mozos-foto/aplicar">
         <div class="tabla-wrap">
@@ -41,9 +37,9 @@
             <thead>
               <tr>
                 <th></th>
-                <th>Nombre</th>
-                <th>CUIL</th>
-                <th>Modalidad</th>
+                <th data-i18n>Nombre</th>
+                <th data-i18n>CUIL</th>
+                <th data-i18n>Modalidad</th>
               </tr>
             </thead>
             <tbody>
@@ -58,7 +54,7 @@
                          style="width:100%;min-width:180px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:7px 9px;font-size:0.82rem;">
                 </td>
                 <td>
-                  <input type="text" name="cuil[<%= i %>]" value="<%= item.cuil || '' %>" placeholder="Sin dato"
+                  <input type="text" name="cuil[<%= i %>]" value="<%= item.cuil || '' %>" placeholder="Sin dato" data-i18n-ph="Sin dato"
                          style="width:100%;min-width:130px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:6px;padding:7px 9px;font-size:0.82rem;">
                 </td>
                 <td>
@@ -75,8 +71,8 @@
         </div>
 
         <div style="margin-top:20px;display:flex;gap:12px;">
-          <button type="submit" class="btn-primary"><i class="ti ti-check"></i> Cargar mozos tildados</button>
-          <a href="/miembros-de-equipo" class="btn-secondary">Descartar todo</a>
+          <button type="submit" class="btn-primary"><i class="ti ti-check"></i> <span data-i18n>Cargar mozos tildados</span></button>
+          <a href="/miembros-de-equipo" class="btn-secondary" data-i18n>Descartar todo</a>
         </div>
       </form>
     <% } %>
