@@ -18,6 +18,24 @@
 .info-label { font-size: 0.75rem; color: var(--gris-texto); }
 .info-val { font-size: 0.85rem; color: var(--negro); font-weight: 500; }
 .list-empty { font-size: 0.78rem; color: var(--gris-texto); font-style: italic; padding: 8px 0; }
+/* Modal de confirmación propio (reemplaza el confirm() nativo del
+   navegador al eliminar la receta) — mismo patrón ya usado en
+   Configuración/Costos/Desayuno. */
+.modal-confirmar{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.2s ease, background 0.2s ease;}
+.modal-confirmar.mostrar{opacity:1;pointer-events:auto;background:rgba(0,0,0,0.45);}
+.modal-confirmar-caja{background:var(--blanco);border-radius:16px;width:100%;max-width:380px;padding:26px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;transform:scale(0.9);transition:transform 0.2s cubic-bezier(.22,1,.36,1);}
+.modal-confirmar.mostrar .modal-confirmar-caja{transform:scale(1);}
+.modal-confirmar-icono{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.4rem;background:var(--azul-claro);color:var(--azul);}
+.modal-confirmar-caja.peligro .modal-confirmar-icono{background:#fef2f2;color:#dc2626;}
+.modal-confirmar-msg{font-size:0.88rem;color:var(--negro);font-weight:500;margin:0 0 22px;line-height:1.5;}
+.modal-confirmar-botones{display:flex;gap:10px;justify-content:center;}
+.modal-confirmar-botones button{font-size:0.78rem;font-weight:600;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:var(--font-sans);}
+.modal-confirmar-cancelar{background:none;border:1px solid var(--gris-borde);color:var(--gris-texto);}
+.modal-confirmar-cancelar:hover{background:var(--gris-fondo);}
+.modal-confirmar-aceptar{background:var(--azul);border:1px solid var(--azul);color:#fff;}
+.modal-confirmar-aceptar:hover{background:var(--azul-hover);}
+.modal-confirmar-caja.peligro .modal-confirmar-aceptar{background:#dc2626;border-color:#dc2626;}
+.modal-confirmar-caja.peligro .modal-confirmar-aceptar:hover{background:#b91c1c;}
 /* Recetas (volver) / Compartir / Editar / Eliminar: los 4 botones de
    acción de esta pantalla, todos del mismo tamaño (cuadrados, solo ícono,
    sin texto) y con el mismo "molde" que .btn-icono-casa en style.css —
@@ -97,17 +115,6 @@
       });
     %>
 
-    <% if (typeof msg !== 'undefined' && msg) {
-      const mensajesReceta = { creada: 'Receta guardada correctamente.', actualizada: 'Receta actualizada correctamente.' };
-      const textoMsg = mensajesReceta[msg] || null;
-    %>
-    <% if (textoMsg) { %>
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:#16a34a;display:flex;align-items:center;gap:10px;">
-      <i class="ti ti-check" style="font-size:18px;"></i> <span data-i18n><%= textoMsg %></span>
-    </div>
-    <% } %>
-    <% } %>
-
     <div class="seccion-header">
       <div class="seccion-header-left">
         <h1 class="seccion-titulo"><%= receta.nombre %></h1>
@@ -122,8 +129,8 @@
             <i class="ti ti-pencil"></i>
           </a>
           <form method="POST" action="/recetas/<%= receta.id %>/eliminar"
-                onsubmit="return confirm(tHilton('¿Eliminar esta receta?'))">
-            <button type="submit" class="btn-icono-accion btn-icono-rojo" title="Eliminar" data-i18n-title="Eliminar">
+                onsubmit="return confirmarAccion(event, this)">
+            <button type="submit" class="btn-icono-accion btn-icono-rojo" title="Eliminar" data-i18n-title="Eliminar" data-confirm-msg="¿Eliminar esta receta?" data-confirm-tipo="peligro">
               <i class="ti ti-trash"></i>
             </button>
           </form>
@@ -260,6 +267,41 @@
   <%- include('partials/mobile-nav', { path: 'recetas' }) %>
 </div>
 
+<!-- Modal de confirmación (reemplaza confirm() nativo) — se usa al eliminar la receta. -->
+<div id="modal-confirmar" class="modal-confirmar" onclick="if(event.target===this) cerrarConfirmar()">
+  <div class="modal-confirmar-caja">
+    <div class="modal-confirmar-icono"><i class="ti ti-alert-triangle"></i></div>
+    <p class="modal-confirmar-msg" id="modalConfirmarMsg"></p>
+    <div class="modal-confirmar-botones">
+      <button type="button" class="modal-confirmar-cancelar" onclick="cerrarConfirmar()">Cancelar</button>
+      <button type="button" class="modal-confirmar-aceptar" onclick="aceptarConfirmar()">Confirmar</button>
+    </div>
+  </div>
+</div>
 
+<script>
+// Modal de confirmación propio (Eliminar receta) en vez del confirm()
+// nativo del navegador — mismo patrón que Configuración/Costos/Desayuno.
+let _formPendienteConfirmar = null;
+function confirmarAccion(event, form) {
+  event.preventDefault();
+  const boton = form.querySelector('[data-confirm-msg]');
+  _formPendienteConfirmar = form;
+  document.getElementById('modalConfirmarMsg').textContent = boton ? tHilton(boton.dataset.confirmMsg) : tHilton('¿Confirmás esta acción?');
+  const caja = document.querySelector('#modal-confirmar .modal-confirmar-caja');
+  caja.classList.toggle('peligro', !!(boton && boton.dataset.confirmTipo === 'peligro'));
+  document.getElementById('modal-confirmar').classList.add('mostrar');
+  return false;
+}
+function cerrarConfirmar() {
+  document.getElementById('modal-confirmar').classList.remove('mostrar');
+  _formPendienteConfirmar = null;
+}
+function aceptarConfirmar() {
+  const form = _formPendienteConfirmar;
+  document.getElementById('modal-confirmar').classList.remove('mostrar');
+  if (form) form.submit();
+}
+</script>
 </body>
 </html>

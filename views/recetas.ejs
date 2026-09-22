@@ -77,6 +77,17 @@
 <div class="app-layout">
   <%- include('partials/nav', { path: 'recetas' }) %>
   <main class="main-content">
+    <% if (typeof msg !== 'undefined' && msg) {
+      const mensajesReceta = { creada: 'Receta guardada correctamente.', actualizada: 'Receta actualizada correctamente.' };
+      const textoMsg = mensajesReceta[msg] || null;
+    %>
+    <% if (textoMsg) { %>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:#16a34a;display:flex;align-items:center;gap:10px;">
+      <i class="ti ti-check" style="font-size:18px;"></i> <span data-i18n><%= textoMsg %></span>
+    </div>
+    <% } %>
+    <% } %>
+
     <div class="seccion-header">
       <div class="seccion-header-left">
         <p class="seccion-label" data-i18n>Portal interno</p>
