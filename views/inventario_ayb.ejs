@@ -166,6 +166,7 @@
           <div class="dropdown-otras-opciones" id="dropdown-otras-opciones">
             <a href="#" onclick="hideOtrasOpciones();showModal('modal-producto');return false;" class="dropdown-otras-item dropdown-otras-item-crear"><i class="ti ti-plus"></i> Nuevo producto</a>
             <a href="#" onclick="hideOtrasOpciones();showModal('modal-importar');return false;" class="dropdown-otras-item dropdown-otras-item-excel"><i class="ti ti-file-spreadsheet"></i> Importar productos (Excel)</a>
+            <a href="/inventario-ayb/precios/importar" class="dropdown-otras-item dropdown-otras-item-excel"><i class="ti ti-currency-dollar"></i> Actualizar precios (Excel)</a>
             <a href="/inventario-ayb/necesidad-semanal" class="dropdown-otras-item dropdown-otras-item-nav"><i class="ti ti-clipboard-list"></i> Necesidad semanal</a>
             <a href="/inventario-ayb/reportes" class="dropdown-otras-item dropdown-otras-item-nav"><i class="ti ti-chart-bar"></i> Reportes de consumo</a>
             <a href="/inventario-ayb/etiquetas" class="dropdown-otras-item dropdown-otras-item-nav"><i class="ti ti-qrcode"></i> Imprimir etiquetas QR</a>
@@ -316,7 +317,7 @@
                 <a href="/inventario-ayb/producto/<%= p.id %>/ajustar" class="btn-icono-glass-navy" title="Ver QR / ajuste rápido"><i class="ti ti-qrcode"></i></a>
               </td>
               <td class="td-acciones" style="white-space:nowrap;">
-                <button type="button" class="btn-icono-glass-navy" title="Editar" onclick='abrirModalEditar(<%- JSON.stringify({id:p.id,nombre:p.nombre,categoria:p.categoria||"",unidad_default:p.unidad_default||"",stock_minimo:p.stock_minimo,codigo_barras:p.codigo_barras||""}).replace(/'/g, "&#39;") %>)'><i class="ti ti-pencil"></i></button>
+                <button type="button" class="btn-icono-glass-navy" title="Editar" onclick='abrirModalEditar(<%- JSON.stringify({id:p.id,nombre:p.nombre,categoria:p.categoria||"",unidad_default:p.unidad_default||"",stock_minimo:p.stock_minimo,precio_unitario:p.precio_unitario,codigo_barras:p.codigo_barras||""}).replace(/'/g, "&#39;") %>)'><i class="ti ti-pencil"></i></button>
                 <form method="POST" action="/inventario-ayb/producto/<%= p.id %>/eliminar" class="form-eliminar-producto" style="display:inline;">
                   <input type="hidden" name="volver_lista" value="1">
                   <input type="hidden" name="buscar_actual" value="<%= buscar %>">
@@ -489,6 +490,11 @@
           <label>Stock mínimo (opcional)</label>
           <input type="number" name="stock_minimo" id="edit-stock-minimo" step="0.01" min="0">
         </div>
+        <div class="field">
+          <label>Precio por ml/unidad (opcional)</label>
+          <input type="number" name="precio_unitario" id="edit-precio-unitario" step="0.001" min="0" placeholder="Ej: 9.18">
+          <small style="color:var(--gris-texto);font-size:0.75rem;">Así lo usa Costos para calcular el costo de cada trago: cantidad × este precio.</small>
+        </div>
         <div class="field" style="grid-column:1/-1;">
           <label>Código de barras (opcional)</label>
           <input type="text" name="codigo_barras" id="edit-codigo-barras">
@@ -534,6 +540,7 @@ function abrirModalEditar(p) {
   document.getElementById('edit-categoria').value = p.categoria || '';
   document.getElementById('edit-unidad').value = p.unidad_default || 'unidad';
   document.getElementById('edit-stock-minimo').value = p.stock_minimo != null ? p.stock_minimo : '';
+  document.getElementById('edit-precio-unitario').value = p.precio_unitario != null ? p.precio_unitario : '';
   document.getElementById('edit-codigo-barras').value = p.codigo_barras || '';
   // Recién acá, no al cargar la página: si mientras tanto se cambió de
   // rubro o se buscó algo (todo por JS, sin recargar), que "Guardar" en
@@ -575,7 +582,7 @@ function filaProductoHtml(p) {
   // en el HTML, además de escapar el resto con escaparHtmlProductos.
   const pJson = escaparHtmlProductos(JSON.stringify({
     id: p.id, nombre: p.nombre, categoria: p.categoria || '', unidad_default: p.unidad_default || '',
-    stock_minimo: p.stock_minimo, codigo_barras: p.codigo_barras || ''
+    stock_minimo: p.stock_minimo, precio_unitario: p.precio_unitario, codigo_barras: p.codigo_barras || ''
   })).replace(/&quot;/g, '&#34;').replace(/'/g, '&#39;');
   const buscarVal = escaparHtmlProductos(document.getElementById('buscar-productos-input').value);
   const rubroVal = escaparHtmlProductos(RUBRO_ACTUAL || '');

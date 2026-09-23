@@ -1,0 +1,5817 @@
+{
+  "quedanActivos": [
+    {
+      "id": 234,
+      "nombre": "ABSENTA",
+      "codigo_barras": "215014",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 252,
+      "nombre": "AGUA AQUARIUS  POMELO 500cc.",
+      "codigo_barras": "240091",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 253,
+      "nombre": "AGUA AQUARIUS MANZANA 500cc.",
+      "codigo_barras": "240092",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 257,
+      "nombre": "AGUA SMARTWATER 591CC C/GAS",
+      "codigo_barras": "240184",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 256,
+      "nombre": "AGUA SMARTWATER 591CC S/GAS",
+      "codigo_barras": "240183",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 375,
+      "nombre": "AMARGO OBRERO X 950 CC",
+      "codigo_barras": "214067",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 380,
+      "nombre": "ANTICA FORMULA",
+      "codigo_barras": "216017",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 228,
+      "nombre": "APEROL",
+      "codigo_barras": "214065",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 374,
+      "nombre": "BITTER ANGOSTURA x 500ML",
+      "codigo_barras": "214063",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 201,
+      "nombre": "CACHACA VELHO BARREIRO x1000cc",
+      "codigo_barras": "214005",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 202,
+      "nombre": "CAMPARI x750cc",
+      "codigo_barras": "214007",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 384,
+      "nombre": "CERVEZA ANDES ORIGEN IPA LATA 437 ML",
+      "codigo_barras": "220042",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 385,
+      "nombre": "CERVEZA ANDES ORIGEN NEGRA LATA 437 ML",
+      "codigo_barras": "220043",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 386,
+      "nombre": "CERVEZA ANDES ORIGEN ROJA LATA 437 ML",
+      "codigo_barras": "220044",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 243,
+      "nombre": "CERVEZA CORONA 330 PORRON",
+      "codigo_barras": "220003",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 244,
+      "nombre": "CERVEZA HEINEKEN LATA X 24UN",
+      "codigo_barras": "220006",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 382,
+      "nombre": "CERVEZA MICHELOB LATA 473 CC",
+      "codigo_barras": "220014",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 381,
+      "nombre": "CERVEZA QUILMES BARRIL 50LT",
+      "codigo_barras": "220011",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 245,
+      "nombre": "CERVEZA QUILMES LATA X 24UN.",
+      "codigo_barras": "220013",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 246,
+      "nombre": "CERVEZA STELLA ART. BARR X 20L",
+      "codigo_barras": "220019",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 247,
+      "nombre": "CERVEZA STELLA ARTOIS LATA 473CC",
+      "codigo_barras": "220039",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 248,
+      "nombre": "CERVEZA STELLA LATA SIN ALCOHOL 473 CC",
+      "codigo_barras": "220041",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 365,
+      "nombre": "CHAMP CALLIA EXTRA BRUT",
+      "codigo_barras": "200089",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 305,
+      "nombre": "CHAMP SALENTEIN BRUT NATURE",
+      "codigo_barras": "201402",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 142,
+      "nombre": "CHAMP. SALENTEIN EXTRA BRUT",
+      "codigo_barras": "200066",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 276,
+      "nombre": "CHAMP.SALENTEIN BRUT ROSE",
+      "codigo_barras": "200065",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 373,
+      "nombre": "CINZANO ROSSO x 950cc",
+      "codigo_barras": "214009",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 259,
+      "nombre": "COCA COLA (LATA) X 6",
+      "codigo_barras": "270002",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 266,
+      "nombre": "COCA COLA ZERO LATA x 6",
+      "codigo_barras": "270061",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 236,
+      "nombre": "COGNAC HENNESSY VS",
+      "codigo_barras": "215017",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 235,
+      "nombre": "COGNAC HENNESSY VSOP",
+      "codigo_barras": "215016",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 237,
+      "nombre": "COGNAC LEPANTO",
+      "codigo_barras": "215018",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 203,
+      "nombre": "CYNAR",
+      "codigo_barras": "214010",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 260,
+      "nombre": "FANTA NARANJA ZERO LATA X 6",
+      "codigo_barras": "270010",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 204,
+      "nombre": "FERNET BRANCA x1000cc",
+      "codigo_barras": "214013",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 225,
+      "nombre": "FERNET MENTA BRANCA x1000cc",
+      "codigo_barras": "214060",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 205,
+      "nombre": "GANCIA AMERICANO x980cc",
+      "codigo_barras": "214014",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 370,
+      "nombre": "GIN APOSTOLES",
+      "codigo_barras": "212007",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 184,
+      "nombre": "GIN BEEFEATER",
+      "codigo_barras": "212001",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 185,
+      "nombre": "GIN BOMBAY SHAPIRE",
+      "codigo_barras": "212002",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 232,
+      "nombre": "GIN BROKER'S X 750CC",
+      "codigo_barras": "214080",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 193,
+      "nombre": "GIN BULLDOG",
+      "codigo_barras": "212016",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 186,
+      "nombre": "GIN GORDONS",
+      "codigo_barras": "212003",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 190,
+      "nombre": "GIN HENDRICKS",
+      "codigo_barras": "212011",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 194,
+      "nombre": "GIN HEREDERO ORIGINAL",
+      "codigo_barras": "212021",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 192,
+      "nombre": "GIN MARE",
+      "codigo_barras": "212013",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 189,
+      "nombre": "GIN MARTIN MILLER",
+      "codigo_barras": "212010",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 191,
+      "nombre": "GIN MONKEY 47",
+      "codigo_barras": "212012",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 187,
+      "nombre": "GIN TANQUERAY x750cc",
+      "codigo_barras": "212006",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 157,
+      "nombre": "GIN THE BOTANIST",
+      "codigo_barras": "211011",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 188,
+      "nombre": "GRAPA CANDOLI",
+      "codigo_barras": "212009",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 229,
+      "nombre": "HESPERIDINA X 1LT",
+      "codigo_barras": "214066",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 206,
+      "nombre": "JEREZ TIO PEPE x750cc",
+      "codigo_barras": "214017",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 377,
+      "nombre": "LEMONCELLO ILTICO V 9",
+      "codigo_barras": "214088",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 207,
+      "nombre": "LICOR AMARETTO DISARONNO x700c",
+      "codigo_barras": "214019",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 208,
+      "nombre": "LICOR AMARULA x 750cc",
+      "codigo_barras": "214020",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 209,
+      "nombre": "LICOR BAILEYS",
+      "codigo_barras": "214022",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 230,
+      "nombre": "LICOR CHATROUSE",
+      "codigo_barras": "214070",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 210,
+      "nombre": "LICOR COINTREAU x700cc",
+      "codigo_barras": "214026",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 221,
+      "nombre": "LICOR DE CAFÉ BORGUETTI",
+      "codigo_barras": "214051",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 211,
+      "nombre": "LICOR DRAMBUIE x750cc",
+      "codigo_barras": "214033",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 212,
+      "nombre": "LICOR FRANGELICO",
+      "codigo_barras": "214034",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 213,
+      "nombre": "LICOR GRAND MARNIER",
+      "codigo_barras": "214036",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 217,
+      "nombre": "LICOR JAGUERMEISTER",
+      "codigo_barras": "214043",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 215,
+      "nombre": "LICOR LEGUI",
+      "codigo_barras": "214039",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 231,
+      "nombre": "LICOR STREGA",
+      "codigo_barras": "214071",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 155,
+      "nombre": "MALIBU CARIBEANN RUM",
+      "codigo_barras": "210016",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 240,
+      "nombre": "MARTINI BIANCO",
+      "codigo_barras": "216006",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 379,
+      "nombre": "MARTINI DRY",
+      "codigo_barras": "216007",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 219,
+      "nombre": "MEZCAL OAXACA",
+      "codigo_barras": "214046",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 376,
+      "nombre": "PIMM'S APERITIVO",
+      "codigo_barras": "214081",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 220,
+      "nombre": "PISCO",
+      "codigo_barras": "214050",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 367,
+      "nombre": "RON BACARDI AÑEJO",
+      "codigo_barras": "210013",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 149,
+      "nombre": "RON BACARDI CARTA BLANCA x 980",
+      "codigo_barras": "210004",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 150,
+      "nombre": "RON BACARDI CARTA ORO x 980c",
+      "codigo_barras": "210005",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 151,
+      "nombre": "RON HAVANA 7 ANOS 12x750",
+      "codigo_barras": "210007",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 152,
+      "nombre": "RON SANTA TERESA 10 AÑOS",
+      "codigo_barras": "210012",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 154,
+      "nombre": "RON ZACAPA XO",
+      "codigo_barras": "210015",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 222,
+      "nombre": "SAMBUCCA BORGUETTI",
+      "codigo_barras": "214053",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 261,
+      "nombre": "SCHWEPPS TONICA LATA X 24UN",
+      "codigo_barras": "270020",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 254,
+      "nombre": "SPEED LATA 250",
+      "codigo_barras": "240093",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 262,
+      "nombre": "SPRITE (LATA) x 6",
+      "codigo_barras": "270023",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 263,
+      "nombre": "SPRITE ZERO (LATA) x 6",
+      "codigo_barras": "270024",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 223,
+      "nombre": "TEQUILA CUERVO BLANCO x750cc",
+      "codigo_barras": "214057",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 224,
+      "nombre": "TEQUILA CUERVO ESPECIAL GOLD",
+      "codigo_barras": "214058",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 233,
+      "nombre": "TEQUILA DON JULIO SILVER",
+      "codigo_barras": "214087",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 227,
+      "nombre": "TEQUILA PATRON AÑEJO 750",
+      "codigo_barras": "214062",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 226,
+      "nombre": "TEQUILA PATRON SILVER 750",
+      "codigo_barras": "214061",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 383,
+      "nombre": "TUBO DE GAS QUILMES X 10KG",
+      "codigo_barras": "220017",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 307,
+      "nombre": "VINO NUMINA CHARDONNAY 750ML",
+      "codigo_barras": "201422",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 366,
+      "nombre": "VINO NUMINA MALBEC 750ML",
+      "codigo_barras": "201413",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 283,
+      "nombre": "VINO PARAMUN PINOT NOIR",
+      "codigo_barras": "201006",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 330,
+      "nombre": "VINO PYROS SYRAH",
+      "codigo_barras": "201497",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 314,
+      "nombre": "VINO SALENTEIN CABERNET FRANC",
+      "codigo_barras": "201464",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 295,
+      "nombre": "VINO SALENTEIN CABERNET S. RES",
+      "codigo_barras": "201204",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 145,
+      "nombre": "VINO SALENTEIN CHARDONAY ROBLE",
+      "codigo_barras": "202119",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 143,
+      "nombre": "VINO SALENTEIN MALBEC ROBLE",
+      "codigo_barras": "201205",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 355,
+      "nombre": "VINO SALENTEIN RESERVA ROSE",
+      "codigo_barras": "203003",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 306,
+      "nombre": "VINO SALENTEIN RVA SAUV BLANC",
+      "codigo_barras": "201404",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 350,
+      "nombre": "VINO ZUCCARDI SERIE A TORRONTE",
+      "codigo_barras": "202351",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 195,
+      "nombre": "VODKA ABSOLUT 40° AZUL x750cc",
+      "codigo_barras": "213001",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 371,
+      "nombre": "VODKA ABSOLUT VANILLA x750cc",
+      "codigo_barras": "213005",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 196,
+      "nombre": "VODKA BELVEDERE",
+      "codigo_barras": "213006",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 200,
+      "nombre": "VODKA CIROC",
+      "codigo_barras": "213013",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 199,
+      "nombre": "VODKA GREY GOOSE",
+      "codigo_barras": "213012",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 372,
+      "nombre": "VODKA SERNOVA",
+      "codigo_barras": "213015",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 197,
+      "nombre": "VODKA SMIRNOFF x750cc",
+      "codigo_barras": "213008",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 198,
+      "nombre": "VODKA ZUBROWKA",
+      "codigo_barras": "213011",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 378,
+      "nombre": "WHISKY BULLEIT",
+      "codigo_barras": "215025",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 368,
+      "nombre": "WHISKY CANARDIAN CLUB",
+      "codigo_barras": "211006",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 177,
+      "nombre": "WHISKY CARDHU",
+      "codigo_barras": "211042",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 156,
+      "nombre": "WHISKY CHIVAS REGAL X 1L",
+      "codigo_barras": "211007",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 239,
+      "nombre": "WHISKY EVAN W.",
+      "codigo_barras": "215028",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 369,
+      "nombre": "WHISKY FAMOUS GROUSE",
+      "codigo_barras": "211037",
+      "categoria": "220",
+      "activo": true
+    },
+    {
+      "id": 158,
+      "nombre": "WHISKY GLEN LIVET",
+      "codigo_barras": "211013",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 178,
+      "nombre": "WHISKY GLENFIDDICH 10",
+      "codigo_barras": "211045",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 168,
+      "nombre": "WHISKY GLENMORANGIE",
+      "codigo_barras": "211030",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 159,
+      "nombre": "WHISKY J. WALKER BLUE",
+      "codigo_barras": "211018",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 173,
+      "nombre": "WHISKY J. WALKER GREEN LABEL",
+      "codigo_barras": "211036",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 160,
+      "nombre": "WHISKY J.WALKER BLACK x L",
+      "codigo_barras": "211019",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 161,
+      "nombre": "WHISKY J.WALKER RED x 1000cc",
+      "codigo_barras": "211020",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 170,
+      "nombre": "WHISKY JACK DANIELS APPLE X 750CC",
+      "codigo_barras": "211032",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 171,
+      "nombre": "WHISKY JACK DANIELS HONEY X 750CC",
+      "codigo_barras": "211033",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 162,
+      "nombre": "WHISKY JACK DANIELS X L",
+      "codigo_barras": "211021",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 163,
+      "nombre": "WHISKY JAMESON x 750",
+      "codigo_barras": "211022",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 164,
+      "nombre": "WHISKY JIM BEAM WHITE x750cc",
+      "codigo_barras": "211023",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 165,
+      "nombre": "WHISKY JOHNNIE WALKER GOLD",
+      "codigo_barras": "211025",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 176,
+      "nombre": "WHISKY JW 18 PLATINUM",
+      "codigo_barras": "211041",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 175,
+      "nombre": "WHISKY JW DOUBLE BLACK",
+      "codigo_barras": "211040",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 183,
+      "nombre": "WHISKY LA ALAZANA PENDERYN 700 ML",
+      "codigo_barras": "211051",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 182,
+      "nombre": "WHISKY LA ORDEN DEL LIBERTADOR 750 ML",
+      "codigo_barras": "211050",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 166,
+      "nombre": "WHISKY MACALLAN 12 AÑOS x750cc",
+      "codigo_barras": "211027",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 181,
+      "nombre": "WHISKY MACALLAN 18 AÑOS",
+      "codigo_barras": "211049",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 174,
+      "nombre": "WHISKY MAKERS MARK",
+      "codigo_barras": "211038",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 180,
+      "nombre": "WHISKY MONKEY SHOULDER",
+      "codigo_barras": "211047",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 167,
+      "nombre": "WHISKY OLD PARR DE LUXE x750cc",
+      "codigo_barras": "211028",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 169,
+      "nombre": "WHISKY ROYAL SALUTE",
+      "codigo_barras": "211031",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 179,
+      "nombre": "WHISKY TALISKER",
+      "codigo_barras": "211046",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 172,
+      "nombre": "WHISKY WILD TURKEY",
+      "codigo_barras": "211034",
+      "categoria": "200",
+      "activo": true
+    }
+  ],
+  "candidatosDesactivar": [
+    {
+      "id": 422,
+      "nombre": "ABROCHADORA GRAP 21/6",
+      "codigo_barras": "300001",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 781,
+      "nombre": "Absenta La Tour Tourne",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 732,
+      "nombre": "Absolut 40% - Suecia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 733,
+      "nombre": "Absolut Saborizados - Suecia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 4,
+      "nombre": "ACEITE DE GIRASOL (5 LT)",
+      "codigo_barras": "139003",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 133,
+      "nombre": "ACEITE GIRASOL SEDA X 10 LT",
+      "codigo_barras": "139792",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 129,
+      "nombre": "ACEITE LAUR EN LATA X 500 CC",
+      "codigo_barras": "139776",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 5,
+      "nombre": "ACEITE OLIVA NOGADA X 5 LTS",
+      "codigo_barras": "139010",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 130,
+      "nombre": "ACEITE OLIVA ZUELO ORIGINAL 500CC",
+      "codigo_barras": "139779",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 6,
+      "nombre": "ACEITE SESAMO KADOYA 1.6 LTS.",
+      "codigo_barras": "139015",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 7,
+      "nombre": "ACEITE SPRAY DE MAIZ 390 CC",
+      "codigo_barras": "139016",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 800,
+      "nombre": "Aceituna",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 8,
+      "nombre": "ACEITUNA NEGRA DESCAR. MARFELLI",
+      "codigo_barras": "139022",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 9,
+      "nombre": "ACEITUNA VERDE DESCAR. MARFELLI",
+      "codigo_barras": "139025",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 23,
+      "nombre": "ACETO BALSAMICO MILLAN 250 CC",
+      "codigo_barras": "139082",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 10,
+      "nombre": "ACETO BALSAMICO MINI 30 ML",
+      "codigo_barras": "139028",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 22,
+      "nombre": "ACETO BALSAMICO VIDRIO 400cc",
+      "codigo_barras": "139080",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 28,
+      "nombre": "ACETO INDIV BALSAM 10CC ABEDUL",
+      "codigo_barras": "139097",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 549,
+      "nombre": "ACIDO OXALICO",
+      "codigo_barras": "320047",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 645,
+      "nombre": "ACONDICIONADOR KIDS",
+      "codigo_barras": "333267",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 636,
+      "nombre": "ACONDICIONADOR PERSEA 350ML",
+      "codigo_barras": "333258",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 678,
+      "nombre": "ACONDICIONADOR SPA X 3.75 LT",
+      "codigo_barras": "371001",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 423,
+      "nombre": "ADHESIVO UHU BARRA X 21GR",
+      "codigo_barras": "300004",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 809,
+      "nombre": "Agua con gas",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 396,
+      "nombre": "AGUA PERRIER 330 CC",
+      "codigo_barras": "240004",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 397,
+      "nombre": "AGUA PERRIER SABORIZADA 330 CC",
+      "codigo_barras": "240081",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 250,
+      "nombre": "AGUA S/GAS X 500 BENEDICTINO",
+      "codigo_barras": "240011",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 258,
+      "nombre": "AGUA VILLAMANAOS X 2LT",
+      "codigo_barras": "240187",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 11,
+      "nombre": "ALCAPARRAS EN VINAGRE FC X 1KG",
+      "codigo_barras": "139034",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 12,
+      "nombre": "ALCAUCIL EN FRASCO  x 3 KG",
+      "codigo_barras": "139036",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 596,
+      "nombre": "ALCOHOL EN GEL X 5 LTS",
+      "codigo_barras": "321074",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 574,
+      "nombre": "ALCOHOL FX500 SANICOL CJCARTON",
+      "codigo_barras": "321003",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 402,
+      "nombre": "ALFAJOR DUBAI PASTICCINO X 12 UN",
+      "codigo_barras": "270323",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 13,
+      "nombre": "ALMENDRAS EN POLVO X 10kg",
+      "codigo_barras": "139039",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 14,
+      "nombre": "ALMENDRAS PARTIDAS X KG",
+      "codigo_barras": "139042",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 831,
+      "nombre": "Almíbar de membrillo",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 828,
+      "nombre": "Almíbar de pepino",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 38,
+      "nombre": "AMARETTI CAJA X 3KG",
+      "codigo_barras": "139124",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 783,
+      "nombre": "Amaretto Disaronno - Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 703,
+      "nombre": "Amargo Obrero - Argentina",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 786,
+      "nombre": "Amarula - Sudáfrica",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 15,
+      "nombre": "ANANA EN LATA X 3KG RODAJAS",
+      "codigo_barras": "139043",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 693,
+      "nombre": "Antica Formula – Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 694,
+      "nombre": "Aperol - Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 711,
+      "nombre": "Apóstoles - Argentina",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 37,
+      "nombre": "ARROZ AMARILLO X 5KG",
+      "codigo_barras": "139121",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 16,
+      "nombre": "ARROZ CARNAROLLI BOLSA X 5 KG",
+      "codigo_barras": "139051",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 17,
+      "nombre": "ATUN EN ACEITE CARACAS 1.8 KG",
+      "codigo_barras": "139060",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 18,
+      "nombre": "AZUCAR BLANCA LEDESMA X 1KG",
+      "codigo_barras": "139067",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 19,
+      "nombre": "AZUCAR HILTON X 800 SOBRES",
+      "codigo_barras": "139069",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 20,
+      "nombre": "AZUCAR IMPALPABLE TALCO LESANSI 10 KG",
+      "codigo_barras": "139070",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 25,
+      "nombre": "AZUCAR LEDESMA BOLSA X 25 KG",
+      "codigo_barras": "139088",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 724,
+      "nombre": "Bacardi blanco",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 725,
+      "nombre": "Bacardi Dorado",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 784,
+      "nombre": "Baileys - Irlanda",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 424,
+      "nombre": "BANDAS ELASTICAS (BOLSA x 1000",
+      "codigo_barras": "300012",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 525,
+      "nombre": "BANDEJA C/TAPA EPP R1",
+      "codigo_barras": "312168",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 575,
+      "nombre": "BARBIJO DESCARTABLE",
+      "codigo_barras": "321008",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 264,
+      "nombre": "BARRA DE CEREAL",
+      "codigo_barras": "270037",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 21,
+      "nombre": "BATATA EN ALMIBAR X 3.8KG",
+      "codigo_barras": "139077",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 425,
+      "nombre": "BATIDOR EMPLEADO CA 1000",
+      "codigo_barras": "300018",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 714,
+      "nombre": "Beefeater - Inglaterra",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 729,
+      "nombre": "Belvedere – Polonia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 762,
+      "nombre": "Benchmark",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 506,
+      "nombre": "BENGALAS",
+      "codigo_barras": "312003",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 426,
+      "nombre": "BIBLIORATO A4 REFORZADO",
+      "codigo_barras": "300019",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 427,
+      "nombre": "BIROME AZUL",
+      "codigo_barras": "300021",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 599,
+      "nombre": "BIROME C/LOGO HILTON ART NEGRA",
+      "codigo_barras": "333014",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 428,
+      "nombre": "BIROME NEGRO",
+      "codigo_barras": "300022",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 429,
+      "nombre": "BIROME VERDE",
+      "codigo_barras": "300024",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 806,
+      "nombre": "Bitter Angostura",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 821,
+      "nombre": "Bitter de cacao",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 820,
+      "nombre": "Bitter de tabaco y vainilla",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 495,
+      "nombre": "BLOCK CONFERENCIA HILTON ART",
+      "codigo_barras": "301303",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 627,
+      "nombre": "BLOCK DE NOTAS HILTON ART",
+      "codigo_barras": "333211",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 474,
+      "nombre": "BLOCK REPORTE SALIDA TRIPLICAD",
+      "codigo_barras": "301008",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 475,
+      "nombre": "BLOCKS DE MOVIM.INVENT. X TRIP",
+      "codigo_barras": "301009",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 600,
+      "nombre": "BOLSA (HILTON)",
+      "codigo_barras": "333015",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 562,
+      "nombre": "BOLSA ASPIRADORA VENTO 15",
+      "codigo_barras": "320129",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 659,
+      "nombre": "BOLSA CON MANIJAS PANADERO",
+      "codigo_barras": "353002",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 544,
+      "nombre": "BOLSA CRISTAL 60X90",
+      "codigo_barras": "320016",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 660,
+      "nombre": "BOLSA ENV.VACIO 25x20 75Mx2500",
+      "codigo_barras": "353004",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 661,
+      "nombre": "BOLSA ENV.VACIO 30X40 75Mx1000",
+      "codigo_barras": "353005",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 647,
+      "nombre": "BOLSA LAVANDERIA COMPOSTABLE",
+      "codigo_barras": "333269",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 628,
+      "nombre": "BOLSA LAVANDERIA HILTON ART",
+      "codigo_barras": "333212",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 680,
+      "nombre": "BOLSA P/ CAJONES COLOR BLANCO",
+      "codigo_barras": "372011",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 672,
+      "nombre": "BOLSA PAPEL KRAFT 15 x 29cm",
+      "codigo_barras": "353053",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 662,
+      "nombre": "BOLSA PAPEL KRAFT 19x34",
+      "codigo_barras": "353012",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 434,
+      "nombre": "BOLSA PAPEL LBOX(12X26CX37CM)KRAFT",
+      "codigo_barras": "300035",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 538,
+      "nombre": "Bolsa papel parafinado bco Past. 13x10x5",
+      "codigo_barras": "312195",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 539,
+      "nombre": "Bolsa papel parafinado bco. Pletz. 24x16x5:",
+      "codigo_barras": "312197",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 598,
+      "nombre": "BOLSA PARA HIELERA 30x40 ROLLO",
+      "codigo_barras": "333009",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 624,
+      "nombre": "BOLSA PARA SECADOR DE PELO",
+      "codigo_barras": "333205",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 630,
+      "nombre": "BOLSA POLIPROPILENO 30x20",
+      "codigo_barras": "333216",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 541,
+      "nombre": "BOLSA RES.80X100/50MBOVINAX250",
+      "codigo_barras": "320013",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 543,
+      "nombre": "BOLSA VERDE 80X100",
+      "codigo_barras": "320015",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 542,
+      "nombre": "BOLSA VERDE RES. 103X150/50M",
+      "codigo_barras": "320014",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 576,
+      "nombre": "BOLSARES.103x150/50MBOVINAX250",
+      "codigo_barras": "321009",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 625,
+      "nombre": "BOMBA SALES CORTESIA NOCHE BOD",
+      "codigo_barras": "333208",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 712,
+      "nombre": "Bombay Sapphire - Inglaterra",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 785,
+      "nombre": "Borguetti - Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 249,
+      "nombre": "BOTELLON DE AGUA 20 LTS",
+      "codigo_barras": "240009",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 699,
+      "nombre": "Brancamenta – Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 420,
+      "nombre": "BRITVIC TONICA LATA",
+      "codigo_barras": "240178",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 430,
+      "nombre": "BROCHE GRAP 10/50",
+      "codigo_barras": "300027",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 431,
+      "nombre": "BROCHE GRAP 21/6",
+      "codigo_barras": "300028",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 713,
+      "nombre": "Brokers - Inglaterra",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 754,
+      "nombre": "Buffalo Trace",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 716,
+      "nombre": "Bulldog - Inglaterra",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 757,
+      "nombre": "Bulleit",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 577,
+      "nombre": "CABO METALICO ROSCADO",
+      "codigo_barras": "321011",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 41,
+      "nombre": "CACAO EN POLVO CALLEBAUT/ R DEL CACAO",
+      "codigo_barras": "139138",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 726,
+      "nombre": "Cachaca",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 395,
+      "nombre": "CAFE CONFIDENTE LATA X 269 ML",
+      "codigo_barras": "212028",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 24,
+      "nombre": "CAFE DESCAFEINADO",
+      "codigo_barras": "139087",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 265,
+      "nombre": "CAFE EN SAQUITOS CABRALES CJ X 20",
+      "codigo_barras": "270042",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 815,
+      "nombre": "Café espresso",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 26,
+      "nombre": "CAFE GRANO (1KG)",
+      "codigo_barras": "139090",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 27,
+      "nombre": "CAFE INSTANTANEO",
+      "codigo_barras": "139091",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 39,
+      "nombre": "CAFE MOLIDO PORCIONADO 200 GRS",
+      "codigo_barras": "139127",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 40,
+      "nombre": "CAFE MOLIDO PORCIONADO 300 GRS",
+      "codigo_barras": "139128",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 481,
+      "nombre": "CAJA 5 BOMBONES C/LOGO 19.1x4.2x3.5",
+      "codigo_barras": "301046",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 432,
+      "nombre": "CAJA ARChP/ARMAR42X32X25 MD406",
+      "codigo_barras": "300030",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 533,
+      "nombre": "CAJA BLANCA 18x9x10cm C/VISOR",
+      "codigo_barras": "312186",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 534,
+      "nombre": "CAJA CHINA ARMADA",
+      "codigo_barras": "312187",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 535,
+      "nombre": "CAJA DOBLE VENTANA 10x10x10",
+      "codigo_barras": "312192",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 527,
+      "nombre": "CAJA EMPANADA BLANCA",
+      "codigo_barras": "312174",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 477,
+      "nombre": "CAJA MDF CON LOGO",
+      "codigo_barras": "301014",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 476,
+      "nombre": "CAJA PIZZA 25CM X 25CM",
+      "codigo_barras": "301011",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 479,
+      "nombre": "CAJA RECTANGULAR 38X12X7 4 DIVISIONES BEIGE",
+      "codigo_barras": "301017",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 524,
+      "nombre": "CAJA TORTA EMPLEADOS 30*30*10",
+      "codigo_barras": "312167",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 433,
+      "nombre": "CALCULADORA CIFRA DT-67",
+      "codigo_barras": "300034",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 29,
+      "nombre": "CALDO DE VERDURAS GRANULADO",
+      "codigo_barras": "139098",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 695,
+      "nombre": "Campari – Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 137,
+      "nombre": "CAPSULA DE CAFÉ COLOMBIA EL BOHIO",
+      "codigo_barras": "139892",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 138,
+      "nombre": "CAPSULA DE CAFÉ DESCAFEINADO EL BOHIO",
+      "codigo_barras": "139893",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 136,
+      "nombre": "CAPSULA NESPRESSO CROUTON´S",
+      "codigo_barras": "139886",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 30,
+      "nombre": "CARAMELO LIQ BACIGALUPO 1.25KG",
+      "codigo_barras": "139101",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 31,
+      "nombre": "CARAMELOS MENTA ALKA",
+      "codigo_barras": "139104",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 769,
+      "nombre": "Cardhu 12 años",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 507,
+      "nombre": "CARGA SIFON ISI P/ESPUMA CAX10",
+      "codigo_barras": "312008",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 697,
+      "nombre": "Carpano Dry, Bianco - Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 435,
+      "nombre": "CARPETA INTERIOR COLOR GRIS",
+      "codigo_barras": "300046",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 677,
+      "nombre": "CARPETA VENTAS HILTON ART",
+      "codigo_barras": "370058",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 500,
+      "nombre": "CARTEL COLGANTE BATAS/TOALLAS",
+      "codigo_barras": "301317",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 497,
+      "nombre": "CARTEL COLGANTE SERVICIO HABITACION",
+      "codigo_barras": "301305",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 496,
+      "nombre": "CARTEL NO FUMAR HABITACIONES",
+      "codigo_barras": "301304",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 494,
+      "nombre": "CARTEL NO MOLESTAR HILTON ART",
+      "codigo_barras": "301302",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 601,
+      "nombre": "CARTON DE CAMISA X 300GR",
+      "codigo_barras": "333030",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 517,
+      "nombre": "CAZUELA TRI GRANDE ARMADA X100U",
+      "codigo_barras": "312147",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 32,
+      "nombre": "CEBOLLITA CASTELL X 5 KG",
+      "codigo_barras": "139107",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 545,
+      "nombre": "CEPILLO DE PISO",
+      "codigo_barras": "320022",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 648,
+      "nombre": "CEPILLO DESMANCHE DE CERDA",
+      "codigo_barras": "341008",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 33,
+      "nombre": "CEREAL CHOCO KRISPIS 320 GRS",
+      "codigo_barras": "139110",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 62,
+      "nombre": "CEREAL COPOS MAIZ AZUC TRES 4K",
+      "codigo_barras": "139352",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 60,
+      "nombre": "CEREAL COPOSDE MAIZGRANIX 3.3K",
+      "codigo_barras": "139333",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 63,
+      "nombre": "CEREAL FIBRA TOTAL TRES ARR 3K",
+      "codigo_barras": "139353",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 35,
+      "nombre": "CEREAL FROOT LOOPS 3.5 KG",
+      "codigo_barras": "139114",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 36,
+      "nombre": "CEREAL GRANOLA  C/ PASAS",
+      "codigo_barras": "139116",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 421,
+      "nombre": "CERVEZA STELLA ARTOIS NOIRE LATA 473CC",
+      "codigo_barras": "220040",
+      "categoria": "280",
+      "activo": true
+    },
+    {
+      "id": 813,
+      "nombre": "Cerveza tirada (top)",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 282,
+      "nombre": "CHAMP AETHER EXTRA BRUT",
+      "codigo_barras": "200088",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 404,
+      "nombre": "CHAMP LUIGI BOSCA BRUT NATURE",
+      "codigo_barras": "200068",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 403,
+      "nombre": "CHAMP LUIGI BOSCA EXTRA BRUT",
+      "codigo_barras": "200052",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 281,
+      "nombre": "CHAMP PUTRUELE EXTRA BRUT",
+      "codigo_barras": "200087",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 278,
+      "nombre": "CHAMP. ALYDA BRUT NATURE",
+      "codigo_barras": "200076",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 274,
+      "nombre": "CHAMP. BOHEME BRUT NATURE",
+      "codigo_barras": "200054",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 275,
+      "nombre": "CHAMP. CASA BOHER EXTRA BRUT",
+      "codigo_barras": "200059",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 279,
+      "nombre": "CHAMP. OSTENGO EXTRA BRUT",
+      "codigo_barras": "200078",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 273,
+      "nombre": "CHAMP. ROSELL BOHER BRUT",
+      "codigo_barras": "200050",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 280,
+      "nombre": "CHAMP. TRIVENTO BRUT NATURE",
+      "codigo_barras": "200080",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 267,
+      "nombre": "CHAMP.CHANDON BARON B EXT.BRUT",
+      "codigo_barras": "200003",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 268,
+      "nombre": "CHAMP.CHANDON BRUT NATURE",
+      "codigo_barras": "200005",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 269,
+      "nombre": "CHAMP.CHANDON DEMI SEC",
+      "codigo_barras": "200007",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 270,
+      "nombre": "CHAMP.DOM PERIGNON CUVE E.BRUT",
+      "codigo_barras": "200009",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 271,
+      "nombre": "CHAMP.MOET CHANDON BRUT IMPERI",
+      "codigo_barras": "200017",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 272,
+      "nombre": "CHAMP.VEUVE CLICQUOT YELLOW L",
+      "codigo_barras": "200035",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 387,
+      "nombre": "CHAMPAGNE SALENTEIN BRUT NATURE 375ML",
+      "codigo_barras": "200071",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 778,
+      "nombre": "Chartreuse - Francia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 747,
+      "nombre": "Chivas Regal",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 55,
+      "nombre": "CHOCOLATE COB CALLEBAUT BLANCO X 10 KG",
+      "codigo_barras": "139238",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 54,
+      "nombre": "CHOCOLATE COB CALLEBAUT LECHE  X 10 KG",
+      "codigo_barras": "139237",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 53,
+      "nombre": "CHOCOLATE COB CALLEBAUT S/AMARGA X 10 KG",
+      "codigo_barras": "139236",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 44,
+      "nombre": "CHOCOLATE NESQUIK x 2 KG",
+      "codigo_barras": "139166",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 602,
+      "nombre": "CINTA ADHESIVA TRANSPARENTE",
+      "codigo_barras": "333034",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 436,
+      "nombre": "CINTA EMB.TRANSP.3M310(4.8X50M",
+      "codigo_barras": "300078",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 437,
+      "nombre": "CINTA P/IMP. EPSON (ERC38)",
+      "codigo_barras": "300081",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 649,
+      "nombre": "CINTA P/MARCAR THERMOPATCHx6un",
+      "codigo_barras": "341015",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 704,
+      "nombre": "Cinzano",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 730,
+      "nombre": "Ciroc – Francia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 814,
+      "nombre": "Clara de huevo",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 438,
+      "nombre": "CLIP Nª3",
+      "codigo_barras": "300085",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 361,
+      "nombre": "COCA COLA 2.25 LT PET x 8",
+      "codigo_barras": "240042",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 417,
+      "nombre": "COCA COLA ZERO 2.25 LT PET X 8",
+      "codigo_barras": "240043",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 42,
+      "nombre": "COCO EN ESCAMAS",
+      "codigo_barras": "139152",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 43,
+      "nombre": "COCO RALLADO",
+      "codigo_barras": "139153",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 603,
+      "nombre": "COFIA DE BANO",
+      "codigo_barras": "333037",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 567,
+      "nombre": "COFIA DESCARTABLE LABORATORIO",
+      "codigo_barras": "320155",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 238,
+      "nombre": "COGNAC RESERVA SAN JUAN",
+      "codigo_barras": "215024",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 789,
+      "nombre": "Cointreau - Francia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 478,
+      "nombre": "COLLARIN CON PRECIO",
+      "codigo_barras": "301016",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 401,
+      "nombre": "COLOREADA GINGER ALE HIBISCUS X354CC",
+      "codigo_barras": "270040",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 400,
+      "nombre": "COLOREADA GINGER ALE LIMON X354",
+      "codigo_barras": "270039",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 399,
+      "nombre": "COLOREADA GINGER ALE POMELO ROSADO X 354",
+      "codigo_barras": "270035",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 480,
+      "nombre": "COMANDA X TRIPLICADO",
+      "codigo_barras": "301030",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 579,
+      "nombre": "COMBUSTIBLE SOLIDO GEL/AZUL",
+      "codigo_barras": "321017",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 515,
+      "nombre": "CONO DESCARTABLE NEGRO ARMADO X100U",
+      "codigo_barras": "312134",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 822,
+      "nombre": "Cordial de hongos",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 824,
+      "nombre": "Cordial de mate",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 439,
+      "nombre": "CORRECTOR PEN",
+      "codigo_barras": "300087",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 605,
+      "nombre": "COSTURERO",
+      "codigo_barras": "333041",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 45,
+      "nombre": "COUS COUS x 5 KG",
+      "codigo_barras": "139171",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 638,
+      "nombre": "CREMA CORPORAL PERSEA 350ML",
+      "codigo_barras": "333260",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 440,
+      "nombre": "CUADERNO LEDESMA EXEC.RAY.T.DU",
+      "codigo_barras": "300090",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 681,
+      "nombre": "CUCHARA PLASTICA (ENSOBRADA)",
+      "codigo_barras": "372032",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 508,
+      "nombre": "CUCHILLO PLASTICO (ENSOBRADO)",
+      "codigo_barras": "312031",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 701,
+      "nombre": "Cynar - Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 682,
+      "nombre": "DESCORCHADOR 2 TIEMPOS",
+      "codigo_barras": "372034",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 658,
+      "nombre": "DESMANCHADOR 150 IN X 500CC",
+      "codigo_barras": "341059",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 740,
+      "nombre": "Don Julio",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 777,
+      "nombre": "Drambuie - Escocia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 46,
+      "nombre": "DULCE DE CAYOTE X 3.8KG",
+      "codigo_barras": "139186",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 50,
+      "nombre": "DULCE DE LECHE MUNCH 40GR",
+      "codigo_barras": "139213",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 48,
+      "nombre": "DULCE DE LECHE VACALIN FAM. BDE X 10 KG",
+      "codigo_barras": "139203",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 47,
+      "nombre": "DULCE DE LECHE VACALIN REP. BALDE X 10 KG",
+      "codigo_barras": "139195",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 49,
+      "nombre": "EDULCORANTE X 400 SOBRES",
+      "codigo_barras": "139208",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 573,
+      "nombre": "EMEREL FORTE CAJA 4X5L",
+      "codigo_barras": "320168",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 612,
+      "nombre": "ENJUAGUE BUCAL 70ML",
+      "codigo_barras": "333102",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 532,
+      "nombre": "ENSALADERA 20OZ BLANCA C/TAPA",
+      "codigo_barras": "312180",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 530,
+      "nombre": "ENSALADERA BCA EPP HOT LUNCH",
+      "codigo_barras": "312178",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 586,
+      "nombre": "ESCOBA PLASTICA GP REFORZADA",
+      "codigo_barras": "321041",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 109,
+      "nombre": "ESPECIE CHIMICHURRI  X KG",
+      "codigo_barras": "139654",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 644,
+      "nombre": "ESPONJA DE BAÑO KIDS",
+      "codigo_barras": "333266",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 550,
+      "nombre": "ESPONJA FIBRA DOBLE-AMA/VER 3M",
+      "codigo_barras": "320058",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 587,
+      "nombre": "ESPONJA VERDE SOLO FIBRA 3M",
+      "codigo_barras": "321042",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 819,
+      "nombre": "Espuma de marshmallow",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 825,
+      "nombre": "Espuma de naranja y fernet menta",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 811,
+      "nombre": "Espumante",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 501,
+      "nombre": "ETIQUETA EQUIP. DEP FONDO AZUL",
+      "codigo_barras": "302002",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 502,
+      "nombre": "ETIQUETA EQUIPAJE IN FONDO BLANCO",
+      "codigo_barras": "302003",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 755,
+      "nombre": "Evan Williams",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 696,
+      "nombre": "Fernet Branca - Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 56,
+      "nombre": "FIDEOS CASARECCE N°38 X 36 UN",
+      "codigo_barras": "139241",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 57,
+      "nombre": "FIDEOS PENNE N°32 X 36 UN",
+      "codigo_barras": "139244",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 58,
+      "nombre": "FIDEOS SPAGUETTI GAROFALO Ix 500g",
+      "codigo_barras": "139245",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 71,
+      "nombre": "FIDEOS SPAGUETTI MATARAZZOX500",
+      "codigo_barras": "139386",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 83,
+      "nombre": "FIDEOS TIRABUZON MATARAZZOX500",
+      "codigo_barras": "139437",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 668,
+      "nombre": "FILTRO CAFE BUNN 36 CM x 500",
+      "codigo_barras": "353043",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 669,
+      "nombre": "FILTRO CAFE TITAN caja x 252 U",
+      "codigo_barras": "353045",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 505,
+      "nombre": "FOLDER LLAVE HILTON ART",
+      "codigo_barras": "302030",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 441,
+      "nombre": "FOLIO A4 PVC",
+      "codigo_barras": "300114",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 483,
+      "nombre": "FORM. ADICIONAL LOST AND FOUND",
+      "codigo_barras": "301096",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 482,
+      "nombre": "FORMULARIO DEVOLUCION LOST & F",
+      "codigo_barras": "301095",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 791,
+      "nombre": "Frangelico- Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 700,
+      "nombre": "Gancia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 416,
+      "nombre": "GATORADE COOL BLUE PET",
+      "codigo_barras": "240020",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 637,
+      "nombre": "GEL DE DUCHA PERSEA 350ML",
+      "codigo_barras": "333259",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 140,
+      "nombre": "GELATINA SIN SABOR",
+      "codigo_barras": "139900",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 675,
+      "nombre": "GENERIC CARD HILTON ART",
+      "codigo_barras": "370031",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 393,
+      "nombre": "GIN HEREDERO CON COPON",
+      "codigo_barras": "212020",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 414,
+      "nombre": "GIN SORGIN",
+      "codigo_barras": "211044",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 767,
+      "nombre": "Glenfiddich 12 años",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 766,
+      "nombre": "Glenlivet 12 años",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 765,
+      "nombre": "Glenmorangie 10 años",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 715,
+      "nombre": "Gordons - Inglaterra",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 670,
+      "nombre": "GORRO DE COCINA CON LOGO",
+      "codigo_barras": "353046",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 776,
+      "nombre": "Grand Marnier - Francia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 775,
+      "nombre": "Grappa Candolini- Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 728,
+      "nombre": "Grey Goose – Francia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 631,
+      "nombre": "GROOMING KIT",
+      "codigo_barras": "333225",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 588,
+      "nombre": "GUANTE DESC. MEDIANO NITRILO",
+      "codigo_barras": "321047",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 568,
+      "nombre": "GUANTE MAPA PROFFESIONL CHICO",
+      "codigo_barras": "320156",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 569,
+      "nombre": "GUANTE MAPA PROFFESIONL MEDIAN",
+      "codigo_barras": "320157",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 723,
+      "nombre": "Havana club 7 años - Cuba",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 721,
+      "nombre": "Havana club añejo - Cuba",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 708,
+      "nombre": "Hendricks - Escocia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 793,
+      "nombre": "Hennessy VS – Francia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 794,
+      "nombre": "Hennessy VSOP – Francia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 717,
+      "nombre": "Heredero",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 788,
+      "nombre": "Hesperidina - Argentina",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 442,
+      "nombre": "HOJA CONQU. A4 CREMA RES X 500",
+      "codigo_barras": "300123",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 823,
+      "nombre": "Hongos miniatura (guarnición)",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 827,
+      "nombre": "Infusión de té verde",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 657,
+      "nombre": "INK RIBBON FOR(BLK)PART#RC0140",
+      "codigo_barras": "341040",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 570,
+      "nombre": "INSECTICIDA RAID MATA MOSCAS Y MOSQUITOS",
+      "codigo_barras": "320159",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 484,
+      "nombre": "INSTRUCCIONES CAJA DE SEGURIDA",
+      "codigo_barras": "301132",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 751,
+      "nombre": "J&B",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 555,
+      "nombre": "JABON BLANCO EN PAN",
+      "codigo_barras": "320091",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 639,
+      "nombre": "JABON DE MANO PERSEA 350ML",
+      "codigo_barras": "333261",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 556,
+      "nombre": "JABON LIQUIDO DISP. VESTUARIOS",
+      "codigo_barras": "320092",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 646,
+      "nombre": "JABON LIQUIDO KIDS",
+      "codigo_barras": "333268",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 640,
+      "nombre": "JABON PERSEA 30GR",
+      "codigo_barras": "333262",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 759,
+      "nombre": "Jack Daniel’s",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 782,
+      "nombre": "Jägermeister - Alemania",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 758,
+      "nombre": "Jameson",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 650,
+      "nombre": "JD CLAX  HYPO BI X 20L (4AL1)",
+      "codigo_barras": "341021",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 654,
+      "nombre": "JD CLAX ALFA BIDON X20L",
+      "codigo_barras": "341025",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 655,
+      "nombre": "JD CLAX BUILD LITE BID X 20L (EX BETA)",
+      "codigo_barras": "341026",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 653,
+      "nombre": "JD CLAX NEUTRAPUR X20L 6GL1",
+      "codigo_barras": "341024",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 652,
+      "nombre": "JD CLAX SOFT FRESH 50A1 X20L",
+      "codigo_barras": "341023",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 651,
+      "nombre": "JD CLAX SONRIL  BI X20L (4EL1)",
+      "codigo_barras": "341022",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 581,
+      "nombre": "JD DRAX ULTRA4X5L (FORCE)",
+      "codigo_barras": "321027",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 548,
+      "nombre": "JD GS FRESHPHASE(J-FLEX)2X1,5L",
+      "codigo_barras": "320046",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 582,
+      "nombre": "JD SOFTCARE DES E 6X800",
+      "codigo_barras": "321029",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 583,
+      "nombre": "JD SOFTCARE PLUS FREE 6X800",
+      "codigo_barras": "321030",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 580,
+      "nombre": "JD SUMA  D44   4X5L",
+      "codigo_barras": "321024",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 590,
+      "nombre": "JD SUMA CALC 4X5 LT ( D5)",
+      "codigo_barras": "321065",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 571,
+      "nombre": "JD SUMA FS 512 (J-FLEX) 2x1.5L",
+      "codigo_barras": "320160",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 585,
+      "nombre": "JD SUMA LIMA BI X 20 L (L3)",
+      "codigo_barras": "321036",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 584,
+      "nombre": "JD SUMA PLAQ  4X5L   (D96)",
+      "codigo_barras": "321034",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 705,
+      "nombre": "Jerez Tio Pepe",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 760,
+      "nombre": "Jim Beam",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 764,
+      "nombre": "Johnnie W. Green L. 15 años",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 745,
+      "nombre": "Johnnie Walker 18 años",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 752,
+      "nombre": "Johnnie Walker Black Label",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 742,
+      "nombre": "Johnnie Walker Blue Label",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 748,
+      "nombre": "Johnnie Walker Double Black",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 744,
+      "nombre": "Johnnie Walker Gold Label",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 749,
+      "nombre": "Johnnie Walker Red Label",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 739,
+      "nombre": "José cuervo blanco",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 738,
+      "nombre": "José cuervo reposado",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 804,
+      "nombre": "Jugo de ananá",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 802,
+      "nombre": "Jugo de cranberry",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 795,
+      "nombre": "Jugo de limón",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 803,
+      "nombre": "Jugo de naranja",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 816,
+      "nombre": "Jugo de pomelo",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 797,
+      "nombre": "Jugo de tomate",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 398,
+      "nombre": "JUGO LAS BRISAS MANZANA Y PERA",
+      "codigo_barras": "240118",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 255,
+      "nombre": "JUGO LAS BRISAS NARANJA PET",
+      "codigo_barras": "240119",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 61,
+      "nombre": "JUGO LIMON MINERVA X 1LT",
+      "codigo_barras": "139346",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 64,
+      "nombre": "KETCHUP BOLSA X 3KG HELLM",
+      "codigo_barras": "139354",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 65,
+      "nombre": "KETCHUP INDIVIDUAL",
+      "codigo_barras": "139357",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 606,
+      "nombre": "KIT DENTAL",
+      "codigo_barras": "333083",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 607,
+      "nombre": "KIT RAZURADORA",
+      "codigo_barras": "333085",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 509,
+      "nombre": "LAMINA SINTETICA BANDEJA PANAD",
+      "codigo_barras": "312075",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 609,
+      "nombre": "LAPIZ NEGRO C/LOGO",
+      "codigo_barras": "333088",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 66,
+      "nombre": "LECHE CONDENSADA X 400GR",
+      "codigo_barras": "139362",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 251,
+      "nombre": "LECHE DE COCO X 1LT (CREMA)",
+      "codigo_barras": "240048",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 67,
+      "nombre": "LECHE EN POLVO X 100 STICKS",
+      "codigo_barras": "139364",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 134,
+      "nombre": "LECHE EN POLVO X 800 GRS",
+      "codigo_barras": "139815",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 779,
+      "nombre": "Legui - Argentina",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 792,
+      "nombre": "Lepanto – España",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 552,
+      "nombre": "LEROPRO X 1LT",
+      "codigo_barras": "320060",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 551,
+      "nombre": "LEROTAN X 1LT",
+      "codigo_barras": "320059",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 485,
+      "nombre": "LIBRETA DE PASE",
+      "codigo_barras": "301139",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 443,
+      "nombre": "LIBRO ACTAS 400 PAGINAS",
+      "codigo_barras": "300136",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 218,
+      "nombre": "LICOR 43",
+      "codigo_barras": "214045",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 214,
+      "nombre": "LICOR KAHLUA",
+      "codigo_barras": "214037",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 216,
+      "nombre": "LICOR TIA MARIA",
+      "codigo_barras": "214041",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 415,
+      "nombre": "LICOR TRIPLE SEC",
+      "codigo_barras": "214042",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 808,
+      "nombre": "Lima (fruta)",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 829,
+      "nombre": "Limón deshidratado (guarnición)",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 787,
+      "nombre": "Limoncello - Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 546,
+      "nombre": "LISOFORM EN AEROSOL",
+      "codigo_barras": "320040",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 547,
+      "nombre": "LISOFORM LIQUIDO",
+      "codigo_barras": "320042",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 626,
+      "nombre": "LISTA LAVANDERIA HILTON ART",
+      "codigo_barras": "333210",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 633,
+      "nombre": "LLAVE DE PROXIMIDAD",
+      "codigo_barras": "333249",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 641,
+      "nombre": "LLAVE DE PROXIMIDAD 4K",
+      "codigo_barras": "333263",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 634,
+      "nombre": "LLAVE DE PROXIMIDAD CON LOGO",
+      "codigo_barras": "333250",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 610,
+      "nombre": "LUSTRA CALZADOS",
+      "codigo_barras": "333095",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 68,
+      "nombre": "MAIZENA CAJA X 2.1/2 KG",
+      "codigo_barras": "139381",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 756,
+      "nombre": "Maker´s Mark",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 722,
+      "nombre": "Malibú - Barbados",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 510,
+      "nombre": "MANGAS DESCARTABLES 30X50CM",
+      "codigo_barras": "312078",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 73,
+      "nombre": "MANI SALADO REPALADO X KG",
+      "codigo_barras": "139388",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 69,
+      "nombre": "MANTECA INDIVIDUAL 10 GRS",
+      "codigo_barras": "139382",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 687,
+      "nombre": "MANTEL INDIVID.COMED.PER.200 U",
+      "codigo_barras": "373008",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 444,
+      "nombre": "MARC. PERMANENTE NEGRO (EDD130",
+      "codigo_barras": "300142",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 445,
+      "nombre": "MARC. PIZARRA AZUL (EDD 360)",
+      "codigo_barras": "300144",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 446,
+      "nombre": "MARC. PIZARRA NEGRO (EDD 360)",
+      "codigo_barras": "300147",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 447,
+      "nombre": "MARC. PIZARRA ROJO (EDD 360)",
+      "codigo_barras": "300148",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 448,
+      "nombre": "MARC. PIZARRA VERDE (EDD 360)",
+      "codigo_barras": "300150",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 707,
+      "nombre": "Mare - Barcelona",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 710,
+      "nombre": "Martin Miller´s - Inglaterra",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 241,
+      "nombre": "MARTINI ROSSO x 1000cc",
+      "codigo_barras": "216008",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 70,
+      "nombre": "MATE COCIDO TARAGUI X 50",
+      "codigo_barras": "139385",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 74,
+      "nombre": "MAYONESA ''HELLMANS''X 2.9KG",
+      "codigo_barras": "139389",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 72,
+      "nombre": "MAYONESA INDIVIDUAL X 10CC",
+      "codigo_barras": "139387",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 810,
+      "nombre": "Menta fresca",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 493,
+      "nombre": "MENU COLGANTE DESAY HILTON ART",
+      "codigo_barras": "301299",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 75,
+      "nombre": "MERMELADA DURAZNO X 3.8KG EL BROCAL",
+      "codigo_barras": "139407",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 76,
+      "nombre": "MERMELADA FRUTOS ROJOS X 3.8KG EL BROCAL",
+      "codigo_barras": "139409",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 86,
+      "nombre": "MERMELADA INDIV FRUTOS RO 45GR",
+      "codigo_barras": "139442",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 78,
+      "nombre": "MERMELADA INDIV. FRUTILLA DIET X 45GR",
+      "codigo_barras": "139422",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 77,
+      "nombre": "MERMELADA INDIV.DURAZNO X 45GR",
+      "codigo_barras": "139420",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 741,
+      "nombre": "Mezcal",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 80,
+      "nombre": "MIEL EN BALDE X 5 KG",
+      "codigo_barras": "139427",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 79,
+      "nombre": "MIEL INDIVIDUAL  X  45 GR",
+      "codigo_barras": "139426",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 486,
+      "nombre": "MISCELANEOS - SERVICIOS VARIOS",
+      "codigo_barras": "301176",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 674,
+      "nombre": "MOLDE BUDIN 20X4CM",
+      "codigo_barras": "353056",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 663,
+      "nombre": "MOLDE FLAN ALUM.V100(7CMx4.5CM",
+      "codigo_barras": "353027",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 673,
+      "nombre": "MOLDE V 230",
+      "codigo_barras": "353054",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 706,
+      "nombre": "Monkey 47 - Alemania",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 772,
+      "nombre": "Monkey Shoulder",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 589,
+      "nombre": "MOPA APLIC RAYON FINISH ITALIA",
+      "codigo_barras": "321052",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 81,
+      "nombre": "MOSTAZA ''SAVORA''X 2.9KG",
+      "codigo_barras": "139432",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 82,
+      "nombre": "MOSTAZA DIJON ARYTZA x 850g",
+      "codigo_barras": "139435",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 84,
+      "nombre": "MOSTAZA INDIVIDUAL",
+      "codigo_barras": "139438",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 132,
+      "nombre": "NACHOS CA X 15 BO DE 250GRS",
+      "codigo_barras": "139789",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 390,
+      "nombre": "NO  usar VINO CONCRETO MALBEC",
+      "codigo_barras": "201427",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 85,
+      "nombre": "NUECES PARTIDAS X KG",
+      "codigo_barras": "139441",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 611,
+      "nombre": "OJOTAS N°42",
+      "codigo_barras": "333101",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 746,
+      "nombre": "Old Parr",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 242,
+      "nombre": "OPORTO EL ABUELO",
+      "codigo_barras": "216013",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 656,
+      "nombre": "OXIVIR FIVE 16 4x5L",
+      "codigo_barras": "341032",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 557,
+      "nombre": "PALA PARA BASURA",
+      "codigo_barras": "320099",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 87,
+      "nombre": "PALILLOS BROCHETTES x 25 Unid.",
+      "codigo_barras": "139452",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 88,
+      "nombre": "PALMITOS ENTEROS LA X 850GR",
+      "codigo_barras": "139457",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 558,
+      "nombre": "PALO PARA SECADOR DE PISO",
+      "codigo_barras": "320100",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 89,
+      "nombre": "PAN RALLADO PREFERIDO X 5 KG",
+      "codigo_barras": "139459",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 90,
+      "nombre": "PANKO",
+      "codigo_barras": "139463",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 613,
+      "nombre": "PANTUFLAS ADULTO HOMBRE",
+      "codigo_barras": "333104",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 620,
+      "nombre": "PANTUFLAS ADULTO MUJER",
+      "codigo_barras": "333118",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 614,
+      "nombre": "PANTUFLAS BEBE",
+      "codigo_barras": "333105",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 608,
+      "nombre": "PAÑUELO DESC. ELITE",
+      "codigo_barras": "333087",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 664,
+      "nombre": "PAPEL ALUMINIO",
+      "codigo_barras": "353031",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 665,
+      "nombre": "PAPEL FILM",
+      "codigo_barras": "353032",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 619,
+      "nombre": "PAPEL HIGIENICO ELITE 6607",
+      "codigo_barras": "333114",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 559,
+      "nombre": "PAPEL HIGIENICO EMPLEA X4 6112",
+      "codigo_barras": "320101",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 616,
+      "nombre": "PAPEL HIGIENICO HAB.ELITE6616",
+      "codigo_barras": "333109",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 666,
+      "nombre": "PAPEL MANTECA ROLLO",
+      "codigo_barras": "353036",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 667,
+      "nombre": "PAPEL ROLLO COCINA ELITE 6203 ECON",
+      "codigo_barras": "353038",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 615,
+      "nombre": "PAPEL SEDA P/LAVANX400- 75X100",
+      "codigo_barras": "333107",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 91,
+      "nombre": "PASAS BLANCAS SIN SEMILLAS",
+      "codigo_barras": "139518",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 92,
+      "nombre": "PASAS NEGRAS SIN SEMILLAS",
+      "codigo_barras": "139520",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 364,
+      "nombre": "PASO DE LOS TOROS TONICA (LATA",
+      "codigo_barras": "270015",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 419,
+      "nombre": "PASO DE LOS TOROS TONICA X 1.5LTS",
+      "codigo_barras": "240154",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 592,
+      "nombre": "PASTILLA ABRILLANTAD. RATIONAL",
+      "codigo_barras": "321069",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 593,
+      "nombre": "PASTILLA DETERGENTE RATIONAL ROJA",
+      "codigo_barras": "321070",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 591,
+      "nombre": "PASTILLAS LIMPIEZA ACTIVE VERDE RATIONAL",
+      "codigo_barras": "321068",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 643,
+      "nombre": "PEINE KIDS EN ESTUCHE",
+      "codigo_barras": "333265",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 617,
+      "nombre": "PEINES PARA HABITACIONES",
+      "codigo_barras": "333111",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 93,
+      "nombre": "PEPINOS AGRIDULCES X 2KG",
+      "codigo_barras": "139534",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 94,
+      "nombre": "PERAS EN LATA X 850 GR",
+      "codigo_barras": "139537",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 618,
+      "nombre": "PERCHAS PLASTICAS COLOR NEGRO",
+      "codigo_barras": "333112",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 684,
+      "nombre": "PILA ALCALINA ''AA''",
+      "codigo_barras": "372079",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 685,
+      "nombre": "PILA ALCALINA AAA",
+      "codigo_barras": "372080",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 95,
+      "nombre": "PIMIENTA INDIVIDUAL ABEDUL 0,8 GR X 400",
+      "codigo_barras": "139543",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 698,
+      "nombre": "Pimms- Inglaterra",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 514,
+      "nombre": "PINCHO DE BAMBU NUDO 9CM X100U",
+      "codigo_barras": "312133",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 683,
+      "nombre": "PIROTINES CA X 1000UN",
+      "codigo_barras": "372056",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 560,
+      "nombre": "PLUMERO",
+      "codigo_barras": "320115",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 818,
+      "nombre": "Pomelo deshidratado (guarnición)",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 679,
+      "nombre": "POMPONES ALGODON PQT",
+      "codigo_barras": "371066",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 449,
+      "nombre": "PORTA BLOCK A4 (ACRILICO)",
+      "codigo_barras": "300182",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 529,
+      "nombre": "PORTA CONDIMENTOS EC-5",
+      "codigo_barras": "312177",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 450,
+      "nombre": "PORTA LLAVE TRANSPARENTE",
+      "codigo_barras": "300183",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 522,
+      "nombre": "PORTA VASOS X2 KRAFT DESCARTABLE",
+      "codigo_barras": "312156",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 604,
+      "nombre": "POSA VASOS ALBERTO´S",
+      "codigo_barras": "333038",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 632,
+      "nombre": "POSAVASOS HABITACIONES",
+      "codigo_barras": "333227",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 451,
+      "nombre": "POST IT BANDERITA",
+      "codigo_barras": "300188",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 59,
+      "nombre": "PREMEZCLA CHIPA (ALMACEN)",
+      "codigo_barras": "139314",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 702,
+      "nombre": "Punt E Mes – Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 96,
+      "nombre": "PURE CHEFF X 5 KG KNORR",
+      "codigo_barras": "139584",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 135,
+      "nombre": "QUESO RALL. IND 8GR X100 SOBR.",
+      "codigo_barras": "139832",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 833,
+      "nombre": "Ramillete de eneldo (guarnición)",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 473,
+      "nombre": "REGALO CUMPLEAÑOS ME",
+      "codigo_barras": "300320",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 566,
+      "nombre": "REPELENTE OFF SPRAY X 200CC",
+      "codigo_barras": "320153",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 452,
+      "nombre": "RESALTADOR AMARILLO EDDING 200",
+      "codigo_barras": "300199",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 453,
+      "nombre": "RESALTADOR CELESTE EDDING 200",
+      "codigo_barras": "300200",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 454,
+      "nombre": "RESALTADOR NARANJA EDDING 200",
+      "codigo_barras": "300201",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 455,
+      "nombre": "RESALTADOR ROSA EDDING 200",
+      "codigo_barras": "300202",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 456,
+      "nombre": "RESALTADOR VERDE EDDING 200",
+      "codigo_barras": "300203",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 457,
+      "nombre": "RESMA A4 LEDESMA",
+      "codigo_barras": "300204",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 516,
+      "nombre": "REVOLVEDOR MADERA GDE x 1000",
+      "codigo_barras": "312146",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 459,
+      "nombre": "RIBBON CERA NEGRA 110MMX75MTS",
+      "codigo_barras": "300221",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 798,
+      "nombre": "Rodaja de limón (guarnición)",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 462,
+      "nombre": "ROLLO ETIQUETA 080X050 1B. MAQUINA SATO",
+      "codigo_barras": "300226",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 460,
+      "nombre": "ROLLO ETIQUETA 100MMX35MMX1000",
+      "codigo_barras": "300222",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 458,
+      "nombre": "ROLLO PAPEL IMP.FISCAL HILTON",
+      "codigo_barras": "300213",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 461,
+      "nombre": "ROLLO TERMICO COMANDERA 244",
+      "codigo_barras": "300225",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 412,
+      "nombre": "RON HAVANA ANEJO BLANCO",
+      "codigo_barras": "210008",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 153,
+      "nombre": "RON ZACAPA 23",
+      "codigo_barras": "210014",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 743,
+      "nombre": "Royal Salute",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 97,
+      "nombre": "SAL FINA PAQ X 500GR",
+      "codigo_barras": "139597",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 98,
+      "nombre": "SAL GRUESA PAQ. 1 KG",
+      "codigo_barras": "139598",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 99,
+      "nombre": "SAL INDIVIDUAL X 1000 SOBRES",
+      "codigo_barras": "139599",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 100,
+      "nombre": "SALSA BBQ X 3 KG",
+      "codigo_barras": "139604",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 101,
+      "nombre": "SALSA DE SOJA FUMEIGA X 5 LT",
+      "codigo_barras": "139614",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 102,
+      "nombre": "SALSA INGLESA",
+      "codigo_barras": "139620",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 139,
+      "nombre": "SALSA SRIRACHA",
+      "codigo_barras": "139898",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 103,
+      "nombre": "SALSA TABASCO 60 ML",
+      "codigo_barras": "139634",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 104,
+      "nombre": "SALSA TERIYAKI HASHI X 5 LT",
+      "codigo_barras": "139636",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 780,
+      "nombre": "Sambuca Borguetti - Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 727,
+      "nombre": "Santa Teresa",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 418,
+      "nombre": "SCHWEPES TONICA X 1.5 LT",
+      "codigo_barras": "240099",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 594,
+      "nombre": "SEC. DE GOMA BLANCO 25CM HSKP",
+      "codigo_barras": "321071",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 561,
+      "nombre": "SECADOR DE GOMA PLAST.55cmC/CA",
+      "codigo_barras": "320124",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 108,
+      "nombre": "SEMILLA DE SESAMO NEGRO X 1 KG",
+      "codigo_barras": "139645",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 105,
+      "nombre": "SEMILLAS DE GIRASOL X 1 KG",
+      "codigo_barras": "139641",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 106,
+      "nombre": "SEMILLAS DE LINO X 1 KG",
+      "codigo_barras": "139643",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 107,
+      "nombre": "SEMILLAS DE SESAMO BLANCA X 1",
+      "codigo_barras": "139644",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 735,
+      "nombre": "Sernova – Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 686,
+      "nombre": "SERVILLETA EMPLEADO (SERVIFOOD",
+      "codigo_barras": "373002",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 671,
+      "nombre": "SERVILLETAS PAPEL HILTON ART",
+      "codigo_barras": "353047",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 642,
+      "nombre": "SHAMPOO KIDS 55CC",
+      "codigo_barras": "333264",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 635,
+      "nombre": "SHAMPOO PERSEA 350ML",
+      "codigo_barras": "333257",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 572,
+      "nombre": "SISTEMA OCENIC 2031",
+      "codigo_barras": "320165",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 734,
+      "nombre": "Smirnoff – Rusia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 487,
+      "nombre": "SOBRE DE RENDICION CAJERO 150G",
+      "codigo_barras": "301215",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 463,
+      "nombre": "SOBRE MANILA 25X35",
+      "codigo_barras": "300233",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 491,
+      "nombre": "SOBRES C4 HILTON ART",
+      "codigo_barras": "301297",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 629,
+      "nombre": "SOBRES C6 HILTON ART",
+      "codigo_barras": "333215",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 492,
+      "nombre": "SOBRES DL HILTON ART",
+      "codigo_barras": "301298",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 832,
+      "nombre": "Soda de hibiscus",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 536,
+      "nombre": "SORBETE DE TRIGO",
+      "codigo_barras": "312193",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 537,
+      "nombre": "SORBETE REUTILIZABLE",
+      "codigo_barras": "312194",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 554,
+      "nombre": "SPARTAN XTRACTION II X5LTS LIMPIADOR",
+      "codigo_barras": "320062",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 362,
+      "nombre": "SPRITE 2.25 LT PET x 8",
+      "codigo_barras": "240052",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 363,
+      "nombre": "SPRITE ZERO 2.25 LT PET x 8",
+      "codigo_barras": "240089",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 773,
+      "nombre": "St. Germain - Francia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 622,
+      "nombre": "STICKER LOGO CROUTONS",
+      "codigo_barras": "333147",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 540,
+      "nombre": "Sticker redondo bco 3cm diámetro",
+      "codigo_barras": "312198",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 621,
+      "nombre": "STICKER ROPA HUESP. PLANCHAX8U",
+      "codigo_barras": "333143",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 774,
+      "nombre": "Strega - Italia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 578,
+      "nombre": "SUJETADOR PARA MOPA",
+      "codigo_barras": "321012",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 595,
+      "nombre": "SUMA RINSE CAJA 4X5L",
+      "codigo_barras": "321072",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 464,
+      "nombre": "SUPER CLIPS 19 MM (binder)",
+      "codigo_barras": "300236",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 465,
+      "nombre": "SUPER CLIPS 25MM (binder) CAJA",
+      "codigo_barras": "300237",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 466,
+      "nombre": "SUPER CLIPS 32MM (binder) CAJA",
+      "codigo_barras": "300239",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 812,
+      "nombre": "Syrup de jengibre",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 796,
+      "nombre": "Syrup simple",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 467,
+      "nombre": "TACO 9 X 9MULTICOLOR",
+      "codigo_barras": "300240",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 563,
+      "nombre": "TACO DE GOMA PARA PUERTA BLANC",
+      "codigo_barras": "320132",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 768,
+      "nombre": "Talisker 10 años",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 488,
+      "nombre": "TALONARIO DE REEMBOLSO x 100",
+      "codigo_barras": "301238",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 718,
+      "nombre": "Tanqueray",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 692,
+      "nombre": "TAPA DOMO TRANSPARENTE 98MM",
+      "codigo_barras": "373023",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 528,
+      "nombre": "TAPA ENSALADERA EPP GDE",
+      "codigo_barras": "312176",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 526,
+      "nombre": "TAPA EPP R1",
+      "codigo_barras": "312169",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 531,
+      "nombre": "TAPA PLANA ENSAL. HOT LUNCH",
+      "codigo_barras": "312179",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 690,
+      "nombre": "TAPA TRASLUCIDA VASO MILANO PL",
+      "codigo_barras": "373019",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 519,
+      "nombre": "TAPAVASO 12 OZ BLANCO",
+      "codigo_barras": "312150",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 623,
+      "nombre": "TAPONES PARA BANERA",
+      "codigo_barras": "333151",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 498,
+      "nombre": "TARJETA AMENITIES AZUL",
+      "codigo_barras": "301310",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 499,
+      "nombre": "TARJETA AMENITIES NEGRA",
+      "codigo_barras": "301312",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 503,
+      "nombre": "TARJETA REGISTRO PASAJEROS",
+      "codigo_barras": "302016",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 504,
+      "nombre": "TARJETA SERVICIO TELEFONO",
+      "codigo_barras": "302019",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 489,
+      "nombre": "TARJETON SERVICIOS VARIOS",
+      "codigo_barras": "301263",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 553,
+      "nombre": "TASKI R5 CONC. CAJA 4X5L",
+      "codigo_barras": "320061",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 110,
+      "nombre": "TE DE BOLDO TARAGUI",
+      "codigo_barras": "139664",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 111,
+      "nombre": "TE DE MANZANILLA (TARAGUI)",
+      "codigo_barras": "139666",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 113,
+      "nombre": "TE DE TILO TARAGUI",
+      "codigo_barras": "139669",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 114,
+      "nombre": "TE DIGESTIVO CACHAMAY",
+      "codigo_barras": "139671",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 141,
+      "nombre": "Te In_T MIX COLLECTION PIRAM ESTU X 10 SAQ",
+      "codigo_barras": "139906",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 119,
+      "nombre": "TE INTI ZEN AMAZONIA",
+      "codigo_barras": "139683",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 125,
+      "nombre": "TE INTI ZEN BE RELAX PIRAMIDE X 12 SAQ",
+      "codigo_barras": "139704",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 121,
+      "nombre": "TE INTI ZEN BLANCO LYCHEE",
+      "codigo_barras": "139687",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 116,
+      "nombre": "TE INTI ZEN CHAMAN CHAI",
+      "codigo_barras": "139679",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 123,
+      "nombre": "TE INTI ZEN ENGL. BREAK PIRAMIDE X 12 SAQ",
+      "codigo_barras": "139699",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 115,
+      "nombre": "TE INTI ZEN ILUMINE x 50 UN",
+      "codigo_barras": "139678",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 120,
+      "nombre": "TE INTI ZEN INCA ROSE",
+      "codigo_barras": "139685",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 118,
+      "nombre": "TE INTI ZEN PATAGONIA BEE",
+      "codigo_barras": "139682",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 117,
+      "nombre": "TE INTI ZEN SILENCIO ANDINO",
+      "codigo_barras": "139680",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 122,
+      "nombre": "TE TARAGUI CLASICO X 50",
+      "codigo_barras": "139691",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 124,
+      "nombre": "TE TARAGUI VERDE",
+      "codigo_barras": "139702",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 112,
+      "nombre": "TE VARIADO INTI ZEN",
+      "codigo_barras": "139668",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 51,
+      "nombre": "TEGRAL CAKE MOIST CHOCO X 10",
+      "codigo_barras": "139217",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 52,
+      "nombre": "TEGRAL SATIN  CREAM VAINIL X10",
+      "codigo_barras": "139218",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 511,
+      "nombre": "TENEDOR PLASTICO ENSOBRADO",
+      "codigo_barras": "312100",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 736,
+      "nombre": "Tequila patrón reposado",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 737,
+      "nombre": "Tequila patrón Silver",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 709,
+      "nombre": "The Botanist - Inglaterra",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 750,
+      "nombre": "The Famous Grouse",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 763,
+      "nombre": "The Macallan 12 YO",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 771,
+      "nombre": "The Macallan 15 YO",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 770,
+      "nombre": "The Macallan 18 YO",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 790,
+      "nombre": "Tia Maria",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 468,
+      "nombre": "TIJERA CHICA ISOFIT",
+      "codigo_barras": "300246",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 564,
+      "nombre": "TOALLAS INTERCALADAS 6283",
+      "codigo_barras": "320139",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 597,
+      "nombre": "TOALLITAS SANITIZANTE INDIVIDUAL",
+      "codigo_barras": "321076",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 126,
+      "nombre": "TOMATE TRITURADO",
+      "codigo_barras": "139718",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 472,
+      "nombre": "TONER HP 147A \"ORIGINAL\"",
+      "codigo_barras": "300319",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 470,
+      "nombre": "TONER HP LJET Q7553X",
+      "codigo_barras": "300311",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 471,
+      "nombre": "TONER HP W9008MC",
+      "codigo_barras": "300318",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 469,
+      "nombre": "TONER Q42X HP4250",
+      "codigo_barras": "300303",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 394,
+      "nombre": "TONICA YERBA MATE MATHIENZO",
+      "codigo_barras": "212026",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 565,
+      "nombre": "TRAPOS AMARILLO PISO BALLERINA",
+      "codigo_barras": "320143",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 801,
+      "nombre": "Triple sec (genérico)",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 490,
+      "nombre": "VALE DE FONDO FIJO",
+      "codigo_barras": "301275",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 520,
+      "nombre": "VASO POLIPAPEL 08 OZ S/LOGO KRAFT",
+      "codigo_barras": "312153",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 518,
+      "nombre": "VASO POLIPAPEL 12 OZ C/LOGO",
+      "codigo_barras": "312148",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 521,
+      "nombre": "VASO POLIPAPEL 12 OZ S/LOGO KRAFT",
+      "codigo_barras": "312155",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 523,
+      "nombre": "VASO POLIPAPEL 8 OZ C/LOGO",
+      "codigo_barras": "312166",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 689,
+      "nombre": "VASO TRASLUCIDO MILANO PLASTIV",
+      "codigo_barras": "373018",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 688,
+      "nombre": "VASOS PLAST.DISP. AGUA 165cc",
+      "codigo_barras": "373010",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 691,
+      "nombre": "VASOS TRANSPARENTE 16OZ /98MM",
+      "codigo_barras": "373022",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 512,
+      "nombre": "VELA NACARA BCA 20CM(X10U)2268",
+      "codigo_barras": "312110",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 513,
+      "nombre": "VELAS FLOTANTES C/BASE (CA x 5",
+      "codigo_barras": "312112",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 826,
+      "nombre": "Vermouth bianco (genérico)",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 817,
+      "nombre": "Vermouth blanco (genérico)",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 805,
+      "nombre": "Vermouth dulce (genérico)",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 807,
+      "nombre": "Vermouth rojo (genérico)",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 799,
+      "nombre": "Vermouth seco (genérico)",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 127,
+      "nombre": "VINAGRE DE ALCOHOL MENOYO X 5L",
+      "codigo_barras": "139746",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 34,
+      "nombre": "VINAGRE MANZANA INDIVIDUAL ABEDUL",
+      "codigo_barras": "139111",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 131,
+      "nombre": "VINAGRE PAMPA GOURMET VARIEDAD",
+      "codigo_barras": "139780",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 360,
+      "nombre": "VINO AIRE BLANC",
+      "codigo_barras": "203031",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 353,
+      "nombre": "VINO ALBARIÑO BODEGA GARZON",
+      "codigo_barras": "202366",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 285,
+      "nombre": "VINO ANGELICA ZAPATA CAB.FRANC",
+      "codigo_barras": "201017",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 335,
+      "nombre": "VINO ANGELICA ZAPATA CHARDONNA",
+      "codigo_barras": "202010",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 286,
+      "nombre": "VINO ANGELICA ZAPATA MALBEC",
+      "codigo_barras": "201018",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 287,
+      "nombre": "VINO ANGELICA ZAPATA MERLOT",
+      "codigo_barras": "201019",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 323,
+      "nombre": "VINO BARDA PINOT NOIR",
+      "codigo_barras": "201487",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 349,
+      "nombre": "VINO BIANCHI MARIA CARMEN CHARDONAY",
+      "codigo_barras": "202348",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 318,
+      "nombre": "VINO BIOLENTO MALBEC",
+      "codigo_barras": "201480",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 146,
+      "nombre": "VINO BLANCO COCINA",
+      "codigo_barras": "202160",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 329,
+      "nombre": "VINO CASA BOHER MALBEC AGRELO",
+      "codigo_barras": "201495",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 343,
+      "nombre": "VINO CASA BOHER VIOGNIER AGRELO",
+      "codigo_barras": "202134",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 290,
+      "nombre": "VINO CITTANINA PASION MALBEC",
+      "codigo_barras": "201117",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 348,
+      "nombre": "VINO COLOMÉ TORRONTÉS",
+      "codigo_barras": "202347",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 337,
+      "nombre": "VINO DIAMANDES GRAN RES. CHARDONNAY",
+      "codigo_barras": "202022",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 311,
+      "nombre": "VINO DIAMANDES GRAN RES. MALBEC",
+      "codigo_barras": "201436",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 336,
+      "nombre": "VINO DIAMANDES PERLITA CHARDONNAY",
+      "codigo_barras": "202021",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 284,
+      "nombre": "VINO DREIDEL GRAN MALBEC (KOSHER)",
+      "codigo_barras": "201014",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 300,
+      "nombre": "VINO DV CATENA  CAB - CAB",
+      "codigo_barras": "201290",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 303,
+      "nombre": "VINO DV CATENA CABE- MALBEC",
+      "codigo_barras": "201343",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 345,
+      "nombre": "VINO DV CATENA CHARD - CHARD",
+      "codigo_barras": "202173",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 302,
+      "nombre": "VINO DV CATENA MALBEC- MALBEC",
+      "codigo_barras": "201325",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 308,
+      "nombre": "VINO DV CATENA MALBEC VINEYARD ADRIANA",
+      "codigo_barras": "201423",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 332,
+      "nombre": "VINO ESCORIHUELA GRAN RVA CHARDONNAY",
+      "codigo_barras": "202007",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 321,
+      "nombre": "VINO GRAN ENEMIGO CHACAYES C. FRANC",
+      "codigo_barras": "201485",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 309,
+      "nombre": "VINO GRAN SOMBRERO MALBEC",
+      "codigo_barras": "201426",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 411,
+      "nombre": "VINO HUENTALA LA ISABEL ESTATE CHARDONNAY",
+      "codigo_barras": "203021",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 356,
+      "nombre": "VINO HUENTALA LA ISABEL ESTATE MALBEC",
+      "codigo_barras": "203022",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 310,
+      "nombre": "VINO JOSE MALBEC",
+      "codigo_barras": "201428",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 147,
+      "nombre": "VINO KILLKA CHARDONNAY",
+      "codigo_barras": "202338",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 148,
+      "nombre": "VINO KILLKA MALBEC",
+      "codigo_barras": "202360",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 408,
+      "nombre": "VINO LA LINDA CHARDONNAY",
+      "codigo_barras": "202000",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 319,
+      "nombre": "VINO LA LINDA MALBEC",
+      "codigo_barras": "201482",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 315,
+      "nombre": "VINO LA LINDA MALBEC ORGANICO",
+      "codigo_barras": "201465",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 317,
+      "nombre": "VINO LABORUM TORRONTES",
+      "codigo_barras": "201471",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 328,
+      "nombre": "VINO LALALA CRIOLLA",
+      "codigo_barras": "201492",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 327,
+      "nombre": "VINO LALALA MALBEC ORGANICO",
+      "codigo_barras": "201491",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 388,
+      "nombre": "VINO LUIGI B  PINOT NOIR SC",
+      "codigo_barras": "201146",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 293,
+      "nombre": "VINO LUIGI B DE SANGRE CAVERNET SAUV",
+      "codigo_barras": "201140",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 291,
+      "nombre": "VINO LUIGI BOSCA CAB.SAUV RESE",
+      "codigo_barras": "201128",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 391,
+      "nombre": "VINO LUIGI BOSCA DE SANGRE",
+      "codigo_barras": "202191",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 326,
+      "nombre": "VINO LUIGI BOSCA DE SANGRE CORTE",
+      "codigo_barras": "201490",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 292,
+      "nombre": "VINO LUIGI BOSCA INSIGNIA MALBEC",
+      "codigo_barras": "201130",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 409,
+      "nombre": "VINO LUIGI BOSCA RESERVA CHAR",
+      "codigo_barras": "202080",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 339,
+      "nombre": "VINO LUIGI BOSCA WHITE BLEND",
+      "codigo_barras": "202085",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 347,
+      "nombre": "VINO MALAMADO VIOGNER",
+      "codigo_barras": "202180",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 289,
+      "nombre": "VINO MARIFLOR SAUV. BLANC",
+      "codigo_barras": "201035",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 392,
+      "nombre": "VINO MARTINO FRUTO BLANCO BLEND BLNCAS",
+      "codigo_barras": "203029",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 359,
+      "nombre": "VINO MARTINO ROSE MERLOT PINOT NOIR",
+      "codigo_barras": "203028",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 333,
+      "nombre": "VINO NASSELLA CHARDONNAY VIÑA ARTESANO",
+      "codigo_barras": "202008",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 324,
+      "nombre": "VINO NN MALBEC CLARETE",
+      "codigo_barras": "201488",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 407,
+      "nombre": "VINO NUMINA CHARDONAY 750ML",
+      "codigo_barras": "201456",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 316,
+      "nombre": "VINO NUMINA PETIT VERDOTT",
+      "codigo_barras": "201467",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 342,
+      "nombre": "VINO OSTENGO CHARDONAY",
+      "codigo_barras": "202129",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 312,
+      "nombre": "VINO OSTENGO MALBEC RES. VALLE DE UCO",
+      "codigo_barras": "201458",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 351,
+      "nombre": "VINO POLIGONOS SAN PABLO CAB. FRANC 2022",
+      "codigo_barras": "202362",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 357,
+      "nombre": "VINO POLIGONOS SAUVIGNON BLANC",
+      "codigo_barras": "203023",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 277,
+      "nombre": "VINO PRIMUS CHARDONNAY",
+      "codigo_barras": "200075",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 313,
+      "nombre": "VINO PRIMUS MALBEC",
+      "codigo_barras": "201463",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 298,
+      "nombre": "VINO PULENTA ESTATE GRAN CABERNET FRANC",
+      "codigo_barras": "201274",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 297,
+      "nombre": "VINO PULENTA ESTATE PINT GRIS",
+      "codigo_barras": "201272",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 354,
+      "nombre": "VINO PUTRUELE SAUVIGNON BLANC",
+      "codigo_barras": "202367",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 344,
+      "nombre": "VINO Q CHARDONNAY",
+      "codigo_barras": "202169",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 294,
+      "nombre": "VINO Q MALBEC",
+      "codigo_barras": "201172",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 325,
+      "nombre": "VINO REBELION BLEND DE MALBEC",
+      "codigo_barras": "201489",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 320,
+      "nombre": "VINO RICCITELLI REPUBLICA DEL MALBEC",
+      "codigo_barras": "201483",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 322,
+      "nombre": "VINO RICCITELLI TINTO DE LA CASA",
+      "codigo_barras": "201486",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 352,
+      "nombre": "VINO ROSE DE PINOT ESTATE",
+      "codigo_barras": "202365",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 299,
+      "nombre": "VINO RUTINI CABERNET SAUVIGNON",
+      "codigo_barras": "201287",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 340,
+      "nombre": "VINO RUTINI CHARDONNAY",
+      "codigo_barras": "202110",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 410,
+      "nombre": "VINO SAINT FELICIEN CHARD.ROBL",
+      "codigo_barras": "202115",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 406,
+      "nombre": "VINO SAINT FELICIEN MALBEC",
+      "codigo_barras": "201202",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 389,
+      "nombre": "VINO SALENTEIN PINOT NOIR",
+      "codigo_barras": "201208",
+      "categoria": "230",
+      "activo": true
+    },
+    {
+      "id": 341,
+      "nombre": "VINO SALENTEIN SAUVIGNON BLANC DULCE",
+      "codigo_barras": "202120",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 331,
+      "nombre": "VINO SAN PABLO MALBEC",
+      "codigo_barras": "201498",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 405,
+      "nombre": "VINO SCHROEDER PINOT NOIR",
+      "codigo_barras": "201040",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 358,
+      "nombre": "VINO SINGLE VINEYARD AGRELO CABERNET FRANC",
+      "codigo_barras": "203027",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 334,
+      "nombre": "VINO SINGLE VINEYARD GUALTALLARY CHARDONNAY",
+      "codigo_barras": "202009",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 296,
+      "nombre": "VINO TERRAZAS RESERVA MALBEC",
+      "codigo_barras": "201232",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 144,
+      "nombre": "VINO TINTO COCINA",
+      "codigo_barras": "201283",
+      "categoria": "200",
+      "activo": true
+    },
+    {
+      "id": 830,
+      "nombre": "Vino Torrontés",
+      "codigo_barras": null,
+      "categoria": "Otros insumos de barra",
+      "activo": true
+    },
+    {
+      "id": 338,
+      "nombre": "VINO TRIVENTO GOLDEN RESERVE CHARDONNAY",
+      "codigo_barras": "202023",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 288,
+      "nombre": "VINO TRIVENTO GOLDEN RESERVE MALBEC",
+      "codigo_barras": "201033",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 304,
+      "nombre": "VINO ZUCCARDI CONCRETO MALBEC",
+      "codigo_barras": "201401",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 346,
+      "nombre": "VINO ZUCCARDI SERIE A CHAR-VIO",
+      "codigo_barras": "202176",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 301,
+      "nombre": "VINO ZUCCARDI SERIE A MALBEC",
+      "codigo_barras": "201322",
+      "categoria": "210",
+      "activo": true
+    },
+    {
+      "id": 676,
+      "nombre": "VOUCHER BENEFICIO TRAGO",
+      "codigo_barras": "370053",
+      "categoria": "300",
+      "activo": true
+    },
+    {
+      "id": 413,
+      "nombre": "WHISKY J&B  x 1000cc",
+      "codigo_barras": "211017",
+      "categoria": "250",
+      "activo": true
+    },
+    {
+      "id": 761,
+      "nombre": "Wild Turkey",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 753,
+      "nombre": "Woodford Reserve",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 128,
+      "nombre": "YERBA MATE X 1KG",
+      "codigo_barras": "139771",
+      "categoria": "100",
+      "activo": true
+    },
+    {
+      "id": 720,
+      "nombre": "Zacapa 23 - Guatemala",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 719,
+      "nombre": "Zacapa xo - Guatemala",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    },
+    {
+      "id": 731,
+      "nombre": "Zubrowka – Polonia",
+      "codigo_barras": null,
+      "categoria": "Destilados",
+      "activo": true
+    }
+  ],
+  "faltantesEnPortal": []
+}

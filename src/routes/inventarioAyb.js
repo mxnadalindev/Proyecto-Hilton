@@ -8,6 +8,8 @@ const ExcelJS = require('exceljs');
 const { loginRequerido, requiereDepartamento } = require('./middleware');
 const { analizarBotellaAyb, mensajeErrorGemini } = require('../services/gemini');
 const { parsearArchivoProductosAyb, importarProductosAyb, generarPlantillaProductosAyb } = require('../services/importadorProductosAyb');
+const { parsearArchivoPreciosAyb, previsualizarPreciosAyb, aplicarPreciosAyb } = require('../services/importadorPreciosAyb');
+const { recalcularPlatosAyb } = require('./costos');
 router.use(loginRequerido, requiereDepartamento('/inventario-ayb'));
 
 const storageFotoBotella = multer.diskStorage({
@@ -68,13 +70,14 @@ router.get('/producto/:id/ajustar', async (req, res) => {
       [req.params.id]
     );
     const geminiConfigurado = !!process.env.GEMINI_API_KEY;
+    const esGestor = esGestorAyb(req);
     if (!producto) {
-      return res.render('inventario_ayb_ajustar', { producto: null, msg: null, geminiConfigurado });
+      return res.render('inventario_ayb_ajustar', { producto: null, msg: null, geminiConfigurado, esGestor });
     }
-    res.render('inventario_ayb_ajustar', { producto, msg: req.query.msg || null, geminiConfigurado });
+    res.render('inventario_ayb_ajustar', { producto, msg: req.query.msg || null, geminiConfigurado, esGestor });
   } catch (e) {
     console.error('Error cargando producto para ajuste rápido:', e.message);
-    res.render('inventario_ayb_ajustar', { producto: null, msg: null, geminiConfigurado: !!process.env.GEMINI_API_KEY });
+    res.render('inventario_ayb_ajustar', { producto: null, msg: null, geminiConfigurado: !!process.env.GEMINI_API_KEY, esGestor: esGestorAyb(req) });
   }
 });
 
@@ -166,6 +169,7 @@ router.get('/reconocer', (req, res) => {
     mostrarReconocer: true,
     geminiConfigurado: !!process.env.GEMINI_API_KEY,
     msg: req.query.msg || null,
+    esGestor: esGestorAyb(req),
   });
 });
 
@@ -385,17 +389,25 @@ function qsVolverListaProductos(req) {
 router.post('/producto/:id/editar', async (req, res) => {
   const qs = qsVolverListaProductos(req);
   try {
+    const precioUnitario = req.body.precio_unitario !== '' && req.body.precio_unitario != null
+      ? parseFloat(req.body.precio_unitario) : null;
     await db.run2(
-      `UPDATE productos_ayb SET nombre=$1, categoria=$2, unidad_default=$3, stock_minimo=$4, codigo_barras=$5 WHERE id=$6`,
+      `UPDATE productos_ayb SET nombre=$1, categoria=$2, unidad_default=$3, stock_minimo=$4, precio_unitario=$5, codigo_barras=$6 WHERE id=$7`,
       [
         (req.body.nombre || '').trim(),
         (req.body.categoria || '').trim() || null,
         (req.body.unidad_default || 'unidad').trim(),
         req.body.stock_minimo !== '' ? parseFloat(req.body.stock_minimo) : null,
+        precioUnitario,
         (req.body.codigo_barras || '').trim() || null,
         req.params.id,
       ]
     );
+    // Si este producto se usa como ingrediente de algún trago en Costos, el
+    // costo ya calculado de esos tragos queda desactualizado en cuanto
+    // cambia el precio acá — se recalcula solo, mismo criterio que cuando
+    // se actualiza un precio desde la pantalla de Costos.
+    await recalcularPlatosAyb(req.params.id);
     res.redirect('/inventario-ayb?msg=' + encodeURIComponent('Producto actualizado.') + qs);
   } catch (e) {
     console.error('Error editando producto de inventario AYB:', e.message);
@@ -452,6 +464,82 @@ router.post('/importar', uploadProductosAyb.single('archivo_productos'), async (
 router.get('/importar/resultado', async (req, res) => {
   const resumen = req.session.importacionProductosAybResumen || null;
   res.render('inventario_ayb_importar_resultado', { resumen });
+});
+
+// ── Actualizar precios en masa (subir una lista de precios) ──────────
+// A diferencia de "Importar productos" (que sólo CREA lo que falta y
+// nunca pisa nada), esto ACTUALIZA precios de productos que ya existen —
+// por eso primero se muestra una vista previa de los cambios y recién se
+// escribe en la base cuando se confirma, en vez de aplicarlo directo.
+const storagePreciosAyb = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, 'precios_ayb_' + Date.now() + path.extname(file.originalname))
+});
+const uploadPreciosAyb = multer({ storage: storagePreciosAyb, limits: { fileSize: 10 * 1024 * 1024 } });
+
+router.get('/precios/importar', (req, res) => {
+  res.render('inventario_ayb_precios_importar', { preview: null, error: req.query.msg || null });
+});
+
+router.post('/precios/importar', uploadPreciosAyb.single('archivo_precios'), async (req, res) => {
+  if (!req.file) return res.redirect('/inventario-ayb/precios/importar?msg=' + encodeURIComponent('No se recibió ningún archivo.'));
+
+  const modoPrecio = req.body.modo_precio === 'directo' ? 'directo' : 'botella';
+  const soloSiCero = req.body.solo_si_cero !== '0'; // checkbox: presente = '1', ausente no viaja -> tratamos cualquier valor != '0' como true, y el form manda '0' cuando está destildado
+
+  try {
+    const { filas, hojasOmitidas } = await parsearArchivoPreciosAyb(req.file.path, req.file.originalname);
+    const preview = await previsualizarPreciosAyb(filas, db, { modoPrecio, soloSiCero });
+    preview.hojasOmitidas = hojasOmitidas;
+    preview.totalFilas = filas.length;
+
+    // Se guarda sólo la config (liviano) para volver a leer el mismo
+    // archivo al confirmar — no el resultado completo, que puede ser
+    // grande con un catálogo de cientos de productos.
+    req.session.previewPreciosAyb = {
+      rutaArchivo: req.file.path,
+      nombreOriginal: req.file.originalname,
+      modoPrecio,
+      soloSiCero,
+    };
+
+    res.render('inventario_ayb_precios_importar', { preview, error: null });
+  } catch (e) {
+    console.error('Error leyendo archivo de precios de Inventario AYB:', e.message);
+    fs.unlink(req.file.path, () => {});
+    res.redirect('/inventario-ayb/precios/importar?msg=' + encodeURIComponent('Error leyendo el archivo: ' + e.message));
+  }
+});
+
+router.post('/precios/confirmar', async (req, res) => {
+  const pendiente = req.session.previewPreciosAyb;
+  if (!pendiente) {
+    return res.redirect('/inventario-ayb/precios/importar?msg=' + encodeURIComponent('No hay ninguna vista previa pendiente — subí el archivo de nuevo.'));
+  }
+
+  try {
+    const { filas } = await parsearArchivoPreciosAyb(pendiente.rutaArchivo, pendiente.nombreOriginal);
+    const preview = await previsualizarPreciosAyb(filas, db, { modoPrecio: pendiente.modoPrecio, soloSiCero: pendiente.soloSiCero });
+    const resultado = await aplicarPreciosAyb(preview.aActualizar, db);
+
+    req.session.resultadoPreciosAyb = {
+      productosActualizados: resultado.productosActualizados,
+      platosRecalculados: resultado.platosRecalculados,
+      nombres: preview.aActualizar.map(a => a.match.nombre),
+    };
+    res.redirect('/inventario-ayb/precios/resultado');
+  } catch (e) {
+    console.error('Error aplicando precios de Inventario AYB:', e.message);
+    res.redirect('/inventario-ayb/precios/importar?msg=' + encodeURIComponent('Error aplicando los precios: ' + e.message));
+  } finally {
+    fs.unlink(pendiente.rutaArchivo, () => {});
+    delete req.session.previewPreciosAyb;
+  }
+});
+
+router.get('/precios/resultado', (req, res) => {
+  const resultado = req.session.resultadoPreciosAyb || null;
+  res.render('inventario_ayb_precios_resultado', { resultado });
 });
 
 // ── Reporte de consumo, por mes ─────────────────────────────────────

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Actualizar precios — Inventario AYB — Hilton</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/vendor/tabler-icons/tabler-icons.min.css"></noscript>
+  <style>
+    .btn-chico-azul,.btn-chico-verde{height:32px;box-sizing:border-box;padding:0 12px;border-radius:8px;font-family:var(--font-sans);font-size:0.62rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;text-decoration:none;cursor:pointer;transition:all .2s;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:none;}
+    .btn-chico-azul{background:rgba(0,47,97,0.12);color:#002f61;border:1px solid rgba(0,47,97,0.28);}
+    .btn-chico-azul:hover{background:rgba(0,47,97,0.20);}
+    .btn-chico-verde{background:rgba(6,147,126,0.14);color:#06937e;border:1px solid rgba(6,147,126,0.32);}
+    .btn-chico-verde:hover{background:rgba(6,147,126,0.24);}
+    .tabla-precios{width:100%;border-collapse:collapse;font-size:0.78rem;}
+    .tabla-precios th{text-align:left;padding:8px 10px;background:var(--gris-fondo);border-bottom:1px solid var(--gris-borde);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--gris-texto);}
+    .tabla-precios td{padding:7px 10px;border-bottom:1px solid var(--gris-borde);}
+    .tabla-scroll{max-height:340px;overflow-y:auto;border:1px solid var(--gris-borde);border-radius:10px;margin-bottom:20px;}
+    .bloque-resumen{background:rgba(6,147,126,0.12);border:1px solid rgba(6,147,126,0.3);border-radius:12px;padding:16px;text-align:center;}
+    .bloque-resumen p.num{font-size:1.8rem;font-weight:700;color:var(--negro);margin:0;}
+    .bloque-resumen p.label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--gris-texto);margin:4px 0 0;}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+
+  <%- include('partials/nav', { path: 'inventario-ayb' }) %>
+
+  <main class="main-content main-content-ancho">
+
+    <div class="seccion-header">
+      <div class="seccion-header-left">
+        <p class="seccion-label">Alimentos y Bebidas</p>
+        <h1 class="seccion-titulo">Actualizar precios</h1>
+      </div>
+      <a href="/inventario-ayb" class="btn-chico-azul"><i class="ti ti-arrow-left"></i> Volver al inventario</a>
+    </div>
+
+    <% if (error) { %>
+      <div style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.28);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:0.85rem;color:#dc2626;">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <% if (!preview) { %>
+      <p style="font-size:0.85rem;color:var(--gris-texto);margin-bottom:20px;max-width:640px;">
+        Subí un Excel o CSV con precios (por ejemplo, una lista de costos de tus proveedores, o un reporte de inventario con precio por artículo). El sistema busca cada producto por código de barras si lo trae, o si no por nombre parecido, y te muestra una vista previa antes de cambiar nada.
+      </p>
+
+      <form method="POST" action="/inventario-ayb/precios/importar" enctype="multipart/form-data" style="max-width:520px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:12px;padding:20px;">
+        <div class="field" style="margin-bottom:16px;">
+          <label>Archivo (.xlsx, .xls o .csv)</label>
+          <input type="file" name="archivo_precios" accept=".xlsx,.xls,.csv" required style="width:100%;">
+        </div>
+
+        <div class="field" style="margin-bottom:16px;">
+          <label>¿Cómo viene el precio en el archivo?</label>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;font-size:0.82rem;">
+            <label style="display:flex;align-items:flex-start;gap:8px;font-weight:400;">
+              <input type="radio" name="modo_precio" value="botella" checked style="margin-top:3px;">
+              <span>Es el precio de la botella/unidad de compra completa (se convierte a precio por ml automáticamente, usando el tamaño de botella si el archivo lo trae, o si no el que se pueda leer del propio nombre, o 750ml por defecto)</span>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:8px;font-weight:400;">
+              <input type="radio" name="modo_precio" value="directo" style="margin-top:3px;">
+              <span>Ya es el precio por ml / por unidad de receta (usar tal cual, sin convertir)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:20px;">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:0.82rem;">
+            <input type="checkbox" name="solo_si_cero" value="1" checked>
+            Sólo actualizar productos que hoy están en $0 (no pisar precios que ya tengas cargados)
+          </label>
+        </div>
+
+        <button type="submit" class="btn-glass-verde" style="width:100%;justify-content:center;"><i class="ti ti-upload"></i> Ver vista previa</button>
+      </form>
+
+    <% } else { %>
+
+      <p style="font-size:0.82rem;color:var(--gris-texto);margin-bottom:16px;">
+        <%= preview.totalFilas %> fila(s) leídas del archivo. Nada se cambió todavía — revisá y confirmá abajo.
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;">
+        <div class="bloque-resumen">
+          <p class="num"><%= preview.aActualizar.length %></p>
+          <p class="label">Se van a actualizar</p>
+        </div>
+        <div class="bloque-resumen" style="background:rgba(0,47,97,0.10);border-color:rgba(0,47,97,0.26);">
+          <p class="num"><%= preview.yaTienenOtroPrecio.length %></p>
+          <p class="label">Ya tienen otro precio (no se tocan)</p>
+        </div>
+        <div class="bloque-resumen" style="background:rgba(220,38,38,0.10);border-color:rgba(220,38,38,0.28);">
+          <p class="num" style="color:#dc2626;"><%= preview.sinMatch.length %></p>
+          <p class="label" style="color:#dc2626;">Sin encontrar en tu catálogo</p>
+        </div>
+      </div>
+
+      <% if (preview.hojasOmitidas && preview.hojasOmitidas.length > 0) { %>
+      <div style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.28);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:0.8rem;color:#dc2626;">
+        <i class="ti ti-alert-circle"></i> No se pudo leer una columna de nombre + precio en: <strong><%= preview.hojasOmitidas.join(', ') %></strong>.
+      </div>
+      <% } %>
+
+      <% if (preview.tamanoAsumido.length > 0) { %>
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:0.8rem;color:#1d4ed8;">
+        <i class="ti ti-info-circle"></i> A <%= preview.tamanoAsumido.length %> producto(s) no se les pudo determinar el tamaño de botella, así que se asumió 750ml — revisá esos casos en la tabla de abajo antes de confirmar.
+      </div>
+      <% } %>
+
+      <% if (preview.aActualizar.length > 0) { %>
+      <h3 style="font-size:0.85rem;margin:20px 0 8px;">Se van a actualizar</h3>
+      <div class="tabla-scroll">
+        <table class="tabla-precios">
+          <thead><tr><th>Archivo</th><th>Matchea con</th><th>Precio actual</th><th>Precio nuevo (por ml)</th><th>Tamaño usado</th></tr></thead>
+          <tbody>
+            <% preview.aActualizar.forEach(a => { %>
+            <tr>
+              <td><%= a.fila.nombre %></td>
+              <td><%= a.match.nombre %></td>
+              <td><%= a.precioActual.toFixed(3) %></td>
+              <td style="font-weight:600;"><%= a.precioNuevo.toFixed(3) %></td>
+              <td><%= a.tamanoUsado ? a.tamanoUsado + 'ml' + (a.tamanoAsumido ? ' (asumido)' : '') : '—' %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+
+      <% if (preview.yaTienenOtroPrecio.length > 0) { %>
+      <h3 style="font-size:0.85rem;margin:20px 0 8px;">Ya tienen otro precio (no se tocan)</h3>
+      <div class="tabla-scroll">
+        <table class="tabla-precios">
+          <thead><tr><th>Archivo</th><th>Matchea con</th><th>Precio actual</th><th>Precio del archivo</th></tr></thead>
+          <tbody>
+            <% preview.yaTienenOtroPrecio.forEach(a => { %>
+            <tr>
+              <td><%= a.fila.nombre %></td>
+              <td><%= a.match.nombre %></td>
+              <td><%= a.precioActual.toFixed(3) %></td>
+              <td><%= a.precioNuevo.toFixed(3) %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+
+      <% if (preview.sinMatch.length > 0) { %>
+      <h3 style="font-size:0.85rem;margin:20px 0 8px;">Sin encontrar en tu catálogo</h3>
+      <div class="tabla-scroll">
+        <table class="tabla-precios">
+          <thead><tr><th>Archivo</th><th>Precio</th></tr></thead>
+          <tbody>
+            <% preview.sinMatch.forEach(f => { %>
+            <tr><td><%= f.nombre %></td><td><%= f.precio %></td></tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <a href="/inventario-ayb/precios/importar" class="btn-chico-azul"><i class="ti ti-x"></i> Cancelar, subir otro archivo</a>
+        <% if (preview.aActualizar.length > 0) { %>
+        <form method="POST" action="/inventario-ayb/precios/confirmar">
+          <button type="submit" class="btn-glass-verde"><i class="ti ti-check"></i> Confirmar y actualizar <%= preview.aActualizar.length %> producto<%= preview.aActualizar.length !== 1 ? 's' : '' %></button>
+        </form>
+        <% } %>
+      </div>
+
+    <% } %>
+  </main>
+</div>
+</body>
+</html>

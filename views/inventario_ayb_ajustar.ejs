@@ -26,6 +26,17 @@
 <div class="ajustar-wrap">
   <p style="text-align:center;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--gris-texto);margin:0 0 4px;">Portal interno · Inventario AYB</p>
 
+  <%
+    // Esta pantalla se abre sola (sin el menú completo del sitio) —
+    // escaneando un QR o desde "Reconocer botella" — así que sin este link
+    // no hay forma de salir de acá si la IA tira error o no encuentra el
+    // producto. Siempre mandamos a /inventario-ayb: si lo abre un mozo sin
+    // acceso, esa misma pantalla ya lo rebota sola a /horarios (ver el
+    // middleware al principio de las rutas de gestión en inventarioAyb.js),
+    // así que no hace falta decidir el destino acá.
+    const volverA = '/inventario-ayb';
+  %>
+
   <% if (typeof msg !== 'undefined' && msg) {
     // Express ya llega con req.query.msg decodificado una vez — este
     // decodeURIComponent es "por si" el mensaje se armó pegando el string
@@ -93,6 +104,10 @@
     </form>
   </div>
   <% } %>
+
+  <a href="<%= volverA %>" style="display:block;box-sizing:border-box;width:100%;margin-top:14px;background:rgba(6,147,126,0.12);border:1px solid rgba(6,147,126,0.3);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:14px 16px;text-align:center;font-family:inherit;text-decoration:none;color:#06937e;font-size:0.85rem;font-weight:600;">
+    <i class="ti ti-arrow-left"></i> Volver<% if (volverA === '/inventario-ayb') { %> a Inventario<% } %>
+  </a>
 
 </div>
 

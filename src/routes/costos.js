@@ -1122,3 +1122,4 @@ async function recalcularPlatosAyb(producto_id) {
 // precios que ya usa esta pantalla, en vez de duplicarla.
 module.exports = router;
 module.exports.calcularVariacionPrecios = calcularVariacionPrecios;
+module.exports.recalcularPlatosAyb = recalcularPlatosAyb;
